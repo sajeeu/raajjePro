@@ -1,0 +1,11 @@
+# Unrelated projects that happen to share this working directory
+petty-cash-*
+hr-dashboard-*
+deliverable-response.md
+REBUILD-DESIGN-SPECS.md
+REBUILD-DIAGRAM-SET.md
+SUPPORTING-DOCS-STATUS.md
+
+# Local working state
+.backups/
+.claude/
