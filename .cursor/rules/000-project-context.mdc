@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+# RaajjePro — Project Context
+
+RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
+Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
+Full specification: `01_Development_Plan_v5.md` at revision 5.1. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+
+Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
+
+1. Provider Profile and Service Listing are distinct domain entities. Never merge provider identity fields into a Listing, and never merge listing fields into a User or Provider Profile.
+
+1a. PROVIDER ONBOARDING IS A REAL FLOW (Phase 6a). Older documentation stated there was no standalone "Become a Provider" screen and that the Create/Edit Service Wizard *was* onboarding. That is obsolete — Phase 6a is a 2–3 screen flow collecting phone, verified email and payment details, sequenced BEFORE the wizard, and it hands off into a fresh draft.
+   PUBLIC VISIBILITY IS DERIVED, NEVER STORED: a provider is visible if and only if `count(listings WHERE status='published' AND visibility='active') > 0` AND the provider is not suspended, computed by ONE shared query helper (`findVisibleProviders`) that every consumer — search, Featured Providers, public profile — calls. There is no `lifecycleStatus` field anywhere in this schema; if you see one referenced in older documentation or existing code, it is obsolete and should be flagged for removal, not extended. Suspension is an INPUT to that helper, not a separate filter reimplemented per query.
+   VERIFICATION IS THREE TIERS, NOT A BOOLEAN. `verificationTier` is `none` / `bronze` / `silver` / `gold` and is what the badge renders and what other systems gate on. `verificationStatus` (`unverified`/`pending`/`verified`) still exists but means only the REVIEW STATE of a pending submission — the two are different axes and must never be conflated with each other or with visibility. A provider can be publicly visible at tier `none`.
+
+1b. Payment between customer and provider is entirely off-platform — RaajjePro never moves money for a booking. Everything RaajjePro itself collects (provider subscriptions only in v1) is collected via manual bank transfer + admin confirmation — never assume or scaffold a payment gateway integration unless explicitly instructed otherwise.
+   V1 IS SUBSCRIPTION-ONLY. There is no credit wallet and no advertising module in this codebase. If you encounter references to `CreditWallet`, `AdCampaign`, `AdRateCard`, or an `Advertiser` entity in older documentation, they describe cut post-v1 features — do not build toward them. Keep `PaymentSubmission`'s `purpose` enum open (`'subscription'` today) so they can slot back in additively.
+   SUBSCRIPTION PRICE IS PER-PROVIDER, NOT GLOBAL. Read `providerProfile.subscriptionPriceLaari`, set at first confirmed payment and defaulting to MVR 150 = 15000 laari. The first 100 providers take a reduced introductory rate honoured 12 months from the billing anchor, then converting with 30 days' notice. Never hardcode a single global price — older documentation pinned one, and the conversion measurement depends on two price points coexisting.
+   All customer-facing features remain free — nothing may ever gate a customer action. Basic listing discoverability is never paywalled; only quantity (listings beyond the free cap) and extras (analytics, priority placement) are gated.
+   THE BADGE IS GATED BY `verificationTier` ALONE, never by subscription state. A lapsed-but-verified provider keeps their tier — it is a safety signal, not a payment status. A lapsed subscription degrades a provider to the free tier; it never deletes data and never hard-blocks an account.
+
+1c. Booking has THREE modes: `slot` (fixed-duration, provider-published time slots — Cleaning, Beauty, Fitness), `request` (customer proposes a window, provider proposes a concrete time and price — Plumbing, Electrical, AC Repair, Photography, Gardening, Computer, Moving, Events, Boat Charter), and `emergency`, layered on Plumbing/Electrical/AC Repair listings only and ONLY for a provider at tier `silver` or `gold`. The bar is SILVER OR ABOVE — older documentation said `verificationStatus === 'verified'` and is obsolete. There are TWELVE categories, including Boat Charter.
+   Time-conflict prevention is a PostgreSQL exclusion constraint scoped to the PROVIDER, not the listing — `EXCLUDE USING gist (providerId WITH =, tstzrange(startsAt, endsAt) WITH &&)`. A `UNIQUE` constraint on `(providerId, listingId, startsAt)` is insufficient: it does not prevent one provider being booked twice at the same time across two different listings, and it does not detect overlapping durations. If you see that older constraint referenced, replace it.
+   Messaging and booking require phone verification (`requirePhoneVerified`, stricter than `requireAuth`), enforced server-side on every relevant endpoint — never rely on hiding a UI button.
+   THERE IS EXACTLY ONE ENDPOINT IN THIS ENTIRE SYSTEM THAT RETURNS A PHONE NUMBER TO ANOTHER USER: `POST /v1/bookings/:id/reveal-contact`. It is emergency-bookings-only, at `accepted` or later, customer-initiated, mutual and simultaneous, notifies the counterparty, expires 24 hours after the booking reaches a terminal state, is logged, and is disableable by a runtime kill switch. Every one of those seven conditions is validated server-side.
+   `GET /v1/bookings/:id/contact-info` DOES NOT EXIST AND MUST NOT BE CREATED. It is a different, far broader mechanism — it exposed a phone number on every booking type with no conditions — and it was deleted outright. WhatsApp and Viber handles are not collected anywhere in this system and cannot be revealed by anything. Any response shape outside the reveal endpoint that carries a phone number is a defect.
+   Booking payment confirmation ("I've Paid" / "Payment Received") is a two-sided self-attestation between customer and provider, NEVER the `PaymentSubmission`/admin-confirmation mechanism (that is exclusively for RaajjePro's own subscription fees) — do not conflate the two systems. UI copy must never imply platform-level verification ("Payment Verified," a certainty checkmark) — use language that honestly reflects what happened, e.g. "Provider confirmed receipt."
+   The enquiry channel's contact-pattern detection is a SOFT NUDGE, LOGGED, NEVER A BLOCK — the message always sends. A hard block on phone-shaped text cannot reliably distinguish a Maldivian mobile number from an appliance serial number, and blocking that content defeats the channel's purpose. Detections surface as a provider-level moderation signal, not enforced inline.
+   IN-APP CHAT IS THE SOLE COORDINATION CHANNEL for a booking's entire life, including after completion. It opens at `quote_offered` for request-based bookings and at `accepted` for slot and emergency. It is never torn down and never replaced.
+
+1d. Never write binding legal text (Terms of Service, Privacy Policy, Provider Agreement, or any policy language) as if it were final — legal content is always inserted as clearly-marked, structurally-correct placeholder pending real legal review, never fabricated. Moderation actions must always be reversible (status/visibility flag), never a hard delete. Product/analytics event logs follow the same no-PII rule as structured logging — event metadata may reference IDs, never raw email/phone/payment-proof/ID-document content.
+   Identity-verification documents live in a SEPARATE private storage location from payment proofs and general media, are served only via short-lived signed URLs, every access is logged, and they are purged automatically 90 days after a verification decision and immediately on account deletion — the decision, the evidence type and the reviewing admin persist, the images do not.
+   ACCOUNT DELETION IS QUEUED, NEVER REFUSED. A request is accepted immediately, the account frozen, and anonymisation executes automatically once non-terminal bookings terminate, with a hard 30-day backstop. Do not implement it as an error when bookings are open.
+
+2. Publishing a basic service listing must remain simple; advanced details are always optional. A draft must be saveable with zero required fields filled. Only publish enforces required fields — of which a COVER IMAGE is one.
+
+3. This is an open marketplace — no mandatory pre-publication approval workflow for listings.
+
+4. The backend is the single source of truth for all business rules. Client-side validation exists only for UX; it must never be the only place a rule is enforced.
+
+5. New functionality is added through additive, modular changes. Do not refactor unrelated modules as a side effect — flag suggested refactors instead of doing them silently.
+
+6. Every phase/feature must be independently testable. If you can't state how to verify what you just built, stop and ask.
+
+7. Money is always integer laari (MVR × 100), never float or decimal-as-string. MVR 150 = 15000 laari.
+
+8. Every entity uses a UUID primary key. Nothing is ever hard-deleted — soft-delete via a visibility/status field, everywhere, no exceptions.
+
+9. THE ADMIN PANEL IS A SEPARATE REACT WEB APP, not a Flutter screen, built across Phases 10a (money and identity queues), 10b (accounts, config, search, shell) and 10c (ops dashboard). Backend endpoints are identical either way.
+
+Development priorities, in order: readability > cleverness, explicit > implicit, predictable > convenient, small focused changes > large sweeping ones.
+
+Never expose internal error details (stack traces, raw DB errors) in API responses. Never log passwords, tokens, or full PII values.
