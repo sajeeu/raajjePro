@@ -20,4 +20,5 @@ SECURITY IS MANDATORY AND SPECIFIED, not left to judgment. This app renders user
 - Ban and hard-delete are NOT panel actions. They stay manual database operations, deliberately.
 - Kill switches: SMS is THREE separate switches (OTP / notification / marketing). A single one would kill OTP and lock every user out of authentication.
 - Alerts de-duplicate per threshold crossing — once on cross, again only after clear and re-cross. An alert firing every fifteen minutes gets muted within a day.
-- DO NOT BUILD, deliberately out of scope: MFA, IP allowlisting, session hardening, second-admin sign-off, bulk queue actions, keyboard triage, a proactive risk-signal dashboard, broadcast messaging, or general booking-state override beyond dispute and `payment_unresolved` resolution.
+- TOTP MFA and session controls ARE in scope as of Round 12 — Phase 2 builds them, every admin account must enrol before taking any action, and this panel enforces re-authentication before an identity document is viewed. Any older text telling you to skip them is obsolete.
+- DO NOT BUILD, deliberately out of scope: IP allowlisting, second-admin sign-off, bulk queue actions, keyboard triage, a proactive risk-signal dashboard, broadcast messaging, or general booking-state override beyond dispute and `payment_unresolved` resolution.

@@ -481,7 +481,7 @@ PART 2 — Admin Panel (separate internal React web app). Propose the stack befo
    - CSP header: default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'. No unsafe-inline, no CDN origins.
    - User-authored fields render as TEXT NODES ONLY — never as HTML, never as an href without scheme validation.
    - Test with a stored <script>, an <img onerror>, and a javascript: URL in a listing description, a review body, and an enquiry message.
-9. Real admin auth from Phase 2. Never publicly reachable without credentials. Do NOT add MFA, IP allowlisting or session hardening — deliberately out of v1 scope (plan §7).
+9. Real admin auth from Phase 2, INCLUDING the TOTP MFA and session controls Phase 2 built (Round 12) — enforce them here, do not bypass them for convenience. Never publicly reachable without credentials. Do NOT add IP allowlisting or second-admin sign-off — those remain deliberately out of v1 scope (plan §7).
 
 Definition of done: a provider submits with proof and sees pending; an admin confirms and the entitlement activates; a rejection surfaces its reason with working resubmit and appeal; CSV import proposes correct matches and routes unresolvable rows to the unmatched queue; a provider hitting 5 clean bookings is promoted to Silver with NO admin action; a Gold submission without registration or a certificate is rejected with a reason; all three XSS payloads render inert in every admin view; an aged payment_unresolved item triggers its alert.
 ```
