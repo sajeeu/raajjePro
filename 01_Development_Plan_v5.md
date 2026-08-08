@@ -2,7 +2,7 @@
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 
-Folds in all decisions resolved across nine rounds of review, 2026-08-03 to 2026-08-05. Full provenance in **§9 Decision Log**.
+Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 2026-08-08. Full provenance in **§9 Decision Log**.
 
 **Stack:** Flutter (mobile-first) · TypeScript / Fastify / Prisma / PostgreSQL · REST `/v1` · monorepo.
 
@@ -10,7 +10,7 @@ Folds in all decisions resolved across nine rounds of review, 2026-08-03 to 2026
 
 ## 0. Read this first
 
-### 0.0 Revision 5.1 — read this before §0.1–0.3
+### 0.0 Revision 5.4 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -21,6 +21,7 @@ Folds in all decisions resolved across nine rounds of review, 2026-08-03 to 2026
 5. **Emergency requests broadcast to every eligible provider at once** (Round 12) — the provider states their callout fee when accepting, and the customer accepts or rejects that offer, with a rejection re-broadcasting. Fan-out was previously deferred to post-v1. **Moving** is now emergency-capable with a 120-minute window, the trial is **30 days** not 60, and **admin MFA and session controls are in v1**.
 6. **SMS is gone from the entire system, and email replaces it** (Round 11). OTP is sent to email; `requireEmailVerified` replaces `requirePhoneVerified` everywhere the plan previously used it; the Phase 3c fallback ladder is push → email. A phone number is still collected and still unique, but is **no longer verified** — nothing below Bronze proves it belongs to its holder.
 7. **Round 10 folded in thirteen further decisions** that had been made but never written down — most consequentially: the emergency `finalAmount` is now **required**, not optional; the `booking` chat opens at **quote offered**, not at `accepted`; and downgrade keeps the **highest-performing** listing, not the most recently updated. Any older statement of those three is superseded.
+8. **The email provider is Amazon SES, and bounce handling moves off Phase 3's critical path** (Round 13). SES is the sole transactional email vendor. Because SES will not leave its sandbox until bounce and complaint handling already exists, that work is a **Phase 0–2 prerequisite**, not the Phase 3c task §Phase 3c previously called it. Anywhere below that describes bounce handling as part of Phase 3c, read it as *already built by then*.
 
 ### 0.1 Why v5 exists
 
@@ -507,7 +508,9 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 - Register, login, JWT access + refresh rotation, logout, `me`, password reset
 - Social auth: provider-agnostic interface with stubs (Facebook/Google/Viber)
 - 🔧 **Email verification replaces phone verification — Round 11. There is no SMS anywhere in this system.** OTP is sent to **email**, with an `emailVerified` flag and a `requireEmailVerified` guard (stricter than `requireAuth`, distinct `EMAIL_NOT_VERIFIED` error code). This guard is what gates booking, enquiry and messaging — every place the plan previously said `requirePhoneVerified`.
-  - Email provider chosen and pinned before this phase starts, with a cost model and a deliverability plan (SPF, DKIM, DMARC). Transactional email now carries OTP, the Phase 3c fallback, and Phase 10b's admin alerting — it is the single delivery channel and therefore a single point of failure.
+  - 🔧 **The provider is Amazon SES — Round 13.** $0.10 per 1,000 emails, against a new-account credit of $200 over six months that covers realistic launch volume many times over. Transactional email carries OTP, the Phase 3c fallback, and Phase 10b's admin alerting — it is the single delivery channel and therefore a single point of failure.
+  - 🔧 **SES must be out of its sandbox before this phase starts, and that is not a formality.** A sandboxed account sends **200 messages per day, to verified addresses only** — which means the real registration flow, an OTP to an arbitrary new mailbox, cannot even be exercised until production access is granted. Leaving the sandbox requires attesting that **bounce and complaint handling is already in place**, so that work is a **Phase 0–2 prerequisite** (§4 Sequencing), not a Phase 3c task. AWS responds within 24 hours but may come back for more information; this must not sit on Phase 3's critical path, because Phase 3 gates booking, enquiry and messaging.
+  - Deliverability setup is still required regardless of vendor: SPF, DKIM, DMARC, and a warmed sending domain.
   - 🔧 **Rate limits, explicit:** **3 OTP sends per email address per 15 minutes** *and* **5 per user account per hour** (both, not either). **5 verification attempts per issued OTP**, after which it is invalidated and a new send is required. Hitting either send limit returns `OTP_RATE_LIMITED` with the seconds remaining, so the UI can show a real countdown rather than a generic error.
 - 🔧 **Phone number: collected, unique, and NOT verified.** Both `email` and `phone` carry a database-level unique constraint, so each can back exactly one account. A registration attempt against either an in-use email or an in-use phone is **blocked at the field**, naming which one is taken, with a route to login or password reset — never a generic failure and never a silent overwrite.
   - **Uniqueness is not ownership, and the UI must not imply otherwise.** Nothing proves the number belongs to the person who typed it, because the mechanism that proved it (SMS OTP) is gone. A phone number is displayed as user-supplied information, never with a check mark, never described as verified.
@@ -547,7 +550,9 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - 🔧 **Fallback email content:** booking type, customer first name, job location island, and an instruction to open the app. **No links** — do not train providers to tap links in messages that claim a job is waiting. No amounts, no phone numbers.
 - **Observability:** log every fallback invocation with reason. Alert if the email fallback exceeds 5% of accept prompts in a rolling day — that indicates a push-integration regression, not user preference.
 - A persistent in-app reminder for a provider who has denied push at the OS level: *"You may miss booking requests — enable notifications."*
-- 🔧 **Email is now the only delivery channel that works when push fails**, so its deliverability is load-bearing in a way it was not before. Bounce and complaint handling, and a monitored sending reputation, are part of this phase, not an afterthought.
+- 🔧 **Email is now the only delivery channel that works when push fails**, so its deliverability is load-bearing in a way it was not before.
+- 🔧 **Bounce and complaint handling already exists by the time this phase starts — Round 13.** It is a Phase 0–2 prerequisite, because SES will not grant production access without it (§Phase 3). What this phase adds is the *consumption* side: the SNS event destination feeding a stored delivery/bounce/complaint record per message, the suppression list being honoured before send, and the reputation metrics being watched rather than merely collected.
+- 🔧 **SES has no searchable activity UI, so the message log is ours to build.** Phase 10b needs to answer "did this provider actually receive the emergency alert?" in one lookup; on a hosted vendor that is a built-in console, on SES it is an event destination plus a queryable store plus a screen. Budget it here and surface it in Phase 10b — it is real scope that a hosted provider would have absorbed.
 
 **Done when:** a test push arrives on a real device within seconds; a provider with push denied at the OS level receives an **email** fallback for a booking-accept prompt immediately, not at the end of the window; an emergency prompt fires push and email in parallel; the app exposes no toggle for booking notifications; multi-device registration and cleanup work; fallback invocations and bounces appear in logs.
 
@@ -750,7 +755,7 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 **Kill switches**
 - Admin-flippable, audit-logged flags for: emergency bookings, new registrations, new listing publication, and the emergency contact reveal (§1c)
-- 🔧 **Email is three separate switches, not one — Round 9's reasoning, applied to email after Round 11 removed SMS.** `OTP email`, `notification/fallback email`, and `marketing email`. A single outbound-email switch would also kill OTP — now the *only* verification channel — locking every user out of registration and any new-device login, and simultaneously disabling Phase 3c's push→email fallback. That is a platform outage, not an incident control. The risk is higher than it was under SMS, because email is now the sole channel rather than one of two.
+- 🔧 **Email is three separate switches, not one — Round 9's reasoning, applied to email after Round 11 removed SMS.** `OTP email`, `notification/fallback email`, and `marketing email`. 🔧 **Round 13:** these map onto three SES **configuration sets**, which is also what keeps their reputation metrics separate — a complaint spike on the opt-in digest must not be able to degrade the sending reputation that OTP depends on. A single outbound-email switch would also kill OTP — now the *only* verification channel — locking every user out of registration and any new-device login, and simultaneously disabling Phase 3c's push→email fallback. That is a platform outage, not an incident control. The risk is higher than it was under SMS, because email is now the sole channel rather than one of two.
 - A persistent banner in the panel (and, where relevant, in the Flutter app) while any flag is off, so a flipped switch doesn't get forgotten
 - These are incident controls, not a general feature-flag framework — no admin-defined flags in v1
 
@@ -769,7 +774,7 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 **Explicitly not in this phase** (raised and declined during scoping): proactive risk-signal dashboard — Phase 22's contact-pattern and cancel-pattern signals stay report-driven, surfacing only alongside a filed report; bulk queue actions and keyboard triage — every queue item is still reviewed and actioned individually; provider broadcast messaging — no in-panel way to reach providers as a segment; IP allowlisting, forced session controls, and MFA — admin auth stays exactly as specified in Phase 2, consistent with §7's accepted single-admin risk.
 
-**Done when:** an admin can find any user, booking, or payment by phone/name/ID/reference code in under two actions; suspending a user removes them from search and Home via `findVisibleProviders` and blocks new bookings without touching an in-progress one; view-as-user renders listings and bookings, is access-logged, and exposes no message content; a booking-mode change is refused while the category has open slots or live bookings and names them; flipping the OTP-SMS switch does not affect notification SMS and vice versa; a kill switch shows its banner everywhere relevant within one page load; a pushed alert arrives outside the panel and does not repeat while the threshold stays breached; a CSV export of the user directory contains no phone number, name, email, or bank detail.
+**Done when:** an admin can find any user, booking, or payment by phone/name/ID/reference code in under two actions; suspending a user removes them from search and Home via `findVisibleProviders` and blocks new bookings without touching an in-progress one; view-as-user renders listings and bookings, is access-logged, and exposes no message content; a booking-mode change is refused while the category has open slots or live bookings and names them; flipping the OTP-email kill switch does not affect notification email or marketing email, and vice versa; a kill switch shows its banner everywhere relevant within one page load; a pushed alert arrives outside the panel and does not repeat while the threshold stays breached; a CSV export of the user directory contains no phone number, name, email, or bank detail.
 
 ### Phase 10c — Admin Ops Dashboard
 
@@ -1009,7 +1014,8 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 - **Phase 8a's trial hook fires from Phase 17's transition into `confirmed`**, plus its own `start-trial` endpoint.
 - **Phase 17 and Phase 22** retain a soft circular reference (disputes and escalations file Reports); build 17 first with a minimal Report insert, 22 makes the queue real.
 - **Phase 4 must seed `bookingMode` and `emergencyCapable`** before Phase 5, 8, 9a, or 17 read them.
-- 🔧 **Pin before Phase 3 — Round 11:** transactional **email** provider, cost model, and deliverability setup (SPF, DKIM, DMARC, a warmed sending domain). Email verification gates booking, enquiry and messaging, *and* carries the Phase 3c fallback *and* Phase 10b's admin alerting — it is the single point of failure for the entire transactional core, more so than SMS was, because there is no second channel behind it. **There is no SMS provider to procure and no sender-ID registration lead time**, which removes the longest-lead external dependency in the plan.
+- 🔧 **Pin before Phase 3 — Rounds 11 and 13:** the provider is **Amazon SES** (§Phase 3), with SPF, DKIM, DMARC and a warmed sending domain. Email verification gates booking, enquiry and messaging, *and* carries the Phase 3c fallback *and* Phase 10b's admin alerting — it is the single point of failure for the entire transactional core, more so than SMS was, because there is no second channel behind it.
+- 🔧 **Do in the Phase 0–2 window, not at Phase 3 — Round 13:** build bounce and complaint handling (SNS event destination, stored per-message result, suppression list honoured before send), then request SES production access. **The attestation required to leave the sandbox is that this handling already exists**, so the order is fixed: build it, then apply, then start Phase 3. Sandboxed SES sends 200/day to verified addresses only, so Phase 3's registration flow is not even testable before this clears. AWS answers within 24 hours but can request more information — which is precisely why it belongs ahead of the critical path rather than on it. **There is no SMS provider to procure and no sender-ID registration lead time**, which removes the longest-lead external dependency in the plan; this replaces it with a shorter but harder-edged one.
 - **Pin before Phase 4:** confirm the per-category `bookingMode` table (§1c) — it drives which listings get a slot picker vs. a request form.
 - **Pin before Phase 8a:** the trial-start trigger applied in §0.4, if you want to override it.
 - **Resolve before Phase 8a goes deep:** Phase 23's App Store subscription question. A negative answer forces a data-model change.
@@ -1031,7 +1037,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 | Slot picker | Payload capped at 14 days of slots per request with pagination; renders in < 1.5 s on a 3G connection |
 | App cold start | < 3 s to interactive Home on a mid-range Android device |
 | Push delivery | 90% of accept prompts delivered within 30 s; 🔧 email fallback within 2 min of trigger |
-| Email deliverability | 🔧 99% of transactional email accepted by the receiving server; bounce rate under 2%, monitored from Phase 3c |
+| Email deliverability | 🔧 99% of transactional email accepted by the receiving server; bounce rate under 2%, monitored from Phase 3c. 🔧 **Round 13:** this target is no longer only ours — AWS places an SES account under review above **5%** bounce and can pause sending above **10%**, so breaching it costs the channel itself, not just the metric |
 | Availability | 99.5% monthly on the API, measured against `/v1/health` |
 | Backups | RPO 24 h, RTO 4 h — drilled in Phase 24, not assumed |
 | Admin SLA | Payment submissions confirmed/rejected within 48 h; `payment_unresolved` items resolved within 5 business days; verification decisions within 5 business days |
@@ -1067,7 +1073,7 @@ Distinct from the backlog — these were offered as in-scope and you chose not t
 - **Provider broadcast messaging** — no in-panel way to reach providers as a segment, including the introductory-pricing cohort the platform now creates.
 - **A first-50-provider acquisition plan.** The launch-mode threshold (Phase 16) is a real product gate with no stated route to clearing it; organic signup is the working assumption. For a cold-start two-sided marketplace this is the largest unowned business risk in the plan.
 - **Chat delivery latency target** — §5 sets targets for API, push, slot payloads and cold start, but chat, now the sole coordination channel, has none.
-- 🔧 **Secondary email provider** — after Round 11 removed SMS, OTP, the push fallback and admin alerting all rest on one email vendor with no failover. An outage there means nobody can register, verify, or reliably receive a job offer. Larger than the SMS single-vendor risk it replaced.
+- 🔧 **Secondary email provider** — after Round 11 removed SMS, OTP, the push fallback and admin alerting all rest on one email vendor with no failover. An outage there means nobody can register, verify, or reliably receive a job offer. Larger than the SMS single-vendor risk it replaced. 🔧 **Round 13 chose SES alone and left this open**, which adds a second failure mode beyond outage: SES can **suspend sending on the account's own bounce or complaint rate**, so a bad list or a bug in the fallback path can take the channel down without any vendor incident at all. The mitigation remains a second provider behind Phase 3's `EmailSender` interface, still deferred.
 - **Bank-detail de-anonymisation** — an account holder's name plus island plus trade may be identifying in a population this size, which would let the one deliberate exception to the contact rule partly defeat it. Reviewed and left unchanged.
 
 ---
@@ -1155,6 +1161,14 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 *In-app messaging carries no interference at all.* The contact-pattern nudge is removed outright — no banner, no reminder, nothing shown to the sender. **Detection and logging continue silently**, because the same review kept the provider-level moderation aggregate, and that aggregate never depended on telling the sender. Resolving those two answers together is the only reading consistent with both.
 
 *Two interface decisions.* Listing tags become selectable chips scoped to the category rather than free-text entry — typing a tag from memory asks a provider to guess what customers search for. Search sort order is fixed as **distance, then rating, then price**; distance leads because a provider who cannot reach your island is not a result at all.
+
+**Round 13 — email provider pinned, dated 2026-08-08.** Taken while clearing the pre-development checklist, after comparing SES, Postmark and Brevo against what this plan actually requires of the email layer.
+
+*The provider is Amazon SES, sole vendor.* At $0.10 per 1,000 against a $200 new-account credit over six months, realistic launch volume is effectively free, and the cost curve matters more here than in most plans because Round 12's open emergency broadcast emails **every eligible provider on every emergency request** — a volume that scales with bookings rather than signups. Postmark was the alternative on deliverability grounds and a split (Postmark for OTP, SES for the Phase 19 digest) was recommended; a single vendor was chosen instead. Brevo was ruled out on a specific detail: its free and entry plans append a "Sent with Brevo" footer, and a third-party footer with a link in it on an OTP mail directly undercuts the reasoning in §Phase 3c that keeps links out of fallback email.
+
+*The consequence that changes sequencing.* SES will not leave its sandbox — 200 messages/day, verified recipients only — until the account attests that bounce and complaint handling exists. That inverts the order this plan assumed: bounce handling was written as a Phase 3c task, and it is now a **Phase 0–2 prerequisite**, because Phase 3's registration flow cannot be tested, let alone launched, from inside the sandbox. §4 Sequencing carries the corrected order.
+
+*Two costs accepted knowingly.* SES has no searchable activity console, so the per-message delivery log Phase 10b needs in order to answer "did this provider get the alert?" is scope this plan now owns rather than scope a hosted vendor absorbs. And the §7 single-vendor risk is not only an outage risk with SES: the account's own bounce rate can pause sending, so a defect in the fallback path can remove the channel with no vendor incident involved.
 
 **Open, requiring your input:**
 - The per-category `bookingMode` table (§1c) — confirm before Phase 4 seeds it.

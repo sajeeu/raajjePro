@@ -81,6 +81,8 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 
 9. THE ADMIN PANEL IS A SEPARATE REACT WEB APP, not a Flutter screen, built across Phases 10a (money and identity queues), 10b (accounts, config, search, shell) and 10c (ops dashboard). Backend endpoints are identical either way.
 
+10. THE TRANSACTIONAL EMAIL PROVIDER IS AMAZON SES, and it is the ONLY one — there is no SMS and no second email vendor. Email carries OTP, the Phase 3c push fallback, and Phase 10b's admin alerting, so it is a single point of failure by design. Send through the `EmailSender` interface, never by calling SES directly from a domain module. Three SES configuration sets back the three independently killable channels (OTP / notification / marketing) and keep their reputation metrics separate. Bounce/complaint handling and the suppression list are built in PHASE 0, not Phase 3c — SES will not leave its sandbox without them. SES has no searchable activity console, so the per-message delivery log is ours to build and Phase 10b must be able to answer "did this user actually receive it?" in one lookup.
+
 Development priorities, in order: readability > cleverness, explicit > implicit, predictable > convenient, small focused changes > large sweeping ones.
 
 Never expose internal error details (stack traces, raw DB errors) in API responses. Never log passwords, tokens, or full PII values.
@@ -199,6 +201,7 @@ alwaysApply: true
 - If a prompt conflicts with the plan, flag it. Do not resolve it silently in either direction.
 - Deliberately out of v1 scope — do not build these, and do not leave TODOs implying they are coming: admin IP allowlisting; second-admin sign-off; bulk admin queue actions and keyboard triage; a proactive risk-signal dashboard; provider broadcast messaging; a secondary email provider; credit wallet; advertising; referrals; Dhivehi/Thaana localisation.
 - IN scope as of Round 12, despite older documentation deferring them: admin TOTP MFA and session controls, and simultaneous emergency fan-out to multiple providers.
+- IN scope as of Round 13, and EARLIER than older documentation places it: email bounce/complaint handling and the SES suppression list are a PHASE 0 deliverable, not Phase 3c. SES will not leave its sandbox without them, and a sandboxed account cannot send to unverified addresses — so Phase 3 is untestable until this exists. If a Phase 3c prompt implies you are building it for the first time, it already exists; wire to it.
 - Flag suggested refactors; do not perform them as a side effect of an unrelated task.
 ```
 
