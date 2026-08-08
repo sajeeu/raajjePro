@@ -9,3 +9,4 @@ globs: backend/**/*.test.ts, frontend/**/*_test.dart
 - Scheduled jobs are tested by advancing time, not by waiting.
 - Authorization tests cover reads as well as writes, and cover the wrong-user case, not just the unauthenticated one.
 - Any endpoint touching a phone number is tested for its ABSENCE in the response, not only for the presence of what it should return.
+- Registration is tested against both a duplicate email and a duplicate phone, asserting each is blocked with a message naming the specific field.

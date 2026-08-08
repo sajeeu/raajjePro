@@ -44,7 +44,7 @@ Do:
 5. Wire up a job runner (pg_cron or equivalent) with ONE no-op scheduled job that observably fires. The plan depends on time-based transitions in seven places (three distinct accept timeouts, quote expiry, payment escalation, completion checks, trial/subscription lifecycle, slot regeneration) — a working runner is a Phase 0 deliverable, not something to discover you need at Phase 17.
 6. Root README documenting the five conventions every later phase assumes: UUID primary keys on every entity; integer-laari money (MVR × 100, never float or decimal-string); soft-delete everywhere (visibility/status field, nothing hard-deleted); client-supplied idempotency keys on money-adjacent and creation POSTs; and additive-only API evolution within /v1 — never remove or repurpose a field, because mobile clients cannot be force-updated and a breaking change strands installed app versions.
 7. Minimal CI (GitHub Actions is fine) running lint + build on both apps on push. No deployment yet.
-8. .env.example covering DB connection, JWT secrets, object storage (TWO buckets — media, and a separate private bucket for identity documents), SMS provider, email provider, and push (FCM/APNs) placeholders. No real secrets committed.
+8. .env.example covering DB connection, JWT secrets, object storage (TWO buckets — media, and a separate private bucket for identity documents), email provider (transactional, load-bearing) and push (FCM/APNs) placeholders — NO SMS provider, deliberately. No real secrets committed.
 
 Do NOT: add business entities, real screens beyond a placeholder splash route, or auth logic.
 
@@ -107,21 +107,23 @@ Definition of done: /v1/health returns 200; a malformed request returns the stan
 Build the Identity & Authentication module, backend and frontend, matching the attached Login and Register mockups exactly.
 
 Backend:
-1. User entity: id, full name, email (unique), emailVerified flag, phone, phoneVerified flag, password hash, createdAt. Provider status is a SEPARATE ProviderProfile entity built in Phase 5 — do not merge provider fields into User.
+1. User entity: id, full name, email (UNIQUE), emailVerified flag, phone (UNIQUE, and deliberately NOT verified), password hash, createdAt. Provider status is a SEPARATE ProviderProfile entity built in Phase 5 — do not merge provider fields into User.
 2. POST /v1/auth/register — validates name, email, phone, password (min 8), terms acceptance. bcrypt or argon2, never custom hashing.
 3. POST /v1/auth/login — short-lived JWT access token + longer-lived refresh token, rotated on use.
 4. POST /v1/auth/refresh, POST /v1/auth/logout, GET /v1/auth/me.
 5. Refresh tokens are PER-DEVICE, so revoking one device does not log out the others. Required by the session-management screen below — build the token model that way from the start.
 6. Social auth: a provider-agnostic SocialAuthProvider interface with stubs (Facebook/Google/Viber) returning "not yet configured". Establish the seam; do not fake an OAuth flow.
-7. Phone verification: POST /v1/auth/phone/send-otp, POST /v1/auth/phone/verify-otp. Provider-agnostic SmsSender interface with a dev stub logging the OTP. Build the real state machine (generation, expiry, attempt limiting); only delivery is stubbed.
+7. EMAIL VERIFICATION — THERE IS NO SMS ANYWHERE IN THIS SYSTEM. Older documentation described SMS OTP, an SmsSender interface, and a phoneVerified flag. All of it is removed. Do not build an SmsSender. Do not integrate an SMS vendor.
+   POST /v1/auth/email/send-otp, POST /v1/auth/email/verify-otp. Provider-agnostic EmailSender interface with a dev stub logging the OTP. Build the real state machine (generation, expiry, attempt limiting); only delivery is stubbed.
 8. RATE LIMITS, EXACT — implement all three, not one of them:
-   - 3 OTP sends per phone number per 15 minutes
+   - 3 OTP sends per email address per 15 minutes
    - 5 OTP sends per user account per hour
    - 5 verification attempts per issued OTP, after which that OTP is invalidated and a new send is required
    Hitting a send limit returns error code OTP_RATE_LIMITED with the seconds remaining, so the UI can render a real countdown rather than a generic failure.
-9. VERIFIED EMAIL — new in v5.1, and load-bearing for three later things. Capture email with a confirmation-link flow. Optional for customers, REQUIRED to complete Phase 6a's provider onboarding. It serves account recovery (below), Phase 19's opt-in weekly digest, and Phase 10b's outbound admin alerting. No earlier revision built this and all three depend on it.
-10. ACCOUNT RECOVERY ON PHONE LOSS — a user who no longer controls their registered number recovers via verified email PLUS manual admin review against the existing record. Build the request and queue path; the admin side lands in Phase 10b. Do NOT build self-serve email recovery: it would make email a full second key to an account holding bank details and identity documents.
-11. `requireAuth` guard. Then a stricter `requirePhoneVerified` guard composing it and additionally checking phoneVerified, rejecting with a DISTINCT error code (PHONE_NOT_VERIFIED) so the frontend routes to verification specifically rather than showing a generic auth error. Nothing uses it yet — Phases 17 and 18 gate booking, enquiry and messaging on it. Build it now.
+9. PHONE IS UNIQUE BUT UNVERIFIED. Put a database-level unique constraint on BOTH email and phone. A registration attempt against an in-use email OR an in-use phone is BLOCKED AT THE FIELD, naming which one is taken, offering login or password reset — never a generic error, never a silent overwrite.
+   UNIQUENESS IS NOT OWNERSHIP. Nothing proves the number belongs to whoever typed it, because the mechanism that proved it is gone. Never render a phone number with a check mark and never describe it as verified anywhere in the UI or the API.
+10. ACCOUNT RECOVERY — email is now the primary credential, so recovery runs through MANUAL ADMIN REVIEW against the account record and identity evidence. Build the request and queue path; the admin side lands in Phase 10b. The same queue also handles two problems the unique-phone constraint creates: SQUATTING (someone registers with a number they do not own, permanently blocking the real holder, who has no self-serve proof) and NUMBER RECYCLING (a reassigned Maldivian number stays locked to a dormant account). Both are resolved by an admin releasing the number.
+11. `requireAuth` guard. Then a stricter `requireEmailVerified` guard composing it and additionally checking emailVerified, rejecting with a DISTINCT error code (EMAIL_NOT_VERIFIED) so the frontend routes to verification specifically rather than showing a generic auth error. THIS REPLACES requirePhoneVerified EVERYWHERE — Phases 17 and 18 gate booking, enquiry and messaging on it. If you see requirePhoneVerified in older documentation, it is obsolete.
 12. Account settings: change password / change email / change phone (each re-verified); active session list + revoke per device; GET /v1/users/me/data-export returning the user's own data as JSON; account deletion.
 13. ACCOUNT DELETION SEMANTICS — App Store requires this, and the semantics changed in v5.1. Anonymise all authored content: name/email/phone replaced with a placeholder, listings and reviews PRESERVED so provider rating aggregates stay intact. Soft-delete, not purge. Identity documents are PURGED, not anonymised. Two additions:
     - REVIEW AUTHORSHIP IS RETAINED INTERNALLY — never shown publicly, never returned in any response, but preserved so a review disputed later can still be traced. Without it a customer can post a fabricated review, delete their account, and sever the accountability trail by design.
@@ -131,14 +133,14 @@ Backend:
 Frontend:
 1. Login screen — pixel-match Login.png: gradient header banner, "Welcome back", email field, password with show/hide, "Remember me", "Forgot password?" (route stub, Phase 3b), Sign In, "or continue with" divider, social row (show a "coming soon" state on tap, never fake success), "Create an account" link.
 2. Register screen — pixel-match Register.png: same header, Full Name, Email + Phone side by side, Password + Confirm with show/hide, terms checkbox with linked ToS/Privacy route stubs, Create Account, same social row.
-3. Phone verification screen — no mockup exists. Propose a minimal design (OTP input, resend with a cooldown driven by the real OTP_RATE_LIMITED seconds-remaining value, matching the established input/button language) before implementing. Triggered right after registration.
+3. Email verification screen — no mockup exists. Propose a minimal design (OTP input, resend with a cooldown driven by the real OTP_RATE_LIMITED seconds-remaining value, matching the established input/button language) before implementing. Triggered right after registration. Include a "check your spam folder" hint — email OTP has a delivery failure mode SMS did not.
 4. Wire both screens to real endpoints. Display real validation errors INLINE, not as generic toasts — "email already registered", "passwords don't match", "password too short".
 5. Store tokens with flutter_secure_storage or equivalent; silent refresh; redirect to Home on success. A user reaches Home and browses WITHOUT completing phone verification — it is enforced later at booking/enquiry/messaging, never at login.
 6. Account settings sub-screens — propose designs before implementing. The deletion screen must state plainly what queued deletion means: the account is frozen now, remaining bookings finish, deletion completes automatically. Never present it as a refusal.
 
 Every screen above specifies its loading, empty, error and populated states as part of this phase, not Phase 20.
 
-Definition of done: register → verify → logout → login works end to end; wrong password and duplicate email show correct inline errors; token refresh works without forcing re-login; an unverified user browses Home/Explore normally but is rejected with PHONE_NOT_VERIFIED against a temporary protected test route, and passes it after completing OTP; all three OTP rate limits are verified independently; an email confirmation link verifies, and a recovery attempt without a verified email is refused; revoking one device's session leaves other devices logged in; a deletion request with an open booking is ACCEPTED and freezes the account rather than erroring, completes automatically when that booking terminates, and completes anyway at the 30-day backstop; a deleted account's reviews remain with anonymised attribution, the aggregate rating is unchanged, and internal authorship is still resolvable by a direct query.
+Definition of done: register → verify → logout → login works end to end; wrong password and duplicate email show correct inline errors; token refresh works without forcing re-login; an unverified user browses Home/Explore normally but is rejected with EMAIL_NOT_VERIFIED against a temporary protected test route, and passes it after completing OTP; registering with an already-used email is blocked naming the email, and with an already-used phone is blocked naming the phone, each offering login or reset; all three OTP rate limits are verified independently; no phone number is described as verified anywhere in the UI or API; an email confirmation link verifies, and a recovery attempt without a verified email is refused; revoking one device's session leaves other devices logged in; a deletion request with an open booking is ACCEPTED and freezes the account rather than erroring, completes automatically when that booking terminates, and completes anyway at the 30-day backstop; a deleted account's reviews remain with anonymised attribution, the aggregate rating is unchanged, and internal authorship is still resolvable by a direct query.
 ```
 *(Attach: Login.png, Register.png)*
 
@@ -175,15 +177,17 @@ Build push notification DELIVERY infrastructure. Notification CONTENT and types 
 This phase is deliberately sequenced ahead of Phases 9a and 17, which depend on it. Phase 17's provider accept prompt is load-bearing on real-time delivery and must not wait on infrastructure built after it.
 
 1. FCM + APNs integration behind a single provider-agnostic PushSender interface. Device token registration and de-registration, multiple devices per user, stale-token pruning on delivery rejection.
-2. FALLBACK CHAIN — push → SMS → email. If push is undeliverable (no token, denied permission, delivery rejection), fall back to SMS; if SMS fails, email. The fallback ladder exists because the plan names weak atoll connectivity as a platform-wide risk.
-3. EMERGENCY PROMPTS SEND SMS UNCONDITIONALLY, not just on push failure — a 30-minute response window cannot absorb a silent push failure.
+2. TWO-RUNG FALLBACK — push → email. THERE IS NO SMS RUNG; older documentation described push → SMS → email and is obsolete. If push permission is ALREADY KNOWN DENIED, send email IMMEDIATELY in parallel with the futile push attempt — do not wait. If push is permitted but delivery is unconfirmed after 30 MINUTES, send email.
+3. EMERGENCY PROMPTS SEND EMAIL UNCONDITIONALLY, in parallel with push, not just on push failure — a 30-minute response window cannot absorb a silent push failure.
+   EMAIL IS NOW THE ONLY CHANNEL THAT WORKS WHEN PUSH FAILS, so its deliverability is load-bearing: bounce and complaint handling and a monitored sending reputation are part of this phase, not an afterthought.
 4. Delivery observability from day one: record attempt, channel used, and outcome per notification. Phase 21 alerts on a fallback-invocation rate above 5%.
-5. Respect a user's notification preferences where they exist, EXCEPT for transactional booking states, which always deliver.
-6. SMS is three separately controllable channels, not one: OTP SMS, notification/fallback SMS, and marketing SMS. Phase 10b attaches kill switches to each independently. Do NOT build a single global SMS toggle — it would take down authentication, since SMS is the only OTP channel.
+5. NO IN-APP TOGGLE FOR BOOKING NOTIFICATIONS. Do not build a notification-preferences screen for transactional sends; they always deliver. Marketing and digest sends remain opt-in.
+   BE HONEST ABOUT WHAT THIS CAN ENFORCE: iOS and Android both let a user revoke notification permission at the OS level and no app can override that. "Always enabled" means only that we ship no switch — the OS-denied case is exactly what the email fallback covers. Do not attempt to block app usage on denied permission.
+6. EMAIL is three separately controllable channels, not one: OTP email, notification/fallback email, and marketing email. Phase 10b attaches kill switches to each independently. Do NOT build a single global email toggle — it would take down authentication, since email is now the ONLY OTP channel and the only fallback.
 
-Frontend: permission request at a moment that explains why it is being asked (not on first launch, cold); graceful handling of a denied permission with an in-app explanation that SMS will be used instead; deep-link handling from a tapped notification into the right screen.
+Frontend: permission request at a moment that explains why it is being asked (not on first launch, cold); graceful handling of an OS-denied permission with an in-app explanation that email will be used instead, plus a persistent reminder that the provider may miss booking requests; deep-link handling from a tapped notification into the right screen.
 
-Definition of done: a push delivers to a real device; disabling push on the device causes an SMS fallback within the expected window; an emergency prompt sends SMS even when push succeeds; delivery outcomes are recorded per channel; killing the notification-SMS channel leaves OTP SMS working.
+Definition of done: a push delivers to a real device; disabling push at the OS level causes an EMAIL fallback immediately, not at the end of the window; an emergency prompt sends email even when push succeeds; the app exposes no toggle for booking notifications; delivery outcomes and bounces are recorded per channel; killing the notification-email channel leaves OTP email working.
 ```
 
 ---
@@ -455,7 +459,7 @@ PART 2 — Admin Panel (separate internal React web app). Propose the stack befo
 3. Bank-statement CSV import with reference-code auto-matching, proposing matches for one-click confirmation.
 4. UNMATCHED-TRANSACTION QUEUE for rows the matcher cannot resolve — a garbled reference, an amount that does not match the submission, or a payment split across two transfers. Each resolvable manually against a searchable list of open submissions. The importer assumes clean data; real manual bank transfers routinely are not.
 5. IDENTITY VERIFICATION QUEUE — three tiers, not a binary approve:
-   - Bronze: government ID matching the account name. No trade evidence.
+   - Bronze: government ID matching the account name, AND the admin confirms the account's phone number by calling it or matching it against the document. No trade evidence. This phone check exists because there is no SMS verification anywhere in the system — below Bronze a number is unproven self-declared text.
    - Silver: Bronze + photos of completed work + EITHER a customer reference the admin contacts OR 5 completed on-platform bookings with no unresolved dispute.
    - Gold: Silver + business registration OR a recognised trade certificate.
    PHOTOS ARE NEVER SUFFICIENT ALONE AT ANY TIER — they are trivially reusable.
@@ -492,7 +496,7 @@ ACCOUNT MANAGEMENT
 5. BAN AND HARD-DELETE ARE NOT PANEL ACTIONS. They remain manual database operations, deliberately — a single unhardened admin credential should not have one-click destructive reach over an account.
 6. READ-ONLY "VIEW AS USER": renders the user's own view of their listings, bookings and subscription state. No ability to act as them. Access-logged with viewing admin, target and timestamp.
    MESSAGE CONTENT IS EXCLUDED. Chat is the sole coordination channel and carries home addresses, gate codes and photos of people's houses. An admin reaches a thread only through a specific report or dispute that names it, scoped to that thread and logged separately.
-7. Phone-loss recovery queue (Phase 3): review a recovery request against the account record and approve or reject, reason required.
+7. RECOVERY AND NUMBER-RELEASE QUEUE (Phase 3): review a recovery request against the account record and identity evidence, approve or reject, reason required. The same queue handles the two problems the unique-phone constraint creates — SQUATTING (someone registered a number they do not own, permanently blocking the real holder) and NUMBER RECYCLING (a reassigned number locked to a dormant account). Releasing a number frees it for re-registration and is audit-logged.
 
 CONFIG MANAGEMENT
 8. Categories editable: name, icon, active/inactive, minimumLeadTimeMinutes — CRUD, audit-logged.
@@ -509,7 +513,7 @@ ALERTING
 
 KILL SWITCHES
 15. Admin-flippable, audit-logged flags for: emergency bookings, new registrations, new listing publication, and the emergency contact reveal.
-16. SMS IS THREE SEPARATE SWITCHES: OTP SMS, notification/fallback SMS, marketing SMS. A single outbound-SMS switch would kill OTP — the only OTP channel — locking every user out of registration and new-device login. That is a platform outage, not an incident control.
+16. EMAIL IS THREE SEPARATE SWITCHES: OTP email, notification/fallback email, marketing email. A single outbound-email switch would kill OTP — now the ONLY verification channel — locking every user out of registration and new-device login, and simultaneously disabling the push fallback. That is a platform outage, not an incident control.
 17. A persistent banner while any flag is off, in the panel and where relevant in the Flutter app.
 
 SEARCH, TABLES, SHELL
@@ -652,7 +656,7 @@ Build the slot-based booking core. Slot bookings ONLY — request-based and emer
 
 1. Booking entity, full shape now so later slices only add behaviour: listingId, customerId, providerId, bookingMode ('slot'|'request'|'emergency'), timeSlotId (nullable), reservationId (nullable), status, agreedAmount (integer laari, nullable until set), amountKind ('listing_price'|'quote'|'callout_fee'), quotedAmount, finalAmount (integer laari, nullable — emergency only), scheduledFor, amountSetAt, paymentClaimedAt, paymentAttestedAt, completedAt, completedVia ('confirmed'|'unconfirmed'), statusHistory.
 2. Status machine: requested → accepted → awaiting_payment → payment_claimed → confirmed → completed, with declined, cancelled, disputed → dispute_resolved, and payment_unresolved. NEITHER disputed NOR payment_unresolved is terminal — an admin resolves both.
-3. POST /v1/listings/:id/bookings — reserves the slot INSIDE the booking-creation transaction against Phase 9a's exclusion constraint. requirePhoneVerified. Idempotency key required.
+3. POST /v1/listings/:id/bookings — reserves the slot INSIDE the booking-creation transaction against Phase 9a's exclusion constraint. requireEmailVerified. Idempotency key required.
 4. PATCH /v1/bookings/:id/accept — sets agreedAmount from the listing price. Slot bookings pass through to awaiting_payment immediately, so the customer's payment prompt appears at once.
 5. PATCH /v1/bookings/:id/decline — provider; frees the slot; DISTINCT from dispute, with its own status and its own endpoint.
 6. PATCH /v1/bookings/:id/claim-payment — customer self-attestation. NO proof upload. Status payment_claimed.
@@ -765,7 +769,7 @@ Build the Messaging module. Chat is THE SOLE COORDINATION CHANNEL for every book
 1. Conversation types:
    - `enquiry` — scoped to a LISTING, not a booking. Available to any phone-verified user BEFORE any booking exists. EVERYTHING IS ALLOWED: appliance make/model/serial, property details, photos of the issue, availability questions, price ranges. The point is to let a plumber ask "is it a split unit or ducted?" and get an answer.
    - `booking` — opens at quote_offered for request-based bookings (17.2) and at accepted for slot and emergency, and STAYS OPEN FOR THE ENTIRE LIFE OF THE BOOKING INCLUDING AFTER COMPLETION. It is never torn down and never replaced by a "real" contact channel, because there isn't one.
-2. requirePhoneVerified on both types.
+2. requireEmailVerified on both types.
 3. CONTACT-PATTERN DETECTION IS A SOFT NUDGE, NEVER A BLOCK, NEVER A REDACTION. The sender sees an inline, non-blocking reminder near the composer: "Phone numbers are never shared on RaajjePro — please keep the conversation and any details here." THE MESSAGE SENDS REGARDLESS.
    Why a nudge: Maldivian mobiles are 7 digits beginning 7 or 9; AC serials are 7–15 digit strings; model numbers are alphanumeric with digit runs. These are not reliably distinguishable, and a hard block would fire on exactly the content the enquiry channel exists to carry. Photos are allowed too, so a photo of a business card passes a text filter regardless.
 4. EVERY DETECTION IS LOGGED (conversationId, senderId, matched pattern, timestamp) and aggregated into Phase 22's moderation signals as a PROVIDER-LEVEL figure — "tripped detection in 40 of 52 enquiries" — not per-message noise.
@@ -840,10 +844,10 @@ Build observability. Note one sequencing correction: FLUTTER CRASH REPORTING IS 
 
 1. Backend error tracking with request correlation IDs.
 2. Uptime monitoring on /v1/health AND on the payment-submission endpoints specifically.
-3. NOTIFICATION-DELIVERY OBSERVABILITY (Phase 3c): fallback-invocation rate, ALERTING ABOVE 5%. A rising SMS-fallback rate means push is quietly failing, which degrades the accept prompt the whole booking model depends on.
+3. NOTIFICATION-DELIVERY OBSERVABILITY (Phase 3c): fallback-invocation rate, ALERTING ABOVE 5%. A rising email-fallback rate means push is quietly failing, which degrades the accept prompt the whole booking model depends on.
 4. ProductEvent log — Phase 10c's dashboard reads this, so the event set must be complete before that phase: draft_created, listing_published, slot_published, booking_requested, booking_accepted, emergency_requested, emergency_unaccepted, contact_revealed, amount_set, payment_claimed, booking_confirmed, booking_completed, enquiry_started, contact_pattern_detected, trial_started, trial_converted, trial_expired, search_performed, verification_tier_granted.
 
-Definition of done: deliberate backend and Flutter exceptions both surface within minutes; a broken payment endpoint triggers an alert; every event type is confirmed logging; the SMS-fallback alert fires when forced above threshold.
+Definition of done: deliberate backend and Flutter exceptions both surface within minutes; a broken payment endpoint triggers an alert; every event type is confirmed logging; the email-fallback alert fires when forced above threshold.
 ```
 
 ---

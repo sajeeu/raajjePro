@@ -1,6 +1,8 @@
-# RaajjePro — Cursor Rules, Skills & Subagents (v5.1)
+# RaajjePro — Cursor Rules, Skills & Subagents (v5.2)
 
-**Regenerated against `01_Development_Plan_v5.md` at revision 5.1** (Rounds 8, 9 and 10 folded in).
+**Regenerated against `01_Development_Plan_v5.md`** (Rounds 8 through 11 folded in).
+
+**Round 11 removed SMS from the system entirely.** If you have the v5.1 copy of these rules installed, replace it: it asserts SMS OTP, a `phoneVerified` flag, a `requirePhoneVerified` guard, and a push→SMS→email fallback ladder, none of which exist any more.
 
 **Delete the v4 version of this file immediately.** It is the most dangerous stale artifact in the project, because rules auto-apply on *every* generation without being restated. Specifically, v4's always-apply rule asserted a `GET /v1/bookings/:id/contact-info` endpoint that no longer exists, and instructed the agent that an emergency contact reveal "was a deliberately closed security hole; do not reintroduce it." That instruction would actively fight Phase 17.3, which builds exactly such a reveal under seven deliberate conditions. It also asserted a binary `verificationStatus`, a pinned global subscription price, and that no provider-onboarding screen exists — all three now false.
 
@@ -49,7 +51,9 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 
 1c. Booking has THREE modes: `slot` (fixed-duration, provider-published time slots — Cleaning, Beauty, Fitness), `request` (customer proposes a window, provider proposes a concrete time and price — Plumbing, Electrical, AC Repair, Photography, Gardening, Computer, Moving, Events, Boat Charter), and `emergency`, layered on Plumbing/Electrical/AC Repair listings only and ONLY for a provider at tier `silver` or `gold`. The bar is SILVER OR ABOVE — older documentation said `verificationStatus === 'verified'` and is obsolete. There are TWELVE categories, including Boat Charter.
    Time-conflict prevention is a PostgreSQL exclusion constraint scoped to the PROVIDER, not the listing — `EXCLUDE USING gist (providerId WITH =, tstzrange(startsAt, endsAt) WITH &&)`. A `UNIQUE` constraint on `(providerId, listingId, startsAt)` is insufficient: it does not prevent one provider being booked twice at the same time across two different listings, and it does not detect overlapping durations. If you see that older constraint referenced, replace it.
-   Messaging and booking require phone verification (`requirePhoneVerified`, stricter than `requireAuth`), enforced server-side on every relevant endpoint — never rely on hiding a UI button.
+   THERE IS NO SMS ANYWHERE IN THIS SYSTEM. OTP is sent to EMAIL. Messaging and booking require email verification (`requireEmailVerified`, stricter than `requireAuth`), enforced server-side on every relevant endpoint — never rely on hiding a UI button. If you see `requirePhoneVerified`, `phoneVerified`, an `SmsSender`, or a push→SMS→email ladder in older documentation or existing code, all of it is obsolete — flag it for removal rather than extending it.
+   PHONE IS UNIQUE BUT NOT VERIFIED. Both `email` and `phone` carry database-level unique constraints, and a registration against either in-use value is blocked at the field naming which one is taken. UNIQUENESS IS NOT OWNERSHIP: nothing proves a number belongs to whoever typed it, so never render a phone number with a check mark and never describe one as verified. The admin confirms the number during Bronze review, which is the only point at which it becomes a checked fact.
+   Push notifications have no in-app toggle for transactional sends, and the fallback is EMAIL. Be honest about the limit: the OS can still revoke notification permission and no app overrides that, so the email fallback is what covers it.
    THERE IS EXACTLY ONE ENDPOINT IN THIS ENTIRE SYSTEM THAT RETURNS A PHONE NUMBER TO ANOTHER USER: `POST /v1/bookings/:id/reveal-contact`. It is emergency-bookings-only, at `accepted` or later, customer-initiated, mutual and simultaneous, notifies the counterparty, expires 24 hours after the booking reaches a terminal state, is logged, and is disableable by a runtime kill switch. Every one of those seven conditions is validated server-side.
    `GET /v1/bookings/:id/contact-info` DOES NOT EXIST AND MUST NOT BE CREATED. It is a different, far broader mechanism — it exposed a phone number on every booking type with no conditions — and it was deleted outright. WhatsApp and Viber handles are not collected anywhere in this system and cannot be revealed by anything. Any response shape outside the reveal endpoint that carries a phone number is a defect.
    Booking payment confirmation ("I've Paid" / "Payment Received") is a two-sided self-attestation between customer and provider, NEVER the `PaymentSubmission`/admin-confirmation mechanism (that is exclusively for RaajjePro's own subscription fees) — do not conflate the two systems. UI copy must never imply platform-level verification ("Payment Verified," a certainty checkmark) — use language that honestly reflects what happened, e.g. "Provider confirmed receipt."
@@ -175,6 +179,7 @@ globs: backend/**/*.test.ts, frontend/**/*_test.dart
 - Scheduled jobs are tested by advancing time, not by waiting.
 - Authorization tests cover reads as well as writes, and cover the wrong-user case, not just the unauthenticated one.
 - Any endpoint touching a phone number is tested for its ABSENCE in the response, not only for the presence of what it should return.
+- Registration is tested against both a duplicate email and a duplicate phone, asserting each is blocked with a message naming the specific field.
 ```
 
 ### `.cursor/rules/050-scope-discipline.mdc`

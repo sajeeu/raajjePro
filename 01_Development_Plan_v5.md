@@ -18,7 +18,8 @@ Folds in all decisions resolved across nine rounds of review, 2026-08-03 to 2026
 2. **There is exactly one contact-info exception, for emergencies** (§1c). §0.2 states the rule as "never, full stop, not even for emergencies." That is no longer true: `POST /v1/bookings/:id/reveal-contact` exists, under seven conditions, for emergency bookings only. **No other endpoint may return a phone number** — that part of the original rule stands unchanged and is still a testable invariant in Phase 17.
 3. **The admin panel is three phases** — 10a (money and identity queues), 10b (accounts, config, search, shell), 10c (ops dashboard).
 4. **Subscription price is per-provider** (`subscriptionPriceLaari`, §1b), not the pinned platform-wide MVR 150 that §0 and earlier rounds describe.
-5. **Round 10 folded in thirteen further decisions** that had been made but never written down — most consequentially: the emergency `finalAmount` is now **required**, not optional; the `booking` chat opens at **quote offered**, not at `accepted`; and downgrade keeps the **highest-performing** listing, not the most recently updated. Any older statement of those three is superseded.
+5. **SMS is gone from the entire system, and email replaces it** (Round 11). OTP is sent to email; `requireEmailVerified` replaces `requirePhoneVerified` everywhere the plan previously used it; the Phase 3c fallback ladder is push → email. A phone number is still collected and still unique, but is **no longer verified** — nothing below Bronze proves it belongs to its holder.
+6. **Round 10 folded in thirteen further decisions** that had been made but never written down — most consequentially: the emergency `finalAmount` is now **required**, not optional; the `booking` chat opens at **quote offered**, not at `accepted`; and downgrade keeps the **highest-performing** listing, not the most recently updated. Any older statement of those three is superseded.
 
 ### 0.1 Why v5 exists
 
@@ -64,7 +65,7 @@ These were defects rather than choices — the spec contradicted itself or left 
 | Billing anchor date, explicitly not "calendar month" | "Calendar billing" and "pause resumes remaining time" are incompatible — a pause shifts the anchor |
 | Trial hook fires on the transition *into* `confirmed` | Hook was on one endpoint; an admin resolving `payment_unresolved` also reaches `confirmed` and would not have fired it |
 | `EXCLUDE USING gist` on a provider-scoped time range | `UNIQUE (providerId, listingId, startsAt)` let one provider be booked three times at 10:00 across three listings, and did not detect overlapping durations at all |
-| SMS fallback fires immediately on known push-denial, at 30 min on delivery failure | "Within the acceptance window" meant an SMS could arrive at hour 23 of a 24-hour window |
+| Fallback fires immediately on known push-denial, at 30 min on delivery failure (SMS in the original decision; email since Round 11) | "Within the acceptance window" meant an SMS could arrive at hour 23 of a 24-hour window |
 | ID/passport documents: private bucket, 90-day retention post-decision, access logged | §1e introduced ID collection with no storage, retention, or access policy |
 | Recurring series survives a missed occurrence | A single auto-declined week silently killed the series |
 | Dispute outcomes enumerated | "An outcome recorded" with no enumeration meant an unstructured audit log |
@@ -289,6 +290,8 @@ This isn't new infrastructure. Phase 18's booking-scoped chat was already speced
 - **Every reveal is logged** — bookingId, requesting user, timestamp — and surfaces in Phase 22's moderation signals. A customer who requests reveals on every emergency booking is a visible pattern.
 - The reveal is **killable at runtime** via the Phase 10b kill switch, without a deploy.
 
+🔧 **The revealed number is not a verified number — Round 11.** Removing SMS removed the only proof that a number belongs to its account holder (§Phase 3). Below Bronze the number is self-declared text, and a customer in an emergency can reach a wrong or dead line at the worst possible moment. Two mitigations, both already in the plan: emergency capability already requires **Silver or above** (§1e), and Bronze review already has the admin confirm the number — so every provider who can receive an emergency request has had their number checked by a human. The reveal UI states that the number was confirmed at verification, never that it is "verified" as a live property.
+
 **Implementation:** one endpoint, `POST /v1/bookings/:id/reveal-contact`, which validates every condition above and is the **only** route in the system through which a phone number reaches another user. Phase 17's "no response shape carries a phone number" audit still applies to every other endpoint in the module, unchanged — this one is the single, named, deliberately-excepted exception, and any *other* endpoint returning a phone number is still a defect.
 
 **What this does not change:** WhatsApp and Viber handles are still not collected at all (§Phase 5) and cannot be revealed by anything. Nothing about a provider's identity beyond the phone number crosses this boundary. Slot, request, and recurring bookings remain absolutely chat-only.
@@ -299,7 +302,7 @@ This isn't new infrastructure. Phase 18's booking-scoped chat was already speced
 |---|---|---|
 | Guest | Browse, search, view listings and public provider profiles | No gate |
 | Registered | Save/favourite | `requireAuth` |
-| Phone-verified | Book, enquire, message within a booking | `requirePhoneVerified` |
+| Email-verified | Book, enquire, message within a booking | 🔧 `requireEmailVerified` (Round 11 — replaces `requirePhoneVerified`; there is no SMS in this system) |
 | Visible provider | Appears publicly, receives bookings | Derived published-listing count (§1a) |
 | Entitled provider | Extra listings, analytics, priority | `getProviderEntitlements` (§1b) |
 
@@ -396,7 +399,7 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 
 | Tier | Requirements | Public copy |
 |---|---|---|
-| **Bronze** | A national ID or passport matching the account name. No trade evidence. | "ID checked by RaajjePro" |
+| **Bronze** | A national ID or passport matching the account name. 🔧 The admin also confirms the account's phone number — by calling it, or by matching it against the document. No trade evidence. | "ID checked by RaajjePro" |
 | **Silver** | Bronze, **plus** photos of completed work, **plus** a second factor that is *not* paperwork — either a customer reference RaajjePro contacts directly, or **5 completed on-platform bookings with no unresolved dispute** | "ID checked, work verified" |
 | **Gold** | Silver, **plus** a business registration **or** a recognised trade certificate | "ID checked, registered trade" |
 
@@ -491,21 +494,24 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 
 - Register, login, JWT access + refresh rotation, logout, `me`, password reset
 - Social auth: provider-agnostic interface with stubs (Facebook/Google/Viber)
-- **Phone verification:** OTP send + verify, `phoneVerified` flag, `requirePhoneVerified` guard (stricter than `requireAuth`, distinct `PHONE_NOT_VERIFIED` error code)
-  - SMS provider chosen and pinned before this phase starts, with a cost model and delivery-failure fallback. Sender-ID registration lead time confirmed.
-  - 🔧 **Rate limits, explicit:** **3 OTP sends per phone number per 15 minutes** *and* **5 per user account per hour** (both, not either). **5 verification attempts per issued OTP**, after which it is invalidated and a new send is required. Hitting either send limit returns `OTP_RATE_LIMITED` with the seconds remaining, so the UI can show a real countdown rather than a generic error.
+- 🔧 **Email verification replaces phone verification — Round 11. There is no SMS anywhere in this system.** OTP is sent to **email**, with an `emailVerified` flag and a `requireEmailVerified` guard (stricter than `requireAuth`, distinct `EMAIL_NOT_VERIFIED` error code). This guard is what gates booking, enquiry and messaging — every place the plan previously said `requirePhoneVerified`.
+  - Email provider chosen and pinned before this phase starts, with a cost model and a deliverability plan (SPF, DKIM, DMARC). Transactional email now carries OTP, the Phase 3c fallback, and Phase 10b's admin alerting — it is the single delivery channel and therefore a single point of failure.
+  - 🔧 **Rate limits, explicit:** **3 OTP sends per email address per 15 minutes** *and* **5 per user account per hour** (both, not either). **5 verification attempts per issued OTP**, after which it is invalidated and a new send is required. Hitting either send limit returns `OTP_RATE_LIMITED` with the seconds remaining, so the UI can show a real countdown rather than a generic error.
+- 🔧 **Phone number: collected, unique, and NOT verified.** Both `email` and `phone` carry a database-level unique constraint, so each can back exactly one account. A registration attempt against either an in-use email or an in-use phone is **blocked at the field**, naming which one is taken, with a route to login or password reset — never a generic failure and never a silent overwrite.
+  - **Uniqueness is not ownership, and the UI must not imply otherwise.** Nothing proves the number belongs to the person who typed it, because the mechanism that proved it (SMS OTP) is gone. A phone number is displayed as user-supplied information, never with a check mark, never described as verified.
+  - 🔧 **Two consequences this creates, both handled by the admin, not by new infrastructure.** First, **squatting**: registering with someone else's number permanently blocks the real holder, who has no self-serve way to prove ownership. Second, **number recycling**: Maldivian numbers are reassigned on carrier churn, so a recycled number stays locked to a dormant account forever. Both resolve through the existing Phase 10b recovery queue — a claimant submits identity evidence and an admin releases the number.
+  - 🔧 **The admin confirms the phone number during Bronze review** (§1e) — by calling it, or by matching it against the submitted identity document. This costs nothing new (Bronze is already a manual review) and it makes a verification tier mean the number is real as well as the person. Below Bronze, treat every number as unproven.
 - **Account settings (backend + screens):**
   - change password, change email, change phone (each re-verified)
   - active session list + revoke — per-device refresh tokens so revoking one device doesn't log out the others
   - data export — `GET /v1/users/me/data-export` returns the user's own data as JSON
-  - 🔧 **Verified email — new in Round 9.** Capture with a confirmation link alongside phone verification. Optional for customers, **required to complete Phase 6a's provider onboarding**. Serves account recovery (§7), the Phase 19 digest, and Phase 10b's outbound alerting. Without it the phone-compromise recovery path has no second channel to use.
-  - 🔧 **Account recovery on phone loss.** A user who no longer controls their registered number recovers via their verified email **plus manual admin review** against the existing account record. Self-serve email recovery is deliberately not offered — it would make email a full second key to an account holding bank details and identity documents.
+  - 🔧 **Account recovery — Round 11.** Email is now the primary credential, so recovery runs the other way: a user who loses access to their email address recovers through **manual admin review** against the account record and their identity evidence, via Phase 10b's queue. There is no automated second channel, because SMS was it. Standard password reset (Phase 3b) still runs over email for anyone who retains mailbox access.
   - account deletion — App Store requirement. Anonymises all authored content: name/email/phone replaced with a placeholder, listings and reviews preserved so provider rating aggregates stay intact. Soft-delete, not purge. **ID documents (§1e) are purged, not anonymised.**
   - 🔧 **Deletion is queued, never refused — Round 9.** A deletion request is **accepted immediately** and the account is frozen (no new bookings, no new listings, hidden from search). Anonymisation executes automatically once every non-terminal booking reaches a terminal state, with a **hard 30-day backstop** after which it proceeds regardless. Refusing deletion outright while bookings are open — the earlier design — could block a user indefinitely on admin inaction, since `payment_unresolved` only clears when a human acts, and both Apple and Google require in-app deletion to actually work.
   - 🔧 **Admin internal notes (§Phase 10b) about the user are deleted with the account**, matching the anonymisation rule. Only the audit log's structured reason fields persist.
 - Frontend: Login, Register (pixel-match), OTP verification screen (propose first), account settings sub-screens (propose first)
 
-**Done when:** full register → verify → logout → login cycle works; an unverified user browses freely but is rejected by `requirePhoneVerified`; both OTP rate limits verified independently; a deleted account's reviews remain with anonymised attribution; export returns complete data; 🔧 a deletion request with an open booking is accepted and freezes the account rather than erroring, completes automatically when that booking terminates, and completes anyway at the 30-day backstop; an email confirmation link verifies and a recovery attempt without one is refused.
+**Done when:** full register → verify → logout → login cycle works; an unverified user browses freely but is rejected by `requireEmailVerified`; 🔧 registering with an already-used email is blocked naming the email, and with an already-used phone is blocked naming the phone, each offering login or reset; both OTP rate limits verified independently; a deleted account's reviews remain with anonymised attribution; export returns complete data; 🔧 a deletion request with an open booking is accepted and freezes the account rather than erroring, completes automatically when that booking terminates, and completes anyway at the 30-day backstop; an email confirmation link verifies and a recovery attempt without one is refused.
 
 ### Phase 3b — Forgot Password Flow *(propose design first)*
 
@@ -520,17 +526,18 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - FCM (Android) + APNs (iOS) integration; device token registration, refresh, and multi-device support
 - A single **`PushSender`** abstraction — the send interface every later module (17, 19) calls, not one each
 - **Detect OS-level permission denial** and store that state on the user
-- 🔧 **Fallback chain with explicit timing** for the load-bearing prompt (Phase 17's provider-accept):
-  - If push permission is **already known denied**: send SMS **immediately**, in parallel with the (futile) push attempt. Do not wait.
-  - If push is permitted but **delivery is unconfirmed after 30 minutes**: send SMS.
-  - If SMS **fails or the provider has no verified phone**: send a forced transactional email immediately.
-  - v3 said "fails to deliver within the acceptance window" — the window is 24 hours, so an SMS could arrive at hour 23, after the booking had effectively died.
-  - **For emergency bookings (30-minute window), SMS fires immediately in all cases**, in parallel with push. There is no time for a fallback ladder.
-- 🔧 **SMS content:** booking type, customer first name, job location island, and an instruction to open the app. **No links** — do not train providers to tap links in text messages. No amounts, no phone numbers.
-- **Observability:** log every fallback invocation with reason. Alert if SMS fallback exceeds 5% of accept prompts in a rolling day — that indicates a push-integration regression, not user preference.
-- A persistent in-app reminder for a provider who has denied push: *"You may miss booking requests — enable notifications."*
+- 🔧 **Two-rung fallback chain — Round 11 removed the SMS rung.** For the load-bearing prompt (Phase 17's provider-accept):
+  - If push permission is **already known denied**: send **email immediately**, in parallel with the (futile) push attempt. Do not wait.
+  - If push is permitted but **delivery is unconfirmed after 30 minutes**: send email.
+  - **For emergency bookings (30-minute window), email fires immediately in all cases**, in parallel with push. There is no time for a ladder.
+  - An earlier revision said "fails to deliver within the acceptance window" — the window is 24 hours, so a fallback could arrive at hour 23, after the booking had effectively died. The timings above are what fix that.
+- 🔧 **No in-app notification toggle — Round 11.** The app offers no setting to disable booking notifications; they are transactional and always sent. **This cannot be enforced beyond the app:** iOS and Android both let a user revoke notification permission at the OS level and no app can override that. "Always enabled" therefore means *we do not offer a switch*, and the OS-denied case is exactly what the email fallback exists for. Marketing and digest sends remain opt-in and are unaffected.
+- 🔧 **Fallback email content:** booking type, customer first name, job location island, and an instruction to open the app. **No links** — do not train providers to tap links in messages that claim a job is waiting. No amounts, no phone numbers.
+- **Observability:** log every fallback invocation with reason. Alert if the email fallback exceeds 5% of accept prompts in a rolling day — that indicates a push-integration regression, not user preference.
+- A persistent in-app reminder for a provider who has denied push at the OS level: *"You may miss booking requests — enable notifications."*
+- 🔧 **Email is now the only delivery channel that works when push fails**, so its deliverability is load-bearing in a way it was not before. Bounce and complaint handling, and a monitored sending reputation, are part of this phase, not an afterthought.
 
-**Done when:** a test push arrives on a real device within seconds; a provider with push denied receives an SMS fallback for a booking-accept prompt immediately, not at the end of the window; an emergency prompt fires push and SMS in parallel; multi-device registration and cleanup work; fallback invocations appear in logs.
+**Done when:** a test push arrives on a real device within seconds; a provider with push denied at the OS level receives an **email** fallback for a booking-accept prompt immediately, not at the end of the window; an emergency prompt fires push and email in parallel; the app exposes no toggle for booking notifications; multi-device registration and cleanup work; fallback invocations and bounces appear in logs.
 
 ### Phase 4 — Categories Module
 
@@ -725,13 +732,13 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 - 🔧 **Deleted with their subject's account** (§Phase 3). Notes are free text about a real person and would otherwise survive both §1e's 90-day document purge and Phase 3's anonymisation, leaving undisclosed personal data the plan never scoped. Structured reasons in the audit log persist; the free text does not.
 
 **Alerting (pushed, not just displayed)**
-- The existing in-panel alerts (aged `payment_unresolved`, queue over 25 items, SMS-fallback rate above 5% from Phase 21) additionally fire **outbound** — email or Slack/Telegram — so a single admin who hasn't opened the panel still gets the SLA-breach warning
+- The existing in-panel alerts (aged `payment_unresolved`, queue over 25 items, email-fallback rate above 5% from Phase 21) additionally fire **outbound** — email or Slack/Telegram — so a single admin who hasn't opened the panel still gets the SLA-breach warning
 - New disputes and verification submissions also push on arrival, not only on aging
 - 🔧 **De-duplicated per threshold crossing.** A queue-depth or SLA breach notifies once when the threshold is crossed and again only after it clears and re-crosses — not on every scheduled run. An alert that fires every fifteen minutes while a queue is deep gets muted within a day, which is the failure mode this whole mechanism exists to prevent.
 
 **Kill switches**
 - Admin-flippable, audit-logged flags for: emergency bookings, new registrations, new listing publication, and the emergency contact reveal (§1c)
-- 🔧 **SMS is three separate switches, not one — Round 9.** `OTP SMS`, `notification/fallback SMS`, and `marketing SMS`. A single outbound-SMS switch would also kill OTP — the only OTP channel — locking every user out of registration and any new-device login, and silently disabling Phase 3c's push→SMS fallback for accept prompts. That is a platform outage, not an incident control. Splitting it lets an SMS-cost or vendor incident be contained without taking down authentication.
+- 🔧 **Email is three separate switches, not one — Round 9's reasoning, applied to email after Round 11 removed SMS.** `OTP email`, `notification/fallback email`, and `marketing email`. A single outbound-email switch would also kill OTP — now the *only* verification channel — locking every user out of registration and any new-device login, and simultaneously disabling Phase 3c's push→email fallback. That is a platform outage, not an incident control. The risk is higher than it was under SMS, because email is now the sole channel rather than one of two.
 - A persistent banner in the panel (and, where relevant, in the Flutter app) while any flag is off, so a flipped switch doesn't get forgotten
 - These are incident controls, not a general feature-flag framework — no admin-defined flags in v1
 
@@ -832,7 +839,7 @@ The largest phase and the highest-risk one. No mockups — propose each frontend
 
 **Backend:**
 1. `Booking`: listingId, customerId, providerId, `bookingMode` (`slot`/`request`/`emergency`), timeSlotId (nullable), reservationId (nullable), status (§1c, including `awaiting_payment` and `payment_unresolved`), `agreedAmount` (integer laari, nullable until set), `amountKind` (`listing_price`/`quote`/`callout_fee`), quotedAmount, **`finalAmount` (integer laari, nullable — emergency only, §1c)**, `scheduledFor`, amountSetAt, paymentClaimedAt, paymentAttestedAt, completedAt, `completedVia` (`confirmed`/`unconfirmed`), statusHistory
-2. `POST /v1/listings/:id/bookings` — slot-based reserves in-transaction; request-based captures a preferred window; emergency captures no timing constraint but **validates category eligibility, provider verification, and the customer's emergency rate limit**. `requirePhoneVerified`; idempotency key required.
+2. `POST /v1/listings/:id/bookings` — slot-based reserves in-transaction; request-based captures a preferred window; emergency captures no timing constraint but **validates category eligibility, provider verification, and the customer's emergency rate limit**. 🔧 `requireEmailVerified` (Round 11); idempotency key required.
 3. `PATCH /v1/bookings/:id/accept` — sets `agreedAmount` for slot and request bookings; **for emergency, accepts without an amount and moves to `accepted` pending the callout fee**. No contact info is ever exposed by this or any later step (§1c) — the `booking`-type chat opens here instead (Phase 18).
 4. `PATCH /v1/bookings/:id/set-amount` — 🔧 emergency only; provider sets the callout fee; transitions `accepted` → `awaiting_payment` and fires the customer's payment prompt.
 5. `PATCH /v1/bookings/:id/quote` / `/approve-quote` — request-based path. Offering a quote creates a **provisional reservation** (Phase 9a); approving converts it to firm.
@@ -874,7 +881,7 @@ The largest phase and the highest-risk one. No mockups — propose each frontend
 ### Phase 18 — Messaging Module
 
 - `Conversation` type **`enquiry`** (listing-scoped, available before any booking) or **`booking`** (opens at `accepted`, 🔧 **stays open for the entire life of the booking including after completion** — it is the only coordination channel that ever exists between these two parties, not a temporary waiting room before a "real" contact exchange, because there is no contact exchange, §1c)
-- `requirePhoneVerified` on both types
+- 🔧 `requireEmailVerified` on both types (Round 11)
 - 🔧 **Contact-pattern detection is a soft nudge in both types — never a block, never a redaction** (§1c). The nudge copy states the permanent rule, not a future unlock: *"Phone numbers are never shared on RaajjePro — keep the conversation and any details here."* Every detection is **logged** (conversationId, senderId, matched pattern, timestamp) and aggregated into Phase 22's moderation signals.
 - 🔧 **Block user — scope is the user's choice, Round 9.** Two distinct actions, presented together: **Mute this conversation** (silences one thread, nothing else) and **Block this person** (account-level — neither party can message the other or create a new booking against them, enforced server-side at both conversation-creation and booking-creation). "Block user" was previously unspecified as to scope, which for a feature framed as safety-relevant left its actual guarantee undefined.
 - 🔧 **A block never severs a live booking's chat.** Since §1c makes the `booking` thread the sole coordination channel, killing it mid-job would leave a scheduled visit uncoordinated. Blocking takes effect immediately for all *future* bookings and messages, but the existing booking's thread stays open until that booking reaches a terminal state, with a visible notice to both parties explaining why. A user who wants out of the job itself cancels or disputes it — those are separate actions with their own consequences.
@@ -928,7 +935,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 - **Notification-delivery observability** (§Phase 3c): fallback-invocation rate, alert above 5%
 - `ProductEvent` log: draft_created, listing_published, slot_published, booking_requested, booking_accepted, emergency_requested, emergency_unaccepted, amount_set, payment_claimed, booking_confirmed, booking_completed, enquiry_started, contact_pattern_detected, trial_started, trial_converted, trial_expired, search_performed
 
-**Done when:** deliberate backend and Flutter exceptions both surface within minutes; a broken payment endpoint triggers an alert; every event type is confirmed logging; the SMS-fallback alert fires when forced above threshold.
+**Done when:** deliberate backend and Flutter exceptions both surface within minutes; a broken payment endpoint triggers an alert; every event type is confirmed logging; the email-fallback alert fires when forced above threshold.
 
 ### Phase 22 — Content Moderation & Reporting
 
@@ -984,8 +991,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 - **Phase 8a's trial hook fires from Phase 17's transition into `confirmed`**, plus its own `start-trial` endpoint.
 - **Phase 17 and Phase 22** retain a soft circular reference (disputes and escalations file Reports); build 17 first with a minimal Report insert, 22 makes the queue real.
 - **Phase 4 must seed `bookingMode` and `emergencyCapable`** before Phase 5, 8, 9a, or 17 read them.
-- **Pin before Phase 3:** SMS provider, cost model, sender-ID lead time. Phone verification gates booking, enquiry, and messaging — SMS is a single point of failure for the entire transactional core.
-- **Pin before Phase 3c:** confirm SMS fallback cost at scale. Every push-denied provider now costs an SMS on every accept prompt, and emergency prompts send SMS unconditionally.
+- 🔧 **Pin before Phase 3 — Round 11:** transactional **email** provider, cost model, and deliverability setup (SPF, DKIM, DMARC, a warmed sending domain). Email verification gates booking, enquiry and messaging, *and* carries the Phase 3c fallback *and* Phase 10b's admin alerting — it is the single point of failure for the entire transactional core, more so than SMS was, because there is no second channel behind it. **There is no SMS provider to procure and no sender-ID registration lead time**, which removes the longest-lead external dependency in the plan.
 - **Pin before Phase 4:** confirm the per-category `bookingMode` table (§1c) — it drives which listings get a slot picker vs. a request form.
 - **Pin before Phase 8a:** the trial-start trigger applied in §0.4, if you want to override it.
 - **Resolve before Phase 8a goes deep:** Phase 23's App Store subscription question. A negative answer forces a data-model change.
@@ -1006,7 +1012,8 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 | API latency | p95 < 400 ms, p99 < 1000 ms, measured at the edge, excluding media upload |
 | Slot picker | Payload capped at 14 days of slots per request with pagination; renders in < 1.5 s on a 3G connection |
 | App cold start | < 3 s to interactive Home on a mid-range Android device |
-| Push delivery | 90% of accept prompts delivered within 30 s; SMS fallback within 2 min of trigger |
+| Push delivery | 90% of accept prompts delivered within 30 s; 🔧 email fallback within 2 min of trigger |
+| Email deliverability | 🔧 99% of transactional email accepted by the receiving server; bounce rate under 2%, monitored from Phase 3c |
 | Availability | 99.5% monthly on the API, measured against `/v1/health` |
 | Backups | RPO 24 h, RTO 4 h — drilled in Phase 24, not assumed |
 | Admin SLA | Payment submissions confirmed/rejected within 48 h; `payment_unresolved` items resolved within 5 business days; verification decisions within 5 business days |
@@ -1042,7 +1049,7 @@ Distinct from the backlog — these were offered as in-scope and you chose not t
 - **Provider broadcast messaging** — no in-panel way to reach providers as a segment, including the introductory-pricing cohort the platform now creates.
 - **A first-50-provider acquisition plan.** The launch-mode threshold (Phase 16) is a real product gate with no stated route to clearing it; organic signup is the working assumption. For a cold-start two-sided marketplace this is the largest unowned business risk in the plan.
 - **Chat delivery latency target** — §5 sets targets for API, push, slot payloads and cold start, but chat, now the sole coordination channel, has none.
-- **Secondary SMS provider** — Phase 3c's push→SMS fallback rests on one vendor with no failover.
+- 🔧 **Secondary email provider** — after Round 11 removed SMS, OTP, the push fallback and admin alerting all rest on one email vendor with no failover. An outage there means nobody can register, verify, or reliably receive a job offer. Larger than the SMS single-vendor risk it replaced.
 - **Bank-detail de-anonymisation** — an account holder's name plus island plus trade may be identifying in a population this size, which would let the one deliberate exception to the contact rule partly defeat it. Reviewed and left unchanged.
 
 ---
@@ -1106,6 +1113,16 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 *Corrections to text that contradicted a made decision:* emergency `finalAmount` is **required** to complete, not optional — it was reliably present on clean cheap jobs and reliably absent on the padded bill a customer was disputing, inverting its evidentiary value · downgrade keeps the **highest-performing** unprotected listing (confirmed bookings over 90 days, then views, then recency) rather than the most recently updated, which a provider who knew the rule could game by touching their preferred listing.
 
 *Behaviours that had no home in any phase:* the `booking` chat opens when a **quote is offered**, closing the one window where negotiation is most needed and previously had no channel · offline queue-and-replay extended from the wizard to the **provider accept prompt and chat sends**, the two higher-stakes surfaces under the connectivity risk the plan names platform-wide · a **"Not right now"** exit from provider onboarding, since resume-where-you-left-off is wrong for someone who decided against it · **"Book again"** on completed bookings, since recurring series cover slot-based work only and leave every request-based category with no repeat path · **ICS calendar export** on confirmed bookings · **provider-side decline-future-bookings**, self-service and enforced at booking creation, since Report → admin review is measured in days · **unmatched-transaction queue** in Phase 10a for CSV rows the reference matcher cannot resolve · **messaging rate-limit tier** in §2, since the enquiry channel's content policy is deliberately permissive · **review authorship retained internally** after anonymisation, so a fabricated review survived by account deletion can still be adjudicated · **chat retention and attachment-size policy**, previously the only content class with none · a **proactive 7-day "Try Premium" prompt**, since the confirmed-booking trigger cannot realistically fire in a useful timeframe for a new provider · **per-phase loading/empty/error state design** promoted from Phase 20's late sweep into every frontend phase's own Done-when, with Phase 20 retained as a backstop.
+
+**Round 11 — SMS removed, dated 2026-08-05.** Your decision, taken while pinning the SMS provider before Phase 3. Three changes and one consequence you accepted knowingly.
+
+*SMS is removed from the system entirely.* OTP is sent to email, `emailVerified`/`requireEmailVerified` replace the phone equivalents at every gate, and Phase 3c's fallback ladder loses its middle rung to become push → email. This removes the longest-lead external dependency in the plan — sender-ID registration with the operators — and it removes a per-booking marginal cost that scaled with volume rather than signups.
+
+*Push has no in-app toggle.* Booking notifications are transactional and always send. Recorded explicitly: **this cannot be enforced past the app.** iOS and Android both let a user revoke notification permission at the OS level and no app can override it, so "always enabled" means only that we ship no switch — the OS-denied path is precisely what the email fallback covers. Weak atoll connectivity is acknowledged and accepted as a launch-stage risk rather than designed around.
+
+*Phone number: unique, collected, and not verified.* Both email and phone carry a unique constraint, and a registration against either in-use value is blocked at the field naming which one is taken. **Uniqueness is not ownership** — with SMS gone nothing proves the number belongs to the person who typed it, and the UI must never show it as verified. Two problems this creates were surfaced and are handled by the admin rather than new infrastructure: **squatting** (registering with someone else's number permanently blocks the real holder, who has no self-serve proof) and **number recycling** (a reassigned Maldivian number stays locked to a dormant account). Both resolve through Phase 10b's existing recovery queue. Additionally, **the admin now confirms the phone number during Bronze review** — a call, or a match against the submitted document — which costs nothing new and means every provider eligible for emergency work (Silver+) has had their number checked by a human. That is what keeps the emergency reveal from handing a customer a dead line.
+
+*The residual risk, stated plainly:* email is now a single channel with nothing behind it, carrying OTP, the push fallback, and admin alerting at once. That is a narrower base than the two-channel design it replaced, and §7 records a secondary email provider as the deferred mitigation.
 
 **Open, requiring your input:**
 - The per-category `bookingMode` table (§1c) — confirm before Phase 4 seeds it.
