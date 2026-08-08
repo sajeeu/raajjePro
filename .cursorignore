@@ -1,0 +1,17 @@
+# Superseded specifications. These contradict 01_Development_Plan_v5.md at revision 5.3
+# and must never reach Cursor's context — v4 in particular describes a contact-info
+# endpoint, SMS OTP, a binary verified badge, and a pinned global price, none of which
+# exist. Kept in the repo for provenance only.
+01_Development_Plan_v2.md
+01_Development_Plan_v3.md
+01_Development_Plan_v4.md
+
+# Reviews of superseded revisions. Historical record, not current behaviour.
+raajjepro-design-review.md
+raajjepro-design-review-v2.md
+raajjepro-design-review-v3.md
+raajjepro-decisions-log.md
+raajjepro-chat-history.md
+
+# Backups
+.backups/
