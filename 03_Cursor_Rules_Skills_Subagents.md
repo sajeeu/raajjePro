@@ -1,6 +1,8 @@
-# RaajjePro — Cursor Rules, Skills & Subagents (v5.3)
+# RaajjePro — Cursor Rules, Skills & Subagents (v5.4)
 
-**Regenerated against `01_Development_Plan_v5.md`** (Rounds 8 through 12 folded in).
+**Reconciled against `01_Development_Plan_v5.md` at revision 5.4** (Rounds 8 through 13 folded in).
+
+**Round 13 pinned Amazon SES and moved bounce handling to Phase 0.** If a Phase 3c prompt reads as though you are building bounce/complaint handling for the first time, you are not — it exists from Phase 0, because SES will not leave its sandbox without it. Wire to it rather than rebuilding it.
 
 **Round 11 removed SMS from the system entirely.** If you have the v5.1 copy of these rules installed, replace it: it asserts SMS OTP, a `phoneVerified` flag, a `requirePhoneVerified` guard, and a push→SMS→email fallback ladder, none of which exist any more.
 
@@ -33,7 +35,7 @@ alwaysApply: true
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.1. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.4. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 
@@ -50,7 +52,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
    THE BADGE IS GATED BY `verificationTier` ALONE, never by subscription state. A lapsed-but-verified provider keeps their tier — it is a safety signal, not a payment status. A lapsed subscription degrades a provider to the free tier; it never deletes data and never hard-blocks an account.
 
 1c. Booking has THREE modes: `slot` (fixed-duration, provider-published time slots — Cleaning, Beauty, Fitness), `request` (customer proposes a window, provider proposes a concrete time and price — Plumbing, Electrical, AC Repair, Photography, Gardening, Computer, Moving, Events, Boat Charter), and `emergency`, layered on Plumbing/Electrical/AC Repair/**Moving** listings only and ONLY for a provider at tier `silver` or `gold`. The bar is SILVER OR ABOVE — older documentation said `verificationStatus === 'verified'` and is obsolete. There are TWELVE categories, including Boat Charter.
-   EMERGENCY REQUESTS BROADCAST TO EVERY ELIGIBLE PROVIDER AT ONCE. The provider supplies their callout fee as part of accepting; the first acceptance wins the claim atomically but is presented to the customer as an OFFER they accept or reject, and a rejection re-broadcasts while excluding that provider. Status `emergency_offered` carries this and no other booking mode can reach it. The overall request window is per-category — 30 minutes for the three trades, 120 for Moving. Older documentation describing one-provider-at-a-time dispatch, a separate `set-amount` step, or fan-out as post-v1 is obsolete.
+   EMERGENCY REQUESTS BROADCAST TO EVERY ELIGIBLE PROVIDER AT ONCE. The provider supplies their callout fee as part of accepting; the first acceptance wins the claim atomically but is presented to the customer as an OFFER they accept or reject, and a rejection re-broadcasts while excluding that provider. Status `emergency_offered` carries this and no other booking mode can reach it. The overall request window is per-category and read from `emergencyAcceptWindowMinutes` on the category (Phase 4 seed) — 30 minutes for the three trades, 120 for Moving. Never hardcode 30. Older documentation describing one-provider-at-a-time dispatch, a separate `set-amount` step, or fan-out as post-v1 is obsolete.
    Time-conflict prevention is a PostgreSQL exclusion constraint scoped to the PROVIDER, not the listing — `EXCLUDE USING gist (providerId WITH =, tstzrange(startsAt, endsAt) WITH &&)`. A `UNIQUE` constraint on `(providerId, listingId, startsAt)` is insufficient: it does not prevent one provider being booked twice at the same time across two different listings, and it does not detect overlapping durations. If you see that older constraint referenced, replace it.
    THERE IS NO SMS ANYWHERE IN THIS SYSTEM. OTP is sent to EMAIL. Messaging and booking require email verification (`requireEmailVerified`, stricter than `requireAuth`), enforced server-side on every relevant endpoint — never rely on hiding a UI button. If you see `requirePhoneVerified`, `phoneVerified`, an `SmsSender`, or a push→SMS→email ladder in older documentation or existing code, all of it is obsolete — flag it for removal rather than extending it.
    PHONE IS UNIQUE BUT NOT VERIFIED. Both `email` and `phone` carry database-level unique constraints, and a registration against either in-use value is blocked at the field naming which one is taken. UNIQUENESS IS NOT OWNERSHIP: nothing proves a number belongs to whoever typed it, so never render a phone number with a check mark and never describe one as verified. The admin confirms the number during Bronze review, which is the only point at which it becomes a checked fact.
@@ -560,7 +562,7 @@ You are the Payments & Monetization Agent for RaajjePro. You work on subscriptio
 
 **System prompt:**
 ```
-You are the Bookings & Reservations Agent for RaajjePro. You work on the booking state machine, time slots, reservations, quotes, recurring series and reschedule. The double-booking constraint is a provider-scoped gist exclusion constraint on a tstzrange — never a unique index on (providerId, listingId, startsAt), which permits one provider being booked across two listings at the same time and detects nothing about overlapping durations. Booking has three modes with different waiting semantics and three distinct accept timeouts: emergency 30 minutes, slot and request 24 hours, quote-approval 72 hours from the quote timestamp rather than from booking creation. Neither disputed nor payment_unresolved is terminal. Seven days of provider silence after a payment claim goes to payment_unresolved, never to confirmed, and unlocks nothing. Emergency bookings require finalAmount to complete. There is exactly one endpoint in the system that returns a phone number and you validate all seven of its conditions server-side. Follow the time-conflict-reservations and booking-payment-attestation skills exactly.
+You are the Bookings & Reservations Agent for RaajjePro. You work on the booking state machine, time slots, reservations, quotes, recurring series and reschedule. The double-booking constraint is a provider-scoped gist exclusion constraint on a tstzrange — never a unique index on (providerId, listingId, startsAt), which permits one provider being booked across two listings at the same time and detects nothing about overlapping durations. Booking has three modes with different waiting semantics and three distinct accept timeouts: emergency per-category from `emergencyAcceptWindowMinutes` (30 minutes for Plumbing/Electrical/AC Repair, 120 for Moving — never hardcode 30), slot and request 24 hours, quote-approval 72 hours from the quote timestamp rather than from booking creation. Neither disputed nor payment_unresolved is terminal. Seven days of provider silence after a payment claim goes to payment_unresolved, never to confirmed, and unlocks nothing. Emergency bookings require finalAmount to complete. There is exactly one endpoint in the system that returns a phone number and you validate all seven of its conditions server-side. Follow the time-conflict-reservations and booking-payment-attestation skills exactly.
 ```
 **Use for:** Phases 9a and 17.1–17.4.
 
@@ -599,7 +601,7 @@ Subagents are configured via Settings, not files — keep a copy of each system 
 
 ## 5. What to do with the old files
 
-**Delete the v4 copy of this file, and delete `03b_Cursor_Rules_Skills_Subagents_v2.md` if it still exists.** Everything worth keeping from both has been carried forward and corrected here against `01_Development_Plan_v5.md` at revision 5.1.
+**Delete the v4 copy of this file, and delete `03b_Cursor_Rules_Skills_Subagents_v2.md` if it still exists.** Everything worth keeping from both has been carried forward and corrected here against `01_Development_Plan_v5.md` at revision 5.4.
 
 This matters more than it does for the prompts file. `02_Cursor_Prompts.md` is pasted deliberately, one phase at a time, so a stale copy is visible when you use it. Rules and skills apply *silently, on every generation*. A stale `000-project-context.mdc` asserting a deleted contact-info endpoint, a binary verification flag, and a pinned global price will quietly steer every file the agent writes — and it will look like the agent is disobeying the prompt, when it is actually obeying an old rule you forgot was there.
 

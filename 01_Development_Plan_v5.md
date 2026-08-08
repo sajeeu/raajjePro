@@ -1,4 +1,4 @@
-# RaajjePro — Development Plan (v5)
+# RaajjePro — Development Plan (v5.4)
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 

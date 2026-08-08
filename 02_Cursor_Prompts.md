@@ -1,7 +1,8 @@
-# RaajjePro — Cursor-Ready Prompts (v5.1)
+# RaajjePro — Cursor-Ready Prompts (v5.4)
 
-**Regenerated against `01_Development_Plan_v5.md`** (Rounds 8 through 12 folded in). The previous version of this file targeted **v4** and is now actively wrong in ways Cursor will enforce against you. Delete it. The four differences that matter most:
+**Reconciled against `01_Development_Plan_v5.md` at revision 5.4** (Rounds 8 through 13 folded in). Superseded plan revisions (v2–v4) are kept out of Cursor's index by `.cursorignore`; if that file is missing, restore it before generating anything. The five differences from v4 that matter most:
 
+- 🔧 **Round 13 — the newest and the one that changes sequencing.** The transactional email provider is **Amazon SES**, and **bounce/complaint handling plus the suppression list are a Phase 0 deliverable, not Phase 3c**. SES will not grant production access until that handling exists, and a sandboxed account sends only 200 messages/day to pre-verified addresses — so Phase 3's registration flow cannot even be *tested* until it clears. Build it in Phase 0, request production access, then start Phase 3.
 - **v4 had a contact-info unlock.** `GET /v1/bookings/:id/contact-info` and the whole unlock-at-`payment_claimed` mechanism are gone. Phone numbers are exchanged through exactly **one** endpoint, `POST /v1/bookings/:id/reveal-contact`, emergency bookings only, under seven conditions. Every other endpoint returning a phone number is a defect.
 - **v4 had a binary verified badge.** Verification is now three tiers — Bronze, Silver, Gold (§1e). Emergency capability requires **Silver or above**, not "verified".
 - **v4 had no provider onboarding screen** and said so explicitly. Phase 6a is now a real flow, sequenced before the wizard.
@@ -10,7 +11,7 @@
 ## How to use this file
 
 1. Work top to bottom. Don't start phase N+1 until phase N's Definition of Done is met.
-2. Before pasting anything, make sure `.cursor/rules/` and `skills/` (from `03_Cursor_Rules_Skills_Subagents.md` **v5.1**) are in the repo. Every prompt below assumes those are active. **If you still have v4 or earlier rules in place, replace them first** — they assert a contact-info endpoint this plan deleted, a binary `verificationStatus` it replaced, and a pinned global subscription price it made per-provider. Rules auto-apply on every generation, so a stale one fights you silently.
+2. Before pasting anything, make sure `.cursor/rules/` and `skills/` (from `03_Cursor_Rules_Skills_Subagents.md` **v5.4**) are in the repo. Every prompt below assumes those are active. **If you still have v4 or earlier rules in place, replace them first** — they assert a contact-info endpoint this plan deleted, a binary `verificationStatus` it replaced, and a pinned global subscription price it made per-provider. Rules auto-apply on every generation, so a stale one fights you silently.
 3. Paste each prompt into a **fresh Cursor chat/composer session**. Don't chain phases in one thread.
 4. Where a prompt says "no mockup yet — propose a design," Cursor stops and shows you the layout before writing implementation code.
 5. Attach the relevant mockup image(s) for any prompt that references one.
