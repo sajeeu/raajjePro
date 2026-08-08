@@ -1,6 +1,6 @@
 # RaajjePro — Cursor-Ready Prompts (v5.1)
 
-**Regenerated against `01_Development_Plan_v5.md` at revision 5.1** (Rounds 8, 9 and 10 folded in). The previous version of this file targeted **v4** and is now actively wrong in ways Cursor will enforce against you. Delete it. The four differences that matter most:
+**Regenerated against `01_Development_Plan_v5.md`** (Rounds 8 through 12 folded in). The previous version of this file targeted **v4** and is now actively wrong in ways Cursor will enforce against you. Delete it. The four differences that matter most:
 
 - **v4 had a contact-info unlock.** `GET /v1/bookings/:id/contact-info` and the whole unlock-at-`payment_claimed` mechanism are gone. Phone numbers are exchanged through exactly **one** endpoint, `POST /v1/bookings/:id/reveal-contact`, emergency bookings only, under seven conditions. Every other endpoint returning a phone number is a defect.
 - **v4 had a binary verified badge.** Verification is now three tiers — Bronze, Silver, Gold (§1e). Emergency capability requires **Silver or above**, not "verified".
@@ -91,7 +91,10 @@ Build the RaajjePro backend's shared infrastructure. No business domains yet —
 4. Zod validation middleware. A malformed request returns 400 in the standard envelope, never a stack trace.
 5. RATE LIMITING — global default plus per-endpoint tiers, stricter on auth, OTP, payment, emergency-booking, and MESSAGING endpoints. Messaging carries its own per-conversation and per-user tier: the enquiry channel's content policy is deliberately permissive, so an uncapped-volume channel with only after-the-fact block-and-report is a real spam and harassment surface. Build the tier mechanism now; later phases attach their limits.
 6. IDEMPOTENCY — a reusable middleware keyed on (userId, operation, client-supplied key), returning the ORIGINAL result on a repeat rather than re-executing. Money-adjacent and creation POSTs use it from Phase 8 onward.
-7. ADMIN IDENTITY MODEL — a real one, not a stub. Admin users, a single `admin` role for v1, login, session. MFA, IP allowlisting and session hardening are deliberately out of v1 scope (plan §7) — do not add them, and do not leave TODOs implying they are coming.
+7. ADMIN IDENTITY MODEL — a real one, not a stub. Admin users, a single `admin` role for v1, login, session.
+   TOTP MFA IS MANDATORY on every admin account (Round 12) — authenticator app, NOT SMS, because there is no SMS in this system. Enrolment is required before the account can take any action, with recovery codes issued once at enrolment.
+   SESSION CONTROLS: active-session list with force-logout, a short idle timeout, and re-authentication before viewing an identity document.
+   IP ALLOWLISTING remains deliberately out of scope — it locks the admin out when travelling. Do not add it and do not leave a TODO implying it is coming.
 8. AUDIT LOG — every admin action records admin ID, timestamp, action, target, and reason. Queryable by date, admin, and action type. This is not optional logging: several later phases require the reason field to be mandatory at the API level.
 9. API VERSIONING POLICY, written into the README: additive-only within /v1. Never remove or repurpose a field. Document the deprecation process before the first breaking change is needed, not after.
 10. /v1/health returning 200 with build info.
@@ -201,10 +204,12 @@ Build the Categories module, backend and frontend, matching the attached Explore
    - bookingMode: enum ('slot' | 'request') — how customers book in this category
    - emergencyCapable: boolean — whether listings here may offer emergency bookings AT ALL
    - minimumLeadTimeMinutes: integer — how far ahead a slot must be to remain bookable
+   - emergencyAcceptWindowMinutes: integer or null — how long an emergency request stays open before auto-declining
 2. SEED EXACTLY 12 CATEGORIES, in this order, with these values. The mockup's grid is 3 columns × 4 rows and the count matters:
    Cleaning (slot, not emergency) · Plumbing (request, EMERGENCY) · Electrical (request, EMERGENCY) · AC Repair (request, EMERGENCY) · Beauty (slot, not emergency) · Photography (request, not emergency) · Gardening (request, not emergency) · Computer (request, not emergency) · Moving (request, not emergency) · Fitness (slot, not emergency) · Events (request, not emergency) · Boat Charter (request, not emergency)
    Set a sensible minimumLeadTimeMinutes per category — the value differs by trade and is configurable, so do not hardcode one number globally.
-3. ONLY Plumbing, Electrical and AC Repair are emergencyCapable. This is a safety decision, not configuration: the admin panel (Phase 10b) can edit category names, icons, lead times and active flags, but NOT this flag and NOT bookingMode while live data exists. Enforce at the service layer.
+3. ONLY Plumbing, Electrical, AC Repair and MOVING are emergencyCapable. Moving was added in Round 12. This is a safety decision, not configuration: the admin panel (Phase 10b) can edit category names, icons, lead times and active flags, but NOT this flag and NOT bookingMode while live data exists. Enforce at the service layer.
+3b. emergencyAcceptWindowMinutes per category: 30 for Plumbing, Electrical and AC Repair; 120 for MOVING; null where not emergency-capable. A mover needs a vehicle and usually a crew, so the 30-minute figure set for a tradesperson with hand tools does not transfer.
 4. GET /v1/categories (active only, sorted), GET /v1/categories/:slug.
 5. Admin-only POST/PATCH/DELETE against REAL admin auth from Phase 2 — not a stub, not an open endpoint.
 6. Deactivating a category never deletes it and never orphans listings; existing listings keep working.
@@ -323,7 +328,7 @@ Build the Service Listings backend domain. BACKEND-ONLY — Phase 9 builds the w
 1. Listing entity: id, providerId, categoryId, name, shortDescription, longDescription, pricingModel enum (fixed/hourly/daily/range/quote), price fields (INTEGER LAARI, never float), coverImage, gallery, status enum ('draft' | 'published'), visibility enum ('active' | 'hidden_over_cap' | 'hidden_suspended' | 'hidden_moderation'), bookingMode, isEmergency, createdAt, updatedAt.
 2. bookingMode DEFAULTS from the listing's category (Phase 4 seed) and is OVERRIDABLE per listing. Store it on the listing; do not resolve it through the category at read time, or a later category edit would silently change how live listings behave.
 3. EMERGENCY ELIGIBILITY — a listing may set isEmergency: true ONLY IF BOTH hold:
-   - its category is emergencyCapable (Phase 4: Plumbing, Electrical, AC Repair only)
+   - its category is emergencyCapable (Phase 4: Plumbing, Electrical, AC Repair and Moving)
    - the provider's verificationTier is 'silver' OR 'gold'
    NOTE: the bar is SILVER OR ABOVE, not "verified". Older documentation said verificationStatus === 'verified'; that is obsolete. Enforce on the publish path AND the update path, and re-check at booking creation in Phase 17.3, because a provider whose tier is later reduced must stop receiving emergency requests immediately.
 4. REQUIRED TO PUBLISH — enforced server-side, not just in the wizard UI: name, category, at least one service area, pricing, and A COVER IMAGE. The cover image is required, not optional; a published listing with no cover renders as a broken card everywhere it appears.
@@ -350,7 +355,7 @@ Build the Subscription & Trial backend module. BACKEND-ONLY — Phase 10a builds
    - POST /v1/providers/me/subscription/start-trial — an explicit provider-initiated "Try Premium"
    - a PROACTIVE prompt fired 7 days after the provider's first published listing if no booking has landed and no trial has started
    All three call the same startTrial(providerId), which is a no-op if a trial has ever run for that account. The third trigger matters because a new provider is capped at one listing and reaching `confirmed` takes days to weeks — without it the confirmed-booking trigger is close to decorative for exactly the provider it needs to reach.
-4. Trial is 60 CALENDAR DAYS.
+4. Trial is 30 CALENDAR DAYS.
 5. BILLING ANCHOR, NOT CALENDAR MONTH: 30-day periods from billingAnchorAt. PAUSING SHIFTS THE ANCHOR by the paused duration. Never imply month boundaries in data or copy — after a few pauses no two providers share an anchor.
 6. PAUSE: capped at 10 CUMULATIVE days, keyed off the provider-level acceptingNewCustomers toggle. Resuming manually within the cap preserves the remaining allowance. At the cap, pause auto-ends and the clock forcibly resumes. ONE function shared by `trialing` and `active` — identical semantics, not two implementations.
 7. getProviderEntitlements(providerId) — reads LIVE database state on every call, NEVER caches. A `pending` payment submission grants exactly nothing.
@@ -377,7 +382,7 @@ Global behavior:
 - OFFLINE RESILIENCE — this is the highest-value conversion flow in the app and must not silently lose work on a weak atoll connection: every step's autosave PATCH is queued locally on failure and replayed on reconnect, with a visible pending indicator. Phases 17 and 18 reuse this exact pattern, so build it as shared infrastructure, not wizard-local code.
 - Before creating a NEW draft, check entitlements against the current active-listing count. At or over the cap, show an upgrade prompt routing to billing (Phase 10a) — never a generic error.
 
-Step 1 — Details (Create_service_widget1.jpg): name with 0/80 counter, 12-CATEGORY icon grid (single-select — this is 12, including Boat Charter), subcategory input, short description.
+Step 1 — Details (Create_service_widget1.jpg): name with 0/80 counter, 12-CATEGORY icon grid (single-select — this is 12, including Boat Charter), subcategory input, short description. TAGS ARE SELECTABLE CHIPS, not a free-text field (Round 12): render a category-scoped set of suggested tags as tappable pills, with free text underneath for anything not covered. Typing a tag from memory asks a provider to guess what customers search for; showing the options turns it into recognition.
 
 Step 2 — Location (Create_service_widget2.jpg): IMPORT AND REUSE the island multi-select widget from Phase 7. Do not rebuild it. Include the "Maldives only" banner.
 
@@ -614,7 +619,7 @@ Build Search & Discovery, backend and frontend.
 3. SEARCH VISIBILITY IS NEVER PAYWALLED. Free-tier providers appear in results identically to paid ones. Subscription buys PRIORITY PLACEMENT within results, never presence in them.
 4. Appropriate indexes plus a SHORT-TTL CACHE (30–60 seconds) in front of search, category-browse and Home responses. Deliberately NO explicit invalidation: the TTL is short enough that suspension, category edits and the launch-mode flip self-correct within a minute, which avoids a bust-key matrix across every mutable input. Revisit read replicas once Phase 21 shows real read volume.
 5. Server-side pagination. Never return an unbounded result set.
-6. Frontend: search results and category results screens (no mockups — propose first), filter sheet, sort control. Each result card carries its BOOKING MODE AFFORDANCE, same as Service Preview.
+6. Frontend: search results and category results screens (no mockups — propose first), filter sheet, sort control. SORT ORDER IS FIXED AS: distance, then rating, then price (Round 12) — distance leads because a provider who cannot reach your island is not a result at all. Each result card carries its BOOKING MODE AFFORDANCE, same as Service Preview.
 
 Specify loading (skeleton), no-results (with a suggestion to broaden filters, naming which filter is narrowing most), and error states as part of this phase.
 
@@ -715,8 +720,13 @@ Add the emergency booking path. This slice carries the ONLY contact-information 
 
 1. POST booking with bookingMode 'emergency' captures NO timing constraint (no slot, no window) and VALIDATES THREE THINGS: the category is emergencyCapable (Plumbing/Electrical/AC Repair only), the provider's verificationTier is SILVER OR GOLD, and the customer is within the emergency rate limit.
 2. RATE LIMIT: 3 emergency requests per customer per 24 hours, 10 per 7 days.
-3. Provider gets an URGENT accept prompt with a 30-MINUTE response window — not 24 hours. A 24-hour auto-decline is meaningless when a pipe has burst.
-4. ON ACCEPTANCE the booking moves to accepted WITHOUT an amount. PATCH /v1/bookings/:id/set-amount is emergency-only: the provider sets a CALLOUT FEE as agreedAmount (amountKind 'callout_fee') and that transitions accepted → awaiting_payment. A provider cannot price a job they have not seen; the callout fee is what they can price.
+3. THE REQUEST BROADCASTS TO EVERY ELIGIBLE PROVIDER AT ONCE — emergency-capable category, island match, verificationTier silver or gold, acceptingNewCustomers on. Older documentation sent an emergency to ONE provider and deferred fan-out to post-v1; that is reversed. Sequential dispatch is the wrong shape for the one booking type where minutes matter.
+4. A PROVIDER ACCEPTS *WITH* THEIR CALLOUT FEE, IN ONE CALL. There is no separate set-amount step any more. PATCH /v1/bookings/:id/emergency-accept takes calloutFee. The claim resolves atomically — exactly one winner; losers get a distinct ALREADY_CLAIMED error code, never a generic failure. Status → emergency_offered (a new non-terminal status no other booking mode can reach).
+4b. THE FIRST ACCEPTANCE DOES NOT BIND THE CUSTOMER. It is an OFFER — provider, tier, rating, callout fee. PATCH /v1/bookings/:id/emergency-offer-response takes accept or reject.
+   - Accept → agreedAmount = calloutFee, amountKind 'callout_fee', status → awaiting_payment.
+   - Reject → back to requested, RE-BROADCAST, and add that provider to the booking's rejectedProviderIds so they are excluded from later rounds.
+   - SCHEDULED JOB, offer expiry: emergency_offered older than 5 MINUTES → release the provider, return to requested, re-broadcast.
+   Without the offer step, first-accept-wins would commit the customer to an unknown provider at an unknown price.
 5. scheduledFor IS SET TO THE ACCEPTANCE TIMESTAMP so the 7-day completion timeout fires normally. Without it, emergency bookings would have no natural scheduled time, the completion timeout could never fire, and a provider could block reviews forever by staying silent.
 6. THE CONTACT REVEAL — POST /v1/bookings/:id/reveal-contact. This is the ONLY endpoint in the entire system that returns a phone number to another user. Validate ALL SEVEN conditions server-side:
    - bookingMode is 'emergency'. No slot or request booking may ever reach this path.
@@ -730,19 +740,20 @@ Add the emergency booking path. This slice carries the ONLY contact-information 
    WhatsApp and Viber handles are NOT collected anywhere in this system and cannot be revealed by this or anything else. Do NOT reintroduce GET /v1/bookings/:id/contact-info — it is a different, far broader thing and it is deleted.
 7. COMPLETION REQUIRES finalAmount. PATCH /v1/bookings/:id/complete REJECTS an emergency booking without it — the real settled total once parts and labour were added to the callout fee. It gates completion exactly as agreedAmount gates awaiting_payment. It was optional in an earlier revision, which meant it would be reliably present on clean cheap jobs and reliably absent on the padded bill a customer was disputing, inverting the evidentiary value it exists to provide.
 8. NO CALENDAR RESERVATION — an emergency is an interruption to the published calendar, not a block on it.
-9. IF NO ONE ACCEPTS WITHIN 30 MINUTES: auto-decline, notify the customer, and offer ONE TAP to send the same request to a different emergency-capable provider, or to convert it to a normal request-based booking. Simultaneous fan-out to multiple providers is deliberately OUT of v1 scope.
+9. THE OVERALL REQUEST WINDOW IS PER-CATEGORY, read from emergencyAcceptWindowMinutes (Phase 4): 30 minutes for Plumbing, Electrical and AC Repair, 120 for Moving. SCHEDULED JOB: a requested emergency booking older than its category's window → auto-decline, notify, offer one tap to re-broadcast or convert to a normal request-based booking. OFFER REJECTIONS AND EXPIRIES DO NOT RESET THIS CLOCK — the window governs the whole request, so a customer who rejects three offers has spent that time. Rejections do NOT consume the customer's emergency rate limit, which applies to requests, not offers.
 10. VERIFICATION REVOCATION CASCADE — when a provider's verificationTier drops below silver, handle in-flight emergency bookings BY PAYMENT STATE, not uniformly: at accepted or awaiting_payment, AUTO-CANCEL with both parties notified; at payment_claimed, confirmed or later, ROUTE TO THE ADMIN QUEUE as a dispute and leave otherwise untouched. Auto-cancelling a booking the customer has already paid for off-platform would strand real money with no platform recourse.
 11. Accept-then-cancel patterns are logged as a provider-level moderation signal (Phase 22).
 
 Frontend:
-1. Emergency/ASAP entry: job details and location, with copy setting the expectation that a callout fee is set on acceptance and that parts and labour settle directly afterward.
+1. Emergency/ASAP entry: job details and location, with copy setting the expectation that providers respond with a callout fee and parts and labour settle directly afterward.
 2. Provider urgent accept prompt with a 30-MINUTE countdown, visually distinct from the 24-hour one.
-3. Callout-fee entry, with copy stating plainly that parts and labour are settled directly with the customer.
+3. Provider accept-with-fee: ONE screen where the callout fee is entered as part of accepting, copy stating parts and labour settle directly with the customer, and a clear "already claimed by someone else" state for a lost race.
+3b. Customer offer card: provider name, verification tier, rating and callout fee, with Accept and Reject, a countdown on the 5-minute offer window, AND a second countdown on the overall request window so the customer can see what rejecting costs them.
 4. THE CONTACT-REVEAL REQUEST — a customer-initiated action on the emergency booking detail, stating before it is tapped that BOTH numbers become visible to each other and that the provider will be told. Never a silent or one-sided reveal.
 5. Emergency completion: a REQUIRED "Final amount charged" field in the complete-job flow, distinct from the callout fee shown earlier in the timeline.
 6. Emergency no-acceptance state: "No one accepted in time" with one tap to try another provider or convert to a scheduled request.
 
-Definition of done: an emergency booking on an ineligible category is rejected; one by a BRONZE provider is rejected and by a SILVER provider accepted; the rate limit triggers; the 30-minute timeout fires and offers both fallbacks; the reveal endpoint REJECTS a non-emergency booking, a requested-state booking, and a provider-initiated call; it reveals BOTH numbers or neither; it returns nothing 24 hours after terminal state; it is disabled by the kill switch; completion is REJECTED without a final amount; revoking verification auto-cancels an accepted emergency booking but routes a payment_claimed one to admin instead.
+Definition of done: an emergency booking on an ineligible category is rejected; one by a BRONZE provider is rejected and by a SILVER provider accepted; the rate limit triggers; a broadcast reaches every eligible provider and nobody outside the eligibility rule; two simultaneous accepts resolve to one winner with the loser receiving ALREADY_CLAIMED; a rejected offer re-broadcasts and never returns to the rejected provider; an unanswered offer expires at 5 minutes and re-broadcasts WITHOUT resetting the overall window; the request window expires at 30 minutes for Plumbing and 120 for Moving and offers both fallbacks; the reveal endpoint REJECTS a non-emergency booking, a requested-state booking, and a provider-initiated call; it reveals BOTH numbers or neither; it returns nothing 24 hours after terminal state; it is disabled by the kill switch; completion is REJECTED without a final amount; revoking verification auto-cancels an accepted emergency booking but routes a payment_claimed one to admin instead.
 ```
 
 ### Phase 17.4 — Recurring series and reschedule
@@ -770,8 +781,9 @@ Build the Messaging module. Chat is THE SOLE COORDINATION CHANNEL for every book
    - `enquiry` — scoped to a LISTING, not a booking. Available to any phone-verified user BEFORE any booking exists. EVERYTHING IS ALLOWED: appliance make/model/serial, property details, photos of the issue, availability questions, price ranges. The point is to let a plumber ask "is it a split unit or ducted?" and get an answer.
    - `booking` — opens at quote_offered for request-based bookings (17.2) and at accepted for slot and emergency, and STAYS OPEN FOR THE ENTIRE LIFE OF THE BOOKING INCLUDING AFTER COMPLETION. It is never torn down and never replaced by a "real" contact channel, because there isn't one.
 2. requireEmailVerified on both types.
-3. CONTACT-PATTERN DETECTION IS A SOFT NUDGE, NEVER A BLOCK, NEVER A REDACTION. The sender sees an inline, non-blocking reminder near the composer: "Phone numbers are never shared on RaajjePro — please keep the conversation and any details here." THE MESSAGE SENDS REGARDLESS.
-   Why a nudge: Maldivian mobiles are 7 digits beginning 7 or 9; AC serials are 7–15 digit strings; model numbers are alphanumeric with digit runs. These are not reliably distinguishable, and a hard block would fire on exactly the content the enquiry channel exists to carry. Photos are allowed too, so a photo of a business card passes a text filter regardless.
+3. CONTACT-PATTERN DETECTION IS COMPLETELY SILENT (Round 12). No banner, no reminder, no redaction, no interference of any kind — the sender sees NOTHING. Older documentation described an inline nudge near the composer; it is removed. In-app messaging carries no friction.
+   DETECTION STILL RUNS INVISIBLY. Every match is recorded and feeds the provider-level aggregate in item 4. The aggregate is the enforcement mechanism and it never depended on telling the sender.
+   Why detection never blocks: Maldivian mobiles are 7 digits beginning 7 or 9; AC serials are 7–15 digit strings; model numbers are alphanumeric with digit runs. These are not reliably distinguishable, and a hard block would fire on exactly the content the enquiry channel exists to carry. Photos are allowed too, so a photo of a business card passes a text filter regardless.
 4. EVERY DETECTION IS LOGGED (conversationId, senderId, matched pattern, timestamp) and aggregated into Phase 22's moderation signals as a PROVIDER-LEVEL figure — "tripped detection in 40 of 52 enquiries" — not per-message noise.
 5. MESSAGE RATE LIMIT — per-conversation and per-user, using Phase 2's tier mechanism. The content policy is deliberately permissive, so an uncapped channel with only after-the-fact block-and-report is a real spam and harassment surface.
 6. BLOCK — TWO DISTINCT ACTIONS, presented together, because the scope was previously undefined for a feature framed as safety-relevant:
@@ -784,9 +796,9 @@ Build the Messaging module. Chat is THE SOLE COORDINATION CHANNEL for every book
 10. Enquiry-thread lifecycle: if the listing is hidden by downgrade, both threads stay READABLE to participants but the `enquiry` side accepts no new messages, with an explanatory state. A `booking` thread tied to a non-terminal booking is NEVER affected by its listing's visibility. If the listing is soft-deleted, the enquiry thread becomes read-only and drops out of the conversation list after 30 days.
 11. Report from within a conversation (Phase 22).
 
-Frontend: conversation list covering both types, thread view, the inline non-blocking nudge banner near the composer, pending/sent/failed states per message.
+Frontend: conversation list covering both types, thread view, pending/sent/failed states per message. NO nudge banner — the composer carries nothing beyond the normal send affordance.
 
-Definition of done: an enquiry thread delivers a message containing an appliance serial number WITHOUT obstruction and logs a detection where one fires; the nudge appears inline, states the permanent rule, and NEVER blocks a send; a message sent in airplane mode queues, shows pending, and delivers on reconnect; the message rate limit triggers; a booking thread remains open and usable after completion; blocking prevents future bookings while leaving a live booking's thread open with its notice; a provider who declines future bookings from a customer stops receiving them while the existing conversation stays intact; detection aggregates are queryable per provider.
+Definition of done: an enquiry thread delivers a message containing an appliance serial number WITHOUT obstruction and logs a detection where one fires; a message containing a phone-shaped string sends with NO visible interference whatsoever while still producing a logged detection; a message sent in airplane mode queues, shows pending, and delivers on reconnect; the message rate limit triggers; a booking thread remains open and usable after completion; blocking prevents future bookings while leaving a live booking's thread open with its notice; a provider who declines future bookings from a customer stops receiving them while the existing conversation stays intact; detection aggregates are queryable per provider.
 ```
 
 ---
