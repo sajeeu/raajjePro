@@ -1,5 +1,8 @@
 # Unrelated projects that happen to share this working directory
+# (Petty Cash now lives in its own repo — these are leftover duplicates)
 petty-cash-*
+Petty-Cash-*
+zoho-books-*
 hr-dashboard-*
 deliverable-response.md
 REBUILD-DESIGN-SPECS.md
