@@ -3,7 +3,7 @@
 **Reconciled against `01_Development_Plan_v5.md` at revision 5.4** (Rounds 8 through 13 folded in). Superseded plan revisions (v2–v4) are kept out of Cursor's index by `.cursorignore`; if that file is missing, restore it before generating anything. The five differences from v4 that matter most:
 
 - 🔧 **Round 13 — the newest and the one that changes sequencing.** The transactional email provider is **Amazon SES**, and **bounce/complaint handling plus the suppression list are a Phase 0 deliverable, not Phase 3c**. SES will not grant production access until that handling exists, and a sandboxed account sends only 200 messages/day to pre-verified addresses — so Phase 3's registration flow cannot even be *tested* until it clears. Build it in Phase 0, request production access, then start Phase 3.
-- **v4 had a contact-info unlock.** `GET /v1/bookings/:id/contact-info` and the whole unlock-at-`payment_claimed` mechanism are gone. Phone numbers are exchanged through exactly **one** endpoint, `POST /v1/bookings/:id/reveal-contact`, emergency bookings only, under seven conditions. Every other endpoint returning a phone number is a defect.
+- **v4 had a contact-info unlock.** `GET /v1/bookings/:id/contact-info` and the whole unlock-at-`payment_claimed` mechanism are gone. Phone numbers are exchanged through exactly **one** endpoint, `POST /v1/bookings/:id/reveal-contact`, emergency bookings only, under seven request-time conditions plus a runtime kill switch. Every other endpoint returning a phone number is a defect.
 - **v4 had a binary verified badge.** Verification is now three tiers — Bronze, Silver, Gold (§1e). Emergency capability requires **Silver or above**, not "verified".
 - **v4 had no provider onboarding screen** and said so explicitly. Phase 6a is now a real flow, sequenced before the wizard.
 - **v4 had one admin panel phase.** It is now three: 10a (money and identity queues), 10b (accounts, config, search, shell), 10c (ops dashboard).
@@ -209,7 +209,9 @@ Build the Categories module, backend and frontend, matching the attached Explore
    - emergencyAcceptWindowMinutes: integer or null — how long an emergency request stays open before auto-declining
 2. SEED EXACTLY 12 CATEGORIES, in this order, with these values. The mockup's grid is 3 columns × 4 rows and the count matters:
    Cleaning (slot, not emergency) · Plumbing (request, EMERGENCY) · Electrical (request, EMERGENCY) · AC Repair (request, EMERGENCY) · Beauty (slot, not emergency) · Photography (request, not emergency) · Gardening (request, not emergency) · Computer (request, not emergency) · Moving (request, not emergency) · Fitness (slot, not emergency) · Events (request, not emergency) · Boat Charter (request, not emergency)
-   Set a sensible minimumLeadTimeMinutes per category — the value differs by trade and is configurable, so do not hardcode one number globally.
+   SEED minimumLeadTimeMinutes EXACTLY AS FOLLOWS (Round 14 — do NOT invent these, they are product decisions):
+   Cleaning 180 · Beauty 120 · Fitness 120 · Plumbing 60 · Electrical 60 · AC Repair 60 · Computer 120 · Gardening 720 · Photography 1440 · Moving 1440 · Boat Charter 1440 · Events 2880
+   Only the three slot categories bite immediately, since they are the ones with a time picker in Phase 9a; the other nine are read by request-flow validation. All twelve stay admin-editable from Phase 10b.
 3. ONLY Plumbing, Electrical, AC Repair and MOVING are emergencyCapable. Moving was added in Round 12. This is a safety decision, not configuration: the admin panel (Phase 10b) can edit category names, icons, lead times and active flags, but NOT this flag and NOT bookingMode while live data exists. Enforce at the service layer.
 3b. emergencyAcceptWindowMinutes per category: 30 for Plumbing, Electrical and AC Repair; 120 for MOVING; null where not emergency-capable. A mover needs a vehicle and usually a crew, so the 30-minute figure set for a tradesperson with hand tools does not transfer.
 4. GET /v1/categories (active only, sorted), GET /v1/categories/:slug.
@@ -244,7 +246,7 @@ CRITICAL — read before designing the schema.
    - subscriptionPriceLaari: integer — the provider's own subscription price, set at first confirmed payment (Phase 8a). Never read a global price constant.
    - jobsCompletedCount: DERIVED from the booking event log, never a hand-maintained counter that can drift. Document your approach.
    - suspendedAt / suspendedReason: set by admin (Phase 10b), and an INPUT TO VISIBILITY — see item 6.
-2. CONTACT DETAIL — phone number only, and it lives on User from Phase 3. Do not duplicate it here and do not add messaging-app handles. The phone number is returned to another user by EXACTLY ONE endpoint in the entire system, built in Phase 17.3: POST /v1/bookings/:id/reveal-contact, emergency bookings only, under seven conditions. Nothing in this module exposes it.
+2. CONTACT DETAIL — phone number only, and it lives on User from Phase 3. Do not duplicate it here and do not add messaging-app handles. The phone number is returned to another user by EXACTLY ONE endpoint in the entire system, built in Phase 17.3: POST /v1/bookings/:id/reveal-contact, emergency bookings only, under seven request-time conditions plus a runtime kill switch. Nothing in this module exposes it.
 3. PAYMENT DETAILS — load-bearing, and no earlier phase creates them: bank name, account name, account number, and/or free-text transfer instructions. Phase 17's payment prompt displays these to the customer, because the off-platform transfer cannot happen without them. Treat as SENSITIVE: excluded from every response except the booking-scoped payment step, and excluded from all logs. Write the DTO mapping so this is structurally enforced, not remembered.
 4. acceptingNewCustomers — a boolean at PROVIDER level, not on the Listing entity. One toggle gates all of a provider's listings, and Phase 8a's billing pause keys off it coherently.
 5. getOrCreateProviderProfile(userId) — idempotent. Returns the existing profile or creates one. Called by Phase 6a's onboarding flow, and as a fallback by Phase 8's draft-creation endpoint for anyone who reaches the wizard without it. Export it.
@@ -351,7 +353,8 @@ Definition of done: a draft can be created and patched step by step; publish is 
 Build the Subscription & Trial backend module. BACKEND-ONLY — Phase 10a builds the billing UI.
 
 1. ProviderSubscription entity: providerId, tier, status ('trialing' | 'active' | 'free' | 'paused' | 'expired'), trialStartedAt, trialEndsAt, billingAnchorAt, currentPeriodEnd, pausedAt, cumulativePausedDays.
-2. PRICE IS PER-PROVIDER, NOT GLOBAL. Read providerProfile.subscriptionPriceLaari, set at first confirmed payment, defaulting to MVR 150 = 15000 laari. The first 100 providers take a reduced introductory rate honoured for 12 MONTHS from the billing anchor, then converting to standard with 30 days' notice delivered through Phase 19. Do NOT hardcode a single global price — older documentation pinned one, and the conversion measurement depends on two real price points coexisting.
+   THE TRIAL IS 30 CALENDAR DAYS (Round 12 — it was 60, and the decision log still records that; 30 is current). Calendar days, not business days: pause shifts the anchor, so trialEndsAt = trialStartedAt + 30 days + cumulativePausedDays.
+2. PRICE IS PER-PROVIDER, NOT GLOBAL. Read providerProfile.subscriptionPriceLaari, set at first confirmed payment, defaulting to MVR 150 = 15000 laari. The first 100 providers take the INTRODUCTORY RATE OF MVR 75 = 7500 laari (Round 14), honoured for 12 MONTHS from the billing anchor, then converting to standard with 30 days' notice delivered through Phase 19. Do NOT hardcode a single global price — older documentation pinned one, and the conversion measurement depends on two real price points coexisting.
 3. TRIAL STARTS ON WHICHEVER OF THREE TRIGGERS FIRES FIRST:
    - the transition of ANY booking into `confirmed` where this is the provider's first — HOOK ON THE STATE TRANSITION, NOT ON ONE ENDPOINT, so an admin resolving payment_unresolved to confirmed also fires it
    - POST /v1/providers/me/subscription/start-trial — an explicit provider-initiated "Try Premium"
@@ -730,7 +733,7 @@ Add the emergency booking path. This slice carries the ONLY contact-information 
    - SCHEDULED JOB, offer expiry: emergency_offered older than 5 MINUTES → release the provider, return to requested, re-broadcast.
    Without the offer step, first-accept-wins would commit the customer to an unknown provider at an unknown price.
 5. scheduledFor IS SET TO THE ACCEPTANCE TIMESTAMP so the 7-day completion timeout fires normally. Without it, emergency bookings would have no natural scheduled time, the completion timeout could never fire, and a provider could block reviews forever by staying silent.
-6. THE CONTACT REVEAL — POST /v1/bookings/:id/reveal-contact. This is the ONLY endpoint in the entire system that returns a phone number to another user. Validate ALL SEVEN conditions server-side:
+6. THE CONTACT REVEAL — POST /v1/bookings/:id/reveal-contact. This is the ONLY endpoint in the entire system that returns a phone number to another user. Validate ALL SEVEN REQUEST-TIME conditions server-side — the Phase 10b kill switch is a separate runtime check, not one of the seven:
    - bookingMode is 'emergency'. No slot or request booking may ever reach this path.
    - status is accepted or later. NEVER at requested — a provider who has not committed gets nothing.
    - THE CUSTOMER INITIATES. No automatic reveal, no provider-initiated reveal.
@@ -841,7 +844,7 @@ Harden the platform. This phase verifies what earlier phases specified — it is
    - simultaneous admin confirmation of one payment submission
    - repeated idempotent POSTs
 3. SECURITY: authorization on EVERY endpoint including reads; rate-limit verification across all tiers including messaging; admin auth; no sensitive data in logs; the three XSS payloads against every admin view.
-4. THE CONTACT-INFO AUDIT — inspect EVERY response shape in the bookings, providers, listings, search and messaging modules and assert that none returns a phone number, with the single documented exception of POST /v1/bookings/:id/reveal-contact under its seven conditions. Verify by reading the response shapes, not only the ones expected to carry it.
+4. THE CONTACT-INFO AUDIT — inspect EVERY response shape in the bookings, providers, listings, search and messaging modules and assert that none returns a phone number, with the single documented exception of POST /v1/bookings/:id/reveal-contact under its seven request-time conditions plus the runtime kill switch. Verify by reading the response shapes, not only the ones expected to carry it.
 5. STATE AUDIT across every screen: loading / empty / error / populated. This is a BACKSTOP verifying what each phase already specified — if you are designing these states for the first time here, the earlier phase was not done.
 6. Performance: payload sizes, pagination, N+1 audit, verified against the plan's §5 targets.
 7. Accessibility sweep: focus visibility, touch targets, screen-reader announcements on state changes, reduced-motion handling.
@@ -893,7 +896,7 @@ Build content moderation and reporting. The admin queue EXTENDS Phase 10a/10b's 
 4. HIDDEN CONTENT STAYS VISIBLE TO ITS OWNER, who sees the category and reason and can appeal. Everyone else cannot find it.
 5. Dispute resolution uses a FIXED ENUMERATION, never free text: resolved_for_customer, resolved_for_provider, inconclusive, fraud_confirmed, withdrawn. An unstructured outcome produces an audit log you cannot measure fairness against.
 6. Review anti-spam: rate limit, and FLAG implausibly-fast reviews for a human look rather than auto-rejecting.
-7. LISTING FREE-TEXT SCANNING for contact patterns — the provider-side leakage vector the chat nudge does not close. A provider publishing their own number in a description or FAQ is the realistic leak, and they have the incentive.
+7. LISTING FREE-TEXT SCANNING for contact patterns — the provider-side leakage vector chat-side detection does not close. A provider publishing their own number in a description or FAQ is the realistic leak, and they have the incentive.
 8. Contact-pattern aggregates from Phase 18 surface here as a PROVIDER-LEVEL SIGNAL, not per-message noise: "tripped detection in 40 of 52 enquiries". This is the enforcement mechanism that replaces an earlier revision's hard block.
 9. Emergency accept-then-cancel patterns, and contact-reveal request patterns from 17.3, surface as provider-level and customer-level signals.
 10. A confirmed-fraud outcome or an accumulated dispute pattern TRIGGERS A VERIFICATION REVIEW that may demote or revoke a tier (Phase 10a).
