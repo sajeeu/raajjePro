@@ -1,4 +1,4 @@
-# RaajjePro — Development Plan (v5.4)
+# RaajjePro — Development Plan (v5.5)
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 
@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.4 — read this before §0.1–0.3
+### 0.0 Revision 5.5 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -21,6 +21,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 5. **Emergency requests broadcast to every eligible provider at once** (Round 12) — the provider states their callout fee when accepting, and the customer accepts or rejects that offer, with a rejection re-broadcasting. Fan-out was previously deferred to post-v1. **Moving** is now emergency-capable with a 120-minute window, the trial is **30 days** not 60, and **admin MFA and session controls are in v1**.
 6. **SMS is gone from the entire system, and email replaces it** (Round 11). OTP is sent to email; `requireEmailVerified` replaces `requirePhoneVerified` everywhere the plan previously used it; the Phase 3c fallback ladder is push → email. A phone number is still collected and still unique, but is **no longer verified** — nothing below Bronze proves it belongs to its holder.
 7. **Round 10 folded in thirteen further decisions** that had been made but never written down — most consequentially: the emergency `finalAmount` is now **required**, not optional; the `booking` chat opens at **quote offered**, not at `accepted`; and downgrade keeps the **highest-performing** listing, not the most recently updated. Any older statement of those three is superseded.
+8a. **Round 15 is the largest revision since v5 itself, and it changes decisions §1b and §1c state in their original form.** Six are load-bearing: **emergency acceptances no longer race** — offers collect for 90 seconds and the customer picks from up to three (§1c); **emergency eligibility is per-category**, `gold` for Electrical and Plumbing and `silver` for AC Repair and Moving, never a flat `silver` (§1c); a **MVR 200 emergency dispatch fee** is the first and only charge to a customer, amending §1b's free-forever rule (§1c); **provider conduct is scored and displayed as objective metrics** with editorial labels explicitly rejected (§1f); **"payment hold" means a locked agreement, not escrow** — RaajjePro still never moves money (§1h); and **phone uniqueness begins at Bronze, not at registration** (§Phase 3).
 8. **The email provider is Amazon SES, and bounce handling moves off Phase 3's critical path** (Round 13). SES is the sole transactional email vendor. Because SES will not leave its sandbox until bounce and complaint handling already exists, that work is a **Phase 0–2 prerequisite**, not the Phase 3c task §Phase 3c previously called it. Anywhere below that describes bounce handling as part of Phase 3c, read it as *already built by then*.
 
 ### 0.1 Why v5 exists
@@ -145,7 +146,7 @@ Claude proposes a design, you approve it, and only then does that phase's code g
 
 ## 1b. Monetization Model — subscription only
 
-**Customer-facing rule:** all customer features are free indefinitely. Nothing in this section may ever gate a customer action.
+**Customer-facing rule:** all customer features are free indefinitely, with 🔧 **exactly one exception, added in Round 15** — the **MVR 200 emergency dispatch fee** (§1c), incurred only when a customer selects an emergency offer. Nothing else in this section may ever gate a customer action, and no further customer charge may be introduced without amending this rule explicitly.
 
 **Payment for jobs is off-platform.** RaajjePro never moves money between customer and provider. Everything RaajjePro collects is a provider paying RaajjePro, via manual bank transfer + admin confirmation. No payment gateway in v1.
 
@@ -223,7 +224,7 @@ Every listing carries a `bookingMode`: `'slot'` or `'request'`, defaulted by cat
 
 **Emergency capability is separate and restricted.** A listing may set `isEmergency: true` only if **all** of the following hold:
 - its category is 🔧 **Plumbing, Electrical, AC Repair, or Moving** (Moving added in Round 12, with a 120-minute accept window)
-- the provider's `verificationTier` is 🔧 **`silver` or `gold`** (§1e)
+- the provider's `verificationTier` meets the category's 🔧 **`emergencyMinimumTier` — Round 15**. **`gold` for Electrical and Plumbing**, **`silver` for AC Repair and Moving**. Electrical and plumbing failures at 2am are life-safety work in a stranger's home; five completed bookings evidences nothing about trade competence, and Gold is the only tier carrying a trade certificate. Never hardcode `silver`.
 
 Enforced server-side on the listing publish and update paths, and re-checked at booking creation (a provider whose verification is later revoked stops receiving emergency requests immediately).
 
@@ -244,7 +245,8 @@ Search results, category results, and Home cards show a mode affordance — **"B
 - Customer submits a **preferred date/time window** (not an exact slot — "Tuesday afternoon", "this week"), job details, and location.
 - 🔧 **The window picker leads with quick-pick chips** — "Tomorrow morning," "Tomorrow afternoon," "This week," "This weekend" — covering the common cases in one tap, with free text available underneath for anything more specific. A blank text field as the primary interaction asks more of the customer than most bookings need.
 - Provider reviews via the same accept prompt and **responds with a proposed concrete date/time and price**. This reuses the quote mechanism (`awaiting_quote` → `quote_offered`).
-- 🔧 **Offering a quote creates a provisional reservation** on the proposed time, expiring with the quote's 72-hour approval window. Without this, the provider could sell that time to someone else in the interim and the customer's approval would fail on a constraint violation after they had already agreed a price.
+- 🔧 **Quote and approval windows are per-category — Round 15.** They were a flat 24h to quote and 72h to approve, which meant booking a plumber could legitimately take four days. Nobody waits four days for a blocked drain; they call someone and the booking never happens. **Plumbing, Electrical, AC Repair and Computer: 2 hours to quote, 4 hours to approve.** **Photography, Gardening, Moving, Events and Boat Charter: 24 hours to quote, 72 hours to approve**, where planning genuinely happens. Seeded as `quoteExpiryMinutes` and `quoteApprovalMinutes` (§1d); never hardcode 24/72.
+- 🔧 **Offering a quote creates a provisional reservation** on the proposed time, expiring with the quote's approval window. Without this, the provider could sell that time to someone else in the interim and the customer's approval would fail on a constraint violation after they had already agreed a price.
 - 🔧 **The `booking`-type chat opens the moment a quote is offered**, not at `accepted`. This is the one window where negotiation is most likely to be needed — the provider proposes Tuesday 2pm at a price and the customer wants Tuesday 3pm — and an earlier revision left it with no channel at all, so the customer's only levers were approve or reject as offered, forcing the provider to guess again from scratch while the 72-hour clock and the provisional reservation churned each time.
 - Customer approves or rejects. Approval converts the provisional reservation to a firm one and transitions to `accepted`.
 - Everything downstream is identical to the slot-based flow from `accepted` onward.
@@ -254,7 +256,12 @@ Search results, category results, and Home cards show a mode affordance — **"B
 - Customer submits an ASAP request — no slot, no window — with job details and location.
 - 🔧 **The request is broadcast to every eligible provider at once — Round 12.** All providers whose listing is emergency-capable in that category, who serve that island, whose `verificationTier` is `silver` or above, and who have `acceptingNewCustomers` on. Earlier revisions sent an emergency to **one** provider at a time and explicitly deferred fan-out to post-v1; that is reversed. Sequential dispatch is the wrong shape for the one booking type where minutes matter, and it made the customer's choice of provider — made under stress, from a list — the thing that determined whether anyone came at all.
 - 🔧 **A provider accepts *with* their callout fee, in one action.** The fee is no longer set in a second step after accepting. Under broadcast, deferring it would commit the customer to an unknown provider at an unknown price before they saw either.
-- 🔧 **The first acceptance wins the claim, but does not bind the customer.** It is presented as an **offer** — provider, tier, rating, and callout fee — and the customer **accepts or rejects** it.
+- 🔧 **Offers are collected for a window, then the customer chooses — Round 15 replaced first-past-the-post.** Acceptances no longer race: the first acceptance opens a **90-second collection window** during which every other eligible provider may also accept with their own fee. At the end of it the customer is shown **up to three offers side by side** — provider, tier, rating, distance and callout fee — and picks one. Under the old rule the winner was whoever tapped fastest rather than whoever was nearest or cheapest, the customer decided blind one offer at a time, and the dominant provider strategy was to accept instantly and quote high. The collection window costs 90 seconds of a 30-minute budget and converts a race into a genuine competitive bid.
+  - **Fewer than three offers** at the end of the window: show what arrived. **None:** keep broadcasting and open a new window on the next acceptance.
+  - Each offer is an `EmergencyOffer` row (bookingId, providerId, calloutFeeLaari, createdAt, state). `emergency_offered` now means *offers are collected and awaiting the customer*, not *one provider has claimed this*.
+  - The atomic-claim machinery still applies, but only to the offer the customer selects — it resolves the case where two customers somehow reach the same provider, not the case of two providers reaching one customer.
+
+🔧 **The selected offer does not bind the customer until they select it.** It is presented as an **offer** — provider, tier, rating, and callout fee — and the customer **accepts or rejects** it.
   - **Accept** → the offer's fee becomes `agreedAmount` (`amountKind: 'callout_fee'`) and the booking moves straight to `awaiting_payment`.
   - **Reject** → the booking returns to `requested` and **re-broadcasts immediately**, excluding every provider already rejected on this booking. The rejected provider is told the customer went elsewhere, without a reason.
   - **Customer silence** → 🔧 the offer expires after **5 minutes**, releases the provider, and re-broadcasts. Applied without a dedicated question: an emergency customer is holding their phone, and a longer window wastes the overall clock.
@@ -264,10 +271,18 @@ Search results, category results, and Home cards show a mode affordance — **"B
 - **In-app chat opens at `accepted`**, same as every other booking mode (§Pre-booking enquiry and full chat, below) — this is when the provider gets the exact address, access instructions, and any detail that doesn't fit the initial job description.
 - 🔧 **`scheduledFor` is set to the acceptance timestamp**, so the 7-day completion timeout fires normally. Without this, emergency bookings would have no natural scheduled time, the completion timeout could never fire, and a provider could block reviews of emergency work forever by staying silent.
 - **No calendar reservation** — an emergency is understood as an interruption to the published calendar, not a block on it.
+- 🔧 **Arrival confirmation and re-dispatch — Round 15.** A confirmed emergency provider who never arrives is currently unhandled: the customer waits with no recourse. The customer may mark **"provider has not arrived"** from the booking screen at any point after the category's accept window elapses. This releases the provider, records a **no-show** against their conduct record (§1f), and **re-broadcasts immediately** excluding them. No admin is involved — an emergency cannot wait for a queue.
 - **Rate limit:** 3 emergency requests per customer per 24 hours, 10 per 7 days. Accept-then-cancel patterns are logged as a moderation signal (Phase 22).
 - 🔧 **The overall response window is per-category, not a single 30 minutes — Round 12.** Plumbing, Electrical and AC Repair keep **30 minutes**. **Moving**, newly emergency-capable, gets **120 minutes**: the 30-minute figure was set for a tradesperson arriving with hand tools, and a mover needs a vehicle and usually a crew. Stored as `emergencyAcceptWindowMinutes` on the category (§Phase 4), alongside `minimumLeadTimeMinutes`.
 - **If the window expires with no accepted offer:** the booking auto-declines, the customer is notified, and is offered one tap to re-broadcast or to convert it to a normal request-based booking. Individual offer expiries and rejections do **not** stop the clock — the window governs the whole request, so a customer who rejects three offers has spent that time.
 - **Rejections do not consume the customer's rate limit.** The limit applies to *requests*, not to offers within one.
+- 🔧 **Emergency dispatch fee — MVR 200, new in Round 15.** RaajjePro charges the **customer** MVR 200 (20000 laari) per emergency dispatch. It exists to stop the feature being used casually, and it is the first money the platform takes from a customer — §1b's "all customer features are free indefinitely" is amended accordingly, and only for this.
+  - **Incurred when the customer selects an offer**, never on submitting a request. A dispatch nobody accepts costs the customer nothing, and a customer whose emergency goes unanswered must not also receive a bill.
+  - 🔧 **It never blocks dispatch.** There is no payment gateway — every payment to RaajjePro is a manual bank transfer — so the fee is recorded as **owed** and the job proceeds immediately. Requiring a transfer mid-emergency would be both unworkable and indefensible.
+  - **Settled afterwards** through the existing `PaymentSubmission` flow against a generated reference code, with admin confirmation. This is what `PaymentSubmission`'s open `purpose` enum was left open for: a new value `emergency_dispatch_fee`, alongside the subscription purpose.
+  - 🔧 **An unsettled fee blocks all new bookings**, not only emergency ones. The account is not suspended and existing bookings are unaffected — the customer simply cannot start anything new while owing.
+  - 🔧 **The block lifts the moment the customer submits proof of transfer, not when an admin confirms it.** Online banking is done from a phone here, so settling takes minutes — but admin confirmation runs on a 48-hour SLA, and holding a customer hostage to a queue for MVR 200 would punish them for the platform's own latency. Submission clears the block; the admin verifies afterwards and acts on anything false. This is the same trust posture the plan already takes with booking payment attestation, and a fabricated receipt is a moderation matter (§Phase 22), not a reason to make everyone wait.
+  - The fee is **not refundable on a provider no-show** — but a re-dispatch under the no-show rule above does **not** incur a second fee. One emergency, one fee.
 
 ### Pre-booking enquiry and in-app chat — the only channel, always
 
@@ -423,6 +438,7 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 - **Where it lives:** the review queue extends Phase 10a/22's existing admin panel and audit log.
 - 🔧 **Document handling — newly specified.** ID and passport images are strictly more sensitive than payment proofs and v3 introduced them with no policy:
   - Stored in a **separate private bucket**, never the media bucket, never publicly addressable, accessed only via short-lived signed URLs.
+  - 🔧 **Excluded from the application backup, with its own retention — Round 15.** A 90-day purge that leaves the document sitting in a database or bucket backup is not a 90-day purge, and it is the first thing a data-protection review finds. The identity bucket carries an independent lifecycle policy and is **not** included in the application backup set. State the real retention in Phase 23's policy — purged from production at 90 days and from backups within the bucket's own retention — rather than the one that sounds better.
   - **Retained 90 days after a verification decision, then purged.** The decision, the evidence *type*, and the reviewing admin persist; the images do not.
   - **Every access is logged** — which admin viewed which document, when. The audit log records the decision, the evidence types submitted, and the rejection reason where applicable, so a rejected provider gets a real reason and a disputed decision has a record.
   - Purged immediately on account deletion.
@@ -430,6 +446,95 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 - Full evidence checklist, rejection-reason taxonomy, and resubmission path are built in Phase 23. The *decision* — what's required, who reviews, how documents are handled — is locked here so Phases 5 and 10 can build against it.
 
 ---
+
+## 1f. Provider Conduct & Reputation — 🔧 new in Round 15
+
+Star ratings measure whether a customer *liked* the job. They say nothing about whether a provider turns up, honours the price they quoted, or answers at all — which are the three failures customers actually complain about, and the three that drove people to distrust the Facebook market in the first place. Conduct is a second axis, computed from booking outcomes rather than opinions, and it is the mechanism that makes "commitment" a real claim rather than a marketing line.
+
+### The metrics — computed, never self-reported
+
+| Metric | Definition | Notes |
+|---|---|---|
+| **Completion rate** | completed ÷ (completed + provider-cancelled + no-show) | The headline reliability number |
+| **Cancellation rate** | provider-initiated cancellations after `accepted` ÷ accepted | Customer cancellations never count against a provider |
+| **No-show rate** | confirmed no-shows ÷ accepted | Emergency no-shows (§1c) and completion-timeout abandonments |
+| **On-time rate** | arrivals within 15 min of `scheduledFor` ÷ completed with an arrival mark | Slot and request modes only; emergency has no scheduled time |
+| **Price adherence** | completions where `finalAmount` ≤ `agreedAmount` ÷ completions with both | The anti-hiking signal, and the reason `finalAmount` is mandatory |
+| **Acceptance rate** | accepted ÷ (accepted + declined) — explicit responses only | Unchanged from Round 10; timeouts feed response rate, not this |
+| **Median response time** | median seconds from prompt to explicit response | Timeouts excluded from the median, counted in response rate |
+
+### Display — 🔧 objective metrics only, never editorial labels
+
+**The public profile shows numbers and counts, and nothing else.** "94% on time · 3% cancelled · usually responds in 12 minutes · 47 jobs completed" — the customer draws their own conclusion.
+
+🔧 **There are no system-generated warning labels.** "Prone to cancel" and "Price hiking" were considered in Round 15 and **rejected**: they are automated public accusations, computed from a handful of data points, in a market small enough that everyone knows everyone. A wrong label is somebody's livelihood and a plausible defamation claim, and the numbers carry the same decision value without asserting a character judgement. **Do not reintroduce editorial labels in any form**, including euphemistic ones.
+
+- **Nothing displays below a 10-completed-booking floor.** Under that, show "New provider" and the job count. One cancellation out of two bookings is 50% and means nothing.
+- **A rolling 90-day window**, so a provider who improves is not defined by last year.
+- **Every metric is visible to the provider on their own dashboard before it is visible to anyone else**, with the underlying bookings listed. Nobody should learn their on-time rate from a customer.
+
+### Consequences — graduated, and never silent
+
+- **Alerts first.** Crossing a threshold notifies the provider with the specific bookings that caused it and what would clear it. A provider who does not know they have a problem cannot fix it.
+- **Then ranking.** Sustained poor conduct lowers search position. This is the main lever, and it is proportionate — the provider is not removed, just less prominent.
+- **Then emergency suspension.** Falling below thresholds removes `emergencyCapable` eligibility while the tier is retained. Emergency is the highest-trust surface and the first thing to lose.
+- **Admin review, never automatic account action.** Suspension stays a human decision through Phase 10b, with the conduct record as evidence.
+- **Appeal.** Any provider may contest a metric through the Phase 22 queue; a booking excluded on appeal is excluded from the aggregate and audit-logged.
+
+### 🔧 Structured review tags — alongside the star rating
+
+The 1–5 star rating stays. Each category additionally carries **six to eight fixed tags, positive and negative**, selectable in one tap: *On time · Fair price · Quality materials · Good communication · Left a mess · Arrived late · Poor communication · Price changed on site.*
+
+- **Fixed per category, never free text.** Free tags cannot be aggregated, arrive in a mix of Dhivehi and English, and become a moderation surface.
+- **Negative tags are the point.** A positive-only set makes every profile look identical and pushes criticism into free text where it cannot be counted.
+- Tags aggregate on the profile as counts — "On time (31) · Fair price (28) · Arrived late (3)" — and a tag is only shown once it has been applied **three times**, so no single review can brand anyone.
+- Rating a booking must be **two taps minimum**: stars, then optional tags. Review completion rate is what makes the whole system work, and every extra field costs completions.
+
+## 1g. Local preference — 🔧 new in Round 15
+
+Customers may filter to **Maldivian-owned businesses**. This is an attribute of the *business*, evidenced by the registration document Gold verification already collects, and it is verified rather than self-declared.
+
+🔧 **It is deliberately not a nationality field on the individual.** Storing the nationality of every provider and letting customers exclude people by it is discrimination in most legal frameworks, would read very badly if it surfaced, and is not what the customer preference is actually about. Business ownership delivers the local-economy goal and the trust signal without profiling workers.
+
+- Available only at **Gold**, because that is the tier carrying the registration document. Below Gold the attribute is absent rather than false.
+- Surfaces as a filter and a profile attribute, never as a ranking boost — customers who care can filter; customers who do not are unaffected.
+
+## 1h. Repeat use — 🔧 new in Round 15
+
+**The problem this section exists to solve.** Payment happens off-platform and coordination cannot be enforced, so after one completed booking the customer has met a provider they liked and the provider has met a paying customer — and neither needs RaajjePro for the second job. Platforms that hold payment retain a reason to exist on transaction two; this one holds nothing. Everything below is a deliberate answer to that, and it is the difference between a subscription and a one-off lead fee.
+
+### 🔧 The locked agreement — what "payment hold" means here
+
+Round 15 considered holding customer funds until completion and **rejected it**: escrow means a payment gateway and almost certainly MMA licensing, which is a different company, not a feature. The behaviour wanted — no price hiking, no no-shows — is obtained instead by making the agreement itself immovable.
+
+- At `accepted`, the **agreed price, date, time and scope are locked**. Neither party can alter them unilaterally.
+- Any change requires an **explicit in-app amendment the other party accepts**. The original terms and the amendment are both retained.
+- **Every amendment attempt is recorded**, accepted or not, and feeds price adherence (§1f). A provider who routinely revises upward on site has a number that says so.
+- At completion, `finalAmount` above `agreedAmount` **without an accepted amendment** is a price-adherence failure and is visible on the profile as one.
+- The customer's evidence in a dispute is therefore complete without RaajjePro ever touching money: agreed terms, amendment history, timestamps, chat, and both completion attestations.
+
+### 🔧 Callback guarantee
+
+A provider commits to **return free within 7 days** if the same issue recurs — honoured **only for on-platform bookings**, and enforceable because RaajjePro holds the record of what was agreed.
+
+- Opt-in per listing, displayed as a badge, and a real differentiator against an unrecorded phone arrangement.
+- A callback is a **new booking linked to the original**, at zero cost, so it flows through the normal machinery and appears in both parties' history.
+- Declining an honoured callback claim routes to the Phase 22 dispute queue and counts against conduct.
+- This is the clearest answer to "why book here instead of calling them directly": going direct forfeits it.
+
+### 🔧 Saved preferences and one-tap rebooking
+
+- **Saved addresses** with labels, **preferred time windows**, and **standing service instructions** ("gate code", "ask for the manager"), reused across bookings.
+- Favourites already exist (Phase 14, saved *listings*); Round 15 extends them to **saved providers**, since customers remember a person, not a listing.
+- "Book Again" (Round 10) carries the saved preferences forward, so a repeat booking is genuinely one screen.
+
+### 🔧 Provider replacement on cancellation
+
+A confirmed provider cancelling is the moment a customer decides the platform is unreliable. It must never dead-end.
+
+- **Emergency bookings re-broadcast** through the normal §1c dispatch, excluding the cancelling provider. No new dispatch fee is incurred.
+- 🔧 **Normal bookings do not broadcast.** The customer is dropped back into the booking flow with **service, date, time and preferences pre-filled**, so rebooking is a confirmation rather than a re-entry. Broadcasting a non-urgent job to every provider would be noise for them and pressure for the customer.
+- The cancelling provider takes the conduct hit (§1f) in both cases.
 
 ## 2. Architecture Decisions
 
@@ -465,7 +570,8 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
 - Monorepo `/backend` (domain modules) + `/frontend` (Flutter, feature-based)
 - TypeScript strict, ESLint, Prettier, commit hooks; Flutter lint config
 - Env config strategy; `.env.example`; no secrets committed
-- CI skeleton: lint + build
+- CI skeleton: lint + build, 🔧 **plus automated dependency scanning — Round 15**. It costs nothing at this stage and covers the highest-frequency real-world compromise path; Phase 20 is an internal audit against your own requirements and cannot find a class of problem nobody thought of.
+- 🔧 **Point-in-time recovery configured from the first migration — Round 15.** WAL archiving with an RPO of 5 minutes or better (§5). Turning it on later does not recover what was lost before it was on.
 - **Job runner wired up** (pg_cron or equivalent) with one no-op scheduled job proving it runs
 - README documenting: UUID primary keys, integer-laari money, soft-delete convention, idempotency-key convention
 
@@ -484,7 +590,9 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
   - every motion primitive has a reduced-motion path honouring the OS setting
 - Component gallery route rendering everything with sample data
 
-**Done when:** the gallery renders every widget; a11y criteria verified with a screen reader and at 200% text scale; `flutter analyze` clean.
+- 🔧 **Built RTL-ready, without shipping Dhivehi — Round 15.** Thaana is right-to-left, and §6 defers localisation while noting only the font consequence. The *layout* consequence is the expensive one: in Flutter, RTL is `Directionality`, `EdgeInsetsDirectional`, `start`/`end` and mirrored motion, not a translation file. A design system built with absolute directions is inherited by every later phase, making the retrofit a rewrite of the presentation layer. Use directional insets and alignment **exclusively** — no `EdgeInsets.only(left:)`, no `TextAlign.left`, no hardcoded row order. This costs nothing now and is the difference between adding a locale later and rebuilding the frontend.
+
+**Done when:** the gallery renders every widget; a11y criteria verified with a screen reader and at 200% text scale; 🔧 the gallery also renders correctly under a forced RTL `Directionality` with no overlap or clipping; `flutter analyze` clean.
 
 ### Phase 2 — Backend Core Infrastructure
 
@@ -514,12 +622,15 @@ Tuition was removed entirely in an earlier revision — from categories, seed da
   - Deliverability setup is still required regardless of vendor: SPF, DKIM, DMARC, and a warmed sending domain.
   - 🔧 **Rate limits, explicit:** **3 OTP sends per email address per 15 minutes** *and* **5 per user account per hour** (both, not either). **5 verification attempts per issued OTP**, after which it is invalidated and a new send is required. Hitting either send limit returns `OTP_RATE_LIMITED` with the seconds remaining, so the UI can show a real countdown rather than a generic error.
 - 🔧 **Phone number: collected, unique, and NOT verified.** Both `email` and `phone` carry a database-level unique constraint, so each can back exactly one account. A registration attempt against either an in-use email or an in-use phone is **blocked at the field**, naming which one is taken, with a route to login or password reset — never a generic failure and never a silent overwrite.
+  - 🔧 **Foreign numbers are accepted — Round 15.** The 7-digit 7-or-9 prefix logic is a Maldivian assumption embedded across validation and contact-pattern detection. Resort guests and expatriate residents are plausible high-value customers, and rejecting their number at registration is a silently lost signup. Store numbers in E.164 with a country code, default to +960, and treat the 7/9 heuristic as Maldives-only rather than universal.
   - **Uniqueness is not ownership, and the UI must not imply otherwise.** Nothing proves the number belongs to the person who typed it, because the mechanism that proved it (SMS OTP) is gone. A phone number is displayed as user-supplied information, never with a check mark, never described as verified.
+  - 🔧 **Uniqueness is enforced from Bronze, not from registration — Round 15.** An unverified phone number is **claimable**: several accounts may hold it, and none of them displays it as anything. Exclusivity begins only when an admin confirms the number during Bronze review, which already happens. This closes squatting as an attack rather than as an inconvenience — under the old rule one motivated person could register the numbers of every established tradesperson in Malé in an afternoon, and each victim's recovery was a manual review against a 5-business-day SLA, jamming the supply pipeline at exactly the moment it needs to fill. **If a number is already held at Bronze or above, registration is blocked at the field** as before.
   - 🔧 **Two consequences this creates, both handled by the admin, not by new infrastructure.** First, **squatting**: registering with someone else's number permanently blocks the real holder, who has no self-serve way to prove ownership. Second, **number recycling**: Maldivian numbers are reassigned on carrier churn, so a recycled number stays locked to a dormant account forever. Both resolve through the existing Phase 10b recovery queue — a claimant submits identity evidence and an admin releases the number.
   - 🔧 **The admin confirms the phone number during Bronze review** (§1e) — by calling it, or by matching it against the submitted identity document. This costs nothing new (Bronze is already a manual review) and it makes a verification tier mean the number is real as well as the person. Below Bronze, treat every number as unproven.
 - **Account settings (backend + screens):**
   - change password, change email, change phone (each re-verified)
   - active session list + revoke — per-device refresh tokens so revoking one device doesn't log out the others
+  - 🔧 **Saved preferences — Round 15 (§1h):** labelled addresses, preferred time windows, and standing service instructions, reused by every booking flow and carried forward by "Book Again".
   - data export — `GET /v1/users/me/data-export` returns the user's own data as JSON
   - 🔧 **Account recovery — Round 11.** Email is now the primary credential, so recovery runs the other way: a user who loses access to their email address recovers through **manual admin review** against the account record and their identity evidence, via Phase 10b's queue. There is no automated second channel, because SMS was it. Standard password reset (Phase 3b) still runs over email for anyone who retains mailbox access.
   - account deletion — App Store requirement. Anonymises all authored content: name/email/phone replaced with a placeholder, listings and reviews preserved so provider rating aggregates stay intact. Soft-delete, not purge. **ID documents (§1e) are purged, not anonymised.**
@@ -559,9 +670,9 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 
 ### Phase 4 — Categories Module
 
-- `Category`: id, name, icon identifier, color token, sortOrder, isActive, `bookingMode`, `emergencyCapable`, `minimumLeadTimeMinutes`, and 🔧 `emergencyAcceptWindowMinutes` (Round 12). Unlimited categories — no hardcoded enum in schema or validation.
+- `Category`: id, name, icon identifier, color token, sortOrder, isActive, `bookingMode`, `emergencyCapable`, `minimumLeadTimeMinutes`, `emergencyAcceptWindowMinutes` (Round 12), and 🔧 **`emergencyMinimumTier`, `quoteExpiryMinutes`, `quoteApprovalMinutes` (Round 15)**. Unlimited categories — no hardcoded enum in schema or validation.
 - **Seed exactly 12:** Cleaning, Plumbing, Electrical, AC Repair, Beauty, Photography, Gardening, Computer, Moving, Fitness, Events, **Boat Charter**. 🔧 Boat Charter is new in v5 — picnics, fishing trips, sandbank excursions. Request-based, not emergency-capable; no schema fields beyond the standard set (§1c).
-- 🔧 **Also seed, per category:** the `bookingMode` default (§1c); `emergencyCapable` — 🔧 **true for Plumbing, Electrical, AC Repair and Moving** (Moving added in Round 12); 🔧 **`minimumLeadTimeMinutes` — Round 14 set these, do not invent them:** Cleaning 180 · Beauty 120 · Fitness 120 · Plumbing 60 · Electrical 60 · AC Repair 60 · Computer 120 · Gardening 720 · Photography 1440 · Moving 1440 · Boat Charter 1440 · Events 2880. Only the three slot categories bite immediately, since they are the ones with a picker in Phase 9a; all twelve remain admin-editable from Phase 10b. and `emergencyAcceptWindowMinutes` — **30 for Plumbing, Electrical and AC Repair, 120 for Moving**, null elsewhere. A mover needs a vehicle and usually a crew, so the 30-minute figure set for a tradesperson with hand tools does not transfer. Phase 5 reads these, Phases 9/9a/17 consume them.
+- 🔧 **Also seed, per category:** the `bookingMode` default (§1c); `emergencyCapable` — 🔧 **true for Plumbing, Electrical, AC Repair and Moving** (Moving added in Round 12); 🔧 **`minimumLeadTimeMinutes` — Round 14 set these, do not invent them:** Cleaning 180 · Beauty 120 · Fitness 120 · Plumbing 60 · Electrical 60 · AC Repair 60 · Computer 120 · Gardening 720 · Photography 1440 · Moving 1440 · Boat Charter 1440 · Events 2880. Only the three slot categories bite immediately, since they are the ones with a picker in Phase 9a; all twelve remain admin-editable from Phase 10b. and `emergencyAcceptWindowMinutes` — **30 for Plumbing, Electrical and AC Repair, 120 for Moving**, null elsewhere. A mover needs a vehicle and usually a crew, so the 30-minute figure set for a tradesperson with hand tools does not transfer. 🔧 **`emergencyMinimumTier` (Round 15)** — `gold` for Electrical and Plumbing, `silver` for AC Repair and Moving, null elsewhere. 🔧 **`quoteExpiryMinutes` / `quoteApprovalMinutes` (Round 15)** — 120 / 240 for Plumbing, Electrical, AC Repair and Computer; 1440 / 4320 for Photography, Gardening, Moving, Events and Boat Charter; null for the three slot categories, which do not quote. Phase 5 reads these, Phases 9/9a/17 consume them.
 - `GET /v1/categories` — public, active categories sorted by sortOrder, including `bookingMode` and `emergencyCapable`.
 - Admin-only POST/PATCH/DELETE against **real** admin auth from Phase 2.
 - Frontend: Explore screen pixel-matched, grid driven entirely by the live endpoint.
@@ -569,6 +680,8 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 **Done when:** a 13th category added via API appears in Explore with no rebuild; the seeded `bookingMode` and `emergencyCapable` values are readable by a downstream module; Boat Charter appears correctly as request-based, not emergency-capable.
 
 ### Phase 5 — Provider Profiles *(backend only)*
+
+🔧 **Round 15 adds two attributes here.** `maldivianOwned` — a verified attribute of the *business*, evidenced by the registration document Gold already collects (§1g), exposed as a filter and a profile flag, **never as a ranking boost** and **never as a nationality field on an individual**. And the read surface for §1f's conduct metrics, which Phase 11 computes and Phases 5 and 12 display.
 
 - `ProviderProfile`: userId, businessName, bio, yearsOfExperience, `verificationTier`, `verificationStatus`, `subscriptionPriceLaari`, createdAt
 - **`jobsCompletedCount` derived from the booking event log**, never a hand-maintained counter
@@ -675,7 +788,7 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 - **Provisional reservations** (§1c) for offered quotes, with a 72-hour expiry swept by a scheduled job
 - Cancellation, decline, or timeout releases the reservation
 - Holiday and exception handling: providers block ranges (Ramadan hours, travel, public holidays)
-- 🔧 **Slot generation window: 60 days rolling**, regenerated by a nightly job. An availability-rule change regenerates **future unreserved slots only** — reserved slots are never touched by a rule change. v3 left the window, the regeneration trigger, and the rule-change behaviour all unspecified.
+- 🔧 **Slot generation window: 60 days rolling**, regenerated 🔧 **incrementally and per-provider — Round 15**, not as a global nightly sweep. Only rules that changed regenerate, and the job carries a stated wall-clock budget with a Phase 21 alert on overrun. A global regeneration is trivial at fifty providers and is the first job that becomes a problem at a thousand, colliding with the day's first bookings. An availability-rule change regenerates **future unreserved slots only** — reserved slots are never touched by a rule change. v3 left the window, the regeneration trigger, and the rule-change behaviour all unspecified.
 - Endpoints: generate/regenerate, block/unblock, list open slots for a listing
 - 🔧 **The list-open-slots query filters on `startsAt > now()` in addition to `status = 'open'`.** A slot that was open a moment ago and hasn't yet been cleaned up by the nightly regeneration job must never be returned as bookable just because its status hasn't caught up — this is a query-time guarantee, not something that depends on job timing.
 
@@ -792,6 +905,12 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 - `Review` tied to a **`completed`** booking. One review per booking, enforced.
 - Rating aggregation per listing and per provider; star breakdown, computed transactionally on write
 - **Auto-completion (Phase 17) is what makes this safe.** Gating reviews on completion is correct *only* because a provider can no longer block completion indefinitely.
+- 🔧 **Structured review tags — Round 15 (§1f).** Six to eight fixed tags per category, positive and negative, selectable in one tap alongside the star rating. `ReviewTag` seeded per category; never free text. A tag is only displayed once applied **three times**, so no single review brands anyone. Rating must stay **two taps minimum** — review completion rate is what makes the whole system work, and every extra field costs completions.
+- 🔧 **Provider conduct metrics — Round 15 (§1f), computed here, displayed in Phases 5 and 12.** Completion, cancellation, no-show, on-time, price adherence, acceptance and median response time, all derived from booking outcomes rather than opinions, over a **rolling 90 days**, recomputed on booking terminal transitions rather than on read.
+  - **Nothing displays below 10 completed bookings** — show "New provider" and the job count. One cancellation out of two is 50% and means nothing.
+  - 🔧 **Never generate editorial labels.** "Prone to cancel", "Price hiking" and every euphemism were considered and rejected (§1f): automated public accusations from thin data, in a market where everyone knows everyone. Emit numbers only.
+  - **The provider sees their own metrics before anyone else**, with the underlying bookings listed, plus an alert on crossing a threshold naming what would clear it.
+  - Appeals route through Phase 22; an excluded booking leaves the aggregate and is audit-logged.
 - Soft-delete; a hidden review is excluded from aggregates
 - 🔧 **Authorship is retained internally after the author's account is anonymised** — never shown publicly, never returned in any response, but preserved so a disputed review can still be traced and adjudicated. Phase 3's anonymisation otherwise lets a customer post a fabricated review, delete their account, and leave the provider with no way to identify or contest the source, since the accountability trail is severed by design.
 
@@ -817,7 +936,9 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 **Done when:** renders for a visible provider; returns a proper not-found state for a drafts-only provider's id; no contact data in the response regardless of viewer.
 
-### Phase 14 — Favorites (Saved Services)
+### Phase 14 — Favorites (Saved Services and 🔧 Providers)
+
+🔧 **Round 15 extends favourites to providers, not only listings.** Customers remember a person, not a listing — and taking a provider's phone number to remember them is exactly the behaviour §1c's contact rule exists to prevent. Saving a provider is the on-platform substitute for that.
 
 Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic update and rollback, Saved Services screen (propose first).
 
@@ -847,6 +968,12 @@ Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic
 
 ### Phase 17 — Bookings Module
 
+🔧 **Round 15 adds four things to this phase, all specified in §1c and §1h.** Build them in the slice named:
+- **17.1 — the locked agreement.** At `accepted`, `agreedAmount`, `scheduledFor` and scope lock. Changing any of them requires an explicit amendment the counterparty accepts; the original and the amendment are both retained; **every attempt is recorded whether accepted or not** and feeds price adherence. `finalAmount` above `agreedAmount` with no accepted amendment is a price-adherence failure. This is what "payment hold" means here — **do not build escrow, funds holding, or a payment gateway.**
+- **17.1 — provider replacement.** A provider cancelling after `accepted` must never dead-end the customer. Emergency re-broadcasts (17.3). Everything else drops the customer into the booking flow with **service, date, time and saved preferences pre-filled** — non-urgent jobs are not broadcast. The cancelling provider takes the conduct hit either way.
+- **17.3 — `EmergencyOffer`.** bookingId, providerId, calloutFeeLaari, createdAt, state. Offers now coexist: `emergency_offered` means *collecting and awaiting the customer*, not *claimed*. Plus the 90-second collection window, the MVR 200 dispatch fee, and the no-show re-dispatch path.
+- **17.4 — the callback guarantee.** Opt-in per listing, displayed as a badge. A claim within 7 days creates a **new booking linked to the original at zero cost**, so it flows through the normal machinery and appears in both histories. Declining an honoured claim routes to Phase 22 and counts against conduct. This is the clearest answer to "why book here rather than calling them directly" — going direct forfeits it.
+
 The largest phase and the highest-risk one. No mockups — propose each frontend piece before implementing.
 
 🔧 **Build in four sequential slices**, each independently testable, rather than as one unit. Phase 17 carries three booking modes, five scheduled jobs, quote flows, recurring series, reschedule, and dispute/escalation paths. Attempting it in one pass is the single largest delivery risk in this plan.
@@ -859,11 +986,12 @@ The largest phase and the highest-risk one. No mockups — propose each frontend
 1. `Booking`: listingId, customerId, providerId, `bookingMode` (`slot`/`request`/`emergency`), timeSlotId (nullable), reservationId (nullable), status (§1c, including `awaiting_payment` and `payment_unresolved`), `agreedAmount` (integer laari, nullable until set), `amountKind` (`listing_price`/`quote`/`callout_fee`), quotedAmount, **`finalAmount` (integer laari, nullable — emergency only, §1c)**, `scheduledFor`, amountSetAt, paymentClaimedAt, paymentAttestedAt, completedAt, `completedVia` (`confirmed`/`unconfirmed`), statusHistory
 2. `POST /v1/listings/:id/bookings` — slot-based reserves in-transaction; request-based captures a preferred window; emergency captures no timing constraint but **validates category eligibility, provider verification, and the customer's emergency rate limit**. 🔧 `requireEmailVerified` (Round 11); idempotency key required.
 3. `PATCH /v1/bookings/:id/accept` — sets `agreedAmount` for slot and request bookings; **for emergency, accepts without an amount and moves to `accepted` pending the callout fee**. No contact info is ever exposed by this or any later step (§1c) — the `booking`-type chat opens here instead (Phase 18).
-4. 🔧 **Emergency dispatch, rebuilt in Round 12.** `set-amount` disappears as a separate step; the fee arrives with the acceptance.
-   - On creation, an emergency booking **broadcasts** to every eligible provider — emergency-capable category, island match, `verificationTier` silver or gold, `acceptingNewCustomers` on.
-   - `PATCH /v1/bookings/:id/emergency-accept` — provider claims the booking **and supplies `calloutFee` in the same call**. The claim resolves atomically: exactly one winner, losers get a distinct `ALREADY_CLAIMED` code rather than a generic failure. Status → `emergency_offered`.
-   - `PATCH /v1/bookings/:id/emergency-offer-response` — customer accepts or rejects. Accept sets `agreedAmount` from `calloutFee` with `amountKind: 'callout_fee'` → `awaiting_payment`. Reject → back to `requested`, re-broadcast, and that provider is added to the booking's `rejectedProviderIds` so they are excluded from later rounds.
-   - **Scheduled job — offer expiry:** `emergency_offered` older than **5 minutes** → release the provider, return to `requested`, re-broadcast.
+4. 🔧 **Emergency dispatch, rebuilt in Round 12 and again in Round 15.** `set-amount` disappears as a separate step; the fee arrives with the acceptance. **Acceptances no longer race** — they create offers that coexist, and the customer chooses.
+   - On creation, an emergency booking **broadcasts** to every eligible provider — emergency-capable category, island match, `verificationTier` meeting the category's `emergencyMinimumTier` (gold for Electrical and Plumbing, silver for AC Repair and Moving — never hardcode), `acceptingNewCustomers` on.
+   - `PATCH /v1/bookings/:id/emergency-accept` — provider **creates an `EmergencyOffer`** and supplies `calloutFee` in the same call. 🔧 **This no longer claims the booking — Round 15.** The first offer opens a **90-second collection window** during which every other eligible provider may also offer. Status → `emergency_offered`, which now means *offers are collecting and awaiting the customer*, not *one provider has claimed this*. There is no `ALREADY_CLAIMED` race between providers any more; atomicity applies only to the offer the customer selects.
+   - `PATCH /v1/bookings/:id/emergency-offer-response` — customer selects one `offerId` from **up to three offers shown side by side** (provider, tier, rating, distance, fee), or rejects all. Selecting sets `agreedAmount` from that offer's `calloutFee` with `amountKind: 'callout_fee'` → `awaiting_payment`, releases the unselected providers immediately rather than leaving them on a spinner, and 🔧 **incurs the MVR 200 dispatch fee (§1c)** — recorded as owed, never blocking dispatch. Reject-all → back to `requested`, re-broadcast, and **every** provider who offered is added to `rejectedProviderIds`.
+   - **Scheduled job — offer expiry:** a collection window whose customer has not responded **5 minutes** after it closes → release all offers, return to `requested`, re-broadcast.
+   - 🔧 **Provider no-show — Round 15:** the customer may mark *"provider has not arrived"* once the category's accept window has elapsed → release the provider, record a no-show against conduct (§1f), re-broadcast excluding them, and **no second dispatch fee**. No admin in the loop; an emergency cannot wait for a queue.
    - **Scheduled job — request expiry:** a `requested` emergency booking older than its category's `emergencyAcceptWindowMinutes` (30 for the three trades, 120 for Moving) → auto-decline, notify, offer re-broadcast or conversion to a request-based booking. Offer rejections and expiries do **not** reset this clock.
 5. `PATCH /v1/bookings/:id/quote` / `/approve-quote` — request-based path. Offering a quote creates a **provisional reservation** (Phase 9a); approving converts it to firm.
 6. `PATCH /v1/bookings/:id/decline` — provider; frees the slot/reservation; distinct from dispute.
@@ -900,7 +1028,7 @@ The largest phase and the highest-risk one. No mockups — propose each frontend
 10. Recurring-booking entry point and one-tap "Same time next week?".
 11. Emergency no-acceptance state: "No one accepted in time" with one tap to try another provider or convert to a scheduled request.
 
-**Done when:** the full lifecycle works for all three modes; concurrent bookings on one reservation window resolve to one winner **even across different listings of the same provider**; an unresponsive provider auto-declines at the correct window per mode; a quote expires on its own 72-hour clock and releases its provisional reservation; an unresolved payment claim escalates to admin review at day 7 without unlocking anything; 🔧 **no endpoint in the module returns a phone number, WhatsApp handle, or Viber handle — with the single exception of `reveal-contact`, and no WhatsApp or Viber handle even there** — verify this by inspecting every response shape in the module, not just the ones expected to carry it; the reveal endpoint rejects a non-emergency booking, a `requested`-state booking, and a provider-initiated call, reveals both numbers or neither, and returns nothing 24 hours after the booking goes terminal; revoking a provider's verification auto-cancels their `accepted` emergency bookings but routes their `payment_claimed` ones to admin instead; the `booking`-type chat opens at `accepted` and stays open through and after completion; an emergency booking on an ineligible category or by an unverified provider is rejected; the emergency rate limit triggers; 🔧 a broadcast reaches every eligible provider and nobody outside the eligibility rule; two simultaneous accepts resolve to one winner with the loser receiving ALREADY_CLAIMED; a rejected offer re-broadcasts and never returns to the rejected provider; an unanswered offer expires at 5 minutes and re-broadcasts without resetting the overall window; the request window expires at 30 minutes for Plumbing and 120 for Moving; an emergency job cannot be completed without a final amount, and the endpoint rejects the attempt; the "did this happen" flow distinguishes confirmed from unconfirmed completions and fires for emergency bookings too; a missed recurring occurrence skips rather than kills the series; reschedule manages reservations atomically; an accept tapped in airplane mode replays on reconnect rather than being lost; "Book again" opens a correctly-routed new request against the same listing; a confirmed booking exports a valid ICS entry.
+**Done when:** the full lifecycle works for all three modes; concurrent bookings on one reservation window resolve to one winner **even across different listings of the same provider**; an unresponsive provider auto-declines at the correct window per mode; a quote expires on its own 72-hour clock and releases its provisional reservation; an unresolved payment claim escalates to admin review at day 7 without unlocking anything; 🔧 **no endpoint in the module returns a phone number, WhatsApp handle, or Viber handle — with the single exception of `reveal-contact`, and no WhatsApp or Viber handle even there** — verify this by inspecting every response shape in the module, not just the ones expected to carry it; the reveal endpoint rejects a non-emergency booking, a `requested`-state booking, and a provider-initiated call, reveals both numbers or neither, and returns nothing 24 hours after the booking goes terminal; revoking a provider's verification auto-cancels their `accepted` emergency bookings but routes their `payment_claimed` ones to admin instead; the `booking`-type chat opens at `accepted` and stays open through and after completion; an emergency booking on an ineligible category or by an unverified provider is rejected; the emergency rate limit triggers; 🔧 a broadcast reaches every eligible provider and nobody outside the eligibility rule; 🔧 two simultaneous accepts both produce offers rather than one winner, and the customer is shown both; a collection window closes at 90 seconds and presents at most three offers; selecting one releases the others immediately; reject-all re-broadcasts and never returns to any provider who offered; an unanswered set of offers expires 5 minutes after the window closes and re-broadcasts without resetting the overall window; 🔧 selecting an offer incurs the MVR 200 dispatch fee, the job proceeds without waiting for payment, an unsettled fee blocks a new booking, and submitting proof lifts that block before any admin confirms it; 🔧 a provider marked as not arrived is released, takes a no-show against conduct, and the booking re-broadcasts without a second fee; 🔧 an emergency on Electrical is refused to a silver provider and accepted from a gold one, while AC Repair accepts silver; the request window expires at 30 minutes for Plumbing and 120 for Moving; an emergency job cannot be completed without a final amount, and the endpoint rejects the attempt; the "did this happen" flow distinguishes confirmed from unconfirmed completions and fires for emergency bookings too; a missed recurring occurrence skips rather than kills the series; reschedule manages reservations atomically; an accept tapped in airplane mode replays on reconnect rather than being lost; "Book again" opens a correctly-routed new request against the same listing; a confirmed booking exports a valid ICS entry.
 
 ### Phase 18 — Messaging Module
 
@@ -932,7 +1060,20 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 
 **Done when:** each event type fires through Phase 3c's sender; the digest sends on schedule to opt-in providers only; the analytics dashboard renders real data; a brand-new provider's response-time metric reads "No data yet," not "0 minutes."
 
+### Phase 19b — Help, Support & Feedback 🔧 *new in Round 15*
+
+Several failure paths currently dead-end with no route to a human: a rejected payment, a stalled verification, a blocked registration, a disputed conduct metric. In a market this small, one stranded provider telling the story is material.
+
+- **In-app help** — a short searchable FAQ plus a contact form that files into Phase 10b's queue as a typed case, so support is not a separate inbox.
+- **Support case type** on the admin side, with the same SLA treatment and internal notes as other queues.
+- 🔧 **Product feedback channel**, distinct from provider reviews — reviews rate providers, and nothing currently rates RaajjePro. At launch this is the fastest way to learn why people stop using it.
+- Reachable from Profile and from every terminal error state, not buried in settings.
+
+**Done when:** a contact-form submission appears as an admin case with its SLA running; help is reachable in one tap from a failed payment and a rejected verification; feedback is stored separately from reviews and is never shown on a provider profile.
+
 ### Phase 20 — Hardening, QA & Launch Readiness
+
+🔧 **One external security review before launch — Round 15.** Not tied to this phase number: the trigger is **the moment real identity documents exist in production**, whichever phase that falls in. Everything else here verifies the system against requirements this project wrote, which cannot surface a category of problem the project never considered.
 
 - Contract tests across every module; E2E on the critical path (register → verify → publish → slot published → customer books → provider accepts → payment attested → confirmed → completed → review)
 - **Concurrency tests specifically:**
@@ -1015,6 +1156,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 - **Phase 8a's trial hook fires from Phase 17's transition into `confirmed`**, plus its own `start-trial` endpoint.
 - **Phase 17 and Phase 22** retain a soft circular reference (disputes and escalations file Reports); build 17 first with a minimal Report insert, 22 makes the queue real.
 - **Phase 4 must seed `bookingMode` and `emergencyCapable`** before Phase 5, 8, 9a, or 17 read them.
+- 🔧 **Do before Phase 0 — Round 15:** cost the admin load against launch revenue. Put hours against every manual step — identity review, the confirmation call, CSV reconciliation, disputes, the recovery queue — at 50, 200 and 500 providers, against subscription income at those counts. Fifty providers at the MVR 75 introductory rate is roughly USD 240 a month, and admin load grows faster than revenue because disputes track bookings rather than signups. 🔧 **Round 15 fixed the lever in advance:** verification quality is not adjustable — the document check and the confirmation call stay. The load must come out of everything else, through auto-matching more transfers, batching queues, and cutting admin touchpoints in payments and disputes.
 - 🔧 **Pin before Phase 3 — Rounds 11 and 13:** the provider is **Amazon SES** (§Phase 3), with SPF, DKIM, DMARC and a warmed sending domain. Email verification gates booking, enquiry and messaging, *and* carries the Phase 3c fallback *and* Phase 10b's admin alerting — it is the single point of failure for the entire transactional core, more so than SMS was, because there is no second channel behind it.
 - 🔧 **Do in the Phase 0–2 window, not at Phase 3 — Round 13:** build bounce and complaint handling (SNS event destination, stored per-message result, suppression list honoured before send), then request SES production access. **The attestation required to leave the sandbox is that this handling already exists**, so the order is fixed: build it, then apply, then start Phase 3. Sandboxed SES sends 200/day to verified addresses only, so Phase 3's registration flow is not even testable before this clears. AWS answers within 24 hours but can request more information — which is precisely why it belongs ahead of the critical path rather than on it. **There is no SMS provider to procure and no sender-ID registration lead time**, which removes the longest-lead external dependency in the plan; this replaces it with a shorter but harder-edged one.
 - **Pin before Phase 4:** confirm the per-category `bookingMode` table (§1c) — it drives which listings get a slot picker vs. a request form.
@@ -1040,7 +1182,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 | Push delivery | 90% of accept prompts delivered within 30 s; 🔧 email fallback within 2 min of trigger |
 | Email deliverability | 🔧 99% of transactional email accepted by the receiving server; bounce rate under 2%, monitored from Phase 3c. 🔧 **Round 13:** this target is no longer only ours — AWS places an SES account under review above **5%** bounce and can pause sending above **10%**, so breaching it costs the channel itself, not just the metric |
 | Availability | 99.5% monthly on the API, measured against `/v1/health` |
-| Backups | RPO 24 h, RTO 4 h — drilled in Phase 24, not assumed |
+| Backups | 🔧 **RPO ≤ 5 min via WAL archiving and point-in-time recovery** (Round 15 — was 24 h), RTO 4 h, both drilled in Phase 24. Booking payment is a two-sided self-attestation RaajjePro never independently observes, so the database is the *only* record that a customer paid and a provider confirmed. A 24-hour RPO does not lose a day of data, it creates a day of unadjudicable disputes with no external ledger to reconcile against. PITR is a checkbox on every managed Postgres. |
 | Admin SLA | Payment submissions confirmed/rejected within 48 h; `payment_unresolved` items resolved within 5 business days; verification decisions within 5 business days |
 | Supported devices | Android 8.0+, iOS 14+ |
 
@@ -1050,7 +1192,7 @@ These are starting targets, not contractual. Measure in Phase 20 and revise deli
 
 ## 6. Post-v1 Backlog — deliberate, not forgotten
 
-- **Credit wallet & à la carte purchases**; the **advertising module**. Both require demand density that will not exist at launch. `PaymentSubmission`'s `purpose` enum stays open so they slot back in additively. Note the `boosted_placement` / `search_boost` naming collision to resolve when ads return.
+- **Credit wallet & à la carte purchases**; the **advertising module** — 🔧 **Round 15 set a trigger rather than leaving it open-ended: revisit at 200+ active providers.** Sponsored placement in search and category results, sold per category per island as a subscription add-on, is the format that works in a marketplace. Selling it to fifty providers competing over near-zero searches produces refund requests and teaches providers the platform does not work, which is why it stays deferred rather than being pulled forward. Both require demand density that will not exist at launch. `PaymentSubmission`'s `purpose` enum stays open so they slot back in additively. Note the `boosted_placement` / `search_boost` naming collision to resolve when ads return.
 - **Referrals — cut from v1, revisit only with fraud controls:** same-device/IP detection, a per-account cap, credit issued on the *referred provider's first confirmed subscription payment* rather than a free off-platform-verifiable booking, and a re-examination of the stored-value question under Maldives Monetary Authority rules. The MVR 50-per-completed-booking design was farmable at zero cost by two accounts and four free actions.
 - ~~**Emergency dispatch fan-out**~~ — 🔧 **built in v1 as of Round 12** (§1c), no longer deferred. Sending one emergency request to several eligible providers simultaneously, first accept wins, others auto-decline. Reuses the existing reservation race machinery. Deliberately out of v1 because Phase 17 is already the largest delivery risk; the v1 fallback (§1c) is a one-tap retry with another provider.
 - **Recurring bookings on request-based services** — currently slot-based only. Weekly plumbing checkups can't commit to a fixed duration upfront. Revisit if recurring proves valuable on the slot-based categories.
@@ -1180,6 +1322,22 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 *Two business values set.* The **introductory rate is MVR 75**, half the standard MVR 150, held for the first 100 providers for 12 months — the spread chosen to be wide enough that Phase 10c's cohort comparison actually reads. **Minimum lead times** are seeded per category from 60 minutes for the three trades to 2880 for Events; only the three slot categories bite at launch, since they are the ones with a picker.
 
 *One ambiguity that was quietly resolved wrong.* The contact reveal was called "seven conditions" in ten places while §1c listed eight bullets under "all of which must hold". `02` had already resolved it by treating the kill switch as separate, which is right — it is a runtime flag, not a per-request validation — but the resolution was never written down, so an agent counting the list would have had to guess which item to drop. §1c now states seven request-time conditions with the kill switch called out separately, and Phase 20's audit asserts the seven.
+
+**Round 15 — the adversarial review, dated 2026-08-12.** A full external-style review across core logic, product design, feature gaps, architecture, security, business and edge cases, run deliberately at the areas Round 14 excluded. Fifteen findings decided, plus eight further product decisions taken alongside them. This is the largest revision since v5 was written, and unlike Rounds 10–14 it is mostly *new scope* rather than reconciliation.
+
+*Emergency dispatch was rebuilt a second time.* Round 12 replaced targeted dispatch with an open broadcast where the first acceptance won. Round 15 found that this makes the winner whoever taps fastest rather than whoever is nearest or cheapest, forces the customer to decide blind one offer at a time under a countdown, and rewards providers for accepting instantly and quoting high. **Offers now collect for 90 seconds and the customer picks from up to three.** Eligibility also became per-category: **Gold for Electrical and Plumbing**, since electrical work at 2am in a stranger's home is life-safety work and five completed bookings evidences nothing about trade competence.
+
+*The first customer-facing charge.* A **MVR 200 emergency dispatch fee**, incurred when the customer selects an offer and never on submitting a request, so a dispatch nobody answers costs nothing. With no payment gateway, it is recorded as owed and settled afterwards by bank transfer through the existing `PaymentSubmission` flow — which is what its open `purpose` enum was reserved for. It never blocks dispatch; an unsettled fee blocks all new bookings instead, because at MVR 200 a manual receivable is not worth chasing.
+
+*Conduct became a second axis, and deliberately stayed unopinionated.* §1f scores completion, cancellation, no-show, on-time, price adherence, acceptance and response time from booking outcomes. System-generated labels — "Prone to cancel", "Price hiking" — were **considered and rejected**: automated public accusations computed from a handful of data points, in a market where everyone knows everyone, are a defamation exposure and a livelihood risk, and the raw numbers carry the same decision value without asserting a character judgement.
+
+*"Payment holds" resolved without becoming a payment company.* Holding customer funds means a gateway and almost certainly MMA licensing. §1h instead locks the agreed price, date, time and scope at `accepted`, requires an accepted amendment to change any of them, and records every attempt against price adherence. Same anti-hiking and anti-no-show behaviour; RaajjePro still never touches money.
+
+*Answers to the defection problem.* A **callback guarantee** honoured only for on-platform bookings, **saved preferences and providers**, and **provider replacement on cancellation** — re-broadcast for emergencies, a pre-filled booking flow for everything else. Together these are what makes job #2 happen here rather than by direct phone call, which §8 had identified as unanswered.
+
+*Smaller corrections with outsized cost if missed.* **RPO moved from 24 hours to 5 minutes** — the database is the only record that payment happened, so 24 hours of loss is 24 hours of unadjudicable disputes. **Phase 1 must be RTL-ready** without shipping Dhivehi, because Thaana's layout consequence is architectural and a retrofit is a presentation-layer rewrite. **Identity documents leave the application backup set**, so the 90-day purge is true. **Phone uniqueness begins at Bronze**, closing squatting as a supply-side denial of service. Quote windows became per-category, because four days to book a plumber is a booking that never happens.
+
+*Recorded without change:* chat-only coordination ships as designed and leakage is measured rather than pre-tested; verification quality stays exactly as-is, which fixes the admin-load lever to automation elsewhere; advertising stays deferred with a **200-provider trigger** rather than an open end; and **local preference is a verified "Maldivian-owned business" attribute at Gold**, not a nationality field on individuals.
 
 **Open, requiring your input:**
 - The per-category `bookingMode` table (§1c) — confirm before Phase 4 seeds it.
