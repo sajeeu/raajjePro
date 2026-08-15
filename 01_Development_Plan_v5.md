@@ -1,4 +1,4 @@
-# RaajjePro — Development Plan (v5.5)
+# RaajjePro — Development Plan (v5.6)
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 
@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.5 — read this before §0.1–0.3
+### 0.0 Revision 5.6 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -82,7 +82,7 @@ These were defects rather than choices — the spec contradicted itself or left 
 
 🔧 **Rewritten in Round 10.** The previous version listed modules rather than owning phases, and closed with a line asserting that provider onboarding has no separate page — which Phase 6a contradicted from the moment v5 introduced it.
 
-### Screens with a mockup — 8
+### Screens with a mockup — 🔧 16, delivered 2026-08-13 (Round 16)
 
 | Screen | Status | Owning phase |
 |---|---|---|
@@ -94,10 +94,27 @@ These were defects rather than choices — the spec contradicted itself or left 
 | My Services Dashboard | Exact match provided | 10 |
 | Create/Edit Service Wizard (1–7) | Exact match provided | 9 |
 | Service Preview | Exact match provided | 12 |
+| 🔧 **Bookings list** (Upcoming / Active / Completed, empty state) | **New in Round 16** — the plan had this as unmockuped | 17 |
+| 🔧 **Forgot Password** | **New in Round 16** — states a 30-minute reset-link expiry the plan had not fixed | 3b |
+| 🔧 **Register — provider variant** | **New in Round 16.** Registration is two screens, not one: the customer variant and a provider variant additionally collecting Business / Trade Name | 3 |
+
+🔧 **The wizard is seven distinct screens, not one.** Steps 1–7 were previously counted as a single entry; each is now a separate pixel-match target with its own state coverage.
 
 🔧 An earlier revision removed Tuition, dropping the count to 11 and leaving an uneven last row in the mockup's 3-column, 12-item grid. Adding Boat Charter in v5 brings the count back to 12 — the original grid's exact-match claim holds again, coincidentally.
 
-**Where a mockup and this plan disagree, the plan wins and the divergence gets flagged, not silently implemented.** Three are known: the wizard's Availability step shows a per-listing "Accepting New Customers" toggle that is now provider-level and lives on the dashboard; any mockup implying contact details pass between customer and provider is obsolete outside the emergency reveal (§1c); and any single "Verified" badge is obsolete now that verification has three tiers (§1e).
+**Where a mockup and this plan disagree, the plan wins and the divergence gets flagged, not silently implemented.** 🔧 **Round 16 audited the delivered set and found seven divergences plus three internal defects.** All require a redraw; none changes the plan.
+
+| # | Divergence | Resolution |
+|---|---|---|
+| 1 | Category grid shows **Tuition**, not **Boat Charter** (both Explore and wizard step 1), and Home features a Tuition listing | Plan's twelve stand. Boat Charter was added deliberately to keep the 3×4 grid even after Tuition was removed. **Redraw both grids and the Home feature card.** |
+| 2 | Wizard step 5 puts **"Accepting New Customers"** on the listing | Account-level since Round 10 — Phase 8a's billing pause keys off it, so a per-listing copy would be actively wrong. **Remove from the wizard.** |
+| 3 | Wizard step 5 shows **"Emergency Service"** as an ungated toggle | Gated by `emergencyMinimumTier` since Round 15 — gold for Electrical and Plumbing. **Redraw disabled-with-reason when the tier or category does not qualify.** |
+| 4 | A single **"Verified Provider"** badge on Service Preview, the Home filter chip and Profile | Three tiers since Round 8, and the tier gates emergency eligibility. A single badge cannot express "may take emergency electrical work". **Redraw as Bronze / Silver / Gold.** |
+| 5 | Wizard step 1 offers **free-text tags** ("Add a tag…", 10 keywords) | Category-scoped selectable chips since Round 12 — typing a tag from memory asks a provider to guess what customers search for. **Redraw as chips with free text underneath.** |
+| 6 | Login offers **Google and Apple** | Plan stubs Facebook, Google and Viber. Apple is required by App Store review where any third-party sign-in exists, so **Apple is correct and the plan is amended**; Facebook and Viber remain stubs. |
+| 7 | Home claims **"Secure Messaging — Private, encrypted communication within the app"** | **False as designed and must be changed.** Chat is admin-readable through a dispute or report (§Phase 10b). **Redraw as "Private messaging — your contact details are never shared."** |
+
+🔧 **Three defects inside the mockups themselves**, unrelated to the plan: step 3 renders the **Price field twice**; step 6 lists **FAQs twice**; Service Preview is titled *"Home Deep Cleaning"* under a Cleaning tag while its description is about **AC installation and repair**.
 
 ### Screens with no mockup — 20
 
@@ -361,7 +378,7 @@ requested ──────────┴──► accepted ──► awaiting
 
 1. Customer picks an open slot (slot-based), submits a preferred window (request-based), or submits an ASAP request (emergency). Status `requested`.
 2. **Provider accept prompt** — job details and the customer's name only, **no contact details of any kind, and no chat yet**. Accept / decline, or (request-based) propose a time + price — 🔧 offering a quote is itself what opens the chat (§Request-based flow).
-3. **On acceptance the booking carries an `agreedAmount`** (integer laari): from the listing price for fixed pricing, from the accepted quote for request-based, or from the provider-set callout fee for emergency. No booking reaches `awaiting_payment` without one.
+3. **On acceptance the booking carries an `agreedAmount`** (integer laari): from the listing price for `fixed` pricing, from rate × slot duration for `hourly` and `daily` in slot mode, from the accepted quote for request-based, or from the provider-set callout fee for emergency. 🔧 **Round 16:** `range` and `quote` listings can only be request-based (§Phase 8), so their `agreedAmount` always comes from the accepted quote — a range is advertising, never a bookable amount. No booking reaches `awaiting_payment` without one.
 4. **🔧 Three accept timeouts, not one:**
    - **Emergency:** 30 minutes → auto-decline, notify customer, offer another provider or conversion to a normal request.
    - **Slot and request-based:** 24 hours → auto-decline, release the slot or reservation, notify the customer to look elsewhere.
@@ -731,6 +748,10 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 
 - Fields matching all 7 wizard steps: Details, Location, Pricing, Media, Availability, Extra Info, Meta
 - **Pricing is per-listing** (each listing carries its own model and rates), not per-provider
+- 🔧 **`pricingModel` enumerated at last — Round 16.** The plan has referred to a per-listing "model" since v4 without ever saying what the values are. They are: **`fixed`** (one flat rate per job) · **`hourly`** · **`daily`** · **`range`** (from–to estimate) · **`quote`** (price on request).
+- 🔧 **`priceUnit` is a separate field from the model.** The model says how the price is *calculated*; the unit says what the customer *sees* — `job`, `hour`, `day`, `session`, `visit`. `fixed` + `session` renders "MVR 500/session", which is what the Home and My Services screens already show. Seed a short list per category; never free text, or you get `/session`, `/sesion` and `/per session` on three listings.
+- 🔧 **`pricingModel` CONSTRAINS `bookingMode` — enforced server-side on publish.** `range` and `quote` **force request mode**; `fixed`, `hourly` and `daily` permit either. This is not a style preference: §1c requires `agreedAmount` to be set at `accepted` and no booking may reach `awaiting_payment` without one, so a slot-mode listing priced `quote` is unrepresentable — the customer would be booking a fixed time at an unknown price. Reject the combination at publish with a structured error naming both fields.
+- 🔧 **Service packages (tiered options) are deferred to post-v1 — Round 16.** The wizard mockup includes them. Tiered pricing multiplies through slots, quotes, `agreedAmount`, price adherence (§1f) and the booking record, which is real scope across Phases 8, 9a and 17 on a v1 that grew substantially in Round 15. **Remove the section from wizard step 3** rather than shipping a control that cannot be booked against.
 - **`bookingMode` per listing**, defaulted from the category seed, provider-overridable
 - **`isEmergency` per listing**, settable only when the category is `emergencyCapable` **and** the provider is `verified` (§1c) — enforced on publish and update
 - `acceptingNewCustomers` is **not** on the Listing entity — it is provider-level (Phase 5)
@@ -769,6 +790,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 
 - Steps 1–7 pixel-matched, wired to Phase 8
 - Step navigation never blocked; Review always reachable
+- 🔧 **Wizard corrections from the Round 16 mockup audit.** Step 5 **drops "Accepting New Customers"** entirely — it is account-level (Phase 5) and Phase 8a's billing pause keys off it. Step 5's **"Emergency Service"** toggle renders **disabled with the reason shown** when the category is not `emergencyCapable` or the provider's tier is below the category's `emergencyMinimumTier`. Step 1's tags become **category-scoped chips** with free text underneath (Round 12). Step 3 **drops Service Packages** and gains the `pricingModel` / `priceUnit` pair (§Phase 8).
 - **Progress framing shows "N required fields left to publish"** alongside or instead of "Step 1 of 7" — 🔧 **six fields are required as of v5** (name, category, short description, one island, pricing, and now a cover image — §Phase 8), and leading with the step count overstates the commitment
 - 🔧 **Step 1's tags are selectable chips, not free-text entry — Round 12.** A category-scoped set of suggested tags renders as tappable pills, with free text underneath for anything not covered. Typing a tag from memory asks a provider to guess what customers search for; showing the options turns it into recognition. The helper line stays — *"Relevant tags help customers find you in search"* — so a provider understands why the field is worth filling in, not just that it exists
 - Step 5 (Availability) surfaces `bookingMode` and, where the category allows it, the `isEmergency` toggle with a clear explanation of the 30-minute response expectation and the verification requirement
@@ -1348,6 +1370,18 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 *The no-contact-information rule is settled, not merely flagged.* Round 15's review recorded chat-only coordination as **shipping as designed with leakage measured** rather than pre-tested (§8). The rule was previously listed here as sharpened but unresolved; it is now a deliberate, recorded position. §8's honest framing about what it can and cannot prevent stands unchanged.
 
 *The secondary email provider is deferred behind a trigger, not left open-ended.* 🔧 **Build it on the first SES sending incident, or at 200 active providers, whichever comes first.** Phase 3's provider-agnostic `EmailSender` interface exists precisely so this stays cheap to add later. §7's residual risk is unchanged in substance — and note the trigger covers more than vendor downtime, since SES can suspend on the account's own bounce rate with no incident at all.
+
+**Round 16 — the mockups arrived, dated 2026-08-13.** Sixteen screens delivered against an inventory that assumed eight. The wizard turned out to be seven distinct pixel-match targets rather than one, registration is two screens rather than one, and two screens the plan had listed as unmockuped — the Bookings list and Forgot Password — exist.
+
+*Pricing finally has an enumeration.* Phase 8 has said since v4 that "each listing carries its own model and rates" without ever stating what the models are. The mockups supplied five and they are adopted whole: `fixed`, `hourly`, `daily`, `range`, `quote`. Two things the designs implied but did not name are now explicit. **`priceUnit` is a separate field** — the model says how a price is calculated, the unit says what the customer sees, which is why the app can render "MVR 500/session" when `session` is not a pricing model. And **`pricingModel` constrains `bookingMode`**: `range` and `quote` force request mode, because §1c requires `agreedAmount` at `accepted` and a slot-mode listing priced "on request" would have the customer booking a fixed time at an unknown price. That combination is now unrepresentable rather than a runtime surprise. **Service packages are deferred** — tiered pricing multiplies through slots, quotes, price adherence and the booking record, which is real scope on a v1 that grew substantially in Round 15.
+
+*Seven divergences between the mockups and the plan, all resolved in the plan's favour except one.* The category grid shows **Tuition** rather than **Boat Charter**, which reverses a deliberate v5 decision — Tuition was removed and Boat Charter added specifically to keep the 3×4 grid even — so the grids get redrawn. The wizard's **"Accepting New Customers"** toggle is account-level (Round 10) and its **"Emergency Service"** toggle is tier-gated (Round 15). The single **"Verified Provider"** badge cannot express what a customer at 2am needs to know, since the tier is what gates emergency eligibility. Tags are **chips, not free text** (Round 12). The one exception: the mockups offer **Google and Apple** sign-in where the plan stubs Facebook, Google and Viber — **Apple is correct and the plan is amended**, since App Store review requires it wherever third-party sign-in exists.
+
+*One claim had to be changed rather than merely redrawn.* Home's trust section reads **"Secure Messaging — Private, encrypted communication within the app."** Chat is admin-readable through a dispute or report by design, so the claim is false as written and would be worst discovered by a user in the middle of a dispute. The plan's honest-framing rule (§1c, §8) applies to marketing copy as much as to status labels.
+
+*Three defects inside the mockups themselves*, unrelated to the plan and cheap to fix: step 3 renders the Price field twice, step 6 lists FAQs twice, and Service Preview carries an AC-repair description under a Cleaning listing titled "Home Deep Cleaning".
+
+*Noted for later:* wizard step 6 already includes a **Warranty & Insurance** section. The adversarial review named the absent liability and insurance position as the largest unpriced exposure in the plan — the design anticipated it and the specification still does not address it.
 
 **Open, requiring your input:**
 - Phase 23's three research questions — App Store subscription compliance, Maldivian data-protection status, GST obligations. These are the last unanswered items in the plan.
