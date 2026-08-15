@@ -82,7 +82,7 @@ These were defects rather than choices — the spec contradicted itself or left 
 
 🔧 **Rewritten in Round 10.** The previous version listed modules rather than owning phases, and closed with a line asserting that provider onboarding has no separate page — which Phase 6a contradicted from the moment v5 introduced it.
 
-### Screens with a mockup — 🔧 16, delivered 2026-08-13 (Round 16)
+### Screens with a mockup — 🔧 17, delivered 2026-08-13 and committed to `mockups/` (Rounds 16 and 20)
 
 | Screen | Status | Owning phase |
 |---|---|---|
@@ -98,7 +98,7 @@ These were defects rather than choices — the spec contradicted itself or left 
 | 🔧 **Forgot Password** | **New in Round 16** — states a 30-minute reset-link expiry the plan had not fixed | 3b |
 | 🔧 **Register — provider variant** | **New in Round 16.** Registration is two screens, not one: the customer variant and a provider variant additionally collecting Business / Trade Name | 3 |
 
-🔧 **The wizard is seven distinct screens, not one.** Steps 1–7 were previously counted as a single entry; each is now a separate pixel-match target with its own state coverage.
+🔧 **The wizard is seven distinct screens, not one.** Steps 1–7 were previously counted as a single entry; each is now a separate pixel-match target with its own state coverage. That makes the true count **17**, not the 16 stated in Round 16 — the wizard was expanded from one entry to seven without adjusting the total. 🔧 **The files now live in `mockups/`** (Round 20); `mockups/README.md` maps every filename to its screen and owning phase.
 
 🔧 An earlier revision removed Tuition, dropping the count to 11 and leaving an uneven last row in the mockup's 3-column, 12-item grid. Adding Boat Charter in v5 brings the count back to 12 — the original grid's exact-match claim holds again, coincidentally.
 
