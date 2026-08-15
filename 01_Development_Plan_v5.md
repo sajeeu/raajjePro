@@ -1,4 +1,4 @@
-# RaajjePro — Development Plan (v5.7)
+# RaajjePro — Development Plan (v5.8)
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 
@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.7 — read this before §0.1–0.3
+### 0.0 Revision 5.8 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -594,7 +594,7 @@ UI copy must never let a customer read the second as the first. **Never render a
 
 A Gold provider already submits business registration (§1e). They **may** additionally attach an insurance certificate, and where they do, the admin records that it was sighted and the listing may render **"Insurance certificate on file"** rather than "Provider states". This adds **no new required document** and no new queue — Round 15 fixed verification quality as unchangeable, and this respects that.
 
-🔧 **Flagged, not resolved:** whether an insurance certificate should be *mandatory* for emergency work in the Gold-gated categories — Electrical and Plumbing. The argument for is that a 2am electrical job in a stranger's home is exactly where uninsured work hurts someone. The argument against is that it further narrows an emergency supply pool that Round 15 already restricted to Gold, in a market where few sole traders carry cover. **This is a business decision, not a technical one, and it is unresolved.**
+🔧 **Resolved in Round 19: insurance stays optional and declared, never mandatory.** The question was whether to require a certificate for emergency work in the Gold-gated categories. The argument for is that a 2am electrical job in a stranger's home is exactly where uninsured work hurts someone. The argument against is that it further narrows an emergency supply pool that Round 15 already restricted to Gold, in a market where few sole traders carry cover. **Decided against requiring it:** Gold already narrows emergency supply hard, and few sole traders in this market carry cover — mandating it risks an emergency pool that is empty at launch, which fails customers more reliably than the uninsured case it prevents. Revisit if the §1i liability advice comes back badly.
 
 ### The platform's own position
 
@@ -798,6 +798,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 - 🔧 **`pricingModel` enumerated at last — Round 16.** The plan has referred to a per-listing "model" since v4 without ever saying what the values are. They are: **`fixed`** (one flat rate per job) · **`hourly`** · **`daily`** · **`range`** (from–to estimate) · **`quote`** (price on request).
 - 🔧 **`priceUnit` is a separate field from the model.** The model says how the price is *calculated*; the unit says what the customer *sees* — `job`, `hour`, `day`, `session`, `visit`. `fixed` + `session` renders "MVR 500/session", which is what the Home and My Services screens already show. Seed a short list per category; never free text, or you get `/session`, `/sesion` and `/per session` on three listings.
 - 🔧 **`pricingModel` CONSTRAINS `bookingMode` — enforced server-side on publish.** `range` and `quote` **force request mode**; `fixed`, `hourly` and `daily` permit either. This is not a style preference: §1c requires `agreedAmount` to be set at `accepted` and no booking may reach `awaiting_payment` without one, so a slot-mode listing priced `quote` is unrepresentable — the customer would be booking a fixed time at an unknown price. Reject the combination at publish with a structured error naming both fields.
+- 🔧 **Keep the provider billing UI behind a thin boundary — Round 19 (§Phase 23).** Phase 10a's in-app billing flow ships as designed and goes to App Review as a deliberate test of guideline 3.1.1. If it is refused, the fallback is a web billing page with the app showing state only — so put **no billing logic in Flutter widgets**, and drive everything through the same endpoints the admin panel uses. A rejection must cost a port, not a rewrite.
 - 🔧 **Warranty and insurance fields — Round 18 (§1i):** `warrantyOffered`, `warrantyTermsText`, `insuranceDeclared`, `insuranceDetailText`. All optional, none gating publish, **none verified by RaajjePro**. Any response carrying them must be renderable as an attributed claim — the API returns the provider's text, never a platform assertion.
 - 🔧 **Service packages (tiered options) are deferred to post-v1 — Round 16.** The wizard mockup includes them. Tiered pricing multiplies through slots, quotes, `agreedAmount`, price adherence (§1f) and the booking record, which is real scope across Phases 8, 9a and 17 on a v1 that grew substantially in Round 15. **Remove the section from wizard step 3** rather than shipping a control that cannot be booked against.
 - **`bookingMode` per listing**, defaulted from the category seed, provider-overridable
@@ -1219,13 +1220,35 @@ Several failure paths currently dead-end with no route to a human: a rejected pa
 - Provider Agreement linked from the Payment Proof Submission flow, where it is most relevant
 - **Identity verification screens and formal evidence checklist**, implementing §1e's locked decision — including the rejection-reason taxonomy and resubmission path
 - **App Store account deletion:** already built in Phase 3. Verify it meets the current requirement.
-- **Research, don't code — resolve before Phase 8a goes deep:**
-  - App Store and Play policy on a manual-bank-transfer subscription. Apple's IAP rules have an exception path for physical goods and services; whether this qualifies needs a real determination from someone who has been through review, because a negative answer changes Phase 8a's data model.
-  - **Current status of Maldivian personal-data-protection legislation.** Do not assume nothing applies. 🔧 §1e's ID-document collection makes this materially more important than it was in v2 — identity-document retention is exactly the kind of processing such a framework governs.
-  - **GST registration and invoicing obligations** on subscription revenue.
+- 🔧 **The three research questions are answered — Round 19, 2026-08-13.** They sat open from Round 8. Findings below; none is legal advice, and the liability question in §1i still needs counsel.
+
+**1. App Store — the design as specified is likely to be rejected, and is shipping anyway as a deliberate test.**
+
+Guideline **3.1.1** is not about payment *processing*, which is the assumption that makes this look safe. It governs what **unlocks features inside the app**. Showing bank details and accepting a payment-proof upload is not a lesser form of payment than a gateway — it is an explicit alternative purchase method, and more visible to a reviewer than a card form would be. The subscription unlocks in-app digital features (listing cap, analytics), which is IAP territory. None of 3.1.3's carve-outs cleanly covers it: **(c) Enterprise** needs the buyer to be your own organisation, **(d) Person-to-person services** describes the service being purchased rather than a platform fee, and **(f) Free stand-alone apps** requires *no purchasing inside the app and no calls to action to purchase outside it*.
+
+🔧 **Decision: build Phase 10a's in-app billing flow as designed and submit it.** Rejection is likely but not certain — enforcement on marketplace business tools has historically been inconsistent — and the alternative degrades the product on a prediction. Learn empirically.
+
+🔧 **The contingency, so a rejection costs a port and not a rewrite.** If App Review refuses it, the fallback is the 3.1.3(f) shape: a **provider billing page on the web** carrying tier, bank details, reference code and proof upload, with the iOS app showing *state only* — tier, trial countdown, "your extra listing is hidden" — and **no price, no bank details, no upgrade CTA, no link to anywhere that sells**. iOS providers are not excluded by this; they subscribe in Safari and the app reflects their entitlement normally. The call to action travels by **email**, which Apple does not govern and which Phase 3 already built.
+
+**Therefore, a Phase 10a build requirement:** keep the provider billing UI **behind a boundary thin enough to re-render on the web** — no billing logic in Flutter widgets, all of it behind the same endpoints the admin panel uses. Backend, reference matching, the admin queue and CSV reconciliation are unchanged in either outcome.
+
+**The customer side is unaffected.** Guideline **3.1.5(a)** requires apps selling physical services consumed outside the app to use payment methods *other than* IAP — which is exactly what bookings are, and RaajjePro never handles that money.
+
+**2. Maldivian data protection — a bill in train, not yet in force.**
+
+The **Privacy and Personal Data Protection Bill** went to public consultation in 2023 and was submitted to Parliament, with enactment targeted for 2025 and compliance for 2026; as of August 2026 it is reported as **not formally enacted**. It establishes an independent **Data Protection Authority** with warning, compliance-order and administrative-fine powers, and imposes controller/processor duties, cross-border transfer conditions, data-protection-officer requirements for some organisations, and individual rights.
+
+🔧 **Build to the bill's shape now rather than waiting for enactment.** §1e already anticipates most of it — private bucket, signed URLs, access logging, 90-day purge, purge-on-deletion. The one thing a data-protection authority would find on day one was the gap Round 15 closed: identity documents surviving in backups after their stated purge. **Re-verify that specifically before launch**, because it is the difference between a true retention promise and a false one.
+
+**3. GST — registration is not required at launch, and the threshold is far off.**
+
+General GST is **8%**, with mandatory registration only above **MVR 1,000,000** in annual taxable supplies. Fifty providers at the MVR 75 introductory rate is roughly **MVR 45,000 a year**; even **500 providers at MVR 150 is about MVR 900,000** — still under. The threshold arrives somewhere around **550–600 paying providers**, and 🔧 **MVR 200 emergency dispatch fees count toward it**, so track both revenue streams against the same figure. Voluntary registration is available below the threshold. Maldives moved to destination-based GST on digital services from July 2025, which applies once registered.
+
+🔧 **Phase 10a's invoice therefore shows no GST at launch** — and must be built so that adding an 8% line later is a configuration change, not a redesign. **Set a monitored alert at MVR 800,000** trailing twelve months so the threshold is not crossed unnoticed.
+
 - Data-protection findings written to `docs/data-protection-review.md` in the repo, not left in a chat
 
-**Done when:** the legal screens exist with placeholder clearly distinguished from final; the three research questions have written answers; nothing invented binding language on its own authority.
+**Done when:** the legal screens exist with placeholder clearly distinguished from final; 🔧 the three research questions have written answers (Round 19 — recorded above), and the App Store submission outcome is recorded either way; nothing invented binding language on its own authority.
 
 ### Phase 24 — Staging Environment & Deployment Hardening
 
@@ -1466,5 +1489,18 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 
 *Cleared in the same sweep, and worth recording so the ground is not re-covered:* `bookingMode`, `verificationTier`, `verificationStatus`, the booking status machine, subscription status, dispute outcomes, `Report.targetType`, `pricingModel` and `priceUnit` are all properly enumerated.
 
-**Open, requiring your input:**
-- Phase 23's three research questions — App Store subscription compliance, Maldivian data-protection status, GST obligations. These are the last unanswered items in the plan.
+**Round 19 — the last three research questions answered, dated 2026-08-13.** Open since Round 8 and carried as "lead-time research" through eleven rounds. None of what follows is legal advice, and §1i's liability question still needs counsel.
+
+*The App Store answer is the uncomfortable one.* Guideline **3.1.1** governs what unlocks features inside an app, not how money moves — so "it is only bank details, not a payment gateway" is not the mitigation it appears to be. An in-app flow showing transfer details and accepting a proof upload is an explicit alternative purchase method, and more conspicuous to a reviewer than a card form. None of 3.1.3's carve-outs covers a marketplace's provider subscription cleanly. **The decision is to build it as specified and submit anyway** — enforcement on business tools has been inconsistent, rejection is likely rather than certain, and degrading the product on a prediction is worse than learning the answer. What Round 19 adds is the contingency: if refused, the fallback is a web billing page with the app showing tier and cap state but no price, no bank details and no call to action, with the upgrade link travelling by email — which does **not** exclude iOS providers, since they subscribe in Safari and the app reflects the entitlement. To keep that a port rather than a rewrite, Phase 10a must hold **no billing logic in Flutter widgets**. The customer side was never at risk: guideline 3.1.5(a) requires physical services consumed outside the app to use payment methods *other than* IAP, which is exactly what a booking is.
+
+*Data protection: a bill in train, not yet in force.* The Privacy and Personal Data Protection Bill went to consultation in 2023 and to Parliament with enactment targeted for 2025, and as of August 2026 is reported as not enacted. It creates an independent authority with fining powers and imposes the familiar controller obligations. **The instruction is to build to its shape now rather than wait** — §1e already anticipates most of it, and the single thing an authority would find first is the gap Round 15 closed, identity documents outliving their purge inside backups. That specific check is now a launch requirement.
+
+*GST: not required at launch, and the threshold is further away than it looks.* Registration is mandatory only above **MVR 1,000,000** of annual taxable supplies at **8%**. Fifty providers on the introductory rate is around MVR 45,000 a year; five hundred at the standard rate is about MVR 900,000. The crossing point is roughly **550–600 paying providers**, and emergency dispatch fees count toward the same figure. Phase 10a's invoice therefore carries no GST line at launch and must be built so adding one is configuration rather than redesign, with an alert at MVR 800,000 trailing twelve months so the threshold is not crossed unnoticed.
+
+*Two smaller items closed alongside.* **Insurance stays optional and declared** rather than mandatory for Gold-gated emergency work — Gold already narrows that supply hard, and few sole traders here carry cover, so mandating it risks an empty emergency pool, which fails customers more reliably than the uninsured case it prevents. And **legal advice on the platform's own liability stays sequenced with Phase 23** rather than being pulled earlier.
+
+**Open, requiring your input:** 🔧 **Nothing, as of Round 19.** Every question this document has raised for you has been answered. Three things remain outstanding but are not decisions:
+
+- **The sixteen mockup image files are not in the repository.** Phases 1, 9, 10, 12 and 16 are specified as pixel-match against them. `mockups/README.md` records what is expected.
+- **Legal counsel on §1i's liability position**, sequenced with Phase 23 by your decision — a marketplace defence weakens the more a platform curates, and this one verifies, tier-gates, scores and dispatches.
+- **The App Store submission outcome**, which is empirical rather than decidable. Phase 23 records the contingency if it goes badly.
