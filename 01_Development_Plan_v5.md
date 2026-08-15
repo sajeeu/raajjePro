@@ -1,4 +1,4 @@
-# RaajjePro — Development Plan (v5.6)
+# RaajjePro — Development Plan (v5.7)
 
 **This document is standalone.** It supersedes `01_Development_Plan.md` (v1) through `_v4.md` entirely. Nothing here defers to an earlier revision — every phase is specified in full. Delete or archive the older plans; they now conflict with this one in ways that will produce wrong code.
 
@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.6 — read this before §0.1–0.3
+### 0.0 Revision 5.7 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -192,6 +192,8 @@ Credit wallet & à la carte purchases; the advertising module; referrals. Ration
 - **Grace:** 7 days after expiry with nothing changing, then downgrade to free.
 - **Billing anchor — 🔧 explicitly not "calendar month".** A subscription bills every 30 days from an anchor date set at first confirmed payment. **Pausing shifts the anchor by the paused duration.** Calling this "calendar month" was incoherent with pause: a provider who pauses four days is no longer billed on the 1st, and after several pauses no two providers share an anchor. Bill on the anchor, display the next billing date, and never imply month boundaries.
 - **Pause:** capped at **10 cumulative days**. Resuming manually within the cap preserves the remaining paused allowance for later use. At the cap, pause auto-ends and the clock forcibly resumes. **The identical mechanism applies to the trial period** — one function, one cap, one resume rule, shared by `trialing` and `active`. Pause keys off the provider-level `acceptingNewCustomers` toggle (§Phase 5).
+- 🔧 **`visibility` enumerated — Round 17.** Values had only ever appeared scattered through the places they were used, never gathered: **`active`** · **`hidden_by_provider`** · **`hidden_over_cap`** · **`hidden_by_admin`**. A listing is publicly visible only at `active` **and** `status: 'published'`.
+- 🔧 **System-hidden and provider-hidden are deliberately different values.** `hidden_over_cap` is set and cleared **only** by the entitlement system; `hidden_by_provider` **only** by the provider; `hidden_by_admin` only by moderation. Upgrade therefore restores exactly what downgrade hid and never resurrects a listing the provider took down for their own reasons — under a single `hidden` value those two cases are indistinguishable, and a paid upgrade would silently republish something the provider had deliberately withdrawn.
 - **Downgrade is non-destructive and reversible.** Listings beyond the free-tier cap are hidden (`visibility: 'hidden_over_cap'`), never deleted. Analytics disable. Badge is unaffected. Any confirmed payment restores everything. Basic discoverability of the remaining listing is never affected.
   - **Protected listings:** a listing with a booking in `accepted`, `awaiting_payment`, `payment_claimed`, `payment_unresolved`, or `confirmed` status and a future `scheduledFor` **stays visible regardless of cap**, until that booking reaches a terminal state (`completed` / `cancelled` / `declined` / `dispute_resolved`). Hiding a listing out from under a customer who already has a confirmed job booked against it breaks a commitment the platform vouched for.
   - 🔧 **Among unprotected listings, keep the highest-performing one visible** — ranked by confirmed bookings over the trailing 90 days, falling back to listing views where booking counts tie, and only to recency where a provider has neither. The provider can override the choice from the dashboard. An earlier rule kept the *most recently updated* listing, which a provider who knew the rule could game by touching their preferred listing more often than the others, regardless of which actually performed.
@@ -242,6 +244,10 @@ Every listing carries a `bookingMode`: `'slot'` or `'request'`, defaulted by cat
 **Emergency capability is separate and restricted.** A listing may set `isEmergency: true` only if **all** of the following hold:
 - its category is 🔧 **Plumbing, Electrical, AC Repair, or Moving** (Moving added in Round 12, with a 120-minute accept window)
 - the provider's `verificationTier` meets the category's 🔧 **`emergencyMinimumTier` — Round 15**. **`gold` for Electrical and Plumbing**, **`silver` for AC Repair and Moving**. Electrical and plumbing failures at 2am are life-safety work in a stranger's home; five completed bookings evidences nothing about trade competence, and Gold is the only tier carrying a trade certificate. Never hardcode `silver`.
+
+🔧 **The composed rule, stated once — Round 17.** Four fields across three entities gate emergency work and no single place had put them together: `emergencyCapable` and `emergencyMinimumTier` on the **category**, `isEmergency` on the **listing**, `verificationTier` on the **provider**. A listing may advertise emergency work when its category is capable **and** the provider meets that category's minimum tier; a booking dispatches to it only when both still hold at booking time.
+
+🔧 **A downward tier change re-evaluates published emergency listings — Round 17.** §1e handled revocation for *live bookings* but said nothing about the *listing*, leaving a gold provider demoted to silver still advertising emergency Electrical work behind a credential they no longer hold. Any tier drop now re-checks every published listing with `isEmergency: true`, clears the flag where the category's bar is no longer met, and notifies the provider naming the listings and the reason. Upward changes never auto-enable — the provider opts in.
 
 Enforced server-side on the listing publish and update paths, and re-checked at booking creation (a provider whose verification is later revoked stops receiving emergency requests immediately).
 
@@ -753,7 +759,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 - 🔧 **`pricingModel` CONSTRAINS `bookingMode` — enforced server-side on publish.** `range` and `quote` **force request mode**; `fixed`, `hourly` and `daily` permit either. This is not a style preference: §1c requires `agreedAmount` to be set at `accepted` and no booking may reach `awaiting_payment` without one, so a slot-mode listing priced `quote` is unrepresentable — the customer would be booking a fixed time at an unknown price. Reject the combination at publish with a structured error naming both fields.
 - 🔧 **Service packages (tiered options) are deferred to post-v1 — Round 16.** The wizard mockup includes them. Tiered pricing multiplies through slots, quotes, `agreedAmount`, price adherence (§1f) and the booking record, which is real scope across Phases 8, 9a and 17 on a v1 that grew substantially in Round 15. **Remove the section from wizard step 3** rather than shipping a control that cannot be booked against.
 - **`bookingMode` per listing**, defaulted from the category seed, provider-overridable
-- **`isEmergency` per listing**, settable only when the category is `emergencyCapable` **and** the provider is `verified` (§1c) — enforced on publish and update
+- 🔧 **`isEmergency` per listing — corrected in Round 17.** Settable only when the category is `emergencyCapable` **and** the provider's `verificationTier` meets that category's **`emergencyMinimumTier`** (§1c) — `gold` for Electrical and Plumbing, `silver` for AC Repair and Moving. **Never a boolean `verified` check and never a hardcoded tier**; this line carried pre-Round-8 binary language until Round 17, in the very phase that builds the gate. Enforced on publish and update.
 - `acceptingNewCustomers` is **not** on the Listing entity — it is provider-level (Phase 5)
 - Draft-save accepting partial/empty payloads; implicitly creates the Provider Profile; **requires an idempotency key**
 - Publish endpoint: full required-field validation returning a structured missing-field list. 🔧 **Six required fields, not five:** name, category, short description, at least one island, a pricing model with its price, **and now a cover image.** v4 left the cover image optional at publish, which meant a listing could go live with a blank thumbnail — the first thing a customer sees on every card and in search results. Everything else (gallery beyond the cover, availability detail, extra info) stays optional.
@@ -762,11 +768,13 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 - Soft-delete only; document cascade rules for a listing with bookings, reviews, or reserved slots
 - **View and booking counts come from an event log with periodic rollup**, not per-request counter writes
 
-**Done when:** a listing saves empty, patches per step, publishes only when complete and within cap; `isEmergency` is rejected on a non-emergency category or an unverified provider; a soft-deleted listing disappears from public queries while its bookings and reviews remain intact.
+**Done when:** a listing saves empty, patches per step, publishes only when complete and within cap; `isEmergency` is rejected on a non-emergency category, and 🔧 rejected for a **silver provider on Electrical** while accepted for that same provider on **AC Repair** — a test that passes against a boolean gate is not a test of this rule; a soft-deleted listing disappears from public queries while its bookings and reviews remain intact.
 
 ### Phase 8a — Subscription & Trial *(backend only)*
 
-- Generic `PaymentSubmission`: payerId, `purpose` (v1: `subscription`; enum stays open), amount (laari), proofUrl, referenceCode, status, submittedAt, reviewedBy, reviewedAt, rejectionReason
+- Generic `PaymentSubmission`: payerId, `purpose`, amount (laari), proofUrl, referenceCode, `status`, submittedAt, reviewedBy, reviewedAt, rejectionReason
+- 🔧 **`purpose`: `subscription` · `emergency_dispatch_fee` (Round 15) — Round 17 listed the second value.** The enum stays deliberately open; it was left extensible for exactly this, and the entity definition had not caught up.
+- 🔧 **`status`: `pending` / `confirmed` / `rejected`.** A `pending` submission grants nothing — entitlements are identical to no payment at all (§1b) — and for the dispatch fee, `pending` is precisely the state that lifts the new-booking block (§1c).
 - `ProviderSubscription`: providerId, tier, status (`trialing`/`active`/`free`/`paused`/`expired`), trialStartedAt, trialEndsAt, **billingAnchorAt**, currentPeriodEnd, pausedAt, cumulativePausedDays, remainingPauseAllowanceDays
 - 🔧 **`amount` reads the provider's `subscriptionPriceLaari`** (§1b), defaulting to MVR 150 = 15000 laari for anyone outside the introductory cohort. Never a global constant and never a range.
 - 🔧 **Trial starts on either trigger, whichever fires first** (§0.4):
@@ -793,7 +801,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 - 🔧 **Wizard corrections from the Round 16 mockup audit.** Step 5 **drops "Accepting New Customers"** entirely — it is account-level (Phase 5) and Phase 8a's billing pause keys off it. Step 5's **"Emergency Service"** toggle renders **disabled with the reason shown** when the category is not `emergencyCapable` or the provider's tier is below the category's `emergencyMinimumTier`. Step 1's tags become **category-scoped chips** with free text underneath (Round 12). Step 3 **drops Service Packages** and gains the `pricingModel` / `priceUnit` pair (§Phase 8).
 - **Progress framing shows "N required fields left to publish"** alongside or instead of "Step 1 of 7" — 🔧 **six fields are required as of v5** (name, category, short description, one island, pricing, and now a cover image — §Phase 8), and leading with the step count overstates the commitment
 - 🔧 **Step 1's tags are selectable chips, not free-text entry — Round 12.** A category-scoped set of suggested tags renders as tappable pills, with free text underneath for anything not covered. Typing a tag from memory asks a provider to guess what customers search for; showing the options turns it into recognition. The helper line stays — *"Relevant tags help customers find you in search"* — so a provider understands why the field is worth filling in, not just that it exists
-- Step 5 (Availability) surfaces `bookingMode` and, where the category allows it, the `isEmergency` toggle with a clear explanation of the 30-minute response expectation and the verification requirement
+- 🔧 **Step 5 (Availability) surfaces `bookingMode` and the `isEmergency` toggle, with every number read from the category being edited — Round 17.** Render `emergencyAcceptWindowMinutes` (so a Moving provider reads **120 minutes**, not 30) and `emergencyMinimumTier` (so a `silver` electrician sees the toggle **disabled with the reason**). The previous copy stated a flat 30-minute expectation and a generic "verification requirement", both superseded — and a provider told the wrong window distrusts everything else the app tells them.
 - **Offline resilience:** every step's autosave PATCH is queued locally on failure and replayed on reconnect. **Step navigation is blocked until the current step's data has persisted** — the wizard is the highest-value conversion flow in the app and must not silently lose work on a weak atoll connection.
 - Over-cap new-draft attempt shows an upgrade prompt, not a generic error
 
@@ -1039,6 +1047,18 @@ The largest phase and the highest-risk one. No mockups — propose each frontend
 3. 🔧 **Emergency accept-with-fee** for the provider — one screen, the callout fee entered as part of accepting, copy stating parts and labour settle directly afterward, and a clear "already claimed" state for a lost race.
 3b. 🔧 **Emergency offer card** for the customer — provider name, verification tier, rating and callout fee, with Accept and Reject, a countdown on the 5-minute offer window, and a second countdown on the overall request window so they can see what rejecting costs.
 4. Payment prompt: provider's payment details, `agreedAmount` shown explicitly and labelled by `amountKind`, honest copy, "I've Paid."
+
+🔧 **`amountKind` enumerated — Round 17.** Named since v4 and never defined, while simultaneously driving the label a customer reads beside a number they are about to transfer. It is **derived, never separately set** — one value per path that can produce an `agreedAmount` (§Phase 8's `pricingModel`):
+
+| `amountKind` | Produced by | Customer-facing label |
+|---|---|---|
+| `fixed_price` | `pricingModel: fixed` | "Agreed price" |
+| `hourly_total` | `hourly` × slot duration, or an accepted quote stating hours | "Agreed total — N hours at MVR X/hour" |
+| `daily_total` | `daily` × duration, or an accepted quote stating days | "Agreed total — N days at MVR X/day" |
+| `quoted` | an accepted quote (always the source for `range` and `quote` listings) | "Quoted price" |
+| `callout_fee` | emergency acceptance | 🔧 "Callout fee — what this provider charges to attend. **The final bill may differ.**" |
+
+The last label is not decoration. §1c requires honest framing, and a customer paying a callout fee must not believe they are paying for the job.
 5. Provider receipt prompt: three visually distinct actions — "Payment Received", "Payment Not Received", "Decline Booking".
 6. 🔧 On `accepted`: the `booking`-type chat opens and is surfaced prominently — this is the coordination moment, not a contact-info reveal (§1c).
 7. **"Did this happen?" prompt** for the customer at the 7-day post-scheduled mark.
@@ -1126,7 +1146,15 @@ Several failure paths currently dead-end with no route to a human: a rejected pa
 
 ### Phase 22 — Content Moderation & Reporting
 
-- `Report`: reporterId, targetType (`listing`/`review`/`user`/`booking`/`message`/`photo`), targetId, reason enum, status, reviewedBy, reviewedAt, **resolution reason**
+- `Report`: reporterId, targetType (`listing`/`review`/`user`/`booking`/`message`/`photo`), targetId, `reason`, `status`, reviewedBy, reviewedAt, **resolution reason**
+- 🔧 **`reason` enumerated and scoped by `targetType` — Round 17.** Previously the document literally read "reason enum" and stopped, one field after `targetType` was carefully enumerated. The plan already accepted this argument for dispute outcomes — an unstructured outcome produces an audit log you cannot measure fairness against — and report reasons feed the same queue and the same §1f provider signals.
+  - **listing:** `misleading_description` · `wrong_category` · `contact_details_in_listing` · `prohibited_service` · `not_the_real_provider`
+  - **review:** `fake_review` · `abusive_language` · `not_about_this_service`
+  - **user:** `harassment` · `impersonation` · `fraud` · `repeated_no_show`
+  - **booking:** `work_not_done` · `price_changed_on_site` · `unsafe_work` · `payment_dispute`
+  - **message:** `harassment` · `contact_solicitation` · `spam` · `abusive_content`
+  - **photo:** `not_own_work` · `inappropriate_content` · `contains_contact_details`
+- 🔧 **`status`: `open` / `under_review` / `resolved` / `dismissed`.** `resolved` and `dismissed` both require a resolution reason; neither is reachable without one.
 - Booking disputes and `payment_unresolved` escalations (Phase 17) file here automatically, with both parties' history shown together
 - Admin queue extends Phase 10a/10b's panel and reuses its auth and audit log; a flagged user's report/dispute history is visible from Phase 10b's account detail view
 - **Actioning hides, never deletes** — reversible via the soft-delete visibility flag
@@ -1382,6 +1410,16 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 *Three defects inside the mockups themselves*, unrelated to the plan and cheap to fix: step 3 renders the Price field twice, step 6 lists FAQs twice, and Service Preview carries an AC-repair description under a Cleaning listing titled "Home Deep Cleaning".
 
 *Noted for later:* wizard step 6 already includes a **Warranty & Insurance** section. The adversarial review named the absent liability and insurance position as the largest unpriced exposure in the plan — the design anticipated it and the specification still does not address it.
+
+**Round 17 — undefined enums and unstated interactions, dated 2026-08-13.** Round 16 found that `pricingModel` had been named since v4 without its values ever being stated. This round swept the whole specification for that shape and two relatives, and found eight more. None was a new decision; all eight were holes a coding agent would have filled by guessing, plausibly.
+
+*Three fields were named and never enumerated.* The worst is **`amountKind`**, which the plan referred to four times while also stating that the payment prompt shows `agreedAmount` "labelled by `amountKind`" — so an undefined enum was driving the words a customer reads beside a number they are about to transfer. It is now derived from `pricingModel` with five values and an explicit label for each, including the one that matters most: a callout fee is labelled as what a provider charges **to attend**, with the final bill stated as possibly different. **`Report.reason`** literally read "reason enum" and stopped, one field after `targetType` was carefully enumerated — the plan had already accepted the argument for dispute outcomes, that an unstructured outcome produces an audit log you cannot measure fairness against, and simply had not applied it here. Reasons are now scoped by target type. **`Report.status`, `PaymentSubmission.status` and `visibility`** were likewise undefined; `visibility` was the most dangerous of the three, because its values existed only in the places they happened to be used while `findVisibleProviders` — the single helper behind search, Home and every public profile — depends on them.
+
+*Three values had survived decisions that replaced them.* This is the fifth instance of the pattern, after SMS, admin MFA, the contact nudge and the emergency tier bar. **Phase 8 still gated emergency listings on the provider being `verified`** — binary language from before Round 8, in the very phase that builds the gate, with a Done-when that would have passed against a boolean implementation. **Phase 9's wizard copy still promised a flat 30-minute response window**, superseded by Round 12's per-category figure, which would have told a Moving provider the wrong number to their face. **`PaymentSubmission.purpose`** still read "v1: `subscription`; enum stays open" two rounds after Round 15 added `emergency_dispatch_fee` — the value the open enum had been reserved for.
+
+*Two interactions existed only in somebody's head.* **Listing `status` and `visibility`** are independent fields whose relationship was shown in exactly one query. The unanswered question was concrete: when a provider downgrades and then upgrades, which listings come back — and what happens to one the provider had hidden themselves? Under a single `hidden` value those cases are indistinguishable, so a paid upgrade would silently republish something deliberately withdrawn. System-hidden and provider-hidden are now different values. **Emergency capability** is gated by four fields across three entities with no single place composing them, and carried an unaddressed case: a gold provider publishes an emergency listing, then drops to silver. §1e covered live bookings and said nothing about the listing, leaving expired credentials advertising emergency electrical work. A downward tier change now re-evaluates published listings and clears the flag.
+
+*Cleared in the same sweep, and worth recording so the ground is not re-covered:* `bookingMode`, `verificationTier`, `verificationStatus`, the booking status machine, subscription status, dispute outcomes, `Report.targetType`, `pricingModel` and `priceUnit` are all properly enumerated.
 
 **Open, requiring your input:**
 - Phase 23's three research questions — App Store subscription compliance, Maldivian data-protection status, GST obligations. These are the last unanswered items in the plan.
