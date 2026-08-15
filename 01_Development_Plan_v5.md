@@ -559,6 +559,47 @@ A confirmed provider cancelling is the moment a customer decides the platform is
 - 🔧 **Normal bookings do not broadcast.** The customer is dropped back into the booking flow with **service, date, time and preferences pre-filled**, so rebooking is a confirmation rather than a re-entry. Broadcasting a non-urgent job to every provider would be noise for them and pressure for the customer.
 - The cancelling provider takes the conduct hit (§1f) in both cases.
 
+## 1i. Warranty, insurance, and what RaajjePro does not stand behind — 🔧 new in Round 18
+
+The wizard's step 6 has carried a **Warranty & Insurance** section since the mockups were drawn, and the specification has never had a counterpart. §8 separately records that the plan states no liability or insurance position for physical work performed by providers found through the platform — the largest unpriced exposure in the product. This section closes the first gap and names the second.
+
+### The distinction that must not blur
+
+Two things now sit near each other and mean very different things. **Getting them confused is the failure mode**, because one is a promise RaajjePro enforces and the other is a claim a stranger made about themselves.
+
+| | **Callback guarantee** (§1h) | **Provider warranty** (this section) |
+|---|---|---|
+| Whose promise | RaajjePro's | The provider's own |
+| Enforced by | The platform — a claim creates a linked zero-cost booking | Nobody. RaajjePro does not adjudicate it |
+| Duration | Fixed at 7 days | Whatever the provider states |
+| If refused | Phase 22 dispute queue, counts against conduct | Not RaajjePro's to resolve |
+
+UI copy must never let a customer read the second as the first. **Never render a provider warranty inside the same visual treatment as the callback badge**, and never use "guaranteed" for a provider-declared warranty.
+
+### Listing fields — all self-declared, none verified
+
+- 🔧 **`warrantyOffered`** (boolean) and **`warrantyTermsText`** (short, capped). What the provider says they will put right, and for how long.
+- 🔧 **`insuranceDeclared`** (boolean) and **`insuranceDetailText`**. Whether they say they carry public liability cover.
+- **Both are optional and neither gates publish.** Step 6 is explicitly the optional step.
+
+### The honesty rule — identical in posture to payment attestation
+
+🔧 **RaajjePro does not check either claim, and the UI must say so.** This is the same rule §1c applies to payment: the platform has no visibility, so it must not imply otherwise.
+
+- Render as **"Provider states: 90-day workmanship warranty"** — attributed, never asserted.
+- **Never** a check mark, a shield, a lock, or the word *verified* on either field. Those belong to `verificationTier` alone, which means something because a human checked it.
+- A false declaration is a **`misleading_description`** report (§Phase 22) and feeds the provider-level moderation signal, which is the realistic enforcement ceiling — the same position §8 takes on contact leakage.
+
+### 🔧 Gold providers may attach evidence — and this stays optional
+
+A Gold provider already submits business registration (§1e). They **may** additionally attach an insurance certificate, and where they do, the admin records that it was sighted and the listing may render **"Insurance certificate on file"** rather than "Provider states". This adds **no new required document** and no new queue — Round 15 fixed verification quality as unchangeable, and this respects that.
+
+🔧 **Flagged, not resolved:** whether an insurance certificate should be *mandatory* for emergency work in the Gold-gated categories — Electrical and Plumbing. The argument for is that a 2am electrical job in a stranger's home is exactly where uninsured work hurts someone. The argument against is that it further narrows an emergency supply pool that Round 15 already restricted to Gold, in a market where few sole traders carry cover. **This is a business decision, not a technical one, and it is unresolved.**
+
+### The platform's own position
+
+🔧 **RaajjePro is a marketplace and not the supplier of the work.** This must be stated plainly in Phase 23's terms of service, and it is not made true merely by asserting it — a platform that verifies identity, gates emergency work by tier, scores conduct and dispatches providers is doing more than listing classifieds. **Phase 23's legal research must confirm where the line actually sits in Maldivian law**, and §8 records this as unresolved rather than settled. The one thing that is certain: the position must be decided before real emergency dispatch happens, not after an incident.
+
 ## 2. Architecture Decisions
 
 | Decision | Choice | Note |
@@ -757,6 +798,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 - 🔧 **`pricingModel` enumerated at last — Round 16.** The plan has referred to a per-listing "model" since v4 without ever saying what the values are. They are: **`fixed`** (one flat rate per job) · **`hourly`** · **`daily`** · **`range`** (from–to estimate) · **`quote`** (price on request).
 - 🔧 **`priceUnit` is a separate field from the model.** The model says how the price is *calculated*; the unit says what the customer *sees* — `job`, `hour`, `day`, `session`, `visit`. `fixed` + `session` renders "MVR 500/session", which is what the Home and My Services screens already show. Seed a short list per category; never free text, or you get `/session`, `/sesion` and `/per session` on three listings.
 - 🔧 **`pricingModel` CONSTRAINS `bookingMode` — enforced server-side on publish.** `range` and `quote` **force request mode**; `fixed`, `hourly` and `daily` permit either. This is not a style preference: §1c requires `agreedAmount` to be set at `accepted` and no booking may reach `awaiting_payment` without one, so a slot-mode listing priced `quote` is unrepresentable — the customer would be booking a fixed time at an unknown price. Reject the combination at publish with a structured error naming both fields.
+- 🔧 **Warranty and insurance fields — Round 18 (§1i):** `warrantyOffered`, `warrantyTermsText`, `insuranceDeclared`, `insuranceDetailText`. All optional, none gating publish, **none verified by RaajjePro**. Any response carrying them must be renderable as an attributed claim — the API returns the provider's text, never a platform assertion.
 - 🔧 **Service packages (tiered options) are deferred to post-v1 — Round 16.** The wizard mockup includes them. Tiered pricing multiplies through slots, quotes, `agreedAmount`, price adherence (§1f) and the booking record, which is real scope across Phases 8, 9a and 17 on a v1 that grew substantially in Round 15. **Remove the section from wizard step 3** rather than shipping a control that cannot be booked against.
 - **`bookingMode` per listing**, defaulted from the category seed, provider-overridable
 - 🔧 **`isEmergency` per listing — corrected in Round 17.** Settable only when the category is `emergencyCapable` **and** the provider's `verificationTier` meets that category's **`emergencyMinimumTier`** (§1c) — `gold` for Electrical and Plumbing, `silver` for AC Repair and Moving. **Never a boolean `verified` check and never a hardcoded tier**; this line carried pre-Round-8 binary language until Round 17, in the very phase that builds the gate. Enforced on publish and update.
@@ -798,6 +840,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 
 - Steps 1–7 pixel-matched, wired to Phase 8
 - Step navigation never blocked; Review always reachable
+- 🔧 **Step 6 (Extra Info) keeps its Warranty & Insurance section — Round 18 (§1i)** — and the copy must attribute rather than assert. Also **delete the duplicated FAQs accordion**; it appears twice in the mockup.
 - 🔧 **Wizard corrections from the Round 16 mockup audit.** Step 5 **drops "Accepting New Customers"** entirely — it is account-level (Phase 5) and Phase 8a's billing pause keys off it. Step 5's **"Emergency Service"** toggle renders **disabled with the reason shown** when the category is not `emergencyCapable` or the provider's tier is below the category's `emergencyMinimumTier`. Step 1's tags become **category-scoped chips** with free text underneath (Round 12). Step 3 **drops Service Packages** and gains the `pricingModel` / `priceUnit` pair (§Phase 8).
 - **Progress framing shows "N required fields left to publish"** alongside or instead of "Step 1 of 7" — 🔧 **six fields are required as of v5** (name, category, short description, one island, pricing, and now a cover image — §Phase 8), and leading with the step count overstates the commitment
 - 🔧 **Step 1's tags are selectable chips, not free-text entry — Round 12.** A category-scoped set of suggested tags renders as tappable pills, with free text underneath for anything not covered. Typing a tag from memory asks a provider to guess what customers search for; showing the options turns it into recognition. The helper line stays — *"Relevant tags help customers find you in search"* — so a provider understands why the field is worth filling in, not just that it exists
@@ -1274,6 +1317,8 @@ Distinct from the backlog — these were offered as in-scope and you chose not t
 ## 8. What This Plan Still Doesn't Solve
 
 Two things worth keeping in view, because no amount of planning detail addresses them.
+
+🔧 **The platform's liability position is unresolved — Round 18.** §1i adds provider-declared warranty and insurance and states plainly that RaajjePro checks neither. What it cannot settle is RaajjePro's *own* position when work done by a provider it verified, tier-gated and dispatched goes badly wrong. A marketplace defence weakens the more the platform curates, and this one curates heavily. Phase 23's research must establish where the line sits in Maldivian law, and it must land **before emergency dispatch is live** rather than after an incident.
 
 **Provider-side leakage remains open, and v5 is honest about the ceiling.** v5's core change is that contact info is never collected for cross-party exposure in the first place — a stronger position than any gate, since there's nothing to unlock incorrectly. But it does not stop a provider putting their real number in a listing description, an FAQ answer, or a gallery image, and the provider is still the party with the incentive to do so. An earlier revision attempted enforcement in the enquiry thread via a hard block; that was removed because it could not distinguish a phone number from an AC serial in a 7-digit-number country, and photos passed regardless. What's in place instead — logged detections surfacing as provider-level moderation signals (§Phase 22) — is the realistic ceiling: it makes patterns visible and actionable without breaking the pre-sales channel.
 

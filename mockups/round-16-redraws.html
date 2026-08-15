@@ -1,0 +1,382 @@
+<title>RaajjePro — Round 16 Redraws</title>
+<style>
+  :root{
+    --ink:#0F172A; --ink-2:#334155; --ink-3:#64748B; --ink-4:#94A3B8;
+    --page:#F5F8FC; --card:#FFFFFF; --line:#E2E8F0; --line-2:#CBD5E1;
+    --blue:#2563EB; --blue-d:#1D4ED8; --blue-l:#EFF6FF; --blue-b:#BFDBFE;
+    --green:#16A34A; --green-l:#F0FDF4;
+    --amber:#D97706; --amber-l:#FFFBEB; --amber-b:#FDE68A;
+    --red:#DC2626; --red-l:#FEF2F2;
+    --gold:#B45309; --gold-l:#FEF3C7; --gold-b:#FCD34D;
+    --silver:#475569; --silver-l:#F1F5F9;
+    --shell:#0B1220; --shell-2:#111C2E; --shell-ink:#E8EEF9; --shell-ink-2:#93A3BC; --shell-line:rgba(232,238,249,.12);
+    --font:"Segoe UI",ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--shell);color:var(--shell-ink)}
+  body{font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 20px 90px}
+  code{font-family:var(--mono);font-size:.85em;background:rgba(108,155,255,.14);color:#A9C6FF;border-radius:4px;padding:1px 5px}
+
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#6C9BFF;margin:0 0 8px}
+  h1{font-size:27px;font-weight:800;letter-spacing:-.015em;margin:0 0 10px;color:var(--shell-ink);text-wrap:balance}
+  .lede{font-size:15px;color:var(--shell-ink-2);max-width:74ch;margin:0 0 8px}
+  .masthead{border-bottom:1px solid var(--shell-line);padding-bottom:22px;margin-bottom:30px}
+
+  .item{margin:0 0 46px}
+  .item-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+  .num{font-family:var(--mono);font-size:11px;font-weight:700;color:#6C9BFF;background:rgba(108,155,255,.14);border-radius:4px;padding:2px 7px}
+  .item-h h2{font-size:19px;font-weight:750;margin:0;color:var(--shell-ink);letter-spacing:-.01em}
+  .item p.why{color:var(--shell-ink-2);font-size:13.6px;margin:0 0 4px;max-width:80ch}
+  .item p.why b{color:var(--shell-ink)}
+  .chg{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+  .tag{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;border-radius:5px;padding:3px 8px}
+  .tag.out{color:#F5A3A3;background:rgba(220,38,38,.16)}
+  .tag.in{color:#8FE3B4;background:rgba(22,163,74,.16)}
+  .tag.fix{color:#F6CE7A;background:rgba(217,119,6,.18)}
+
+  .stage{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .phone{width:340px;flex:0 0 340px;background:var(--page);border:1px solid var(--shell-line);border-radius:22px;overflow:hidden;color:var(--ink);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .phone.tall{max-height:none}
+  .notes{flex:1;min-width:250px;background:var(--shell-2);border:1px solid var(--shell-line);border-radius:12px;padding:14px 16px}
+  .notes h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6C9BFF;margin:0 0 8px;font-weight:700}
+  .notes ul{margin:0;padding-left:17px}
+  .notes li{font-size:13.2px;color:var(--shell-ink-2);margin-bottom:7px}
+  .notes li b{color:var(--shell-ink)}
+
+  /* ---- in-app primitives ---- */
+  .app{font-size:14px;color:var(--ink)}
+  .topbar{display:flex;align-items:center;gap:9px;padding:13px 15px;background:#fff;border-bottom:1px solid var(--line)}
+  .logo{width:30px;height:30px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-size:14px}
+  .brandtxt{font-weight:800;font-size:16px;letter-spacing:-.02em}
+  .brandtxt span{color:var(--blue)}
+  .locpill{margin-left:6px;display:flex;align-items:center;gap:5px;background:var(--blue-l);border:1px solid var(--blue-b);color:var(--blue-d);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:650}
+  .spacer{flex:1}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(140deg,#94A3B8,#64748B)}
+
+  .body{padding:16px 15px 18px}
+  h4.scr{font-size:20px;font-weight:800;margin:0 0 14px;letter-spacing:-.02em}
+  .sub{font-size:12.8px;color:var(--ink-3);margin:-9px 0 14px}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .cat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 6px;text-align:center}
+  .cat .ic{width:40px;height:40px;border-radius:12px;margin:0 auto 8px;display:grid;place-items:center;font-size:17px}
+  .cat .nm{font-size:11.5px;font-weight:650;color:var(--ink-2);line-height:1.25}
+  .cat.new{border-color:var(--green);box-shadow:0 0 0 2px var(--green-l)}
+  .cat.gone{border-color:var(--red);background:var(--red-l);opacity:.55;position:relative}
+  .cat.gone::after{content:"REMOVED";position:absolute;inset:auto 0 5px 0;font-family:var(--mono);font-size:8px;font-weight:700;color:var(--red);letter-spacing:.06em}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .lbl{font-size:12.8px;font-weight:700;margin:0 0 7px}
+  .lbl .req{color:var(--red)}
+  .hint{font-size:11.4px;color:var(--ink-4);margin:6px 0 0}
+  .inp{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-4);background:#fff}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;font-size:12.2px;font-weight:600;color:var(--ink-2);background:#fff}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .chip.add{border-style:dashed;color:var(--ink-4)}
+
+  .row{display:flex;align-items:flex-start;gap:11px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;font-size:15px}
+  .row .t{font-size:13.4px;font-weight:700}
+  .row .d{font-size:11.8px;color:var(--ink-3);margin-top:1px}
+  .sw{width:42px;height:24px;border-radius:999px;background:var(--line-2);flex-shrink:0;position:relative;margin-top:3px}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+  .sw.on{background:var(--blue)}
+  .sw.on::after{left:21px}
+  .sw.off-locked{background:#E2E8F0;opacity:.6}
+  .row.locked{opacity:.62}
+  .lockmsg{background:var(--amber-l);border:1px solid var(--amber-b);border-radius:10px;padding:9px 11px;font-size:11.8px;color:#92400E;margin-top:9px;display:flex;gap:8px}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:750;letter-spacing:.01em}
+  .badge.gold{background:var(--gold-l);color:var(--gold);border:1px solid var(--gold-b)}
+  .badge.silver{background:var(--silver-l);color:var(--silver);border:1px solid var(--line-2)}
+  .badge.bronze{background:#FDF2E9;color:#9A5B2B;border:1px solid #F0C9A8}
+
+  .hero{height:150px;background:linear-gradient(150deg,#334155,#1E293B);position:relative}
+  .hero .who{position:absolute;left:13px;bottom:11px;color:#fff}
+  .hero .who .n{font-size:13px;font-weight:750}
+  .hero .who .v{font-size:11px;opacity:.92;display:flex;align-items:center;gap:4px;margin-top:3px}
+
+  .navbar{display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 4px 10px}
+  .nav{flex:1;text-align:center;font-size:10px;color:var(--ink-4);font-weight:600}
+  .nav .i{font-size:16px;display:block;margin-bottom:2px}
+  .nav.on{color:var(--blue)}
+
+  .trust{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .trust .t{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}
+  .trust .t .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12px;margin-bottom:7px}
+  .trust .t .h{font-size:11.8px;font-weight:750}
+  .trust .t .s{font-size:10.8px;color:var(--ink-3);margin-top:2px;line-height:1.35}
+
+  .diffbar{background:var(--green-l);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:7px 10px;font-size:11.5px;color:#166534;margin:10px 0 0}
+  .diffbar.rm{background:var(--red-l);border-left-color:var(--red);color:#991B1B}
+  .stepbar{display:flex;gap:4px;padding:0 15px 12px}
+  .stepbar i{height:3px;border-radius:2px;background:var(--line-2);flex:1}
+  .stepbar i.done{background:var(--blue)}
+  .wizhead{text-align:center;padding:13px 15px 6px;background:#fff}
+  .wizhead .t{font-size:14.5px;font-weight:750}
+  .wizhead .s{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+</style>
+
+<div class="wrap">
+<div class="masthead">
+  <p class="eyebrow">Round 16 redraws · plan revision 5.7</p>
+  <h1>Seven corrected screens, rendered from the plan rather than described</h1>
+  <p class="lede">Each screen below is the mockup with its Round 16 divergence resolved in the plan's favour. Green marks what was added, red what came out. These are working HTML at phone width — hand them to whoever redraws the originals, or let Phase 1 extract tokens from them directly.</p>
+  <p class="lede">The eighth divergence needed no redraw: <b>Apple sign-in was correct</b> and the plan was amended instead, since App Store review requires it wherever third-party sign-in exists.</p>
+</div>
+
+<!-- 1 ================================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">01</span><h2>Explore — Boat Charter replaces Tuition</h2></div>
+  <p class="why">The grid is the category set, and the category set drives booking mode, lead times, quote windows and emergency tiers — all seeded in Phase 4. <b>Tuition is not in the plan's twelve.</b> Boat Charter was added deliberately in v5, and removing Tuition is what kept the 3×4 grid even.</p>
+  <div class="chg"><span class="tag out">− Tuition</span><span class="tag in">+ Boat Charter</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="topbar"><div class="logo">◎</div><div class="brandtxt">Raajje<span>Pro</span></div><div class="locpill">◎ Malé ⌄</div><div class="spacer"></div><div class="avatar"></div></div>
+        <div class="body">
+          <h4 class="scr">Explore Services</h4>
+          <div class="grid3">
+            <div class="cat"><div class="ic" style="background:#EEF2FF;color:#4F46E5">🧹</div><div class="nm">Cleaning</div></div>
+            <div class="cat"><div class="ic" style="background:#ECFDF5;color:#059669">💧</div><div class="nm">Plumbing</div></div>
+            <div class="cat"><div class="ic" style="background:#FFFBEB;color:#D97706">⚡</div><div class="nm">Electrical</div></div>
+            <div class="cat"><div class="ic" style="background:#EFF6FF;color:#2563EB">❄️</div><div class="nm">AC Repair</div></div>
+            <div class="cat"><div class="ic" style="background:#FDF2F8;color:#DB2777">✂️</div><div class="nm">Beauty</div></div>
+            <div class="cat"><div class="ic" style="background:#FFF7ED;color:#EA580C">📷</div><div class="nm">Photography</div></div>
+            <div class="cat"><div class="ic" style="background:#F0FDF4;color:#16A34A">🌿</div><div class="nm">Gardening</div></div>
+            <div class="cat"><div class="ic" style="background:#EFF6FF;color:#2563EB">💻</div><div class="nm">Computer</div></div>
+            <div class="cat"><div class="ic" style="background:#FFF7ED;color:#EA580C">🚚</div><div class="nm">Moving</div></div>
+            <div class="cat"><div class="ic" style="background:#FAF5FF;color:#9333EA">🏋️</div><div class="nm">Fitness</div></div>
+            <div class="cat"><div class="ic" style="background:#FEFCE8;color:#CA8A04">🎪</div><div class="nm">Events</div></div>
+            <div class="cat new"><div class="ic" style="background:#ECFEFF;color:#0891B2">⛵</div><div class="nm">Boat Charter</div></div>
+          </div>
+          <div class="diffbar">Boat Charter — request mode, not emergency-capable, 1440 / 4320 quote windows.</div>
+        </div>
+        <div class="navbar"><div class="nav"><span class="i">⌂</span>Home</div><div class="nav on"><span class="i">◎</span>Explore</div><div class="nav"><span class="i">▤</span>Bookings</div><div class="nav"><span class="i">◌</span>Messages</div><div class="nav"><span class="i">○</span>Profile</div></div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Also change</h3>
+      <ul>
+        <li><b>Wizard step 1</b> carries the same twelve-icon grid — apply the identical swap there.</li>
+        <li><b>Home feed</b> features a <i>"Math &amp; Science Tuition"</i> card under Popular Near You. Replace it; a featured listing in a category that does not exist is worse than the grid being wrong.</li>
+        <li>Boat Charter covers picnics, fishing trips and sandbank excursions — a genuinely Maldivian category no competitor serves.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 2 ================================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">02</span><h2>Wizard step 5 — the toggles</h2></div>
+  <p class="why"><b>"Accepting New Customers" leaves the wizard entirely.</b> It is account-level (Round 10) and Phase 8a's billing pause keys off it — a per-listing copy would be actively wrong, and a switch inside a per-listing wizard that silently changes every listing is a genuine surprise. <b>"Emergency Service" stays but is gated</b>, rendering disabled with the reason when the category or the provider's tier does not qualify.</p>
+  <div class="chg"><span class="tag out">− Accepting New Customers</span><span class="tag in">+ tier gate + reason</span><span class="tag fix">120 min for Moving</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="wizhead"><div class="t">Create Service</div><div class="s">Step 5 of 7 — Availability</div></div>
+        <div class="stepbar"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+        <div class="body" style="padding-top:4px">
+          <h4 class="scr">Availability</h4>
+          <p class="sub">Set your working schedule so customers know when to book you.</p>
+          <div class="card">
+            <p class="lbl">Available Days</p>
+            <div class="chips"><span class="chip on">Mon</span><span class="chip on">Tue</span><span class="chip on">Wed</span><span class="chip on">Thu</span><span class="chip on">Fri</span><span class="chip">Sat</span><span class="chip">Sun</span></div>
+          </div>
+          <div class="card">
+            <div class="row locked">
+              <div class="ic" style="background:#FFFBEB;color:#D97706">⚡</div>
+              <div style="flex:1">
+                <div class="t">Emergency Service</div>
+                <div class="d">Accept urgent jobs outside normal hours.</div>
+              </div>
+              <div class="sw off-locked"></div>
+            </div>
+            <div class="lockmsg"><span>🔒</span><div><b>Not available for Electrical.</b> Emergency work in this category needs <b>Gold</b> verification — you are currently Silver. Emergency requests here expect a response within <b>30 minutes</b>.</div></div>
+            <div class="row" style="border-top:1px solid var(--line);padding-top:14px">
+              <div class="ic" style="background:#EFF6FF;color:#2563EB">▤</div>
+              <div style="flex:1"><div class="t">Appointment Required</div><div class="d">Customers must book in advance — no walk-ins.</div></div>
+              <div class="sw on"></div>
+            </div>
+          </div>
+          <div class="diffbar rm">Removed: “Accepting New Customers”. It lives in Profile → account settings and gates every listing at once.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Rules the copy must follow</h3>
+      <ul>
+        <li>Every number is read from the <b>category being edited</b> — never hardcoded. A Moving provider must read <b>120 minutes</b>, not 30.</li>
+        <li>The tier named in the lock message comes from <code>emergencyMinimumTier</code>: <b>Gold</b> for Electrical and Plumbing, <b>Silver</b> for AC Repair and Moving.</li>
+        <li>For a non-emergency category the row does not render at all — no toggle, no message.</li>
+        <li>A <b>downward tier change re-evaluates published listings</b> and clears the flag, notifying the provider (Round 17).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 3 ================================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">03</span><h2>Wizard step 1 — tags become category-scoped chips</h2></div>
+  <p class="why">Free text asks a provider to guess what customers search for. Chips turn it into recognition, and they stay consistent enough to filter on. Round 12 decided this; the mockup still shows <code>Add a tag…</code> with a 10-keyword limit.</p>
+  <div class="chg"><span class="tag out">− free-text entry</span><span class="tag in">+ suggested chips</span><span class="tag in">+ free text below</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="wizhead"><div class="t">Create Service</div><div class="s">Step 1 of 7 — Details</div></div>
+        <div class="stepbar"><i class="done"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="body" style="padding-top:4px">
+          <div class="card">
+            <p class="lbl">Service Name <span class="req">*</span></p>
+            <div class="inp">e.g. Professional Home Cleaning</div>
+            <p class="hint">Choose a clear, descriptive name customers will recognise. &nbsp;0/80</p>
+          </div>
+          <div class="card">
+            <p class="lbl">Tags &amp; Keywords</p>
+            <p class="hint" style="margin:0 0 10px">Tap the ones that describe your service. These are what customers filter by.</p>
+            <div class="chips">
+              <span class="chip on">Deep cleaning ✓</span><span class="chip on">Move-out ✓</span>
+              <span class="chip">Regular maintenance</span><span class="chip">Sofa &amp; carpet</span>
+              <span class="chip">Post-construction</span><span class="chip">Kitchen deep clean</span>
+              <span class="chip">Eco-friendly products</span><span class="chip">Same-day</span>
+            </div>
+            <div class="inp" style="margin-top:11px">Something not listed? Add it…</div>
+            <p class="hint">Suggested tags come from the category you chose. Up to 10 in total.</p>
+          </div>
+          <div class="diffbar">Chips are seeded per category. Selecting Plumbing shows a different set entirely.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Why chips, not text</h3>
+      <ul>
+        <li><b>Recognition beats recall.</b> A provider typing from memory guesses at customer vocabulary and usually guesses wrong.</li>
+        <li>Free tags cannot be aggregated or filtered — they arrive in a mix of Dhivehi and English with inconsistent spelling.</li>
+        <li>Free text stays available underneath for genuine gaps, so nothing is lost.</li>
+        <li>Same reasoning as §1f's review tags, which are also fixed per category for the same reason.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 4 ================================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">04</span><h2>Service Preview — three tiers, and the right description</h2></div>
+  <p class="why">A single "Verified Provider" badge cannot express <b>what a customer at 2am actually needs to know</b> — the tier is what gates emergency eligibility, and it is Gold that carries a trade certificate. This screen also carries an internal defect: it is titled <i>Home Deep Cleaning</i> under a Cleaning tag while describing AC installation and repair.</p>
+  <div class="chg"><span class="tag out">− "Verified Provider"</span><span class="tag in">+ Gold / Silver / Bronze</span><span class="tag fix">description matches the listing</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="hero">
+          <div class="who"><div class="n">Cool Air Maldives</div><div class="v"><span class="badge gold">◆ Gold verified</span></div></div>
+        </div>
+        <div class="body">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="chip" style="background:#EFF6FF;border-color:var(--blue-b);color:var(--blue-d);font-size:11px">Cleaning</span><span class="chip" style="background:var(--green-l);border-color:#BBF7D0;color:#15803D;font-size:11px">Published</span><div class="spacer"></div><div style="text-align:right"><div style="font-size:19px;font-weight:800;color:var(--blue-d)">MVR 500</div><div style="font-size:11px;color:var(--ink-3);margin-top:-2px">/session</div></div></div>
+          <h4 class="scr" style="margin-bottom:6px">Home Deep Cleaning</h4>
+          <p class="sub" style="margin-bottom:14px">★ 4.8 (47 reviews) · ◎ Malé · ▤ 23 bookings</p>
+          <div class="card">
+            <p class="lbl">About this service</p>
+            <p style="font-size:12.6px;color:var(--ink-3);margin:0">Thorough deep cleaning for homes and apartments across Malé and Hulhumalé — kitchens, bathrooms, floors, windows and interior surfaces. Includes appliance exteriors and cupboard fronts. Products and equipment supplied.</p>
+          </div>
+          <div class="card">
+            <p class="lbl">Service Highlights</p>
+            <div class="row"><div class="ic" style="background:var(--gold-l);color:var(--gold)">◆</div><div style="flex:1"><div class="t">Gold verified</div><div class="d">ID, business registration and trade certificate checked</div></div></div>
+            <div class="row"><div class="ic" style="background:var(--green-l);color:var(--green)">◷</div><div style="flex:1"><div class="t">Usually responds in 2 hours</div><div class="d">94% on time · 3% cancelled · 47 jobs</div></div></div>
+          </div>
+          <div class="diffbar">Conduct metrics are numbers only — never “Prone to cancel” or any editorial label (§1f).</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Badge in three places</h3>
+      <ul>
+        <li><b>Service Preview</b> — the hero badge, shown here.</li>
+        <li><b>Home filter chip</b> — “Verified” becomes a tier filter, since filtering to Bronze is not the same request as filtering to Gold.</li>
+        <li><b>Profile → Trust &amp; Safety</b> — currently reads “Verified account”; show the tier and what it required.</li>
+        <li>Below 10 completed bookings, show <b>“New provider”</b> and the job count instead of percentages — one cancellation out of two is 50% and means nothing.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 5 ================================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">05</span><h2>Home — the encryption claim comes out</h2></div>
+  <p class="why">This one is not a redraw, it is a <b>correction of a false statement</b>. Chat is admin-readable through a dispute or report by design. Advertising encryption is a promise the system does not keep, and the worst possible moment to discover that is mid-dispute — which is exactly when someone will read it back to you.</p>
+  <div class="chg"><span class="tag out">− "encrypted"</span><span class="tag in">+ what is actually true</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="body">
+          <p style="text-align:center;font-size:11px;color:var(--blue);font-weight:700;margin:0 0 4px">◇ Why RaajjePro?</p>
+          <h4 class="scr" style="text-align:center;font-size:18px">Built on trust, <span style="color:var(--blue)">designed</span> for the Maldives</h4>
+          <div class="trust">
+            <div class="t"><div class="ic" style="background:#EFF6FF;color:var(--blue)">✓</div><div class="h">Verified Providers</div><div class="s">ID-checked, with business registration at Gold.</div></div>
+            <div class="t"><div class="ic" style="background:#FFFBEB;color:var(--amber)">★</div><div class="h">Real Reviews</div><div class="s">From customers after every completed job.</div></div>
+            <div class="t" style="border-color:var(--green);box-shadow:0 0 0 2px var(--green-l)"><div class="ic" style="background:var(--green-l);color:var(--green)">🔒</div><div class="h">Private Messaging</div><div class="s">Your phone number is never shared with providers.</div></div>
+            <div class="t"><div class="ic" style="background:#FAF5FF;color:#9333EA">◈</div><div class="h">Transparent Pricing</div><div class="s">The agreed price is locked and cannot change.</div></div>
+          </div>
+          <div class="diffbar rm">Was: “Secure Messaging — Private, encrypted communication within the app.”</div>
+          <div class="diffbar">Now claims only what the system delivers: contact details are never exchanged, and the agreed price is locked at acceptance (§1h).</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Two claims tightened</h3>
+      <ul>
+        <li><b>Encryption → non-disclosure.</b> The real, defensible promise is that a provider never gets the customer's number — which is the whole point of §1c and a stronger claim than most competitors can make.</li>
+        <li><b>Transparent Pricing</b> gained a specific: Round 15's locked agreement means the price genuinely cannot move without the other party accepting an amendment. That is worth saying plainly.</li>
+        <li>Same honesty rule the plan already applies to payment status — never “Payment Verified”, always “Provider confirmed receipt”.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 6 & 7 ============================================================= -->
+<div class="item">
+  <div class="item-h"><span class="num">06</span><h2>Wizard steps 3 and 6 — the duplicated fields</h2></div>
+  <p class="why">Two defects inside the mockups rather than disagreements with the plan. Step 3 renders the <b>Price field twice</b>; step 6 lists <b>FAQs twice</b>. Step 3 also gains the pricing work from Round 16 and loses Service Packages, which is deferred.</p>
+  <div class="chg"><span class="tag out">− duplicate Price</span><span class="tag out">− duplicate FAQs</span><span class="tag out">− Service Packages</span><span class="tag in">+ priceUnit</span></div>
+  <div class="stage">
+    <div class="phone">
+      <div class="app">
+        <div class="wizhead"><div class="t">Create Service</div><div class="s">Step 3 of 7 — Pricing</div></div>
+        <div class="stepbar"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i><i></i><i></i></div>
+        <div class="body" style="padding-top:4px">
+          <div class="card">
+            <p class="lbl">Pricing Model <span class="req">*</span></p>
+            <div class="row" style="padding:9px 0"><div style="flex:1"><div class="t">Fixed Price</div><div class="d">One flat rate per job</div></div><div style="width:18px;height:18px;border-radius:50%;border:5px solid var(--blue);background:#fff;margin-top:4px"></div></div>
+            <div class="row" style="padding:9px 0"><div style="flex:1"><div class="t">Hourly Rate</div><div class="d">Charged per hour worked</div></div><div style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line-2);margin-top:4px"></div></div>
+            <div class="row" style="padding:9px 0"><div style="flex:1"><div class="t">Price Range</div><div class="d">From–to estimate · booking is by request only</div></div><div style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line-2);margin-top:4px"></div></div>
+          </div>
+          <div class="card">
+            <p class="lbl">Price <span class="req">*</span></p>
+            <div style="display:flex;gap:9px">
+              <div class="inp" style="flex:1"><span style="color:var(--blue-d);font-weight:700">MVR</span> &nbsp;500</div>
+              <div class="inp" style="width:112px">per session ⌄</div>
+            </div>
+            <p class="hint">Shown to customers as <b>MVR 500/session</b>.</p>
+          </div>
+          <div class="diffbar rm">Removed: the second Price card, and “Service Packages” (deferred to post-v1).</div>
+          <div class="diffbar">Step 6: delete the second “FAQs” accordion — it appears twice in the original.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h3>Pricing, per Round 16</h3>
+      <ul>
+        <li><b>Five models:</b> <code>fixed</code>, <code>hourly</code>, <code>daily</code>, <code>range</code>, <code>quote</code>.</li>
+        <li><b><code>priceUnit</code> is separate</b> — job, hour, day, session, visit. It is what lets the app render “MVR 500/session” when session is not a pricing model at all.</li>
+        <li><b>Model constrains booking mode.</b> <code>range</code> and <code>quote</code> force request mode — say so inline, as shown, rather than rejecting the combination at publish after the provider has built the whole listing.</li>
+        <li><b>Service Packages deferred.</b> Tiered pricing multiplies through slots, quotes, price adherence and the booking record. Shipping a control nobody can book against is worse than not shipping it.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div>
