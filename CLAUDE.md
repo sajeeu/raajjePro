@@ -1,7 +1,26 @@
+# RaajjePro
+
+Mobile-first, API-first local services marketplace for the Maldives. Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
+
+**Nothing is built yet.** This repository currently holds the specification the build will follow.
+
+## The one document that matters
+
+`01_Development_Plan_v5.md`, at **revision 5.7**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+
+Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
+
+## Building a phase
+
+Phases are slash commands: `/phase-0`, `/phase-3`, `/phase-17-1`. Each one names the plan sections it builds from and its Definition of Done. Work top to bottom; do not start phase N+1 until phase N's Done-when is met.
+
+Where a command says a screen has no mockup, propose the design and get approval before writing implementation code.
+
+## archive/ — never read as current
+
+`archive/` holds superseded specifications and the Cursor-era build artifacts, kept for provenance only. **Never treat anything in `archive/` as current, and never cite it.** `01_Development_Plan_v4.md` in particular asserts a contact-info endpoint that was deleted, SMS OTP, a binary verified badge and a pinned global subscription price — none of which exist. If a question seems answerable only from an archived file, the answer is that the plan does not specify it: say so rather than filling the gap.
+
 ---
-alwaysApply: true
----
-# RaajjePro — Project Context
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
@@ -68,3 +87,16 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 Development priorities, in order: readability > cleverness, explicit > implicit, predictable > convenient, small focused changes > large sweeping ones.
 
 Never expose internal error details (stack traces, raw DB errors) in API responses. Never log passwords, tokens, or full PII values.
+
+---
+
+# Scope Discipline
+
+- Build exactly what the current phase's prompt describes. Do not build ahead into a later phase because it seems convenient.
+- Do not add features not asked for. Do not add configuration options "for flexibility."
+- If a prompt appears to require something the plan does not specify, STOP and ask rather than inventing it. A plausible guess written confidently is worse than a question.
+- If a prompt conflicts with the plan, flag it. Do not resolve it silently in either direction.
+- Deliberately out of v1 scope — do not build these, and do not leave TODOs implying they are coming: admin IP allowlisting; second-admin sign-off; bulk admin queue actions and keyboard triage; a proactive risk-signal dashboard; provider broadcast messaging; a secondary email provider; credit wallet; advertising; referrals; Dhivehi/Thaana localisation.
+- IN scope as of Round 12, despite older documentation deferring them: admin TOTP MFA and session controls, and simultaneous emergency fan-out to multiple providers.
+- IN scope as of Round 13, and EARLIER than older documentation places it: email bounce/complaint handling and the SES suppression list are a PHASE 0 deliverable, not Phase 3c. SES will not leave its sandbox without them, and a sandboxed account cannot send to unverified addresses — so Phase 3 is untestable until this exists. If a Phase 3c prompt implies you are building it for the first time, it already exists; wire to it.
+- Flag suggested refactors; do not perform them as a side effect of an unrelated task.

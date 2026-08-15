@@ -1170,7 +1170,7 @@ Several failure paths currently dead-end with no route to a human: a rejected pa
 
 ### Phase 23 — Legal, Compliance & App Store Readiness
 
-- **Not primarily a coding task.** Cursor builds screens and section structure with clearly-marked placeholders; it does **not** write binding legal language.
+- **Not primarily a coding task.** The agent builds screens and section structure with clearly-marked placeholders; it does **not** write binding legal language.
 - **Unified Terms of Service** (customers and providers) + **separate Provider Agreement** covering subscription, trial, cancellation, the manual bank-transfer process, and dispute handling
 - Privacy Policy
 - Provider Agreement linked from the Payment Proof Submission flow, where it is most relevant
