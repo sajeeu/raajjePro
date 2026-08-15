@@ -24,4 +24,30 @@ Login needed no correction: **Apple sign-in was right** and the plan was amended
 
 Phases 1, 9, 10, 12 and 16 are specified as pixel-match against these files. **Put them here before starting Phase 1**, keeping the filenames stable — phase commands reference them by path, and those references should not move.
 
-Sixteen screens are expected. `§1 Mockup Inventory` in the plan lists them with their owning phases.
+## Where to put them
+
+Drop the files straight into this folder — `/home/sajeeu/Claude/mockups/` — using these names. Phase commands and `§1 Mockup Inventory` reference them by path, so keep the names stable once set.
+
+| Expected filename | Screen | Owning phase |
+|---|---|---|
+| `login.png` | Sign In | 3 |
+| `register-customer.png` | Create account — Find Services | 3 |
+| `register-provider.png` | Create account — Offer Services | 3 |
+| `forgot-password.png` | Forgot Password | 3b |
+| `home.png` | Home feed (full scroll) | 16 |
+| `explore.png` | Explore — category grid | 4 |
+| `bookings.png` | My Bookings — Upcoming / Active / Completed | 17 |
+| `profile.png` | Profile — customer | 6 |
+| `my-services.png` | My Services — provider dashboard | 10 |
+| `service-preview.png` | Service Preview — public listing | 12 |
+| `wizard-1-details.png` | Create Service step 1 | 9 |
+| `wizard-2-location.png` | Create Service step 2 | 9 |
+| `wizard-3-pricing.png` | Create Service step 3 | 9 |
+| `wizard-4-media.png` | Create Service step 4 | 9 |
+| `wizard-5-availability.png` | Create Service step 5 | 9 |
+| `wizard-6-extra-info.png` | Create Service step 6 | 9 |
+| `wizard-7-review.png` | Create Service step 7 | 9 |
+
+Seventeen files for sixteen screens — Home is two images because it scrolls; name the second `home-2.png`.
+
+`.jpg` is fine where that is what you have. If your filenames differ, put them here anyway and they will be reconciled against this table rather than renamed blindly.
