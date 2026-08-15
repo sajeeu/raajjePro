@@ -11,7 +11,17 @@ SUPPORTING-DOCS-STATUS.md
 
 # Local working state
 .backups/
-.claude/
+.claude/*
+# Project configuration must travel with the clone — the whole point of the
+# Claude Code migration is that agents, commands and skills are version-controlled
+# rather than pasted into settings per machine.
+!.claude/agents/
+!.claude/commands/
+!.claude/skills/
+# Local, per-machine state stays ignored
+.claude/settings.local.json
+.claude/worktrees/
+.claude/projects/
 
 # Personal notes — not part of this project
 chatgpt-books-history.md
