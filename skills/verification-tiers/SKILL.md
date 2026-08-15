@@ -14,7 +14,7 @@ description: Use when working on identity verification, the verified badge, emer
 
 - PHOTOS ARE NEVER SUFFICIENT ALONE AT ANY TIER — they are trivially reusable.
 - THE 5-CLEAN-BOOKINGS ROUTE TO SILVER GRANTS AUTOMATICALLY, with no admin review. Implement as a triggered check, not a queue item. Only ID checks, customer references and Gold paperwork reach a human — that is what makes three tiers affordable against a single reviewer.
-- EMERGENCY CAPABILITY REQUIRES SILVER OR ABOVE. Enforced on listing publish, on update, AND re-checked at booking creation.
+- EMERGENCY CAPABILITY IS PER-CATEGORY (Round 15), read from `emergencyMinimumTier` on the category — GOLD for Electrical and Plumbing, SILVER for AC Repair and Moving. NEVER hardcode `silver` as the bar; older documentation saying "silver or above" for all four is obsolete. Electrical and plumbing failures at 2am are life-safety work in a stranger's home, and Gold is the only tier carrying a trade certificate. Enforced on listing publish, on update, AND re-checked at booking creation.
 - The badge NEVER depends on subscription state. A lapsed-but-verified provider keeps their tier.
 - Tiers do NOT expire and there is no periodic recheck. A `fraud_confirmed` outcome or an accumulated dispute pattern triggers a review that may demote or revoke.
 - Never render a bare "Verified" — always the tier-specific copy above.

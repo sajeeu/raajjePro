@@ -51,7 +51,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
    All customer-facing features remain free — nothing may ever gate a customer action. Basic listing discoverability is never paywalled; only quantity (listings beyond the free cap) and extras (analytics, priority placement) are gated.
    THE BADGE IS GATED BY `verificationTier` ALONE, never by subscription state. A lapsed-but-verified provider keeps their tier — it is a safety signal, not a payment status. A lapsed subscription degrades a provider to the free tier; it never deletes data and never hard-blocks an account.
 
-1c. Booking has THREE modes: `slot` (fixed-duration, provider-published time slots — Cleaning, Beauty, Fitness), `request` (customer proposes a window, provider proposes a concrete time and price — Plumbing, Electrical, AC Repair, Photography, Gardening, Computer, Moving, Events, Boat Charter), and `emergency`, layered on Plumbing/Electrical/AC Repair/**Moving** listings only and ONLY for a provider at tier `silver` or `gold`. The bar is SILVER OR ABOVE — older documentation said `verificationStatus === 'verified'` and is obsolete. There are TWELVE categories, including Boat Charter.
+1c. Booking has THREE modes: `slot` (fixed-duration, provider-published time slots — Cleaning, Beauty, Fitness), `request` (customer proposes a window, provider proposes a concrete time and price — Plumbing, Electrical, AC Repair, Photography, Gardening, Computer, Moving, Events, Boat Charter), and `emergency`, layered on Plumbing/Electrical/AC Repair/**Moving** listings only and ONLY for a provider meeting the category's `emergencyMinimumTier` — GOLD for Electrical and Plumbing, SILVER for AC Repair and Moving (Round 15). NEVER hardcode `silver` as the bar; older documentation saying "silver or above" for all four, or `verificationStatus === 'verified'`, is obsolete. There are TWELVE categories, including Boat Charter.
    EMERGENCY REQUESTS BROADCAST TO EVERY ELIGIBLE PROVIDER AT ONCE, and ACCEPTANCES DO NOT RACE (Round 15). The provider supplies their callout fee as part of accepting. The first acceptance opens a 90-SECOND COLLECTION WINDOW during which other eligible providers may also accept; at the end the customer is shown UP TO THREE OFFERS SIDE BY SIDE and picks one. Each offer is an `EmergencyOffer` row. `emergency_offered` means "offers are collected and awaiting the customer", NOT "one provider has claimed this" — older documentation describing first-acceptance-wins is obsolete, as is one-provider-at-a-time dispatch, a separate `set-amount` step, or fan-out as post-v1.
    ELIGIBILITY IS PER-CATEGORY, read from `emergencyMinimumTier` — GOLD for Electrical and Plumbing, SILVER for AC Repair and Moving. Never hardcode `silver`. The overall request window is likewise per-category from `emergencyAcceptWindowMinutes` — 30 minutes for the three trades, 120 for Moving. Never hardcode 30.
    EMERGENCY CARRIES A MVR 200 DISPATCH FEE charged to the CUSTOMER, incurred when they select an offer and never on submitting a request. It NEVER blocks dispatch: it is recorded as owed and settled later by bank transfer through `PaymentSubmission` (purpose `emergency_dispatch_fee`). An unsettled fee blocks new bookings, and THE BLOCK LIFTS ON PROOF SUBMISSION, not on admin confirmation.
@@ -388,9 +388,14 @@ HONEST FRAMING IS MANDATORY. RaajjePro has no visibility into the actual bank tr
 - USE "Provider confirmed receipt."
 - The whole experience here is waiting for a human decision, so status legibility and honest expectation-setting are the product. State what happens next and roughly when.
 
+THE AGREEMENT LOCKS AT `accepted` (§1h, Round 15). Price, date, time and scope cannot be changed unilaterally — a change requires an explicit amendment the counterparty accepts, and EVERY attempt is recorded whether accepted or not, feeding price adherence (§1f). `finalAmount` above `agreedAmount` with no accepted amendment is a price-adherence failure, not just a number.
+
+THIS IS WHAT "PAYMENT HOLD" MEANS HERE. DO NOT BUILD ESCROW, FUNDS HOLDING, OR A PAYMENT GATEWAY for bookings — holding customer money means payment-services licensing, and the plan deliberately obtains the anti-hiking and anti-no-show behaviour through the locked agreement instead.
+
+ONE EXCEPTION TO "PaymentSubmission IS SUBSCRIPTIONS ONLY": the MVR 200 emergency dispatch fee (purpose `emergency_dispatch_fee`, Round 15) is money owed to RaajjePro by a CUSTOMER, and does use PaymentSubmission. It is incurred when the customer selects an emergency offer, never blocks dispatch, and the resulting new-booking block lifts on PROOF SUBMISSION rather than on admin confirmation.
+
 Emergency bookings additionally REQUIRE `finalAmount` to complete — the real settled total after parts and labour. It gates completion exactly as `agreedAmount` gates `awaiting_payment`. It is the number a dispute needs, and the provider has no incentive to volunteer it.
 ```
-
 ### `skills/offline-queue-and-replay/SKILL.md`
 
 ```markdown
@@ -431,14 +436,13 @@ THE CONSTRAINT — provider-scoped and range-based:
 A `UNIQUE` index on `(providerId, listingId, startsAt)` is WRONG twice over: it permits one provider being booked three times at 10:00 across three different listings, and it detects nothing about overlapping DURATIONS. If you see it referenced anywhere, replace it. Application code must not be able to override the constraint.
 
 - Slot reservation happens INSIDE the booking-creation transaction. A race resolves to exactly one winner.
-- Reservations are FIRM (a booked slot) or PROVISIONAL (a quote offered, expiring with its 72-hour window). Offering a quote MUST create a provisional reservation — otherwise the provider can sell that time in the interim and the customer's approval fails on a constraint violation after they already agreed a price.
+- Reservations are FIRM (a booked slot) or PROVISIONAL (a quote offered, expiring with its approval window). QUOTE AND APPROVAL WINDOWS ARE PER-CATEGORY (Round 15) from `quoteExpiryMinutes` / `quoteApprovalMinutes` — 120/240 minutes for Plumbing, Electrical, AC Repair and Computer; 1440/4320 for Photography, Gardening, Moving, Events and Boat Charter. Never hardcode 24h/72h. Offering a quote MUST create a provisional reservation — otherwise the provider can sell that time in the interim and the customer's approval fails on a constraint violation after they already agreed a price.
 - Releasing a reservation (cancel, decline, timeout, expiry) returns the slot to `open` atomically.
 - Reschedule frees the old reservation in the SAME transaction that takes the new one — never leave the provider double-blocked or double-free.
 - The customer-facing picker filters on `startsAt > now()` PLUS the category's `minimumLeadTimeMinutes`, IN ADDITION to `status = 'open'`. This is a QUERY-TIME guarantee, not a dependency on the nightly regeneration job having run.
 - Slot generation is idempotent across a 60-day rolling window. Re-running changes nothing.
 - Emergency bookings take NO calendar reservation — an emergency interrupts the published calendar rather than blocking it.
 ```
-
 ### `skills/verification-tiers/SKILL.md`
 
 ```markdown
@@ -458,13 +462,12 @@ description: Use when working on identity verification, the verified badge, emer
 
 - PHOTOS ARE NEVER SUFFICIENT ALONE AT ANY TIER — they are trivially reusable.
 - THE 5-CLEAN-BOOKINGS ROUTE TO SILVER GRANTS AUTOMATICALLY, with no admin review. Implement as a triggered check, not a queue item. Only ID checks, customer references and Gold paperwork reach a human — that is what makes three tiers affordable against a single reviewer.
-- EMERGENCY CAPABILITY REQUIRES SILVER OR ABOVE. Enforced on listing publish, on update, AND re-checked at booking creation.
+- EMERGENCY CAPABILITY IS PER-CATEGORY (Round 15), read from `emergencyMinimumTier` on the category — GOLD for Electrical and Plumbing, SILVER for AC Repair and Moving. NEVER hardcode `silver` as the bar; older documentation saying "silver or above" for all four is obsolete. Electrical and plumbing failures at 2am are life-safety work in a stranger's home, and Gold is the only tier carrying a trade certificate. Enforced on listing publish, on update, AND re-checked at booking creation.
 - The badge NEVER depends on subscription state. A lapsed-but-verified provider keeps their tier.
 - Tiers do NOT expire and there is no periodic recheck. A `fraud_confirmed` outcome or an accumulated dispute pattern triggers a review that may demote or revoke.
 - Never render a bare "Verified" — always the tier-specific copy above.
 - Documents: separate private bucket, short-lived signed URLs, every access logged, purged 90 days after decision and immediately on account deletion.
 ```
-
 ### `skills/contact-rule-and-moderation/SKILL.md`
 
 ```markdown
@@ -521,6 +524,46 @@ SECURITY IS MANDATORY AND SPECIFIED, not left to judgment. This app renders user
 ```
 
 ---
+
+### `skills/provider-conduct-and-reviews/SKILL.md`
+
+```markdown
+---
+name: provider-conduct-and-reviews
+description: Use when working on reviews, ratings, review tags, provider reputation, conduct metrics, search ranking by provider quality, or any provider-facing performance display. Triggers on mentions of rating, review, tags, cancel rate, no-show, on-time, price adherence, response time, reliability, or provider badges.
+---
+# Provider Conduct & Reviews
+
+Two separate axes. Star ratings measure whether a customer LIKED the job. Conduct measures whether the provider turned up, honoured the price they quoted, and answered at all — computed from booking outcomes, never from opinions. Do not merge them into one score.
+
+## Conduct metrics (§1f) — computed in Phase 11, displayed in Phases 5 and 12
+
+Completion rate, cancellation rate, no-show rate, on-time rate, price adherence, acceptance rate, median response time. All derived from booking terminal transitions over a ROLLING 90-DAY window, recomputed on transition rather than on read.
+
+- CUSTOMER cancellations never count against a provider. Only provider-initiated ones after `accepted`.
+- Price adherence compares `finalAmount` to `agreedAmount`. An increase WITHOUT an accepted amendment is a failure — see the booking-payment-attestation skill for the locked agreement.
+- Acceptance rate counts EXPLICIT responses only; timeouts feed response rate, not acceptance.
+- On-time applies to slot and request modes only. Emergency has no `scheduledFor` to be late against.
+
+## Display rules — these are invariants, not preferences
+
+- **NEVER generate editorial labels.** "Prone to cancel", "Price hiking", "Unreliable" and every euphemism for them were considered in Round 15 and REJECTED. They are automated public accusations computed from thin data, in a market small enough that everyone knows everyone — a wrong one is somebody's livelihood and a plausible defamation claim. Emit NUMBERS ONLY and let the customer conclude: "94% on time · 3% cancelled · usually responds in 12 minutes · 47 jobs".
+- **Nothing displays below 10 completed bookings.** Show "New provider" and the job count. One cancellation out of two bookings is 50% and means nothing.
+- **The provider sees their own metrics before anyone else**, with the underlying bookings listed. Nobody should learn their on-time rate from a customer.
+
+## Consequences — graduated, never silent, never automatic
+
+Alert the provider first, naming the specific bookings and what would clear the threshold → then reduce search ranking → then remove emergency eligibility → then admin review. NEVER automatic account suspension; that stays a human decision in Phase 10b with the conduct record as evidence. Any provider may appeal through Phase 22, and a booking excluded on appeal leaves the aggregate and is audit-logged.
+
+## Review tags
+
+Six to eight FIXED tags per category, positive and negative, selected in one tap alongside the 1–5 star rating: *On time · Fair price · Quality materials · Good communication · Left a mess · Arrived late · Price changed on site.*
+
+- FIXED PER CATEGORY, never free text. Free tags cannot be aggregated, arrive in a mix of Dhivehi and English, and become a moderation surface.
+- Negative tags are the POINT. A positive-only set makes every profile look identical and pushes criticism into free text where it cannot be counted.
+- A tag displays only once applied THREE times, so no single review brands anyone. Aggregate as counts: "On time (31) · Fair price (28) · Arrived late (3)".
+- Rating must stay TWO TAPS MINIMUM — stars, then optional tags. Review completion rate is what makes the whole system work, and every extra required field costs completions.
+```
 
 ## 3. Subagents — configure in Settings → Rules, Skills, Subagents
 
