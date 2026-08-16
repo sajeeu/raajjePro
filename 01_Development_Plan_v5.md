@@ -116,32 +116,33 @@ These were defects rather than choices — the spec contradicted itself or left 
 
 🔧 **Three defects inside the mockups themselves**, unrelated to the plan: step 3 renders the **Price field twice**; step 6 lists **FAQs twice**; Service Preview is titled *"Home Deep Cleaning"* under a Cleaning tag while its description is about **AC installation and repair**.
 
-### Screens with no mockup — 20
+### Screens with no mockup — 🔧 19, rated by how much a mockup actually buys you (Round 20)
 
-Claude proposes a design, you approve it, and only then does that phase's code get written. These are **not** lesser screens — they include the entire booking flow and every admin surface. Having no fixed design is an advantage here: interaction behaviour can be specified from scratch rather than retrofitted around a layout.
+The agent proposes a design, you approve it, and only then does that phase's code get written. These are **not** lesser screens — they include the entire booking flow and every admin surface.
 
-| Screen / flow | Owning phase | Platform |
-|---|---|---|
-| Phone verification (OTP entry) | 3 | Flutter |
-| Account settings sub-screens (password/email/phone, sessions, data export, deletion) | 3 | Flutter |
-| Forgot Password flow | 3b | Flutter |
-| Role switcher (customer ⇄ provider) | 6 | Flutter |
-| **Become a Provider onboarding flow** | **6a** | Flutter |
-| Availability & Time Slot management (provider side) | 9a | Flutter |
-| Provider Billing (subscription status, payment proof submission, invoice list) | 10a | Flutter |
-| Admin panel — money & identity queues | 10a | **React web** |
-| Admin panel — accounts, config, search, shell | 10b | **React web** |
-| Admin panel — ops dashboard | 10c | **React web** |
-| Provider public profile | 13 | Flutter |
-| Saved Services list | 14 | Flutter |
-| Search results | 15 | Flutter |
-| Category results | 15 | Flutter |
-| Launch-mode Home variant | 16 | Flutter |
-| **Booking flow, three variants** (slot picker, request-with-window, emergency/ASAP) | 17.1–17.3 | Flutter |
-| Bookings tab (list + detail + status timeline) | 17.1 | Flutter |
-| **Pre-booking Enquiry thread** and booking chat | 18 | Flutter |
-| Notifications centre | 19 | Flutter |
-| Trust & Safety and Privacy & Security sub-screens | 23 | Flutter |
+🔧 **Round 20 rated each one.** The rating is not importance of the screen — it is how much a *drawn mockup* is worth versus a proposal, judged on how novel the interaction is, whether Phase 1 components and the delivered screens already imply it, and what a wrong guess costs. **Four are worth a designer's time; seven are not worth any.** Having no fixed design is an advantage here: interaction behaviour can be specified from scratch rather than retrofitted around a layout.
+
+| Screen / flow | Owning phase | Platform | 🔧 Mockup value |
+|---|---|---|---|
+| Phone verification (OTP entry) | 3 | Flutter | 🟢 Low — universal pattern, Login sets the visual language |
+| Account settings sub-screens (password/email/phone, sessions, data export, deletion) | 3 | Flutter | 🟢 Low — Profile establishes the row pattern; deletion needs care in copy, not layout |
+| Role switcher (customer ⇄ provider) | 6 | Flutter | 🟡 Medium — small, but it is the pivot between two entire app modes |
+| **Become a Provider onboarding flow** | **6a** | Flutter | 🔴 **Critical** — the supply-side conversion funnel, and §7 calls reaching the first 50 providers the largest unowned risk. New in v5, so no precedent exists |
+| Availability & Time Slot management (provider side) | 9a | Flutter | 🔴 **Critical** — recurring rules, exceptions, blocked ranges, generation preview. Wizard step 5 is a toy version and will mislead if treated as the pattern |
+| Provider Billing (subscription status, payment proof submission, invoice list) | 10a | Flutter | 🟠 High — money-adjacent and trust-sensitive; may also need a web rendering (§Phase 23) |
+| Admin panel — money & identity queues | 10a | **React web** | 🟡 Medium — internal, one user, function over form. The identity-document review screen is the exception |
+| Admin panel — accounts, config, search, shell | 10b | **React web** | 🟡 Medium — internal |
+| Admin panel — ops dashboard | 10c | **React web** | 🟢 Low — internal, conventional charts |
+| Provider public profile | 13 | Flutter | 🟠 High — where §1f conduct metrics and the three-tier badge render. The trust surface |
+| Saved Services list | 14 | Flutter | 🟢 Low — Home already establishes the card |
+| Search results | 15 | Flutter | 🟡 Medium — high traffic; sort order and booking-mode affordance must read clearly |
+| Category results | 15 | Flutter | 🟢 Low — derivable from search |
+| Launch-mode Home variant | 16 | Flutter | 🟡 Medium — the first impression every early user gets, but Home gives the structure |
+| **Booking flow, three variants** (slot picker, request-with-window, emergency/ASAP) | 17.1–17.3 | Flutter | 🔴 **Critical** — the core product, and nothing delivered resembles it. Emergency needs the 90-second offer collection, three offers side by side and the MVR 200 disclosure |
+| Booking **detail + status timeline** (the list is delivered) | 17.1 | Flutter | 🟠 High — where the locked agreement, amendments, payment attestation and contact reveal all surface |
+| **Pre-booking Enquiry thread** and booking chat | 18 | Flutter | 🔴 **Critical** — the sole coordination channel for a booking's whole life. Two thread types, different lifecycle rules, offline replay |
+| Notifications centre | 19 | Flutter | 🟢 Low — conventional list |
+| Trust & Safety and Privacy & Security sub-screens | 23 | Flutter | 🟢 Low — policy content in a scroll view |
 
 **The admin panel is a separate internal React web app**, not a Flutter screen, built across Phases 10a, 10b and 10c. Backend endpoints are identical either way. Keyboard, hover and focus states apply there; mobile assumptions do not.
 
