@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button{font-family:inherit}
+input:focus,textarea:focus,button:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="padding:18px 20px 14px;display:flex;flex-direction:column;gap:14px;background:#F2F6FB">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onClick="{{ goBack }}" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0F1B2D;flex:none;box-shadow:0 1px 2px rgba(15,27,45,.05)" style-hover="background:#EDF3FB" style-active="transform:scale(.94)">
+        <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></sc-if>
+        <sc-if value="{{ s2 }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></sc-if>
+        <sc-if value="{{ s3 }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></sc-if>
+      </button>
+      <div style="flex:1;text-align:center;font-size:13.5px;font-weight:700;color:#41526B;letter-spacing:.01em">{{ stepText }}</div>
+      <div style="width:44px;flex:none"></div>
+    </div>
+    <div style="display:flex;gap:6px" aria-hidden="true">
+      <sc-for list="{{ segs }}" as="g" hint-placeholder-count="3">
+        <div style="flex:1;height:4px;border-radius:999px;background:{{ g.bg }};transition:background .3s ease"></div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="1 · Intro" style="padding:4px 20px 28px;display:flex;flex-direction:column;gap:20px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#5B8DF6 0%,#2563EB 62%,#1D4ED8 100%);padding:26px 22px 28px;color:#fff;box-shadow:0 14px 30px rgba(37,99,235,.28)">
+          <div style="position:absolute;top:-46px;right:-36px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.10)"></div>
+          <div style="position:absolute;bottom:-58px;left:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+          <div style="position:relative;display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+            <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:.02em">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+              For Providers
+            </div>
+            <h1 style="margin:0;font-size:26px;line-height:1.22;font-weight:800;letter-spacing:-.02em;text-wrap:pretty">Offer your services on RaajjePro</h1>
+            <p style="margin:0;font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.86);text-wrap:pretty">Turn your skills into bookings from customers across the Maldives — on your terms.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84">How it works</div>
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid #EEF3FA">
+              <div style="width:44px;height:44px;border-radius:14px;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"></rect><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"></path></svg></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;font-weight:700;color:#0F1B2D">List your services</div><div style="font-size:13px;line-height:1.45;color:#5B6B84">Add what you offer and the islands you cover.</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid #EEF3FA">
+              <div style="width:44px;height:44px;border-radius:14px;background:#E5F6EC;color:#16A34A;display:flex;align-items:center;justify-content:center;flex:none"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"></rect><path d="M4 10.5h16M8.5 3.5v4M15.5 3.5v4"></path></svg></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;font-weight:700;color:#0F1B2D">Receive bookings &amp; interest</div><div style="font-size:13px;line-height:1.45;color:#5B6B84">Customers near you discover your profile and reach out.</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid #EEF3FA">
+              <div style="width:44px;height:44px;border-radius:14px;background:#F3ECFE;color:#7C3AED;display:flex;align-items:center;justify-content:center;flex:none"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;font-weight:700;color:#0F1B2D">Agree on the job in chat</div><div style="font-size:13px;line-height:1.45;color:#5B6B84">Discuss details, timing and scope — all in the app.</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:15px 0">
+              <div style="width:44px;height:44px;border-radius:14px;background:#FEF3DC;color:#D97706;display:flex;align-items:center;justify-content:center;flex:none"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"></rect><circle cx="12" cy="12.5" r="2.4"></circle></svg></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;font-weight:700;color:#0F1B2D">Get paid directly</div><div style="font-size:13px;line-height:1.45;color:#5B6B84">Customers pay you directly when the job is done.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:2px 6px">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3l7 2.8v5.4c0 4.3-3 7.6-7 9.3-4-1.7-7-5-7-9.3V5.8z"></path><path d="M9 12l2.2 2.2L15.5 10"></path></svg>
+          <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">You can switch back to customer mode anytime. Nothing is published until you create your first service.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s2 }}">
+      <div data-screen-label="2 · Provider basics" style="padding:4px 20px 28px;display:flex;flex-direction:column;gap:22px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Tell us about you</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84">Who you are, how you get paid, and when you're available.</p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:-12px">
+          <span style="font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84">About you</span>
+          <span style="flex:1;height:1px;background:#E3EAF3"></span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px">
+          <input type="file" accept="image/*" ref="{{ fileRef }}" onChange="{{ onPhoto }}" style="display:none">
+          <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ pickPhoto }}" aria-label="Add photo" style="width:68px;height:68px;border-radius:50%;border:2px dashed #B9CBE6;background:#F4F8FD;color:#2563EB;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#E8F0FE" style-active="transform:scale(.95)">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5h3.2l1.6-2.5h6.4l1.6 2.5H20a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"></path><circle cx="12" cy="14" r="3"></circle></svg>
+            </button>
+          </sc-if>
+          <sc-if value="{{ hasPhoto }}">
+            <button onClick="{{ pickPhoto }}" aria-label="Change photo" style="width:68px;height:68px;border-radius:50%;border:2px solid #2563EB;padding:0;background:none;cursor:pointer;flex:none;overflow:hidden"><div role="img" aria-label="Profile photo" style="width:100%;height:100%;background-image:{{ photoCss }};background-size:cover;background-position:center"></div></button>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Photo or logo</span><span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></div>
+            <div style="font-size:12.5px;line-height:1.45;color:#5B6B84">Profiles with a photo get noticed more by customers.</div>
+            <sc-if value="{{ hasPhoto }}"><button onClick="{{ removePhoto }}" style="align-self:flex-start;background:none;border:none;padding:2px 0;font-size:12.5px;font-weight:700;color:#DC2626;cursor:pointer">Remove</button></sc-if>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="pname" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Provider or business name<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required</span></label>
+          <input id="pname" type="text" value="{{ name }}" onChange="{{ setName }}" placeholder="e.g. Hassan's Repairs" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ nameBd }};background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <sc-if value="{{ hasNameErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ nameErr }}</div></sc-if>
+          <sc-if value="{{ noNameErr }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#5B6B84">Shown to customers on your profile and services.</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">How will you offer services?<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required</span></div>
+          <div style="display:flex;gap:12px">
+            <button onClick="{{ pickInd }}" style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:{{ indBg }};border:1.5px solid {{ indBd }};border-radius:16px;padding:14px 14px 13px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.98)">
+              <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"></circle><path d="M5 20c1.2-3.2 3.8-4.8 7-4.8s5.8 1.6 7 4.8"></path></svg>
+                <sc-if value="{{ isInd }}"><span style="width:20px;height:20px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Individual</span><span style="font-size:12px;line-height:1.4;color:#5B6B84">Just me — verified later with my personal ID</span></div>
+            </button>
+            <button onClick="{{ pickBiz }}" style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:8px;background:{{ bizBg }};border:1.5px solid {{ bizBd }};border-radius:16px;padding:14px 14px 13px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.98)">
+              <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="9" width="15" height="11" rx="1.5"></rect><path d="M4.5 9L6.2 4.5h11.6L19.5 9M10 20v-5h4v5"></path></svg>
+                <sc-if value="{{ isBiz }}"><span style="width:20px;height:20px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Business</span><span style="font-size:12px;line-height:1.4;color:#5B6B84">Registered company or team — verified later with business documents</span></div>
+            </button>
+          </div>
+          <sc-if value="{{ hasTypeErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ typeErr }}</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">Your registered mobile number</div>
+          <sc-if value="{{ phoneLocked }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #E3EAF3;border-radius:14px;padding:0 12px 0 16px;min-height:52px">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><path d="M11 18.5h2"></path></svg>
+              <span style="flex:1;font-size:15px;font-weight:700;color:#0F1B2D;letter-spacing:.01em">{{ phoneDisplay }}</span>
+              <button onClick="{{ editPhone }}" style="height:38px;padding:0 14px;border-radius:10px;border:none;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;flex:none" style-hover="background:#D8E6FD" style-active="transform:scale(.96)">Change</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ phoneEditing }}">
+            <div style="display:flex;gap:10px;animation:fadeUp .2s ease both">
+              <input aria-label="Country code" value="{{ dial }}" onChange="{{ setDial }}" style="width:82px;flex:none;height:52px;border-radius:14px;border:1.5px solid {{ dialBd }};background:#fff;padding:0 12px;font-size:15px;font-weight:700;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+              <input id="pphone" type="tel" value="{{ phone }}" onChange="{{ setPhone }}" placeholder="777 1234" style="flex:1;min-width:0;height:52px;border-radius:14px;border:1.5px solid {{ phoneBd }};background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasPhoneErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ phoneErr }}</div></sc-if>
+          <sc-if value="{{ noPhoneErr }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;line-height:1.45;color:#5B6B84">{{ phoneHelp }}</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">Account email</div>
+          <div style="display:flex;align-items:center;gap:12px;background:{{ mailBg }};border:1.5px solid {{ mailBd }};border-radius:14px;padding:0 14px 0 16px;min-height:52px">
+            <span style="flex:1;min-width:0;font-size:14.5px;font-weight:600;color:#41526B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ email }}</span>
+            <sc-if value="{{ mailOk }}" hint-placeholder-val="{{ true }}">
+              <span style="display:inline-flex;align-items:center;gap:5px;color:#16A34A;font-size:12.5px;font-weight:700;flex:none">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M8.4 12.4l2.6 2.6 4.6-5"></path></svg>
+                Verified
+              </span>
+            </sc-if>
+            <sc-if value="{{ mailVerifying }}"><span style="display:inline-flex;align-items:center;gap:7px;color:#41526B;font-size:12.5px;font-weight:700;flex:none"><span style="width:14px;height:14px;border:2px solid #C7D5E8;border-top-color:#2563EB;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span>Sending…</span></sc-if>
+            <sc-if value="{{ mailUnverified }}"><button onClick="{{ verifyMail }}" style="height:38px;padding:0 14px;border-radius:10px;border:none;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;flex:none" style-hover="filter:brightness(1.07)" style-active="transform:scale(.96)">Verify email</button></sc-if>
+          </div>
+          <sc-if value="{{ mailUnverified }}"><div style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;line-height:1.45;font-weight:600;color:{{ mailNoteFg }};animation:fadeUp .2s ease both"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg><span>{{ mailNote }}</span></div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="pintro" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Short introduction<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></label>
+          <textarea id="pintro" value="{{ intro }}" onChange="{{ setIntro }}" rows="3" placeholder="e.g. AC repair and servicing in Malé for 8 years. Fast, tidy and reliable." style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:14px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:#5B6B84"><span>A sentence or two about what you do.</span><span>{{ introCount }}</span></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:-12px;margin-top:2px">
+          <span style="font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84">Getting paid</span>
+          <span style="flex:1;height:1px;background:#E3EAF3"></span>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;background:#E5F6EC;border:1px solid #C6E9D4;border-radius:16px;padding:14px 16px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3l7 2.8v5.4c0 4.3-3 7.6-7 9.3-4-1.7-7-5-7-9.3V5.8z"></path><path d="M9 12l2.2 2.2L15.5 10"></path></svg>
+          <div style="font-size:13.5px;line-height:1.5;font-weight:600;color:#15803D;text-wrap:pretty">Customers pay you directly into this account. RaajjePro never collects or holds your payments.</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="pholder" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Account holder name<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required</span></label>
+          <input id="pholder" type="text" value="{{ holder }}" onChange="{{ setHolder }}" placeholder="As printed on your bank account" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ holderBd }};background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <sc-if value="{{ hasHolderErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ holderErr }}</div></sc-if>
+          <sc-if value="{{ noHolderErr }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#5B6B84">Must match your bank records exactly.</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="pacct" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Account number<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required</span></label>
+          <input id="pacct" type="text" inputMode="numeric" value="{{ acct }}" onChange="{{ setAcct }}" placeholder="e.g. 7730000123456" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ acctBd }};background:#fff;padding:0 16px;font-size:15px;letter-spacing:.03em;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <sc-if value="{{ hasAcctErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ acctErr }}</div></sc-if>
+          <sc-if value="{{ noAcctErr }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#5B6B84">Only you and paying customers see this.</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="pbank" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Bank<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required</span></label>
+          <div style="position:relative">
+            <select id="pbank" value="{{ bank }}" onChange="{{ setBank }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ bankBd }};background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:{{ bankFg }};appearance:none;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+              <option value="">Select your bank</option>
+              <sc-for list="{{ banks }}" as="b" hint-placeholder-count="4"><option value="{{ b.v }}">{{ b.v }}</option></sc-for>
+            </select>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+          </div>
+          <sc-if value="{{ hasBankErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ bankErr }}</div></sc-if>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:-12px;margin-top:2px">
+          <span style="font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84">Availability</span>
+          <span style="flex:1;height:1px;background:#E3EAF3"></span>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="flex:1;font-size:15px;font-weight:700;color:#0F1B2D">Accepting new customers</div>
+            <button onClick="{{ toggleAccepting }}" role="switch" aria-checked="{{ accepting }}" aria-label="Accepting new customers" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ swBd }};background:{{ swBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ swJustify }};transition:background .2s,border-color .2s">
+              <span style="width:24px;height:24px;border-radius:50%;background:{{ swKnob }};display:block;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:background .2s"></span>
+            </button>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Turn this off when you're fully booked. It hides all your services at once — this is an account-level switch, not per service — and you can turn it back on anytime.</div>
+        </div>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ s3 }}">
+      <div data-screen-label="3 · Service area" style="padding:4px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Where do you usually work?</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">These become your default service areas — they pre-fill every new service you create, and you can narrow them down for any single service.</p>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:12px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:14px 16px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+          <div style="font-size:13.5px;line-height:1.5;font-weight:600;color:#1D4ED8;text-wrap:pretty">Customers will discover your services based on the islands you serve.</div>
+        </div>
+
+        <div style="position:relative">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2" stroke-linecap="round" style="position:absolute;left:16px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.3-4.3"></path></svg>
+          <input type="text" value="{{ query }}" onChange="{{ setQuery }}" placeholder="Search islands…" aria-label="Search islands" style="width:100%;height:52px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px 0 46px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+        </div>
+
+        <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:-2px -2px -6px;scrollbar-width:none">
+          <sc-for list="{{ atollChips }}" as="a" hint-placeholder-count="5">
+            <button onClick="{{ a.pick }}" style="flex:none;height:38px;padding:0 16px;border-radius:999px;background:{{ a.bg }};color:{{ a.fg }};border:1.5px solid {{ a.bd }};font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s" style-active="transform:scale(.96)">{{ a.name }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ hasSel }}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ chips }}" as="c" hint-placeholder-count="2">
+              <span style="display:inline-flex;align-items:center;gap:6px;background:#E8F0FE;color:#1D4ED8;border:1px solid #CDDDFB;border-radius:999px;padding:8px 8px 8px 14px;font-size:13.5px;font-weight:700;animation:fadeUp .2s ease both">{{ c.name }}
+                <button onClick="{{ c.rm }}" aria-label="Remove {{ c.name }}" style="width:22px;height:22px;border-radius:50%;border:none;background:rgba(37,99,235,.14);color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(37,99,235,.28)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+              </span>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:4px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
+            <div onClick="{{ i.go }}" role="checkbox" aria-checked="{{ i.on }}" tabIndex="0" style="display:flex;align-items:center;gap:14px;padding:14px 2px;border-bottom:1px solid #F0F4FA;cursor:pointer;min-height:56px" style-hover="background:#FAFCFF">
+              <div style="display:flex;flex-direction:column;gap:1px;flex:1"><div style="font-size:15px;font-weight:700;color:#0F1B2D">{{ i.name }}</div><div style="font-size:12.5px;color:#5B6B84">{{ i.atoll }}</div></div>
+              <div style="width:26px;height:26px;border-radius:50%;background:{{ i.cBg }};border:2px solid {{ i.cBd }};display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s,border-color .15s">
+                <sc-if value="{{ i.on }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noResults }}">
+            <div style="padding:28px 8px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No islands found</div>
+              <div style="font-size:13px;color:#5B6B84">Try a different spelling, or another atoll.</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+    <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ continue1 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);transition:transform .1s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Continue</button>
+      <button onClick="{{ notNow }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Not right now</button>
+    </sc-if>
+    <sc-if value="{{ s2 }}">
+      <button onClick="{{ continue2 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+        <sc-if value="{{ loading }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Setting up your profile…</span></sc-if>
+        <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ true }}"><span>Continue</span></sc-if>
+      </button>
+    </sc-if>
+    <sc-if value="{{ s3 }}">
+      <sc-if value="{{ hasSel }}"><div style="text-align:center;font-size:13px;font-weight:700;color:#16A34A;animation:fadeUp .2s ease both">{{ selLabel }}</div></sc-if>
+      <button onClick="{{ create3 }}" disabled="{{ noSel }}" style="width:100%;height:54px;border:none;border-radius:16px;background:{{ cta3Bg }};color:{{ cta3Fg }};font-size:16px;font-weight:700;cursor:{{ cta3Cur }};box-shadow:{{ cta3Sh }};transition:transform .1s,background .2s" style-active="transform:scale(.98)">Create Your First Service</button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ done }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeDone }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.35);margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ doneTitle }}</div>
+        <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ doneSub }}</div>
+        <button onClick="{{ startCreate }}" style="width:100%;height:54px;margin-top:12px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Start My First Service</button>
+        <button onClick="{{ closeDone }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Back to service area</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:110px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intro&quot;,&quot;basics&quot;,&quot;service-area&quot;],&quot;default&quot;:&quot;intro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;emailVerified&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;accountEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;aishath.h@gmail.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;requirePhone&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Form behavior&quot;},&quot;loadingMs&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:0,&quot;max&quot;:3000,&quot;step&quot;:100,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Form behavior&quot;}}">
+class Component extends DCLogic {
+  state = { screen: 1, name: '', type: null, dial: '+960', phone: '777 1234', editingPhone: false, verifiedNow: false, verifying: false, holder: '', acct: '', bank: '', accepting: true, intro: '', photoUrl: null, errors: {}, loading: false, atoll: 'All', query: '', selected: [], done: false, toast: null };
+  BANKS = ['Bank of Maldives (BML)', 'Maldives Islamic Bank (MIB)', 'State Bank of India — Male’', 'Habib Bank Limited', 'Mauritius Commercial Bank (MCB)', 'Commercial Bank of Maldives (CBM)', 'Bank of Ceylon'];
+  fileRef = React.createRef();
+  ATOLLS = [
+    { a: 'Malé Region', is: ['Malé', 'Hulhumalé', 'Villimalé'] },
+    { a: 'Kaafu', is: ['Maafushi', 'Thulusdhoo', 'Himmafushi', 'Guraidhoo', 'Gulhi', 'Dhiffushi', 'Huraa'] },
+    { a: 'Addu', is: ['Addu City', 'Hithadhoo', 'Feydhoo', 'Maradhoo', 'Meedhoo'] },
+    { a: 'Alif Alif', is: ['Rasdhoo', 'Thoddoo', 'Ukulhas', 'Mathiveri'] },
+    { a: 'Alif Dhaal', is: ['Maamigili', 'Dhangethi', 'Dhigurah', 'Mahibadhoo'] },
+    { a: 'Baa', is: ['Eydhafushi', 'Dharavandhoo', 'Thulhaadhoo'] },
+    { a: 'Lhaviyani', is: ['Naifaru', 'Hinnavaru', 'Kurendhoo'] },
+    { a: 'Haa Alif', is: ['Dhidhdhoo', 'Hoarafushi', 'Ihavandhoo'] },
+    { a: 'Laamu', is: ['Fonadhoo', 'Gan', 'Isdhoo'] },
+    { a: 'Gnaviyani', is: ['Fuvahmulah'] }
+  ];
+  componentDidMount() {
+    const m = { intro: 1, basics: 2, 'service-area': 3 };
+    const s = m[this.props.startScreen];
+    if (s && s !== 1) this.setState({ screen: s });
+  }
+  toastMsg(t) {
+    clearTimeout(this._tt);
+    this.setState({ toast: t });
+    this._tt = setTimeout(() => this.setState({ toast: null }), 2400);
+  }
+  setField(k, v) {
+    const errors = { ...this.state.errors };
+    delete errors[k];
+    this.setState({ [k]: v, errors });
+  }
+  validate2(requirePhone) {
+    const S = this.state, e = {};
+    const name = S.name.trim();
+    if (!name) e.name = 'Please enter your provider name.';
+    else if (name.length < 3) e.name = 'Name must be at least 3 characters.';
+    if (!S.type) e.type = "Choose how you'll offer services.";
+    const d = S.phone.replace(/\D/g, '');
+    const cc = S.dial.replace(/[^\d]/g, '');
+    if (requirePhone && !d) e.phone = 'Please enter a mobile number we can reach you on.';
+    else if (d && (d.length < 6 || d.length > 15)) e.phone = 'Enter a valid mobile number, including area code if outside the Maldives.';
+    else if (S.editingPhone && !cc) e.phone = 'Add a country code, e.g. +960.';
+    if (!S.holder.trim()) e.holder = "Enter the account holder's name.";
+    const an = S.acct.replace(/\s/g, '');
+    if (!an) e.acct = 'Enter your account number.';
+    else if (an.length < 7) e.acct = 'Account numbers are at least 7 digits.';
+    if (!S.bank) e.bank = 'Select your bank.';
+    return e;
+  }
+  renderVals() {
+    const S = this.state, P = this.props;
+    const blue = '#2563EB', line = '#E3EAF3', errC = '#DC2626';
+    const grad = 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)';
+    const requirePhone = P.requirePhone ?? true;
+    const flat = [];
+    this.ATOLLS.forEach(g => g.is.forEach(n => flat.push({ name: n, atoll: g.a })));
+    const q = S.query.trim().toLowerCase();
+    const filtered = flat.filter(i => (S.atoll === 'All' || i.atoll === S.atoll) && (!q || i.name.toLowerCase().includes(q)));
+    const sel = S.selected;
+    const toggle = n => this.setState({ selected: sel.includes(n) ? sel.filter(x => x !== n) : [...sel, n] });
+    const fmt = v => { const d = v.replace(/\D/g, '').slice(0, 15); return d.length === 7 ? d.slice(0, 3) + ' ' + d.slice(3) : d; };
+    const first = S.name.trim().split(' ')[0];
+    const mailVerified = S.verifiedNow || (P.emailVerified ?? true);
+    return {
+      s1: S.screen === 1, s2: S.screen === 2, s3: S.screen === 3,
+      stepText: 'Step ' + S.screen + ' of 3',
+      segs: [1, 2, 3].map(i => ({ bg: i <= S.screen ? blue : '#D6E1F0' })),
+      goBack: () => {
+        if (S.loading) return;
+        if (S.screen === 1) this.toastMsg('Back to Home — nothing was saved.');
+        else this.setState({ screen: S.screen - 1 });
+      },
+      continue1: () => this.setState({ screen: 2 }),
+      notNow: () => this.toastMsg("No problem — you're back in customer mode."),
+      name: S.name, setName: e => this.setField('name', e.target.value),
+      nameBd: S.errors.name ? errC : line, nameErr: S.errors.name || '', hasNameErr: !!S.errors.name, noNameErr: !S.errors.name,
+      isInd: S.type === 'ind', isBiz: S.type === 'biz',
+      pickInd: () => this.setField('type', 'ind'), pickBiz: () => this.setField('type', 'biz'),
+      indBd: S.type === 'ind' ? blue : line, indBg: S.type === 'ind' ? '#E8F0FE' : '#fff',
+      bizBd: S.type === 'biz' ? blue : line, bizBg: S.type === 'biz' ? '#E8F0FE' : '#fff',
+      typeErr: S.errors.type || '', hasTypeErr: !!S.errors.type,
+      phone: S.phone, setPhone: e => this.setField('phone', fmt(e.target.value)),
+      dial: S.dial, setDial: e => this.setField('dial', e.target.value.replace(/[^\d+]/g, '').slice(0, 5)),
+      dialBd: S.errors.phone ? errC : line,
+      phoneDisplay: S.dial + ' ' + S.phone,
+      phoneLocked: !S.editingPhone, phoneEditing: S.editingPhone,
+      editPhone: () => this.setState({ editingPhone: true }),
+      phoneHelp: S.editingPhone
+        ? 'Any country code works — expatriate residents can keep a foreign number.'
+        : 'From your account. Used for booking updates, never shown publicly.',
+      phoneBd: S.errors.phone ? errC : line, phoneErr: S.errors.phone || '', hasPhoneErr: !!S.errors.phone, noPhoneErr: !S.errors.phone,
+      email: P.accountEmail ?? 'aishath.h@gmail.com',
+      mailOk: mailVerified, mailUnverified: !mailVerified && !S.verifying, mailVerifying: S.verifying,
+      mailBg: mailVerified ? '#F7FAFD' : '#FFF8EC',
+      mailBd: mailVerified ? '#E3EAF3' : '#F3C77B',
+      mailNote: S.errors.email || 'Verify your email to continue — booking notifications and customer messages are sent here.',
+      mailNoteFg: S.errors.email ? errC : '#A15C00',
+      verifyMail: () => {
+        this.setState({ verifying: true });
+        this.toastMsg('Verification link sent to your email.');
+        setTimeout(() => this.setState({ verifying: false, verifiedNow: true, errors: (() => { const e = { ...this.state.errors }; delete e.email; return e; })() }), 1600);
+      },
+      holder: S.holder, setHolder: e => this.setField('holder', e.target.value),
+      holderBd: S.errors.holder ? errC : line, holderErr: S.errors.holder || '', hasHolderErr: !!S.errors.holder, noHolderErr: !S.errors.holder,
+      acct: S.acct, setAcct: e => this.setField('acct', e.target.value.replace(/[^\d]/g, '').slice(0, 16)),
+      acctBd: S.errors.acct ? errC : line, acctErr: S.errors.acct || '', hasAcctErr: !!S.errors.acct, noAcctErr: !S.errors.acct,
+      bank: S.bank, setBank: e => this.setField('bank', e.target.value),
+      banks: this.BANKS.map(v => ({ v })),
+      bankBd: S.errors.bank ? errC : line, bankFg: S.bank ? '#0F1B2D' : '#9AA9C0',
+      bankErr: S.errors.bank || '', hasBankErr: !!S.errors.bank,
+      accepting: S.accepting,
+      toggleAccepting: () => this.setState({ accepting: !S.accepting }),
+      swBg: S.accepting ? blue : '#E6ECF5', swBd: S.accepting ? blue : '#C7D5E8',
+      swKnob: S.accepting ? '#fff' : '#93A5BE', swJustify: S.accepting ? 'flex-end' : 'flex-start',
+      intro: S.intro, setIntro: e => this.setField('intro', e.target.value.slice(0, 160)),
+      introCount: S.intro.length + ' / 160',
+      photoCss: S.photoUrl ? 'url(' + S.photoUrl + ')' : 'none', hasPhoto: !!S.photoUrl, noPhoto: !S.photoUrl,
+      fileRef: this.fileRef,
+      pickPhoto: () => this.fileRef.current && this.fileRef.current.click(),
+      onPhoto: e => { const f = e.target.files && e.target.files[0]; if (f) this.setState({ photoUrl: URL.createObjectURL(f) }); },
+      removePhoto: () => this.setState({ photoUrl: null }),
+      loading: S.loading, notLoading: !S.loading,
+      continue2: () => {
+        if (S.loading) return;
+        const e = this.validate2(requirePhone);
+        if (!mailVerified) e.email = 'Verify your email before continuing — booking notifications are sent there.';
+        if (Object.keys(e).length) {
+          this.setState({ errors: e });
+          this.toastMsg(e.email && Object.keys(e).length === 1 ? 'Verify your email to continue.' : 'Please fix the highlighted fields.');
+          return;
+        }
+        this.setState({ loading: true, errors: {} });
+        setTimeout(() => this.setState({ loading: false, screen: 3 }), P.loadingMs ?? 900);
+      },
+      atollChips: ['All', ...this.ATOLLS.map(g => g.a)].map(a => {
+        const on = S.atoll === a;
+        return { name: a, bg: on ? blue : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? blue : line, pick: () => this.setState({ atoll: a }) };
+      }),
+      query: S.query, setQuery: e => this.setState({ query: e.target.value }),
+      islandRows: filtered.map(i => {
+        const on = sel.includes(i.name);
+        return { name: i.name, atoll: i.atoll, on, cBg: on ? blue : '#fff', cBd: on ? blue : '#C7D5E8', go: () => toggle(i.name) };
+      }),
+      noResults: filtered.length === 0,
+      chips: sel.map(n => ({ name: n, rm: () => toggle(n) })),
+      hasSel: sel.length > 0, noSel: sel.length === 0,
+      selLabel: sel.length + (sel.length === 1 ? ' island selected' : ' islands selected'),
+      cta3Bg: sel.length ? grad : '#C6D4EA',
+      cta3Fg: sel.length ? '#fff' : '#8296B3',
+      cta3Sh: sel.length ? '0 10px 24px rgba(37,99,235,.32)' : 'none',
+      cta3Cur: sel.length ? 'pointer' : 'default',
+      create3: () => { if (sel.length) this.setState({ done: true }); },
+      done: S.done,
+      closeDone: () => this.setState({ done: false }),
+      stopProp: e => e.stopPropagation(),
+      startCreate: () => this.toastMsg('Service creation flow opens here.'),
+      doneTitle: first ? "You're all set, " + first + '!' : "You're all set!",
+      doneSub: 'Your provider profile is ready. Next, add your first service so customers on ' + (sel.length === 1 ? sel[0] : sel.length + ' islands') + ' can find you.',
+      toast: S.toast, hasToast: !!S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

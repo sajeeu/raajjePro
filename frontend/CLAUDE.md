@@ -34,3 +34,44 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 - Authorization tests cover reads as well as writes, and cover the wrong-user case, not just the unauthenticated one.
 - Any endpoint touching a phone number is tested for its ABSENCE in the response, not only for the presence of what it should return.
 - Registration is tested against both a duplicate email and a duplicate phone, asserting each is blocked with a message naming the specific field.
+
+---
+
+# Design tokens — extracted from the delivered designs
+
+🔧 **These are measured values, not proposals.** They come from `mockups/design-composer/Become a Provider.dc.html`, which is a working Design Composer prototype rather than a flat image — so every colour, radius and duration below is exact rather than eyedropped. Phase 1 builds the Theme extension from these.
+
+**`Become a Provider.dc.html` is the highest-fidelity reference in the repo.** It carries interaction detail no image can: which field shows which error text, when a CTA disables, how long a transition runs. When implementing a screen it covers, read it rather than the JPEGs.
+
+## Colour
+
+| Role | Value |
+|---|---|
+| Primary | `#2563EB` · pressed `#1D4ED8` · gradient `#5B8DF6 → #2563EB 60% → #1D4ED8` |
+| Ink | `#0F1B2D` |
+| Secondary text | `#5B6B84` · tertiary `#41526B` |
+| Placeholder | `#9AA9C0` |
+| Page background | `#F2F6FB` · outer frame `#DEE7F3` |
+| Surface | `#FFFFFF` |
+| Border | `#E3EAF3` · subtle divider `#EEF3FA` / `#F0F4FA` |
+| Accent tint | `#E8F0FE` · border `#CDDDFB` |
+| Success | `#16A34A` · tint `#E5F6EC` |
+| Error | `#DC2626` |
+| Warning | `#D97706` · tint `#FEF3DC` |
+| Disabled fill | `#C6D4EA` · disabled text `#8296B3` |
+
+## Type — Inter
+
+Sizes in use: **11 · 12 · 12.5 · 13 · 13.5 · 14 · 14.5 · 15 · 16 · 22 · 24 · 26**. Weights: **600 · 700 · 800** only — nothing lighter than semibold appears anywhere. Headings carry `letter-spacing: -.02em`; uppercase labels carry `+.06em`.
+
+## Geometry
+
+- **Radii:** 10 · 12 · 14 (inputs) · 16 (buttons, cards) · 20 · 24 (feature cards) · 28 (bottom sheets) · `999` (pills)
+- **Heights:** 52 inputs · 54 primary CTA · 44 touch targets and icon buttons · 38 filter chips · 26 checkboxes
+- **Borders:** `1px` dividers, `1.5px` inputs and selectable cards, `2px` selected states
+
+## Motion
+
+`screenIn` 350ms `cubic-bezier(.2,.8,.3,1)` · `fadeUp` 200ms ease · `sheetUp` 400ms `cubic-bezier(.2,.9,.3,1)` · `toastIn` 250ms ease · spinner 800ms linear.
+
+🔧 **These are web idioms and must not be transliterated.** `100dvh`, CSS gradients, `box-shadow` and `overflow-y:auto` all have Flutter equivalents, but copying them literally produces something that feels like a website in an app. Match the *values*; use Flutter's own elevation, scroll physics and page transitions.

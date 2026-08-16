@@ -50,6 +50,16 @@ All seventeen screens are here, committed 2026-08-13. Filenames are **as deliver
 
 **Two names worth knowing about.** `Profile_serviceProvider.jpg` is the My Services dashboard, verified by opening it — a phase command that took the name at face value would attach the wrong screen. And `Explore seervices.jpg` was renamed to `Explore_services.jpg`: a space in a filename referenced from phase commands causes real friction, and the original also misspelled "services".
 
+## design-composer/ — the highest-fidelity reference here
+
+`design-composer/Become a Provider.dc.html` is a **working prototype** of the Phase 6a onboarding flow, not a picture. Open it in a browser and it runs: real validation, real error text, real loading and disabled states.
+
+**Prefer it over any image for the screens it covers.** It carries what a flat mockup structurally cannot — which field shows which message, when a CTA disables, exactly how long a transition runs. `frontend/CLAUDE.md` has its tokens extracted for Phase 1.
+
+**It is never shipped.** It is React and HTML in Design Composer's `.dc.html` format; the app is Flutter. Match its values; do not transliterate `100dvh`, CSS gradients or `overflow-y:auto` into Flutter, or you get something that feels like a website in an app.
+
+It was reviewed against the plan and corrected on 2026-08-15: bank transfer details, verified email, the account-level `acceptingNewCustomers` toggle, phone as confirm-rather-than-retype, and international phone validation were all added after the first pass omitted them.
+
 ## These files are not correct as drawn
 
 Seven divergences from the plan were found in Round 16 and confirmed in Round 18. **`round-16-redraws.html` is authoritative where the two disagree** — open it in a browser. Do not implement `Create_service_widget5.jpg` or `Explore_services.jpg` as delivered.
