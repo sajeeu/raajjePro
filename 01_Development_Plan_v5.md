@@ -1509,6 +1509,6 @@ Every substantive choice in this document, in the order made. Rounds 1–6 dated
 
 **Open, requiring your input:** 🔧 **Nothing, as of Round 19.** Every question this document has raised for you has been answered. Three things remain outstanding but are not decisions:
 
-- **The sixteen mockup image files are not in the repository.** Phases 1, 9, 10, 12 and 16 are specified as pixel-match against them. `mockups/README.md` records what is expected.
+- **Four of the nineteen unmockuped screens still need designing**, and two of those are the ones rated critical: the customer slot picker (Phase 9a) and the booking flow's three variants (Phase 17). The seventeen delivered screens are committed to `mockups/`, and Phase 6a's flow additionally exists as a working prototype.
 - **Legal counsel on §1i's liability position**, sequenced with Phase 23 by your decision — a marketplace defence weakens the more a platform curates, and this one verifies, tier-gates, scores and dispatches.
 - **The App Store submission outcome**, which is empirical rather than decidable. Phase 23 records the contingency if it goes badly.
