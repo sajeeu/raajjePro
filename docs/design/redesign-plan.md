@@ -31,9 +31,11 @@ Home is the right place to start and you named it correctly: it is where the vis
 But Home should produce **two files, not one**:
 
 1. **`Home.dc.html`** — the screen, with its launch-mode variant and all four states.
-2. **`Components.dc.html`** — the shared vocabulary, extracted from Home while it is being built: button variants, input states, chip, service card, verification badge, status pill, bottom nav, avatar, skeleton.
+2. **A component per file** — `ServiceCard.dc.html`, `VerificationBadge.dc.html`, `Chip.dc.html`, `StatusPill.dc.html`, `BottomNav.dc.html`, `SkeletonCard.dc.html`, `EmptyState.dc.html` — plus `Components.dc.html` as the gallery that mounts them.
 
-The second file is what makes the following twelve sessions fast and consistent. Every later artboard imports from it (`<dc-import name="ServiceCard">`) rather than re-deriving a card from a screenshot, which is how twelve independently-built sessions drift into looking like twelve products.
+🔧 **One file per component, not one sheet.** `<dc-import>` mounts a **sibling `.dc.html` file**, so a single gallery cannot be imported from. Session 1 delivered the sheet as one file and it had to be split before session 2 could use it — the fix is `sessions/02b-components.md`. A gallery is a display of the components; the components are the files.
+
+That split is what makes the following twelve sessions fast and consistent. Every later artboard imports the real component rather than re-deriving a card from a screenshot, which is how twelve independently-built sessions drift into looking like twelve products.
 
 **Verify in session 1** that a component built in one chat is importable from another chat in the same project. All artboards are siblings in project `065ca2ad`, so it should work — but the whole sequencing below assumes it, so confirm it before session 2 rather than discovering it in session 7.
 

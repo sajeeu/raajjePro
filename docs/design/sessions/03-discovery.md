@@ -1,6 +1,12 @@
 Build the discovery screens for RaajjePro — four screens, in one file where they share state.
 
-**Import from `Components.dc.html`** rather than re-deriving anything. The service card, verification badge, chips, status pills, bottom navigation, skeleton and empty state all exist there and are settled. This is the first session that inherits from that sheet, and every session after this one does too — so if an import does not resolve, say so rather than copying the markup across, and I will fix the sheet.
+**Import the components; do not re-derive them.** These exist as sibling files and are settled:
+
+```
+<dc-import name="ServiceCard" variant="full" title="{{ s.title }}" … hint-size="100%,132px"></dc-import>
+```
+
+`ServiceCard` · `VerificationBadge` · `Chip` · `StatusPill` · `BottomNav` · `SkeletonCard` · `EmptyState`. Their props are declared in each file. This is the first session that inherits them and every session after does too — so if an import does not resolve, **say so rather than copying the markup across**, and I will fix the component rather than let a second copy exist.
 
 **Match the existing language, do not improve it.** `Home.dc.html` is the reference for how these pieces sit together — same 412px frame, same 20px screen padding, same header treatment, same tokens.
 
