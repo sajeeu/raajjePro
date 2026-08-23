@@ -331,6 +331,7 @@ The person or business behind the services. The trust surface.
 - **Conduct metrics — numbers only:**
   - `94% completed` · `3% cancelled` · `2% no-show` · `91% on time` · `97% price honoured` · `usually responds in 12 minutes` · `47 jobs completed`
   - Fact: these cover a rolling `90 days`
+  - Fact: **on time** covers emergency work too, measured against the arrival the provider themselves promised when they made the offer — not a time the platform assigned them
   - **Below `10` completed bookings, none of them appear.** Instead: `New provider · 4 jobs completed`. One cancellation out of two bookings is 50% and means nothing
   - Fact that must be conveyed: **no label, no grade, no summary judgement.** The numbers are the whole output
 - The provider's published services, as cards
