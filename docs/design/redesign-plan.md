@@ -70,7 +70,11 @@ The loop is the one already proven across three artboards:
 3. **Build.** Ask explicitly for any state it skipped.
 4. **Import.** I pull the `.dc.html` through the connector and audit it against the plan.
 5. **Correct.** I write a follow-up prompt naming the divergences; you paste it back.
-6. **Commit** the reviewed file into `mockups/design-composer/`.
+6. **Export** the artboard from Claude Design into `mockups/design-composer/`, keeping the filename Claude Design gave it.
+7. **Check** it: `python3 docs/design/verify-dc.py mockups/design-composer/*.dc.html`. Structure plus the plan's locked rules — a bare "Verified", a Tuition category, an encryption claim, an editorial provider label, a payment claimed as verified, a phone rendered as verified, a 120-minute Moving window, the deleted contact-info endpoint. Exit 0 or it does not get committed.
+8. **Commit** the reviewed file.
+
+**Why the export step is yours.** The connector hands file contents into my context rather than onto disk, and below roughly 40 KB nothing is written out — so for smaller artboards I have to reconstruct the file rather than copy it. That has validated clean every time, but an export is a copy and a reconstruction is not. Step 7 is what makes it not matter either way.
 
 **Step 4 is not optional.** Across three artboards it has caught: a missing screen, a false claim about how declining affects a provider's record, invented functionality with no endpoint behind it, an implied charge that does not exist, and bank details missing from onboarding entirely. None of those were visible in the design; all of them were visible against the plan.
 
