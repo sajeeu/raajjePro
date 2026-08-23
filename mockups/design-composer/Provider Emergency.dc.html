@@ -80,7 +80,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg>
                 <span style="font-size:15px;font-weight:800;color:#1D4ED8;letter-spacing:-.01em">This is a bid, not a race</span>
               </div>
-              <div style="font-size:13px;line-height:1.55;color:#2B4A8C;text-wrap:pretty">Other providers are being asked at the same time. {{ custFirst }} sees up to 3 offers side by side and picks one — <b>answering first doesn't win it</b>. Quote the fee you'd actually charge.</div>
+              <div style="font-size:13px;line-height:1.55;color:#2B4A8C;text-wrap:pretty">Other providers are being asked at the same time. {{ custFirst }} sees up to 3 offers side by side and picks one — <b>answering first doesn't win it</b>. Quote the fee you'd actually charge and an arrival you can actually make.</div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -91,6 +91,24 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               </div>
               <sc-if value="{{ hasFeeErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ feeErr }}</div></sc-if>
               <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">What you charge to attend. Parts and labour are agreed and settled directly with {{ custFirst }} afterwards.</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="peta" style="font-size:14px;font-weight:700;color:#0F1B2D">When can you get there?</label>
+              <div style="display:flex;gap:8px">
+                <sc-for list="{{ etaOpts }}" as="e" hint-placeholder-count="4">
+                  <button onClick="{{ e.pick }}" style="flex:1;height:48px;border:1.5px solid {{ e.bd }};border-radius:14px;background:{{ e.bg }};color:{{ e.fg }};font-size:14px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0;transition:border-color .15s,background .15s" style-active="transform:scale(.97)">{{ e.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="flex:none;font-size:12.5px;font-weight:600;color:#5B6B84">Or your own:</span>
+                <div style="flex:1;display:flex;align-items:center;background:#fff;border:1.5px solid {{ etaCBd }};border-radius:12px;overflow:hidden;transition:border-color .15s">
+                  <input id="peta" type="text" inputMode="numeric" value="{{ etaCustom }}" onChange="{{ setEtaCustom }}" placeholder="0" style="flex:1;height:44px;border:none;background:none;padding:0 6px 0 14px;font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;min-width:0">
+                  <span style="flex:none;padding:0 14px;font-size:13px;font-weight:700;color:#5B6B84">min</span>
+                </div>
+              </div>
+              <sc-if value="{{ hasEtaErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ etaErr }}</div></sc-if>
+              <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Your own estimate — {{ custFirst }} sees it next to every other offer. Arriving later than you said counts against your on-time record.</div>
             </div>
 
             <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
@@ -127,12 +145,16 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="font-size:15px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">Your offer is in</div>
           <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums" aria-live="polite">{{ chooseTxt }}</div>
           <div style="font-size:13px;font-weight:600;color:#5B6B84">{{ custFirst }} has 5 minutes to choose</div>
-          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty;margin-top:8px">Offers are shown side by side — up to 3 of them. Being first in doesn't matter; the fee and verification do.</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty;margin-top:8px">Offers are shown side by side — up to 3 of them. Being first in doesn't matter; the fee, arrival time and verification do.</div>
         </div>
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA">
             <span style="font-size:14px;font-weight:600;color:#41526B">Your callout fee</span>
             <span style="font-size:16px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ feeTxt }}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA">
+            <span style="font-size:14px;font-weight:600;color:#41526B">Arrival estimate</span>
+            <span style="font-size:16px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ etaSentTxt }}</span>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0">
             <span style="font-size:14px;font-weight:600;color:#41526B">Sent as</span>
@@ -151,7 +173,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ custFirst }} picked you</div>
-          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">The job is yours at <b style="color:#0F1B2D">{{ feeTxt }}</b> callout. Head over now and coordinate arrival in chat.</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">The job is yours at <b style="color:#0F1B2D">{{ feeTxt }}</b> callout — you said <b style="color:#0F1B2D">{{ etaSentTxt }}</b>. Head over now and coordinate in chat.</div>
         </div>
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;align-items:flex-start;gap:13px">
           <span style="width:38px;height:38px;border-radius:12px;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
@@ -253,14 +275,14 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Customer picks you&quot;,&quot;Customer picks another&quot;,&quot;No decision&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Customer picks you&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
-  state = { booted: false, screen: 'request', fee: '350', feeErr: null,
+  state = { booted: false, screen: 'request', fee: '350', feeErr: null, eta: null, etaCustom: '', etaErr: null,
     submitting: false, submitFailed: false, retried: false,
     sim: 240, rate: 1, submitAt: null, sheet: null, toast: null };
   CATS = [
-    { name: 'Plumbing', tier: 'Gold', win: 30 },
-    { name: 'Electrical', tier: 'Gold', win: 30 },
-    { name: 'AC Repair', tier: 'Silver', win: 30 },
-    { name: 'Moving', tier: 'Silver', win: 120 }];
+    { name: 'Plumbing', tier: 'Gold', win: 30, eta: [15, 30, 45, 60] },
+    { name: 'Electrical', tier: 'Gold', win: 30, eta: [15, 30, 45, 60] },
+    { name: 'AC Repair', tier: 'Silver', win: 30, eta: [15, 30, 45, 60] },
+    { name: 'Moving', tier: 'Silver', win: 30, eta: [60, 90, 120, 180] }];
   OFFERS = [
     { name: 'Ibrahim Rasheed', biz: 'Rasheed Plumbing Services', tier: 'Gold', rating: '4.6', dist: '1.2 km', fee: 350, at: 240, init: 'IR' }];
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' } };
@@ -302,6 +324,8 @@ class Component extends DCLogic {
     const b = this.BADGE.Gold;
     const feeNum = parseInt(S.fee, 10) || 0;
     const feeTxt = 'MVR ' + (feeNum || 0);
+    const etaVal = S.etaCustom ? parseInt(S.etaCustom, 10) || 0 : S.eta;
+    const etaTxt = etaVal ? '~' + etaVal + ' min' : '';
     const chooseRemain = S.submitAt != null ? Math.max(0, S.submitAt + 300 - S.sim) : 300;
     const hTitles = { request: 'New request near you', submitted: 'Offer sent', chosen: 'Job confirmed', notChosen: 'Request closed', expired: 'Request closed', declined: 'Request declined' };
     const showDemo = (this.props.compressTime ?? true) && (this.props.demoBadge ?? true) && S.rate > 1 && S.screen === 'submitted';
@@ -322,13 +346,22 @@ class Component extends DCLogic {
       fee: S.fee, feeTxt,
       setFee: e => this.setState({ fee: e.target.value.replace(/[^0-9]/g, '').slice(0, 5), feeErr: null }),
       feeBd: S.feeErr ? '#DC2626' : '#E3EAF3', feeErr: S.feeErr || '', hasFeeErr: !!S.feeErr,
-      ctaTxt: feeNum > 0 ? 'Send offer — ' + feeTxt : 'Send offer',
+      etaOpts: cat.eta.map(m => { const on = !S.etaCustom && S.eta === m; return { label: m + ' min',
+        bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#41526B',
+        pick: () => this.setState({ eta: m, etaCustom: '', etaErr: null }) }; }),
+      etaCustom: S.etaCustom,
+      setEtaCustom: e => this.setState({ etaCustom: e.target.value.replace(/[^0-9]/g, '').slice(0, 3), eta: null, etaErr: null }),
+      etaCBd: S.etaCustom ? '#2563EB' : '#E3EAF3',
+      hasEtaErr: !!S.etaErr, etaErr: S.etaErr || '',
+      etaSentTxt: etaTxt,
+      ctaTxt: feeNum > 0 && etaVal ? 'Send offer — ' + feeTxt + ', ' + etaVal + ' min' : 'Send offer',
       submitting: S.submitting, notSubmitting: !S.submitting, submitFailed: S.submitFailed, notFailed: !S.submitFailed,
       sendOffer: () => {
         if (S.submitting) return;
         if (!feeNum) { this.setState({ feeErr: 'Enter the fee you charge to attend.' }); return; }
         if (feeNum < 50) { this.setState({ feeErr: 'That looks too low — the callout fee should cover attending.' }); return; }
-        this.setState({ submitting: true, feeErr: null });
+        if (!etaVal) { this.setState({ etaErr: 'Pick when you can arrive — the customer compares this next to the fee.' }); return; }
+        this.setState({ submitting: true, feeErr: null, etaErr: null });
         setTimeout(() => {
           if (sc === 'conn' && !this.state.retried) this.setState({ submitting: false, submitFailed: true, retried: true });
           else this.setState({ submitting: false, submitFailed: false, screen: 'submitted', submitAt: this.state.sim });
@@ -342,7 +375,7 @@ class Component extends DCLogic {
         : 'The response window ended before an offer went in. It disappears from your list — the next emergency near you still reaches you.',
       openChat: () => this.toastMsg('Chat opens here.'),
       backToJobs: () => this.toastMsg('Back to your jobs list.'),
-      replay: () => { this._expiredWhy = null; this.setState({ screen: 'request', sim: 240, submitAt: null, submitting: false, submitFailed: false, retried: false, feeErr: null }); },
+      replay: () => { this._expiredWhy = null; this.setState({ screen: 'request', sim: 240, submitAt: null, submitting: false, submitFailed: false, retried: false, feeErr: null, eta: null, etaCustom: '', etaErr: null }); },
       hasSheet: !!S.sheet, sheetDecline: S.sheet === 'decline',
       closeSheet: () => this.setState({ sheet: null }),
       stopProp: e => e.stopPropagation(),

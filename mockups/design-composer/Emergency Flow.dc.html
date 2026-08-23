@@ -270,7 +270,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <div>
                 <sc-if value="{{ s.real }}">
                   <div onClick="{{ s.select }}" role="button" style="background:#fff;border:{{ s.bd }};border-radius:18px;padding:15px 14px;cursor:pointer;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both;transition:border-color .15s" style-active="transform:scale(.99)">
-                    <div style="display:grid;grid-template-columns:36px 1fr 50px 80px;gap:8px;align-items:center">
+                    <div style="display:grid;grid-template-columns:36px 1fr 62px 78px;gap:8px;align-items:center">
                       <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">{{ s.init }}</span>
                       <span style="display:flex;flex-direction:column;gap:4px;min-width:0">
                         <span style="font-size:14px;font-weight:700;color:#0F1B2D;line-height:1.25;text-wrap:balance">{{ s.name }}</span>
@@ -280,9 +280,10 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                           <sc-if value="{{ s.hasTierChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.tierChip }}</span></sc-if>
                         </span>
                       </span>
-                      <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
-                        <span style="font-size:13px;font-weight:700;color:#41526B;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.dist }}</span>
-                        <sc-if value="{{ s.hasDistChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.distChip }}</span></sc-if>
+                      <span style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
+                        <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.etaTxt }}</span>
+                        <span style="font-size:11px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.dist }}</span>
+                        <sc-if value="{{ s.hasEtaChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.etaChip }}</span></sc-if>
                       </span>
                       <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;text-align:right">
                         <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.feeTxt }}</span>
@@ -294,6 +295,10 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                       <div style="border-top:1px solid #EEF3FA;margin-top:13px;padding-top:12px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .2s ease both">
                         <div style="font-size:12.5px;line-height:1.5;font-weight:600;color:#5B6B84">◆ {{ s.tier }} — {{ s.tierCopy }}</div>
                         <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:4px 14px">
+                          <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid #EEF3FA">
+                            <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;flex:none">{{ s.etaTxt }}</span>
+                            <span style="font-size:12.5px;line-height:1.5;color:#41526B;font-weight:600;text-wrap:pretty">to arrive — {{ s.name }}'s own estimate, part of what you're accepting.</span>
+                          </div>
                           <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid #EEF3FA">
                             <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;flex:none">{{ s.feeTxt }}</span>
                             <span style="font-size:12.5px;line-height:1.5;color:#41526B;font-weight:600;text-wrap:pretty">to {{ s.name }}, paid directly — the final bill may differ once parts and labour are added.</span>
@@ -453,11 +458,11 @@ class Component extends DCLogic {
     { name: 'Plumbing', tier: 'Gold', win: 30, iBg: '#ECFDF5', iFg: '#059669', k: 'isPl' },
     { name: 'Electrical', tier: 'Gold', win: 30, iBg: '#FFFBEB', iFg: '#D97706', k: 'isEl' },
     { name: 'AC Repair', tier: 'Silver', win: 30, iBg: '#EFF6FF', iFg: '#2563EB', k: 'isAc' },
-    { name: 'Moving', tier: 'Silver', win: 120, iBg: '#FFF7ED', iFg: '#EA580C', k: 'isMv' }];
+    { name: 'Moving', tier: 'Silver', win: 30, iBg: '#FFF7ED', iFg: '#EA580C', k: 'isMv' }];
   OFFERS = [
-    { name: 'Ibrahim Rasheed', biz: 'Rasheed Plumbing Services', tier: 'Gold', rating: '4.6', dist: '1.2 km', fee: 350, at: 240, init: 'IR' },
-    { name: 'Hassan Waheed', biz: null, tier: 'Gold', rating: '4.9', dist: '2.8 km', fee: 450, at: 300, init: 'HW' },
-    { name: 'Ahmed Shakir', biz: null, tier: 'Silver', rating: '4.4', dist: '0.8 km', fee: 500, at: 390, init: 'AS' }];
+    { name: 'Ibrahim Rasheed', biz: 'Rasheed Plumbing Services', tier: 'Gold', rating: '4.6', dist: '1.2 km', eta: 30, fee: 350, at: 240, init: 'IR' },
+    { name: 'Hassan Waheed', biz: null, tier: 'Gold', rating: '4.9', dist: '2.8 km', eta: 40, fee: 450, at: 300, init: 'HW' },
+    { name: 'Ahmed Shakir', biz: null, tier: 'Silver', rating: '4.4', dist: '0.8 km', eta: 15, fee: 500, at: 390, init: 'AS' }];
   TIERCOPY = { Gold: 'ID checked, registered trade', Silver: 'ID checked, work verified', Bronze: 'ID checked by RaajjePro' };
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' } };
   ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Maafushi'];
@@ -574,16 +579,16 @@ class Component extends DCLogic {
       revealing: S.screen === 'offers' && S.revealing,
       showRows: S.screen === 'offers' && !S.revealing,
       slots: (() => {
-        const km = o => parseFloat(o.dist), rank = { Gold: 2, Silver: 1, Bronze: 0 };
+        const rank = { Gold: 2, Silver: 1, Bronze: 0 };
         const uniqMin = val => { if (active.length < 2) return null; const best = Math.min(...active.map(val)); const hits = active.filter(o => val(o) === best); return hits.length === 1 ? hits[0] : null; };
-        const closest = uniqMin(km), lowFee = uniqMin(o => o.fee);
+        const soonest = uniqMin(o => o.eta), lowFee = uniqMin(o => o.fee);
         const topTier = (() => { if (active.length < 2) return null; const best = Math.max(...active.map(o => rank[o.tier])); const hits = active.filter(o => rank[o.tier] === best); return hits.length === 1 ? hits[0] : null; })();
         const rows = active.map(o => {
           const b = this.BADGE[o.tier], idx = this.OFFERS.indexOf(o), open = S.sel === idx;
           return { real: true, ghost: false, name: o.name, init: o.init, tier: o.tier, tierCopy: this.TIERCOPY[o.tier],
-            bBg: b.bg, bFg: b.fg, bBd: b.bd, rating: o.rating, dist: o.dist, feeTxt: 'MVR ' + o.fee, open,
+            bBg: b.bg, bFg: b.fg, bBd: b.bd, rating: o.rating, dist: o.dist, etaTxt: '~' + o.eta + ' min', feeTxt: 'MVR ' + o.fee, open,
             bd: open ? '1.5px solid #2563EB' : '1.5px solid #E9EFF7',
-            hasDistChip: closest === o, distChip: 'Closest',
+            hasEtaChip: soonest === o, etaChip: 'Soonest',
             hasFeeChip: lowFee === o, feeChip: 'Lowest fee',
             hasTierChip: topTier === o, tierChip: 'Highest tier',
             select: () => { if (this.state.confirming) return; this.setState({ sel: this.state.sel === idx ? null : idx }); } };
