@@ -58,6 +58,15 @@ Measured from the delivered designs, not proposed. Keep these unless you have a 
 | Warning | `#D97706` · tint `#FEF3DC` |
 | Disabled | fill `#C6D4EA` · text `#8296B3` |
 
+**Verification badge palettes** — one per tier, fill · text · border:
+
+| Tier | Fill | Text | Border |
+|---|---|---|---|
+| Bronze | `#FBEDE3` | `#9A5B2D` | `#E8C4A0` |
+| Silver | `#F1F5F9` | `#475569` | `#CBD5E1` |
+| Gold | `#FEF3C7` | `#B45309` | `#FCD34D` |
+| None | — | — | — (the badge is absent; never a grey "unverified" chip) |
+
 **Category accents** — each of the twelve carries its own tint for icon chips: Cleaning indigo, Plumbing emerald, Electrical amber, AC Repair blue, Beauty pink, Photography orange, Gardening green, Computer blue, Moving orange, Fitness violet, Events yellow, Boat Charter cyan. Tints sit around 8% saturation on white; the icon takes the full colour.
 
 ### Type — Inter

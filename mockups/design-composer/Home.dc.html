@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+.hscroll::-webkit-scrollbar{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:14px 20px 10px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
+    <span style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+    <span style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;flex:none">Raajje<span style="color:#2563EB">Pro</span></span>
+    <span style="flex:1"></span>
+    <button onClick="{{ openIsland }}" style="height:36px;border:1px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12.5px;font-weight:700;cursor:pointer;max-width:130px" style-hover="background:#DDEAFE">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ islandLbl }}</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <button onClick="{{ bellTap }}" aria-label="Notifications" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex:none" style-hover="background:#F7FAFD">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.3 19.5a2 2 0 0 0 3.4 0"></path></svg>
+      <span style="position:absolute;top:-2px;right:-2px;min-width:17px;height:17px;border-radius:999px;background:#2563EB;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #F2F6FB">3</span>
+    </button>
+    <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:none">AN</span>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="display:flex;flex-direction:column;gap:22px;padding:8px 0 28px">
+
+      <div style="display:flex;flex-direction:column;gap:14px;padding:0 20px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.2;color:#0F1B2D;text-wrap:balance">Find trusted local <span style="color:#2563EB">services</span> near you</div>
+          <div style="font-size:14px;font-weight:500;line-height:1.5;color:#5B6B84">Discover skilled professionals across Maldives islands</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:52px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input value="{{ q }}" onChange="{{ setQ }}" placeholder="What service do you need?" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+          <button onClick="{{ searchTap }}" aria-label="Search" style="width:38px;height:38px;border:none;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 6px 14px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.95)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
+        </div>
+        <div class="hscroll" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
+          <sc-for list="{{ quickChips }}" as="ch" hint-placeholder-count="4">
+            <button onClick="{{ ch.tap }}" style="flex:none;height:38px;border:1.5px solid {{ ch.bd }};border-radius:999px;background:{{ ch.bg }};color:{{ ch.fg }};padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s" style-active="transform:scale(.97)">{{ ch.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ skel }}">
+        <div style="display:flex;flex-direction:column;gap:22px" aria-hidden="true">
+          <div class="hscroll" style="display:flex;gap:12px;overflow:hidden;padding:0 20px">
+            <sc-for list="{{ skel6 }}" as="k" hint-placeholder-count="6">
+              <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:7px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div><div style="width:44px;height:9px;border-radius:5px;background:#E8EEF6"></div></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
+            <div style="width:150px;height:16px;border-radius:8px;background:#E8EEF6"></div>
+            <div style="display:flex;gap:12px;overflow:hidden">
+              <div style="flex:none;width:250px;height:264px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+              <div style="flex:none;width:250px;height:264px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
+            <div style="width:170px;height:16px;border-radius:8px;background:#E8EEF6"></div>
+            <div style="height:92px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:92px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:92px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ body }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:22px">
+
+          <sc-if value="{{ noLoc }}">
+            <div style="margin:0 20px;background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:26px 22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+              <span style="position:relative;width:72px;height:72px;display:flex;align-items:center;justify-content:center" aria-hidden="true">
+                <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.10);animation:pulseRing 2.4s ease-out infinite"></span>
+                <span style="width:52px;height:52px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+              </span>
+              <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Where are you browsing from?</div>
+              <div style="font-size:13px;line-height:1.55;color:#5B6B84;max-width:270px;text-wrap:pretty">Pick your island to see providers who actually work near you.</div>
+              <button onClick="{{ openIsland }}" style="margin-top:4px;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;padding:0 24px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Choose your island</button>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px">
+              <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Browse categories</span>
+              <sc-if value="{{ catRow }}"><button onClick="{{ viewAllCats }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:3px;padding:6px 0" style-hover="color:#1D4ED8">View all<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></sc-if>
+            </div>
+            <sc-if value="{{ catRow }}" hint-placeholder-val="{{ true }}">
+              <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:0 20px">
+                <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
+                  <button onClick="{{ c.tap }}" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;border:none;background:none;cursor:pointer;padding:0;width:64px" style-active="transform:scale(.96)">
+                    <span style="width:56px;height:56px;border-radius:16px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ c.fg }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.d }}"></path></svg></span>
+                    <span style="font-size:11.5px;font-weight:600;color:#41526B;white-space:nowrap">{{ c.n }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ catGrid }}">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px;padding:0 20px">
+                <sc-for list="{{ cats }}" as="c" hint-placeholder-count="12">
+                  <button onClick="{{ c.tap }}" style="display:flex;flex-direction:column;align-items:center;gap:7px;border:none;background:none;cursor:pointer;padding:0" style-active="transform:scale(.96)">
+                    <span style="width:56px;height:56px;border-radius:16px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ c.fg }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.d }}"></path></svg></span>
+                    <span style="font-size:11px;font-weight:600;color:#41526B;text-align:center;line-height:1.25">{{ c.n }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ hasPopNear }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px">
+                <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Popular near you</span>
+                <sc-if value="{{ popNearOk }}" hint-placeholder-val="{{ true }}"><button onClick="{{ seeAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">See all</button></sc-if>
+              </div>
+              <sc-if value="{{ popNearErr }}">
+                <div style="margin:0 20px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+                  <span style="width:44px;height:44px;border-radius:50%;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg></span>
+                  <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">This section didn't load</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Your connection dropped while loading services near {{ islandLbl }}. The rest of the page is fine.</div>
+                  <button onClick="{{ retrySec }}" style="margin-top:4px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;display:inline-flex;align-items:center;gap:8px" style-hover="background:#DDEAFE" style-active="transform:scale(.98)">
+                    <sc-if value="{{ retrying }}"><span style="width:15px;height:15px;border:2.5px solid #B9CFF7;border-top-color:#1D4ED8;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span></sc-if>
+                    <span>{{ retryLbl }}</span>
+                  </button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ popNearOk }}" hint-placeholder-val="{{ true }}">
+                <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 20px 6px">
+                  <sc-for list="{{ popNear }}" as="s" hint-placeholder-count="3">
+                    <div style="flex:none;width:250px;scroll-snap-align:start;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);display:flex;flex-direction:column;animation:fadeUp .3s ease both">
+                      <div style="position:relative;height:126px;background:{{ s.cBg }};display:flex;align-items:center;justify-content:center">
+                        <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background-image:{{ s.photoCss }};background-size:cover;background-position:center"></span></sc-if>
+                        <sc-if value="{{ s.noPhoto }}"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ s.cFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ s.cD }}"></path></svg></sc-if>
+                        
+                        <button onClick="{{ s.save }}" aria-label="Save" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(15,27,45,.12)" style-active="transform:scale(.9)"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ s.hFill }}" stroke="{{ s.hStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+                        <span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:{{ s.cFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ s.cat }}</span>
+                      </div>
+                      <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px;flex:1">
+                        <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3;min-height:39px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ s.title }}</div>
+                        <div style="display:flex;align-items:center;gap:7px">
+                          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">{{ s.pInit }}</span>
+                          <span style="font-size:12.5px;font-weight:600;color:#41526B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.prov }}</span>
+                          <sc-if value="{{ s.hasBadge }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ s.tBg }};color:{{ s.tFg }};border:1px solid {{ s.tBd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;flex:none">◆ {{ s.tier }}</span></sc-if>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
+                          <span style="font-variant-numeric:tabular-nums">{{ s.rating }}</span>
+                          <span style="flex:1"></span>
+                          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ s.island }}</span>
+                        </div>
+                        <div style="border-top:1px solid #EEF3FA;padding-top:10px;display:flex;align-items:baseline;gap:3px;margin-top:auto">
+                          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ s.price }}</span>
+                          <sc-if value="{{ s.hasUnit }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ s.unit }}</span></sc-if>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                          <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
+                          <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
+                          <sc-if value="{{ s.emg }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ hasFeatured }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Featured providers</span>
+                <button onClick="{{ seeAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">See all</button>
+              </div>
+              <sc-for list="{{ featured }}" as="f" hint-placeholder-count="3">
+                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+                  <span style="width:52px;height:52px;flex:none;display:block"><image-slot id="{{ f.logoId }}" shape="rounded" radius="16" style="width:52px;height:52px" placeholder="Logo"></image-slot></span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <span style="font-size:15px;font-weight:700;color:#0F1B2D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.name }}</span>
+                      <sc-if value="{{ f.hasBadge }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ f.tBg }};color:{{ f.tFg }};border:1px solid {{ f.tBd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;flex:none">◆ {{ f.tier }}</span></sc-if>
+                    </div>
+                    <span style="align-self:flex-start;background:{{ f.cBg }};color:{{ f.cFg }};border-radius:999px;padding:3px 9px;font-size:10.5px;font-weight:800">{{ f.cat }}</span>
+                    <div style="font-size:12.5px;font-weight:500;line-height:1.45;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.desc }}</div>
+                    <div style="display:flex;align-items:center;gap:12px;font-size:11.5px;font-weight:600;color:#5B6B84">
+                      <span style="display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ f.area }}</span>
+                      <span style="font-variant-numeric:tabular-nums">{{ f.jobs }} jobs</span>
+                    </div>
+                  </div>
+                  <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums"><svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>{{ f.rating }}</span>
+                    <span style="font-size:11px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">{{ f.reviews }} reviews</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ launch }}">
+            <div style="margin:0 20px;background:#E8F0FE;border:1.5px solid #CDDDFB;border-radius:20px;padding:16px 18px;display:flex;align-items:flex-start;gap:12px">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
+              <div style="font-size:13px;line-height:1.55;font-weight:600;color:#2B4A8C;text-wrap:pretty">RaajjePro is new on {{ islandLbl }} — providers are joining every week. Browse a category to see everyone offering it today.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ full }}">
+            <div style="display:flex;flex-direction:column;gap:22px">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px">
+                  <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Popular this week</span>
+                  <button onClick="{{ seeAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">See all</button>
+                </div>
+                <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 20px 6px">
+                  <sc-for list="{{ popWeek }}" as="s" hint-placeholder-count="3">
+                    <div style="flex:none;width:250px;scroll-snap-align:start;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);display:flex;flex-direction:column">
+                      <div style="position:relative;height:126px;background:{{ s.cBg }};display:flex;align-items:center;justify-content:center">
+                        <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background-image:{{ s.photoCss }};background-size:cover;background-position:center"></span></sc-if>
+                        <sc-if value="{{ s.noPhoto }}"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ s.cFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ s.cD }}"></path></svg></sc-if>
+                        <button onClick="{{ s.save }}" aria-label="Save" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(15,27,45,.12)" style-active="transform:scale(.9)"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ s.hFill }}" stroke="{{ s.hStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+                        <span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:{{ s.cFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ s.cat }}</span>
+                      </div>
+                      <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px;flex:1">
+                        <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3;min-height:39px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ s.title }}</div>
+                        <div style="display:flex;align-items:center;gap:7px">
+                          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">{{ s.pInit }}</span>
+                          <span style="font-size:12.5px;font-weight:600;color:#41526B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.prov }}</span>
+                          <sc-if value="{{ s.hasBadge }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ s.tBg }};color:{{ s.tFg }};border:1px solid {{ s.tBd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;flex:none">◆ {{ s.tier }}</span></sc-if>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
+                          <span style="font-variant-numeric:tabular-nums">{{ s.rating }}</span>
+                          <span style="flex:1"></span>
+                          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ s.island }}</span>
+                        </div>
+                        <div style="border-top:1px solid #EEF3FA;padding-top:10px;display:flex;align-items:baseline;gap:3px;margin-top:auto">
+                          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ s.price }}</span>
+                          <sc-if value="{{ s.hasUnit }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ s.unit }}</span></sc-if>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                          <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
+                          <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
+                          <sc-if value="{{ s.emg }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
+                <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Nearby in {{ islandLbl }}</span>
+                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+                  <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+                  <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Enable precise location</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Allow location access to see the services closest to you on {{ islandLbl }}.</div>
+                  <button onClick="{{ enableLoc }}" style="margin-top:2px;height:44px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Enable location</button>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
+                <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Recently viewed</span>
+                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+                  <span style="width:48px;height:48px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
+                  <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No recent activity</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Services you browse will appear here for quick access.</div>
+                  <button onClick="{{ seeAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">Explore services</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:14px;padding:0 20px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin-top:4px">
+              <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">Why RaajjePro?</span>
+              <div style="font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1.25;color:#0F1B2D;text-wrap:balance">Built on trust, <span style="color:#2563EB">designed</span> for the Maldives</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <sc-for list="{{ trust }}" as="t" hint-placeholder-count="4">
+                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:16px 14px;display:flex;flex-direction:column;gap:8px">
+                  <span style="width:36px;height:36px;border-radius:11px;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></span>
+                  <span style="font-size:13.5px;font-weight:700;color:#0F1B2D;line-height:1.3">{{ t.title }}</span>
+                  <span style="font-size:12px;font-weight:500;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ t.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin:0 20px;background:linear-gradient(135deg,#3B72EE,#1D4ED8);border-radius:24px;padding:22px 20px;display:flex;flex-direction:column;gap:10px;overflow:hidden;position:relative">
+            <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:4px 11px;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase">For providers</span>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1.25;color:#fff;text-wrap:balance">Grow your local service business</div>
+            <div style="font-size:13px;font-weight:500;line-height:1.55;color:rgba(255,255,255,.85);text-wrap:pretty">Reach customers across the Maldives islands and run your bookings from your phone.</div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button onClick="{{ becomeProv }}" style="flex:none;height:46px;border:none;border-radius:14px;background:#fff;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 18px" style-hover="background:#F0F5FF" style-active="transform:scale(.98)">Become a Provider</button>
+              <button onClick="{{ learnMore }}" style="flex:none;height:46px;border:1.5px solid rgba(255,255,255,.45);border-radius:14px;background:none;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 18px" style-hover="background:rgba(255,255,255,.1)" style-active="transform:scale(.98)">Learn more</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="flex:none;background:#fff;border-top:1px solid #EEF3FA;display:flex;padding:8px 10px 14px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <button onClick="{{ t.tap }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;min-height:48px;justify-content:center">
+        <span style="display:flex;align-items:center;justify-content:center;height:30px;width:52px;border-radius:999px;background:{{ t.pBg }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ t.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></span>
+        <span style="font-size:10.5px;font-weight:700;color:{{ t.fg }}">{{ t.n }}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasSheet }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:6px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:8px" aria-hidden="true"></div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;margin-bottom:6px">Choose your island</div>
+        <sc-for list="{{ islands }}" as="i" hint-placeholder-count="6">
+          <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+            <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
+            <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:92px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Launch mode&quot;,&quot;Loading&quot;,&quot;Error&quot;,&quot;No location&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = { q: '', island: 'Malé', picked: false, sheet: false, saved: {}, chips: {}, secFailed: true, retrying: false, locOn: false, toast: null };
+  CATS = [
+    { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
+    { n: 'Plumbing', bg: '#ECFDF5', fg: '#059669', d: 'M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z' },
+    { n: 'Electrical', bg: '#FFFBEB', fg: '#D97706', d: 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' },
+    { n: 'AC Repair', bg: '#EFF6FF', fg: '#2563EB', d: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2.5 2.5 0 1 1-2.5 2.5' },
+    { n: 'Beauty', bg: '#FDF2F8', fg: '#DB2777', d: 'M12 21s-7-4.8-9.2-9.4C1.2 8 3.3 5 6.5 5c2 0 3.7 1.2 4.5 3 .8-1.8 2.5-3 4.5-3 3.2 0 5.3 3 3.7 6.6C19 16.2 12 21 12 21z' },
+    { n: 'Photography', bg: '#FFF7ED', fg: '#EA580C', d: 'M4 8h3l2-2.5h6L17 8h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' },
+    { n: 'Gardening', bg: '#F0FDF4', fg: '#16A34A', d: 'M5 19C5 9 13 4 20 4c0 7-5 15-15 15zM5 19c2-5 6-9 10-11' },
+    { n: 'Computer', bg: '#F0F9FF', fg: '#0284C7', d: 'M3 5h18v11H3zM9 20h6M12 16v4' },
+    { n: 'Moving', bg: '#FFF7ED', fg: '#C2410C', d: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10' },
+    { n: 'Fitness', bg: '#F5F3FF', fg: '#7C3AED', d: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
+    { n: 'Events', bg: '#FEFCE8', fg: '#CA8A04', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
+  BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' }, Bronze: { bg: '#FBEDE3', fg: '#9A5B2D', bd: '#E8C4A0' } };
+  SVCS = [
+    { id: 1, title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', rating: '4.8 (24)', price: 'MVR 450', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', emg: false },
+    { id: 2, title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', rating: '4.6 (31)', price: 'From MVR 350', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: true },
+    { id: 3, title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', rating: '4.4 (12)', price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', tier: 'Silver', mode: 'request', emg: true },
+    { id: 4, title: 'Event & Wedding Photography', prov: 'Hussain Nizar', cat: 'Photography', rating: '4.9 (58)', price: 'From MVR 2500', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: false },
+    { id: 5, title: 'Bridal Makeup & Styling', prov: 'Aishath Leela', cat: 'Beauty', rating: '4.9 (86)', price: 'MVR 800', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', emg: false },
+    { id: 6, title: 'Garden & Yard Maintenance', prov: 'Adam Naseer', cat: 'Gardening', rating: '4.5 (9)', price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', tier: null, mode: 'instant', emg: false },
+    { id: 7, title: 'House & Office Moving', prov: 'Moosa Rilwan', cat: 'Moving', rating: '4.3 (21)', price: 'From MVR 1500', unit: '', island: 'Malé', tier: 'Bronze', mode: 'request', emg: false },
+    { id: 8, title: 'Laptop & Desktop Repair', prov: 'Island Tech Solutions', cat: 'Computer', rating: '4.7 (186)', price: 'From MVR 200', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: false }];
+  FEATURED = [
+    { name: 'Island Tech Solutions', cat: 'Computer', tier: 'Gold', rating: '4.7', reviews: '186', desc: 'Laptop, desktop & network repair for homes and offices.', area: 'Malé & Hulhumalé', jobs: '420+' },
+    { name: 'Mariyam Beauty Studio', cat: 'Beauty', tier: 'Silver', rating: '4.9', reviews: '312', desc: 'Bridal, makeup & hair styling for all occasions.', area: 'Malé', jobs: '680+' },
+    { name: 'Maldives Lens', cat: 'Photography', tier: 'Bronze', rating: '4.8', reviews: '98', desc: 'Event, wedding & commercial photography.', area: 'All atolls', jobs: '215+' }];
+  TRUST = [
+    { title: 'Three levels of verification', sub: 'Bronze, Silver and Gold. Each provider\u2019s badge says exactly what was checked.', bg: '#E8F0FE', fg: '#2563EB', d: 'M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6zM9 12l2 2 4-4' },
+    { title: 'Real reviews', sub: 'Ratings from customers, only after a completed job.', bg: '#FFFBEB', fg: '#D97706', d: 'M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z' },
+    { title: 'Private messaging', sub: 'Your contact details are never shared.', bg: '#F0FDF4', fg: '#16A34A', d: 'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' },
+    { title: 'No hidden fees', sub: 'You agree the price before any work starts, and pay the provider directly.', bg: '#FDF2F8', fg: '#DB2777', d: 'M3 4h8l9 9-8 8-9-9zM7.5 8.5h.01' }];
+  TABS = [
+    { n: 'Home', d: 'M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z' },
+    { n: 'Explore', d: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z' },
+    { n: 'Bookings', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { n: 'Messages', d: 'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' },
+    { n: 'Profile', d: 'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5' }];
+  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Addu City', 'Fuvahmulah', 'Kulhudhuffushi'];
+  QUICK = ['Near me', 'Available today', 'Book instantly', 'Emergency'];
+  scn() { return this.props.scenario ?? 'Populated'; }
+  componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._rt); }
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2200); }
+  PHOTOS = { Cleaning: 'uploads/cleaning.jpeg', Electrical: 'uploads/electrical.jpeg', Plumbing: 'uploads/plumbing.jpeg', Beauty: 'uploads/beauty.jpeg', Photography: 'uploads/photography.jpeg' };
+  mkCard(s) {
+    const c = this.CATS.find(x => x.n === s.cat) || this.CATS[0];
+    const b = s.tier ? this.BADGE[s.tier] : null;
+    const saved = !!this.state.saved[s.id];
+    return { title: s.title, prov: s.prov, pInit: s.prov.split(' ').map(w => w[0]).slice(0, 2).join(''),
+      cat: s.cat, cBg: c.bg, cFg: c.fg, cD: c.d, rating: s.rating, island: s.island,
+      photoCss: this.PHOTOS[s.cat] ? 'url("' + this.PHOTOS[s.cat] + '")' : 'none', hasPhoto: !!this.PHOTOS[s.cat], noPhoto: !this.PHOTOS[s.cat],
+      price: s.price, unit: s.unit, hasUnit: !!s.unit,
+      instant: s.mode === 'instant', request: s.mode === 'request', emg: s.emg,
+      hasBadge: !!b, tier: s.tier || '', tBg: b ? b.bg : '', tFg: b ? b.fg : '', tBd: b ? b.bd : '',
+      hFill: saved ? '#DC2626' : 'none', hStroke: saved ? '#DC2626' : '#41526B',
+      save: () => { const sv = { ...this.state.saved }; sv[s.id] = !sv[s.id]; this.setState({ saved: sv }); } };
+  }
+  renderVals() {
+    const S = this.state, sc = this.scn();
+    const noLocMode = sc === 'No location' && !S.picked;
+    const loading = sc === 'Loading';
+    const launch = sc === 'Launch mode';
+    const errMode = sc === 'Error';
+    const full = !loading && !launch && !noLocMode;
+    const byId = ids => ids.map(i => this.mkCard(this.SVCS.find(s => s.id === i)));
+    return {
+      islandLbl: noLocMode ? 'Set island' : S.island,
+      q: S.q, setQ: e => this.setState({ q: e.target.value }),
+      searchTap: () => this.toastMsg(S.q ? 'Searches "' + S.q + '"' : 'Opens search'),
+      bellTap: () => this.toastMsg('Opens notifications'),
+      quickChips: this.QUICK.map(n => { const on = !!S.chips[n]; return { label: n,
+        bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
+        tap: () => { const ch = { ...this.state.chips }; ch[n] = !ch[n]; this.setState({ chips: ch }); } }; }),
+      skel: loading, skel6: [1, 2, 3, 4, 5, 6], body: !loading,
+      noLoc: noLocMode, launch, full,
+      catRow: full, catGrid: launch || noLocMode,
+      cats: this.CATS.map(c => ({ ...c, tap: () => this.toastMsg('Opens ' + c.n) })),
+      viewAllCats: () => this.toastMsg('Opens all categories'),
+      hasPopNear: full || launch,
+      popNearErr: errMode && S.secFailed && !S.retrying, popNearOk: !(errMode && S.secFailed), retrying: S.retrying,
+      retryLbl: S.retrying ? 'Loading…' : 'Retry',
+      retrySec: () => { if (this.state.retrying) return; this.setState({ retrying: true, secFailed: true });
+        this._rt = setTimeout(() => this.setState({ retrying: false, secFailed: false }), 1100); },
+      popNear: byId(launch ? [1, 2, 3, 6] : [1, 2, 3, 6]),
+      hasFeatured: true,
+      featured: (launch ? this.FEATURED.slice(0, 2) : this.FEATURED).map(f => {
+        const c = this.CATS.find(x => x.n === f.cat), b = this.BADGE[f.tier];
+        return { name: f.name, init: f.name.split(' ').map(w => w[0]).slice(0, 2).join(''), cat: c.n,
+          logoId: 'logo-' + f.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          cBg: c.bg, cFg: c.fg, aBg: c.bg, aFg: c.fg, desc: f.desc, area: f.area, jobs: f.jobs,
+          rating: f.rating, reviews: f.reviews, hasBadge: !!b, tier: f.tier, tBg: b.bg, tFg: b.fg, tBd: b.bd }; }),
+      popWeek: byId([4, 5, 7, 8]),
+      enableLoc: () => this.toastMsg('Asks for location permission'),
+      seeAll: () => this.toastMsg('Opens Explore'),
+      trust: this.TRUST,
+      becomeProv: () => this.toastMsg('Opens Become a Provider'),
+      learnMore: () => this.toastMsg('Opens provider info'),
+      tabs: this.TABS.map((t, i) => ({ n: t.n, d: t.d,
+        pBg: i === 0 ? '#E8F0FE' : 'transparent', fg: i === 0 ? '#1D4ED8' : '#8296B3',
+        tap: () => { if (i > 0) this.toastMsg('Opens ' + t.n); } })),
+      hasSheet: S.sheet, openIsland: () => this.setState({ sheet: true }),
+      closeSheet: () => this.setState({ sheet: false }),
+      stopProp: e => e.stopPropagation(),
+      islands: this.ISLANDS.map(n => { const on = !noLocMode && n === S.island; return { n, on,
+        bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
+        pick: () => { this.setState({ island: n, picked: true, sheet: false }); this.toastMsg('Browsing ' + n); } }; }),
+      toast: S.toast, hasToast: !!S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

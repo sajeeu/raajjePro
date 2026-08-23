@@ -76,3 +76,17 @@ Seven divergences from the plan were found in Round 16 and confirmed in Round 18
 | `Service-full-post.jpg` | Single "Verified Provider" badge becomes three tiers; description describes AC repair under a Cleaning listing |
 
 `Login.jpg` needed no correction — **Apple sign-in was right** and the plan was amended, since App Store review requires it wherever third-party sign-in exists.
+
+## The prototypes are becoming the reference
+
+`design-composer/` holds working Design Composer prototypes reviewed against the plan. **Where a prototype and a JPEG cover the same screen, the prototype wins** — it carries every state, the real interaction detail, and the corrections the images never got.
+
+| Prototype | Screens | Supersedes |
+|---|---|---|
+| `Home.dc.html` | Home + launch mode | `HomePage1.jpg` · `HomePage2.jpg` |
+| `Components.dc.html` | the shared component sheet | — |
+| `Emergency Flow.dc.html` | emergency booking, customer side | — |
+| `Provider Emergency.dc.html` | emergency offer, provider side | — |
+| `Become a Provider.dc.html` | Phase 6a onboarding | — |
+
+The JPEGs stay as the provenance record of what was originally delivered. This table grows as each session in `docs/design/redesign-plan.md` lands.
