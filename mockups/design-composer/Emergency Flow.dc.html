@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:16px 20px 12px;display:flex;align-items:center;gap:12px;background:#F2F6FB">
+    <sc-if value="{{ showX }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ xAct }}" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0F1B2D;flex:none;box-shadow:0 1px 2px rgba(15,27,45,.05)" style-hover="background:#EDF3FB" style-active="transform:scale(.94)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </sc-if>
+    <sc-if value="{{ noX }}"><div style="width:44px;flex:none"></div></sc-if>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#DC2626"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626;animation:blinkDot 1.6s ease infinite"></span>Emergency</div>
+      <div style="font-size:14px;font-weight:700;color:#0F1B2D;letter-spacing:-.01em">{{ hTitle }}</div>
+    </div>
+    <div style="width:44px;flex:none;display:flex;justify-content:flex-end">
+      <sc-if value="{{ demoOn }}"><span title="Prototype: waits are compressed" style="font-size:9.5px;font-weight:800;letter-spacing:.04em;color:#5B6B84;background:#E6EDF7;border:1px solid #D6E1F0;border-radius:999px;padding:3px 7px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ demoTxt }}</span></sc-if>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ fForm }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="1 · Emergency request" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <sc-if value="{{ skel }}">
+          <div style="display:flex;flex-direction:column;gap:16px" aria-hidden="true">
+            <div style="height:88px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="display:flex;gap:10px"><div style="flex:1;height:76px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div><div style="flex:1;height:76px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div></div>
+            <div style="height:110px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:52px;border-radius:14px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ limitOn }}">
+          <div style="display:flex;flex-direction:column;gap:16px;animation:fadeUp .25s ease both">
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:26px 22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+              <div style="width:64px;height:64px;border-radius:50%;background:#FEF3DC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
+              <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You've reached the emergency limit</div>
+              <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Emergency requests are capped so that dispatch stays fast for everyone with a genuine emergency.</div>
+            </div>
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Last 24 hours</span><span style="font-size:14px;font-weight:800;color:#DC2626;font-variant-numeric:tabular-nums">3 of 3 used</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Last 7 days</span><span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">7 of 10 used</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0"><span style="font-size:14px;font-weight:600;color:#41526B">Next request available</span><span style="font-size:14px;font-weight:800;color:#16A34A">in about 6 hours</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:14px 16px">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><rect x="4" y="5.5" width="16" height="15" rx="2.5"></rect><path d="M4 10.5h16M8.5 3.5v4M15.5 3.5v4"></path></svg>
+              <div style="font-size:13.5px;line-height:1.5;font-weight:600;color:#1D4ED8;text-wrap:pretty">A normal booking has no limit — many providers respond to requests within a few hours.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ formOn }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#FEF2F2;border:1px solid #F5C6C6;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 4L2.8 19.5h18.4z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+                <span style="font-size:15px;font-weight:800;color:#B91C1C;letter-spacing:-.01em">For urgent problems only</span>
+              </div>
+              <div style="font-size:13px;line-height:1.55;color:#7F3535;text-wrap:pretty">A burst pipe, a dead circuit — something that can't wait. Dispatching costs <b style="color:#B91C1C">MVR 200</b>, charged only when you pick a provider. If it can wait a few hours, a normal booking is free of this fee.</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:14px;font-weight:700;color:#0F1B2D">What kind of emergency?</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <sc-for list="{{ cats }}" as="c" hint-placeholder-count="4">
+                  <button onClick="{{ c.pick }}" style="display:flex;align-items:center;gap:10px;background:{{ c.bg }};border:1.5px solid {{ c.bd }};border-radius:16px;padding:12px 12px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s;min-height:60px" style-active="transform:scale(.97)">
+                    <span style="width:36px;height:36px;border-radius:11px;background:{{ c.iBg }};color:{{ c.iFg }};display:flex;align-items:center;justify-content:center;flex:none">
+                      <sc-if value="{{ c.isPl }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z"></path></svg></sc-if>
+                      <sc-if value="{{ c.isEl }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5L4.5 13.5H11l-1 8 8.5-11H12z"></path></svg></sc-if>
+                      <sc-if value="{{ c.isAc }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"></path></svg></sc-if>
+                      <sc-if value="{{ c.isMv }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="12" height="9" rx="1.5"></rect><path d="M14.5 10h4l2.5 3v3h-2.5"></path><circle cx="7" cy="18" r="1.8"></circle><circle cx="17" cy="18" r="1.8"></circle></svg></sc-if>
+                    </span>
+                    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+                      <span style="font-size:13.5px;font-weight:700;color:#0F1B2D">{{ c.name }}</span>
+                      <span style="font-size:11px;font-weight:600;color:#5B6B84">{{ c.sub }}</span>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:9px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:14px;padding:12px 14px;animation:fadeUp .2s ease both">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.1" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+                <div style="font-size:12.5px;line-height:1.5;font-weight:600;color:#1D4ED8;text-wrap:pretty">Goes to every <b>{{ tierReq }}</b>-verified {{ catName }} provider near you at the same time — they have <b>{{ winMin }} minutes</b> to respond.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="edesc" style="font-size:14px;font-weight:700;color:#0F1B2D">What's wrong?</label>
+              <textarea id="edesc" value="{{ desc }}" onChange="{{ setDesc }}" rows="3" placeholder="e.g. Pipe burst under the kitchen sink — water is spreading fast" style="width:100%;border-radius:14px;border:1.5px solid {{ descBd }};background:#fff;padding:14px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+              <sc-if value="{{ hasDescErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ descErr }}</div></sc-if>
+              <sc-if value="{{ noDescErr }}" hint-placeholder-val="{{ true }}"><div style="display:flex;justify-content:space-between;font-size:12.5px;color:#5B6B84"><span>Providers see this before they answer.</span><span style="font-variant-numeric:tabular-nums">{{ descCount }}</span></div></sc-if>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="eaddr" style="font-size:14px;font-weight:700;color:#0F1B2D">Where?</label>
+              <sc-if value="{{ addrLocked }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #E3EAF3;border-radius:14px;padding:10px 12px 10px 16px;min-height:52px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+                  <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+                    <span style="font-size:14.5px;font-weight:700;color:#0F1B2D;line-height:1.35">{{ addr }}</span>
+                    <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ island }} · your saved address</span>
+                  </span>
+                  <button onClick="{{ editAddr }}" style="height:38px;padding:0 14px;border-radius:10px;border:none;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;flex:none" style-hover="background:#D8E6FD" style-active="transform:scale(.96)">Change</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ addrEditing }}">
+                <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .2s ease both">
+                  <input id="eaddr" type="text" value="{{ addr }}" onChange="{{ setAddr }}" placeholder="Street address, building, floor" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ addrBd }};background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                  <sc-if value="{{ hasAddrErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ addrErr }}</div></sc-if>
+                  <div style="position:relative">
+                    <select aria-label="Island" value="{{ island }}" onChange="{{ setIsland }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:#0F1B2D;appearance:none;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                      <sc-for list="{{ islands }}" as="i" hint-placeholder-count="3"><option value="{{ i.v }}">{{ i.v }}</option></sc-for>
+                    </select>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:14px 0;border-bottom:1px solid #EEF3FA">
+                <div style="width:38px;height:38px;border-radius:12px;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 16 0M2 12h4M18 12h4M12 4v3"></path><circle cx="12" cy="14.5" r="2.2"></circle></svg></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:14px;font-weight:700;color:#0F1B2D">Everyone qualified is asked at once</div><div style="font-size:12.5px;line-height:1.5;color:#5B6B84">Not one at a time — every {{ tierReq }}-verified {{ catName }} provider gets your request together.</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:14px 0;border-bottom:1px solid #EEF3FA">
+                <div style="width:38px;height:38px;border-radius:12px;background:#E5F6EC;color:#16A34A;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:14px;font-weight:700;color:#0F1B2D">You choose from up to 3 offers</div><div style="font-size:12.5px;line-height:1.5;color:#5B6B84">Each provider answers with their own callout fee. You compare and pick.</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:13px;padding:14px 0">
+                <div style="width:38px;height:38px;border-radius:12px;background:#FEF3DC;color:#D97706;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"></rect><circle cx="12" cy="12.5" r="2.4"></circle></svg></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:14px;font-weight:700;color:#0F1B2D">MVR 200 only if you pick someone</div><div style="font-size:12.5px;line-height:1.5;color:#5B6B84">A request nobody answers costs nothing. Settled afterwards by bank transfer.</div></div>
+              </div>
+            </div>
+
+            <sc-if value="{{ submitFailed }}">
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:14px 16px;animation:fadeUp .2s ease both">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+                <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                  <div style="font-size:14px;font-weight:700;color:#B91C1C">Your request didn't send</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#7F3535">The connection dropped before it reached us. Everything you typed is saved on this phone — nothing was sent and nothing was charged.</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fWaiting }}">
+      <div data-screen-label="2 · Waiting" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <sc-if value="{{ blip }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#FEF3DC;border:1px solid #F3C77B;border-radius:14px;padding:12px 14px;animation:fadeUp .2s ease both">
+            <span style="width:16px;height:16px;border:2px solid #EAD3A0;border-top-color:#D97706;border-radius:50%;animation:spin .8s linear infinite;flex:none;margin-top:1px"></span>
+            <div style="font-size:12.5px;line-height:1.5;font-weight:600;color:#A15C00;text-wrap:pretty">Connection lost — reconnecting. Your request is already with providers and stays live.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ notCollecting }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:4px" aria-hidden="true">
+              <span style="position:absolute;inset:0;border-radius:50%;background:rgba(220,38,38,.14);animation:pulseRing 2.4s ease-out infinite"></span>
+              <span style="position:absolute;inset:0;border-radius:50%;background:rgba(220,38,38,.14);animation:pulseRing 2.4s ease-out .8s infinite"></span>
+              <span style="position:absolute;inset:0;border-radius:50%;background:rgba(220,38,38,.14);animation:pulseRing 2.4s ease-out 1.6s infinite"></span>
+              <span style="width:64px;height:64px;border-radius:50%;background:#FEF2F2;border:1.5px solid #F5C6C6;display:flex;align-items:center;justify-content:center;position:relative">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 16 0M7 12a5 5 0 0 1 10 0"></path><circle cx="12" cy="14.5" r="2"></circle><path d="M12 16.5V20"></path></svg>
+              </span>
+            </div>
+            <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums" aria-live="polite">{{ winTxt }}</div>
+            <div style="font-size:13px;font-weight:600;color:#5B6B84">remaining of the {{ winMin }}-minute response window</div>
+            <div style="display:inline-flex;align-items:center;gap:7px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:999px;padding:7px 14px;margin-top:10px;font-size:13px;font-weight:700;color:#1D4ED8">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3"></circle><path d="M3.5 19c.9-2.6 3-4 5.5-4s4.6 1.4 5.5 4"></path><circle cx="17.5" cy="9.5" r="2.4"></circle><path d="M15.5 15.4c1.9.3 3.5 1.5 4.2 3.6"></path></svg>
+              Sent to 4 providers
+            </div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:280px;text-wrap:pretty">Every {{ tierReq }}-verified {{ catName }} provider near {{ island }} got your request at the same moment.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ collecting }}">
+          <div style="background:#fff;border:1.5px solid #C6E9D4;border-radius:24px;padding:26px 22px 22px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeUp .3s ease both">
+            <div style="display:inline-flex;align-items:center;gap:7px;background:#E5F6EC;border:1px solid #C6E9D4;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800;color:#15803D">
+              <span style="width:8px;height:8px;border-radius:50%;background:#16A34A;animation:blinkDot 1.2s ease infinite"></span>
+              {{ collectCount }}
+            </div>
+            <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;color:#15803D;font-variant-numeric:tabular-nums" aria-live="polite">{{ collectTxt }}</div>
+            <div style="font-size:13px;font-weight:600;color:#5B6B84">holding for more offers</div>
+            <div style="width:100%;height:8px;border-radius:999px;background:#E7F2EB;overflow:hidden;margin-top:6px" aria-hidden="true"><div style="height:100%;border-radius:999px;background:linear-gradient(90deg,#34C77B,#16A34A);width:{{ collectPct }}%;transition:width .25s linear"></div></div>
+            <div style="font-size:12.5px;line-height:1.55;color:#41526B;max-width:300px;text-wrap:pretty;margin-top:6px">Offers are gathered for <b>90 seconds</b> so you choose between providers — instead of taking the first and only answer.</div>
+            <div style="font-size:12px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">{{ winTxt }} left on the overall window</div>
+          </div>
+        </sc-if>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84;padding:13px 0 4px">What happens next</div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid #EEF3FA">
+            <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;margin-top:1px">1</span>
+            <div style="font-size:13px;line-height:1.5;color:#41526B;font-weight:600">Providers answer with the fee they charge to attend</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid #EEF3FA">
+            <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;margin-top:1px">2</span>
+            <div style="font-size:13px;line-height:1.5;color:#41526B;font-weight:600">First answers are held ~90 seconds so more can arrive — you compare up to 3</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0">
+            <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;margin-top:1px">3</span>
+            <div style="font-size:13px;line-height:1.5;color:#41526B;font-weight:600">You pick one — only then is the MVR 200 dispatch fee incurred</div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#5B6B84;padding:13px 0 4px">Activity</div>
+          <sc-for list="{{ feed }}" as="f" hint-placeholder-count="1">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F3F7FC;animation:fadeUp .25s ease both">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ f.dot }};flex:none;margin-top:5px"></span>
+              <span style="flex:1;font-size:13px;line-height:1.45;color:#41526B;font-weight:600">{{ f.t }}</span>
+              <span style="font-size:12px;color:#8296B3;font-weight:600;font-variant-numeric:tabular-nums;flex:none">{{ f.at }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fOffers }}">
+      <div data-screen-label="3 · Offers" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 0 0">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:{{ chooseLbl }}">Pick one</span>
+          <span style="font-size:44px;font-weight:800;letter-spacing:-.02em;color:{{ chooseFg }};font-variant-numeric:tabular-nums" aria-live="polite">{{ offerTxt }}</span>
+        </div>
+
+        <sc-if value="{{ revealing }}">
+          <div style="display:flex;flex-direction:column;gap:10px" aria-hidden="true">
+            <div style="height:104px;border-radius:18px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:104px;border-radius:18px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:104px;border-radius:18px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showRows }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ slots }}" as="s" hint-placeholder-count="3">
+              <div>
+                <sc-if value="{{ s.real }}">
+                  <div onClick="{{ s.select }}" role="button" style="background:#fff;border:{{ s.bd }};border-radius:18px;padding:15px 14px;cursor:pointer;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both;transition:border-color .15s" style-active="transform:scale(.99)">
+                    <div style="display:grid;grid-template-columns:36px 1fr 50px 80px;gap:8px;align-items:center">
+                      <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">{{ s.init }}</span>
+                      <span style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                        <span style="font-size:14px;font-weight:700;color:#0F1B2D;line-height:1.25;text-wrap:balance">{{ s.name }}</span>
+                        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                          <span style="display:inline-flex;align-items:center;gap:4px;background:{{ s.bBg }};color:{{ s.bFg }};border:1px solid {{ s.bBd }};border-radius:999px;padding:2px 8px;font-size:10.5px;font-weight:800">◆ {{ s.tier }}</span>
+                          <span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:#41526B"><svg width="12" height="12" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">{{ s.rating }}</span></span>
+                          <sc-if value="{{ s.hasTierChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.tierChip }}</span></sc-if>
+                        </span>
+                      </span>
+                      <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                        <span style="font-size:13px;font-weight:700;color:#41526B;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.dist }}</span>
+                        <sc-if value="{{ s.hasDistChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.distChip }}</span></sc-if>
+                      </span>
+                      <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;text-align:right">
+                        <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.feeTxt }}</span>
+                        <span style="font-size:10.5px;font-weight:600;color:#8296B3;white-space:nowrap">callout fee</span>
+                        <sc-if value="{{ s.hasFeeChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.feeChip }}</span></sc-if>
+                      </span>
+                    </div>
+                    <sc-if value="{{ s.open }}">
+                      <div style="border-top:1px solid #EEF3FA;margin-top:13px;padding-top:12px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .2s ease both">
+                        <div style="font-size:12.5px;line-height:1.5;font-weight:600;color:#5B6B84">◆ {{ s.tier }} — {{ s.tierCopy }}</div>
+                        <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:4px 14px">
+                          <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid #EEF3FA">
+                            <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;flex:none">{{ s.feeTxt }}</span>
+                            <span style="font-size:12.5px;line-height:1.5;color:#41526B;font-weight:600;text-wrap:pretty">to {{ s.name }}, paid directly — the final bill may differ once parts and labour are added.</span>
+                          </div>
+                          <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0">
+                            <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;flex:none">MVR 200</span>
+                            <span style="font-size:12.5px;line-height:1.5;color:#41526B;font-weight:600;text-wrap:pretty">dispatch fee to RaajjePro, by bank transfer afterwards.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ s.ghost }}">
+                  <div style="border:1.5px dashed #C7D5E8;border-radius:18px;min-height:96px;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(90deg,#EDF3FA 25%,#F7FBFE 50%,#EDF3FA 75%);background-size:200% 100%;animation:shimmer 1.8s linear infinite" aria-hidden="true">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#8FA9CC;animation:blinkDot 1.2s ease infinite"></span>
+                    <span style="font-size:13px;font-weight:700;color:#8296B3">still listening</span>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fExpired }}">
+      <div data-screen-label="4 · Nobody came" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">No one accepted in time</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Your request reached 4 providers, but no one accepted within the {{ winMin }}-minute window.</div>
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#E5F6EC;border:1px solid #C6E9D4;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;color:#15803D">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg>
+            Nothing has been charged
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">A scheduled request often works better</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">Your description and address carry over. Providers who couldn't drop everything right now can propose a time — most respond within a few hours.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fDispatched }}">
+      <div data-screen-label="Dispatched" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ aName }} is on the way</div>
+          <div style="font-size:13.5px;line-height:1.5;color:#5B6B84;max-width:290px;text-wrap:pretty">Heading to <b style="color:#0F1B2D">{{ addrShort }}</b>, {{ island }}. Coordinate arrival in chat.</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+            <span style="display:inline-flex;align-items:center;gap:5px;background:{{ aBBg }};color:{{ aBFg }};border:1px solid {{ aBBd }};border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:800">◆ {{ aTier }}</span>
+            <span style="font-size:12px;font-weight:600;color:#5B6B84;line-height:1.4">{{ aTierCopy }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#41526B">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
+            <span style="font-variant-numeric:tabular-nums">{{ aRating }}</span><span style="color:#C6D4EA">·</span><span style="font-variant-numeric:tabular-nums">{{ aDist }} away</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA">
+            <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Callout fee</span><span style="font-size:12px;color:#5B6B84">Pay {{ aFirst }} directly</span></div>
+            <span style="font-size:16px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ aFeeTxt }}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0">
+            <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Dispatch fee</span><span style="font-size:12px;color:#5B6B84">To RaajjePro — bank transfer, afterwards</span></div>
+            <span style="font-size:16px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 200</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#FEF3DC;border:1px solid #F3C77B;border-radius:14px;padding:12px 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.1" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+          <div style="font-size:12.5px;line-height:1.55;font-weight:600;color:#A15C00;text-wrap:pretty">The callout fee covers attending. The final bill may differ — parts and labour are agreed and settled directly with {{ aFirst }}.</div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+    <sc-if value="{{ fForm }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ formOn }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ sendReq }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#F26D6D,#DC2626 60%,#B91C1C);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.3);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+          <sc-if value="{{ submitting }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Sending to providers…</span></sc-if>
+          <sc-if value="{{ notSubmitting }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ submitFailed }}"><span>Retry — send request</span></sc-if><sc-if value="{{ notFailed }}" hint-placeholder-val="{{ true }}"><span>Send emergency request</span></sc-if></sc-if>
+        </button>
+        <button onClick="{{ bookNormal }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Not urgent? Book normally</button>
+      </sc-if>
+      <sc-if value="{{ limitOn }}">
+        <button onClick="{{ bookNormal }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Make a normal booking instead</button>
+        <button onClick="{{ goHome }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Back to Home</button>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ fWaiting }}">
+      <button onClick="{{ cancelReq }}" style="width:100%;height:52px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#DC2626;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#FEF6F6;border-color:#F5C6C6" style-active="transform:scale(.98)">Cancel request</button>
+      <div style="text-align:center;font-size:12px;font-weight:600;color:#8296B3">Nothing has been charged</div>
+    </sc-if>
+    <sc-if value="{{ fOffers }}">
+      <button onClick="{{ confirmAccept }}" style="width:100%;height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:#fff;font-size:16px;font-weight:700;cursor:{{ ctaCur }};box-shadow:{{ ctaSh }};display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s" style-active="transform:scale(.98)">
+        <sc-if value="{{ confirming }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Confirming…</span></sc-if>
+        <sc-if value="{{ notConfirming }}" hint-placeholder-val="{{ true }}"><span>{{ ctaTxt }}</span></sc-if>
+      </button>
+      <button onClick="{{ rejectAll }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14px;font-weight:700;cursor:pointer;border-radius:12px;font-variant-numeric:tabular-nums" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Reject all and keep looking — {{ winTxt }} left</button>
+    </sc-if>
+    <sc-if value="{{ fExpired }}">
+      <button onClick="{{ tryAgain }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#F26D6D,#DC2626 60%,#B91C1C);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.3)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Try again now</button>
+      <button onClick="{{ scheduleNormal }}" style="width:100%;height:52px;border:1.5px solid #CDDDFB;border-radius:16px;background:#E8F0FE;color:#1D4ED8;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#D8E6FD" style-active="transform:scale(.98)">Turn into a scheduled request</button>
+    </sc-if>
+    <sc-if value="{{ fDispatched }}">
+      <button onClick="{{ openChat }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>
+        Chat with {{ aFirst }}
+      </button>
+      <button onClick="{{ doneReset }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Done</button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ hasSheet }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
+
+        <sc-if value="{{ sheetCancel }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Cancel this request?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">Providers will be told the request is closed. Nothing has been charged.</div>
+            <button onClick="{{ confirmCancel }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#DC2626;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.28)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Cancel request</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep waiting</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ sheetReject }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Reject all {{ offerCount }} offers?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">These offers may be withdrawn once rejected. Your request stays live for <b style="color:#0F1B2D;font-variant-numeric:tabular-nums">{{ winTxt }}</b> and new offers can still arrive — but none are guaranteed. Nothing has been charged.</div>
+            <button onClick="{{ confirmReject }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#DC2626;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.28)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Reject offers</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep choosing</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:110px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Offers arrive&quot;,&quot;Nobody answers&quot;,&quot;Over the limit&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Offers arrive&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = { booted: false, screen: 'form', cat: 'Plumbing', desc: '', addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false, island: 'Malé',
+    errors: {}, submitting: false, submitFailed: false, retried: false,
+    sim: 0, rate: 1, collectStart: null, revealed: false, revealSim: null, revealing: false,
+    cleared: null, accepted: null, sel: null, confirming: false, sheet: null, blip: false, toast: null };
+  CATS = [
+    { name: 'Plumbing', tier: 'Gold', win: 30, iBg: '#ECFDF5', iFg: '#059669', k: 'isPl' },
+    { name: 'Electrical', tier: 'Gold', win: 30, iBg: '#FFFBEB', iFg: '#D97706', k: 'isEl' },
+    { name: 'AC Repair', tier: 'Silver', win: 30, iBg: '#EFF6FF', iFg: '#2563EB', k: 'isAc' },
+    { name: 'Moving', tier: 'Silver', win: 120, iBg: '#FFF7ED', iFg: '#EA580C', k: 'isMv' }];
+  OFFERS = [
+    { name: 'Ibrahim Rasheed', biz: 'Rasheed Plumbing Services', tier: 'Gold', rating: '4.6', dist: '1.2 km', fee: 350, at: 240, init: 'IR' },
+    { name: 'Hassan Waheed', biz: null, tier: 'Gold', rating: '4.9', dist: '2.8 km', fee: 450, at: 300, init: 'HW' },
+    { name: 'Ahmed Shakir', biz: null, tier: 'Silver', rating: '4.4', dist: '0.8 km', fee: 500, at: 390, init: 'AS' }];
+  TIERCOPY = { Gold: 'ID checked, registered trade', Silver: 'ID checked, work verified', Bronze: 'ID checked by RaajjePro' };
+  BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' } };
+  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Maafushi'];
+  scn() { return ({ 'Offers arrive': 'offers', 'Nobody answers': 'nobody', 'Over the limit': 'limit', 'Connection error': 'conn' })[this.props.scenario ?? 'Offers arrive'] || 'offers'; }
+  catObj() { return this.CATS.find(c => c.name === this.state.cat) || this.CATS[0]; }
+  fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  componentDidMount() {
+    if (!this.state.addr) this.setState({ addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false });
+    this._bt = setTimeout(() => this.setState({ booted: true }), 750);
+    this._iv = setInterval(() => this.tick(), 250);
+  }
+  componentWillUnmount() { clearTimeout(this._bt); clearInterval(this._iv); clearTimeout(this._tt); }
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2400); }
+  tick() {
+    const S = this.state;
+    if (S.screen !== 'waiting' && S.screen !== 'offers') return;
+    if (S.sheet || S.accepted != null || S.confirming) return;
+    const sc = this.scn(), compress = this.props.compressTime ?? true;
+    let rate = 1;
+    if (compress) {
+      if (S.screen === 'waiting') rate = S.collectStart != null ? 6 : (sc === 'nobody' && S.sim > 300 ? 80 : 16);
+      else rate = S.cleared ? 80 : 4;
+    }
+    const sim = S.sim + rate * 0.25;
+    const winS = this.catObj().win * 60;
+    const upd = { sim, rate };
+    if (sc === 'conn') upd.blip = sim > 120 && sim < 210;
+    if (sc !== 'nobody' && !S.cleared && S.collectStart == null && sim >= 240) upd.collectStart = 240;
+    const cs = upd.collectStart != null ? upd.collectStart : S.collectStart;
+    if (S.screen === 'waiting' && cs != null && sim >= cs + 90) {
+      upd.screen = 'offers'; upd.revealed = true; upd.revealSim = sim; upd.revealing = true;
+      setTimeout(() => this.setState({ revealing: false }), 700);
+    }
+    if (S.screen === 'offers' && !S.cleared && S.revealSim != null && sim >= S.revealSim + 300) { upd.screen = 'waiting'; upd.cleared = 'lapsed'; upd.collectStart = null; upd.revealSim = null; upd.sel = null; }
+    if (sim >= winS) { upd.screen = 'expired'; upd.blip = false; }
+    this.setState(upd);
+  }
+  dispatch() {
+    this.setState({ screen: 'waiting', submitting: false, submitFailed: false, sim: 0, rate: 1,
+      collectStart: null, revealed: false, revealSim: null, revealing: false, cleared: null, accepted: null, sel: null, confirming: false, sheet: null, blip: false });
+  }
+  activeOffers() {
+    const S = this.state;
+    if (S.cleared || this.scn() === 'nobody') return [];
+    return this.OFFERS.filter(o => o.at <= S.sim);
+  }
+  setField(k, v) { const errors = { ...this.state.errors }; delete errors[k]; this.setState({ [k]: v, errors }); }
+  renderVals() {
+    const S = this.state, sc = this.scn();
+    const cat = this.catObj(), winS = cat.win * 60;
+    const winRemain = Math.max(0, winS - S.sim);
+    const offerRemain = S.revealSim != null ? Math.max(0, S.revealSim + 300 - S.sim) : 0;
+    const active = this.activeOffers();
+    const limitOn = S.booted && sc === 'limit';
+    const acc = S.accepted != null ? this.OFFERS[S.accepted] : this.OFFERS[0];
+    const feed = [{ t: 'Request sent to 4 qualified providers', at: '0:00', dot: '#16A34A' }];
+    if (S.sim >= 60) feed.push({ t: 'Delivered — all 4 received it', at: '1:00', dot: '#16A34A' });
+    if (S.sim >= 150 && sc !== 'nobody') feed.push({ t: 'A provider is viewing your request', at: '2:30', dot: '#2563EB' });
+    if (S.collectStart != null) feed.push({ t: active.length + (active.length === 1 ? ' provider has answered' : ' providers have answered'), at: this.fmt(S.collectStart), dot: '#16A34A' });
+    const collecting = S.screen === 'waiting' && S.collectStart != null;
+    const hTitles = { form: 'Emergency request', waiting: 'Request live', offers: 'Choose a provider', expired: 'Request expired', dispatched: 'Provider on the way' };
+    const showDemo = (this.props.compressTime ?? true) && (this.props.demoBadge ?? true) && S.rate > 1 && (S.screen === 'waiting' || S.screen === 'offers');
+    const lowChoose = offerRemain < 90;
+    return {
+      hTitle: hTitles[S.screen],
+      showX: S.screen === 'form' && !limitOn, noX: !(S.screen === 'form' && !limitOn),
+      xAct: () => this.toastMsg('Back to Home — nothing was sent.'),
+      demoOn: showDemo, demoTxt: '×' + Math.round(S.rate),
+      fForm: S.screen === 'form', fWaiting: S.screen === 'waiting', fOffers: S.screen === 'offers',
+      fExpired: S.screen === 'expired', fDispatched: S.screen === 'dispatched',
+      skel: !S.booted, limitOn, formOn: S.booted && sc !== 'limit',
+      cats: this.CATS.map(c => {
+        const on = c.name === S.cat;
+        return { name: c.name, sub: c.tier + ' · ' + c.win + ' min', bg: on ? '#E8F0FE' : '#fff', bd: on ? '#2563EB' : '#E3EAF3',
+          iBg: c.iBg, iFg: c.iFg, isPl: c.k === 'isPl', isEl: c.k === 'isEl', isAc: c.k === 'isAc', isMv: c.k === 'isMv',
+          pick: () => this.setState({ cat: c.name }) };
+      }),
+      catName: cat.name, tierReq: cat.tier, winMin: cat.win, island: S.island,
+      desc: S.desc, setDesc: e => this.setField('desc', e.target.value.slice(0, 240)),
+      descCount: S.desc.length + ' / 240',
+      descBd: S.errors.desc ? '#DC2626' : '#E3EAF3', descErr: S.errors.desc || '', hasDescErr: !!S.errors.desc, noDescErr: !S.errors.desc,
+      addr: S.addr, setAddr: e => this.setField('addr', e.target.value),
+      addrLocked: !S.addrEditing, addrEditing: S.addrEditing,
+      editAddr: () => this.setState({ addrEditing: true }),
+      addrBd: S.errors.addr ? '#DC2626' : '#E3EAF3', addrErr: S.errors.addr || '', hasAddrErr: !!S.errors.addr,
+      setIsland: e => this.setState({ island: e.target.value }),
+      islands: this.ISLANDS.map(v => ({ v })),
+      submitting: S.submitting, notSubmitting: !S.submitting, submitFailed: S.submitFailed, notFailed: !S.submitFailed,
+      sendReq: () => {
+        if (S.submitting) return;
+        const e = {};
+        if (!S.desc.trim()) e.desc = 'Describe what happened so providers know what they\u2019re coming to.';
+        else if (S.desc.trim().length < 12) e.desc = 'A little more detail helps providers answer faster.';
+        if (!S.addr.trim()) e.addr = 'Providers need an address to attend.';
+        if (Object.keys(e).length) { this.setState({ errors: e }); this.toastMsg('Please fix the highlighted fields.'); return; }
+        this.setState({ submitting: true, errors: {} });
+        setTimeout(() => {
+          if (sc === 'conn' && !this.state.retried) this.setState({ submitting: false, submitFailed: true, retried: true });
+          else this.dispatch();
+        }, 1100);
+      },
+      bookNormal: () => this.toastMsg('Normal booking flow opens here.'),
+      goHome: () => this.toastMsg('Back to Home.'),
+      blip: S.blip,
+      winTxt: this.fmt(winRemain),
+      collecting, notCollecting: S.screen === 'waiting' && !collecting,
+      collectTxt: collecting ? this.fmt(Math.max(0, S.collectStart + 90 - S.sim)) : '1:30',
+      collectPct: collecting ? Math.min(100, Math.round((S.sim - S.collectStart) / 90 * 100)) : 0,
+      collectCount: active.length + (active.length === 1 ? ' provider has answered' : ' providers have answered'),
+      feed,
+      cancelReq: () => this.setState({ sheet: { type: 'cancel' } }),
+      offerTxt: this.fmt(offerRemain),
+      chooseFg: lowChoose ? '#A15C00' : '#0F1B2D', chooseLbl: lowChoose ? '#A15C00' : '#5B6B84',
+      revealing: S.screen === 'offers' && S.revealing,
+      showRows: S.screen === 'offers' && !S.revealing,
+      slots: (() => {
+        const km = o => parseFloat(o.dist), rank = { Gold: 2, Silver: 1, Bronze: 0 };
+        const uniqMin = val => { if (active.length < 2) return null; const best = Math.min(...active.map(val)); const hits = active.filter(o => val(o) === best); return hits.length === 1 ? hits[0] : null; };
+        const closest = uniqMin(km), lowFee = uniqMin(o => o.fee);
+        const topTier = (() => { if (active.length < 2) return null; const best = Math.max(...active.map(o => rank[o.tier])); const hits = active.filter(o => rank[o.tier] === best); return hits.length === 1 ? hits[0] : null; })();
+        const rows = active.map(o => {
+          const b = this.BADGE[o.tier], idx = this.OFFERS.indexOf(o), open = S.sel === idx;
+          return { real: true, ghost: false, name: o.name, init: o.init, tier: o.tier, tierCopy: this.TIERCOPY[o.tier],
+            bBg: b.bg, bFg: b.fg, bBd: b.bd, rating: o.rating, dist: o.dist, feeTxt: 'MVR ' + o.fee, open,
+            bd: open ? '1.5px solid #2563EB' : '1.5px solid #E9EFF7',
+            hasDistChip: closest === o, distChip: 'Closest',
+            hasFeeChip: lowFee === o, feeChip: 'Lowest fee',
+            hasTierChip: topTier === o, tierChip: 'Highest tier',
+            select: () => { if (this.state.confirming) return; this.setState({ sel: this.state.sel === idx ? null : idx }); } };
+        });
+        while (rows.length < 3) rows.push({ real: false, ghost: true });
+        return rows;
+      })(),
+      offerCount: active.length,
+      rejectAll: () => { if (S.confirming) return; this.setState({ sheet: { type: 'reject' } }); },
+      confirming: S.confirming, notConfirming: !S.confirming,
+      ctaTxt: S.sel != null ? 'Confirm ' + this.OFFERS[S.sel].name + ' — MVR ' + this.OFFERS[S.sel].fee : 'Select a provider to continue',
+      ctaBg: S.sel != null ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C2D0E4',
+      ctaSh: S.sel != null ? '0 10px 24px rgba(37,99,235,.32)' : 'none',
+      ctaCur: S.sel != null ? 'pointer' : 'default',
+      confirmAccept: () => { if (this.state.sel == null || this.state.confirming) return; this.setState({ confirming: true }); setTimeout(() => this.setState({ confirming: false, accepted: this.state.sel, sel: null, screen: 'dispatched' }), 1100); },
+      tryAgain: () => this.dispatch(),
+      scheduleNormal: () => this.toastMsg('Scheduled request flow opens here — details carry over.'),
+      aName: acc.name, aFirst: acc.name.split(' ')[0], aFeeTxt: 'MVR ' + acc.fee, aTier: acc.tier, aTierCopy: this.TIERCOPY[acc.tier],
+      aBBg: this.BADGE[acc.tier].bg, aBFg: this.BADGE[acc.tier].fg, aBBd: this.BADGE[acc.tier].bd,
+      aRating: acc.rating, aDist: acc.dist,
+      addrShort: S.addr.trim() ? (S.addr.length > 34 ? S.addr.slice(0, 34) + '…' : S.addr) : 'your address',
+      openChat: () => this.toastMsg('Chat opens here.'),
+      doneReset: () => this.setState({ screen: 'form', desc: '', addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false, island: 'Malé', accepted: null, sim: 0, collectStart: null, revealed: false, revealSim: null, cleared: null, sel: null, confirming: false, retried: false, submitFailed: false }),
+      hasSheet: !!S.sheet,
+      sheetCancel: !!S.sheet && S.sheet.type === 'cancel',
+      sheetReject: !!S.sheet && S.sheet.type === 'reject',
+      closeSheet: () => this.setState({ sheet: null }),
+      stopProp: e => e.stopPropagation(),
+      confirmCancel: () => { this.setState({ sheet: null, screen: 'form', sim: 0, collectStart: null, revealed: false, revealSim: null, cleared: null }); this.toastMsg('Request cancelled — nothing charged.'); },
+      confirmReject: () => this.setState({ sheet: null, cleared: 'rejected', screen: 'waiting', collectStart: null, revealSim: null, sel: null }),
+      toast: S.toast, hasToast: !!S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

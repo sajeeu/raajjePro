@@ -406,7 +406,8 @@ The **emergency** flow. Something is broken now.
 - Address and island
 - Fact: the request goes to **every qualified provider at once**, not one at a time
 - Fact: qualified means the provider carries the tier this category demands — **Gold** for Electrical and Plumbing, **Silver** for AC Repair and Moving
-- Fact: the whole window is `30 minutes` on Plumbing, Electrical and AC Repair, and `120 minutes` on Moving. **State the real number for the category**
+- Fact: the whole window is `30 minutes`, on every emergency category including Moving. A mover answers as fast as a plumber; what takes longer is arriving, and that is stated per offer rather than by stretching the clock
+- Fact: **each offer carries the provider's own arrival estimate** — `arrives in ~25 min`. It is the provider's estimate, never a promise the platform is making
 - Fact: the `MVR 200` is charged **only when the customer picks a provider**. A request nobody answers costs nothing
 - A submit action
 - Over-limit data: `3` emergency requests per `24 hours` and `10` per `7 days`. Design the state where a customer has reached that, and give it a route to a normal booking rather than a dead end
@@ -737,7 +738,8 @@ The islands this provider generally covers.
 - Working days and hours
 - **Emergency service** toggle — and this is the correction that matters:
   - It is **disabled with the reason shown** where the category or the provider's tier does not qualify: `Emergency work on Electrical needs Gold verification. You are Silver.`
-  - Where it is available, the real window for that category: `Customers expect a response within 30 minutes` — or `120 minutes` on Moving. **The number is read from the category, never fixed at 30**
+  - Where it is available: `Customers expect a response within 30 minutes` — the same on every emergency category. Read it from the category rather than writing it into the screen, since it is configurable, but every category currently reads 30
+- Fact that must be conveyed to the provider: answering fast and arriving fast are different commitments. They state their own arrival estimate when they answer, so a mover needing two hours to load a van says so rather than answering late
 - The delivered mockup carries an **`Accepting New Customers`** toggle. **Remove it entirely** — that setting is account-level and belongs in the provider's own settings
 - Fact: a provider told the wrong response window stops trusting everything else the app says
 
@@ -808,7 +810,7 @@ The prompt a provider answers. The highest-stakes screen in the provider app: a 
 - What the job is: service, the customer's **first name only**, date and time or the requested window, address, island, job notes, photos
 - Fact that must be conveyed: **no contact details of any kind appear here**, and there is no chat yet
 - The amount they would be agreeing to: `MVR 450`
-- **A countdown matching the real window** — `24 hours` for a normal booking, `30 minutes` for an emergency on Plumbing, Electrical or AC Repair, `120 minutes` on Moving
+- **A countdown matching the real window** — `24 hours` for a normal booking, `30 minutes` for an emergency on any of the four emergency categories, Moving included
 - Three actions: accept, decline, and — on a request-based booking — **propose a time and price**
 - Fact that must be conveyed: **accepting locks the price, date, time and scope.** Changing any of them afterwards needs the customer to agree
 - **Offline behaviour belongs on this screen:** a tap with no connection is recorded, shows as pending, and sends on reconnect. The provider is never left unsure whether it registered

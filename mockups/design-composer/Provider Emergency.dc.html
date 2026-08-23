@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:16px 20px 12px;display:flex;align-items:center;gap:12px;background:#F2F6FB">
+    <div style="width:44px;flex:none"></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#DC2626"><span style="width:7px;height:7px;border-radius:50%;background:#DC2626;animation:blinkDot 1.6s ease infinite"></span>Emergency</div>
+      <div style="font-size:14px;font-weight:700;color:#0F1B2D;letter-spacing:-.01em">{{ hTitle }}</div>
+    </div>
+    <div style="width:44px;flex:none;display:flex;justify-content:flex-end">
+      <sc-if value="{{ demoOn }}"><span title="Prototype: waits are compressed" style="font-size:9.5px;font-weight:800;letter-spacing:.04em;color:#5B6B84;background:#E6EDF7;border:1px solid #D6E1F0;border-radius:999px;padding:3px 7px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ demoTxt }}</span></sc-if>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ fRequest }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="P1 · New request" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <sc-if value="{{ skel }}">
+          <div style="display:flex;flex-direction:column;gap:16px" aria-hidden="true">
+            <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:110px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:96px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+            <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ reqOn }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="display:inline-flex;align-items:center;gap:8px">
+                  <span style="width:36px;height:36px;border-radius:11px;background:#ECFDF5;color:#059669;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z"></path></svg></span>
+                  <span style="display:flex;flex-direction:column;gap:0px"><span style="font-size:15px;font-weight:800;color:#0F1B2D">{{ catName }} emergency</span><span style="font-size:12px;font-weight:600;color:#5B6B84">from {{ custFirst }}</span></span>
+                </span>
+                <span style="font-size:12px;font-weight:700;color:#8296B3;font-variant-numeric:tabular-nums;flex:none">{{ agoTxt }}</span>
+              </div>
+              <div style="font-size:14px;line-height:1.55;color:#0F1B2D;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:12px 14px;text-wrap:pretty">&ldquo;{{ jobDesc }}&rdquo;</div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap">
+                <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#41526B"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ island }}</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#41526B;font-variant-numeric:tabular-nums"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"></path></svg>{{ dist }} from you</span>
+              </div>
+              <div style="font-size:11.5px;font-weight:600;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px">Exact address is shared if the customer picks you.</div>
+            </div>
+
+            <div style="background:#E8F0FE;border:1.5px solid #CDDDFB;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg>
+                <span style="font-size:15px;font-weight:800;color:#1D4ED8;letter-spacing:-.01em">This is a bid, not a race</span>
+              </div>
+              <div style="font-size:13px;line-height:1.55;color:#2B4A8C;text-wrap:pretty">Other providers are being asked at the same time. {{ custFirst }} sees up to 3 offers side by side and picks one — <b>answering first doesn't win it</b>. Quote the fee you'd actually charge.</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="pfee" style="font-size:14px;font-weight:700;color:#0F1B2D">Your callout fee</label>
+              <div style="display:flex;align-items:center;gap:0;background:#fff;border:1.5px solid {{ feeBd }};border-radius:16px;overflow:hidden;transition:border-color .15s">
+                <span style="flex:none;padding:0 4px 0 18px;font-size:20px;font-weight:800;color:#5B6B84;letter-spacing:-.01em">MVR</span>
+                <input id="pfee" type="text" inputMode="numeric" value="{{ fee }}" onChange="{{ setFee }}" placeholder="0" style="flex:1;height:64px;border:none;background:none;padding:0 18px 0 8px;font-size:26px;font-weight:800;color:#0F1B2D;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:0">
+              </div>
+              <sc-if value="{{ hasFeeErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ feeErr }}</div></sc-if>
+              <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">What you charge to attend. Parts and labour are agreed and settled directly with {{ custFirst }} afterwards.</div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+              <span style="width:44px;height:44px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:none">IR</span>
+              <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+                <span style="font-size:14px;font-weight:700;color:#0F1B2D">Answering as {{ provName }}</span>
+                <span style="font-size:12px;font-weight:600;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ provBiz }}</span>
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:{{ pBBg }};color:{{ pBFg }};border:1px solid {{ pBBd }};border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:800;flex:none">◆ {{ pTier }}</span>
+            </div>
+
+            <sc-if value="{{ submitFailed }}">
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:14px 16px;animation:fadeUp .2s ease both">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+                <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                  <div style="font-size:14px;font-weight:700;color:#B91C1C">Your offer didn't send</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#7F3535">The connection dropped before it reached us. The request is still open — your fee is kept on this phone. Retry when you're ready.</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fSubmitted }}">
+      <div data-screen-label="P2 · Offer in" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:4px" aria-hidden="true">
+            <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.12);animation:pulseRing 2.4s ease-out infinite"></span>
+            <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.12);animation:pulseRing 2.4s ease-out 1.2s infinite"></span>
+            <span style="width:62px;height:62px;border-radius:50%;background:#E8F0FE;border:1.5px solid #CDDDFB;display:flex;align-items:center;justify-content:center;position:relative"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg></span>
+          </div>
+          <div style="font-size:15px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">Your offer is in</div>
+          <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums" aria-live="polite">{{ chooseTxt }}</div>
+          <div style="font-size:13px;font-weight:600;color:#5B6B84">{{ custFirst }} has 5 minutes to choose</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty;margin-top:8px">Offers are shown side by side — up to 3 of them. Being first in doesn't matter; the fee and verification do.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA">
+            <span style="font-size:14px;font-weight:600;color:#41526B">Your callout fee</span>
+            <span style="font-size:16px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ feeTxt }}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0">
+            <span style="font-size:14px;font-weight:600;color:#41526B">Sent as</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:{{ pBBg }};color:{{ pBFg }};border:1px solid {{ pBBd }};border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:800">◆ {{ pTier }}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#FEF3DC;border:1px solid #F3C77B;border-radius:14px;padding:12px 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.1" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+          <div style="font-size:12.5px;line-height:1.55;font-weight:600;color:#A15C00;text-wrap:pretty">Stay reachable — if {{ custFirst }} picks you, the address appears here and the job starts right away.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fChosen }}">
+      <div data-screen-label="P3 · Chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ custFirst }} picked you</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">The job is yours at <b style="color:#0F1B2D">{{ feeTxt }}</b> callout. Head over now and coordinate arrival in chat.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;align-items:flex-start;gap:13px">
+          <span style="width:38px;height:38px;border-radius:12px;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#0F1B2D;line-height:1.4">{{ custAddr }}</div>
+            <div style="font-size:12.5px;font-weight:600;color:#5B6B84">{{ island }} · {{ dist }} from you</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#FEF3DC;border:1px solid #F3C77B;border-radius:14px;padding:12px 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.1" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+          <div style="font-size:12.5px;line-height:1.55;font-weight:600;color:#A15C00;text-wrap:pretty">Collect the {{ feeTxt }} callout fee directly from {{ custFirst }}. Parts and labour are agreed on site and settled the same way.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fNotChosen }}">
+      <div data-screen-label="P4 · Not chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ custFirst }} chose another offer</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">This one's closed. Your offer of {{ feeTxt }} was seen and compared — nothing more to do here.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">You stay in the pool</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">Every new {{ catName }} emergency near you still reaches you the moment it's sent.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fExpired }}">
+      <div data-screen-label="P5 · Expired" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">This request closed</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ expiredCopy }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fDeclined }}">
+      <div data-screen-label="P6 · Declined" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You passed on this one</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">This one's off your list. The next emergency near you still reaches you first thing.</div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+    <sc-if value="{{ fRequest }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ reqOn }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ sendOffer }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+          <sc-if value="{{ submitting }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Sending offer…</span></sc-if>
+          <sc-if value="{{ notSubmitting }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ submitFailed }}"><span>Retry — {{ ctaTxt }}</span></sc-if><sc-if value="{{ notFailed }}" hint-placeholder-val="{{ true }}"><span>{{ ctaTxt }}</span></sc-if></sc-if>
+        </button>
+        <button onClick="{{ declineAsk }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Decline this request</button>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ fSubmitted }}">
+      <div style="text-align:center;font-size:12px;font-weight:600;color:#8296B3;padding:8px 0">You'll be told the moment {{ custFirst }} decides</div>
+    </sc-if>
+    <sc-if value="{{ fChosen }}">
+      <button onClick="{{ openChat }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>
+        Chat with {{ custFirst }}
+      </button>
+      <button onClick="{{ backToJobs }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Back to jobs</button>
+    </sc-if>
+    <sc-if value="{{ fEnded }}">
+      <button onClick="{{ backToJobs }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Back to jobs</button>
+      <button onClick="{{ replay }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Replay this request</button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ hasSheet }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
+        <sc-if value="{{ sheetDecline }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Decline this request?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">Declining is counted in your acceptance rate — letting it lapse is not. Either way, no one is told you passed.</div>
+            <button onClick="{{ confirmDecline }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#DC2626;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.28)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Decline</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep it open</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:110px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Customer picks you&quot;,&quot;Customer picks another&quot;,&quot;No decision&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Customer picks you&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = { booted: false, screen: 'request', fee: '350', feeErr: null,
+    submitting: false, submitFailed: false, retried: false,
+    sim: 240, rate: 1, submitAt: null, sheet: null, toast: null };
+  CATS = [
+    { name: 'Plumbing', tier: 'Gold', win: 30 },
+    { name: 'Electrical', tier: 'Gold', win: 30 },
+    { name: 'AC Repair', tier: 'Silver', win: 30 },
+    { name: 'Moving', tier: 'Silver', win: 120 }];
+  OFFERS = [
+    { name: 'Ibrahim Rasheed', biz: 'Rasheed Plumbing Services', tier: 'Gold', rating: '4.6', dist: '1.2 km', fee: 350, at: 240, init: 'IR' }];
+  BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' } };
+  JOB = { cat: 'Plumbing', island: 'Malé', dist: '1.2 km', custFirst: 'Aishath',
+    desc: 'Pipe burst under the kitchen sink — water is spreading fast',
+    addr: 'M. Fehivina, 2nd floor, Majeedhee Magu' };
+  scn() { return ({ 'Customer picks you': 'chosen', 'Customer picks another': 'notChosen', 'No decision': 'expired', 'Connection error': 'conn' })[this.props.scenario ?? 'Customer picks you'] || 'chosen'; }
+  catObj() { return this.CATS.find(c => c.name === this.JOB.cat) || this.CATS[0]; }
+  fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  componentDidMount() {
+    this._bt = setTimeout(() => this.setState({ booted: true }), 750);
+    this._iv = setInterval(() => this.tick(), 250);
+  }
+  componentWillUnmount() { clearTimeout(this._bt); clearInterval(this._iv); clearTimeout(this._tt); }
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2400); }
+  tick() {
+    const S = this.state;
+    if (S.screen !== 'request' && S.screen !== 'submitted') return;
+    if (S.sheet) return;
+    const sc = this.scn(), compress = this.props.compressTime ?? true;
+    let rate = 1;
+    if (compress && S.screen === 'submitted') rate = sc === 'expired' ? 24 : 10;
+    const sim = S.sim + rate * 0.25;
+    const winS = this.catObj().win * 60;
+    const upd = { sim, rate };
+    if (S.screen === 'submitted' && S.submitAt != null) {
+      const elapsed = sim - S.submitAt;
+      if (sc === 'chosen' && elapsed >= 100) upd.screen = 'chosen';
+      if (sc === 'notChosen' && elapsed >= 100) upd.screen = 'notChosen';
+      if (elapsed >= 300 && !upd.screen) { upd.screen = 'expired'; upd.expiredWhy = 'submitted'; }
+      if (upd.screen === 'expired') this._expiredWhy = 'submitted';
+    }
+    if (S.screen === 'request' && sim >= winS) { upd.screen = 'expired'; this._expiredWhy = 'request'; }
+    this.setState(upd);
+  }
+  renderVals() {
+    const S = this.state, sc = this.scn();
+    const cat = this.catObj();
+    const b = this.BADGE.Gold;
+    const feeNum = parseInt(S.fee, 10) || 0;
+    const feeTxt = 'MVR ' + (feeNum || 0);
+    const chooseRemain = S.submitAt != null ? Math.max(0, S.submitAt + 300 - S.sim) : 300;
+    const hTitles = { request: 'New request near you', submitted: 'Offer sent', chosen: 'Job confirmed', notChosen: 'Request closed', expired: 'Request closed', declined: 'Request declined' };
+    const showDemo = (this.props.compressTime ?? true) && (this.props.demoBadge ?? true) && S.rate > 1 && S.screen === 'submitted';
+    return {
+      hTitle: hTitles[S.screen],
+      demoOn: showDemo, demoTxt: '×' + Math.round(S.rate),
+      fRequest: S.screen === 'request', fSubmitted: S.screen === 'submitted',
+      fChosen: S.screen === 'chosen', fNotChosen: S.screen === 'notChosen',
+      fExpired: S.screen === 'expired', fDeclined: S.screen === 'declined',
+      fEnded: S.screen === 'notChosen' || S.screen === 'expired' || S.screen === 'declined',
+      skel: !S.booted, reqOn: S.booted,
+      catName: cat.name, winMin: cat.win,
+      custFirst: this.JOB.custFirst, jobDesc: this.JOB.desc, island: this.JOB.island, dist: this.JOB.dist,
+      custAddr: this.JOB.addr,
+      agoTxt: Math.max(1, Math.floor(S.sim / 60)) + ' min ago',
+      provName: 'Ibrahim Rasheed', provBiz: 'Rasheed Plumbing Services',
+      pTier: 'Gold', pBBg: b.bg, pBFg: b.fg, pBBd: b.bd,
+      fee: S.fee, feeTxt,
+      setFee: e => this.setState({ fee: e.target.value.replace(/[^0-9]/g, '').slice(0, 5), feeErr: null }),
+      feeBd: S.feeErr ? '#DC2626' : '#E3EAF3', feeErr: S.feeErr || '', hasFeeErr: !!S.feeErr,
+      ctaTxt: feeNum > 0 ? 'Send offer — ' + feeTxt : 'Send offer',
+      submitting: S.submitting, notSubmitting: !S.submitting, submitFailed: S.submitFailed, notFailed: !S.submitFailed,
+      sendOffer: () => {
+        if (S.submitting) return;
+        if (!feeNum) { this.setState({ feeErr: 'Enter the fee you charge to attend.' }); return; }
+        if (feeNum < 50) { this.setState({ feeErr: 'That looks too low — the callout fee should cover attending.' }); return; }
+        this.setState({ submitting: true, feeErr: null });
+        setTimeout(() => {
+          if (sc === 'conn' && !this.state.retried) this.setState({ submitting: false, submitFailed: true, retried: true });
+          else this.setState({ submitting: false, submitFailed: false, screen: 'submitted', submitAt: this.state.sim });
+        }, 1100);
+      },
+      declineAsk: () => this.setState({ sheet: 'decline' }),
+      confirmDecline: () => this.setState({ sheet: null, screen: 'declined' }),
+      chooseTxt: this.fmt(chooseRemain),
+      expiredCopy: this._expiredWhy === 'submitted'
+        ? 'The customer didn’t decide within their window, so the request lapsed. Nothing more is needed from you.'
+        : 'The response window ended before an offer went in. It disappears from your list — the next emergency near you still reaches you.',
+      openChat: () => this.toastMsg('Chat opens here.'),
+      backToJobs: () => this.toastMsg('Back to your jobs list.'),
+      replay: () => { this._expiredWhy = null; this.setState({ screen: 'request', sim: 240, submitAt: null, submitting: false, submitFailed: false, retried: false, feeErr: null }); },
+      hasSheet: !!S.sheet, sheetDecline: S.sheet === 'decline',
+      closeSheet: () => this.setState({ sheet: null }),
+      stopProp: e => e.stopPropagation(),
+      toast: S.toast, hasToast: !!S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
