@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+.hscroll::-webkit-scrollbar{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <sc-if value="{{ scrExplore }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="Explore" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <div style="flex:none;padding:14px 20px 10px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
+      <span style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+      <span style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;flex:none">Raajje<span style="color:#2563EB">Pro</span></span>
+      <span style="flex:1"></span>
+      <button onClick="{{ openIsland }}" style="height:36px;border:1px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12.5px;font-weight:700;cursor:pointer;max-width:130px" style-hover="background:#DDEAFE">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ islandLbl }}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 9l6 6 6-6"></path></svg>
+      </button>
+      <button onClick="{{ bellTap }}" aria-label="Notifications" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex:none" style-hover="background:#F7FAFD">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.3 19.5a2 2 0 0 0 3.4 0"></path></svg>
+        <span style="position:absolute;top:-2px;right:-2px;min-width:17px;height:17px;border-radius:999px;background:#2563EB;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #F2F6FB">3</span>
+      </button>
+      <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:none">AN</span>
+    </div>
+    <div style="flex:none;display:flex;flex-direction:column;gap:14px;padding:8px 0 2px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px">
+          <span style="font-size:25px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Explore Services</span>
+          <button onClick="{{ goSaved }}" aria-label="Saved" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+        </div>
+        <div style="margin:0 20px;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:52px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input value="{{ q }}" onChange="{{ setQ }}" placeholder="What service do you need?" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+          <button onClick="{{ goSearch }}" aria-label="Search" style="width:38px;height:38px;border:none;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 6px 14px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.95)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
+        </div>
+        
+      <button onClick="{{ urgentTap }}" style="margin:0 20px;display:flex;align-items:center;gap:12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:13px 14px;cursor:pointer;text-align:left" style-hover="border-color:#FCA5A5" style-active="transform:scale(.99)">
+        <span style="width:40px;height:40px;border-radius:12px;background:#DC2626;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#991B1B">Something urgent? Get help now</span>
+          <span style="font-size:12px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">Your request goes to every qualified provider nearby — you choose from up to three offers.</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="display:flex;flex-direction:column;gap:16px;padding:10px 0 28px">
+        <sc-if value="{{ expSkel }}">
+          <div aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 20px">
+            <sc-for list="{{ skel12 }}" as="k" hint-placeholder-count="12">
+              <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:10px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div><div style="width:52px;height:10px;border-radius:5px;background:#E8EEF6"></div></div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ expErr }}">
+          <div style="margin:0 20px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+            <span style="width:44px;height:44px;border-radius:50%;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg></span>
+            <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Categories didn't load</div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Your connection dropped while loading. Search still works.</div>
+            <button onClick="{{ retry }}" style="margin-top:4px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;display:inline-flex;align-items:center;gap:8px" style-hover="background:#DDEAFE" style-active="transform:scale(.98)">
+              <sc-if value="{{ retrying }}"><span style="width:15px;height:15px;border:2.5px solid #B9CFF7;border-top-color:#1D4ED8;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span></sc-if>
+              <span>{{ retryLbl }}</span>
+            </button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ expEmpty }}">
+          <div style="display:flex;justify-content:center;padding:0 20px"><dc-import name="EmptyState" icon="search" title="Nothing to explore yet" body="Categories are still loading for your region. Check back shortly, or search directly for what you need." action-label="Retry" on-action="{{ retry }}" hint-size="340px,220px"></dc-import></div>
+        </sc-if>
+        <sc-if value="{{ expOk }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 20px">
+            <sc-for list="{{ cats }}" as="c" hint-placeholder-count="12">
+              <button onClick="{{ c.tap }}" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 3px rgba(15,27,45,.04)" style-hover="border-color:#CDDDFB" style-active="transform:scale(.97)">
+                <span style="width:56px;height:56px;border-radius:16px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ c.fg }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.d }}"></path></svg></span>
+                <span style="font-size:12.5px;font-weight:700;color:#0F1B2D;line-height:1.2;text-align:center">{{ c.n }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ scrResults }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="{{ resLabel }}" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <div style="flex:none;padding:14px 20px 6px;display:flex;align-items:center;gap:10px">
+      <button onClick="{{ goExplore }}" aria-label="Back" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+      <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ editSearch }}" style="flex:1;min-width:0;height:44px;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #E3EAF3;border-radius:14px;padding:0 14px;cursor:pointer" style-hover="background:#F7FAFD">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <span style="font-size:13.5px;font-weight:600;color:#0F1B2D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">home services</span>
+        </button>
+      </sc-if>
+      <sc-if value="{{ isCategory }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+          <span style="font-size:18px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ catName }}</span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ resCount }} · {{ islandLbl }}</span>
+        </div>
+      </sc-if>
+      <button onClick="{{ goSaved }}" aria-label="Saved" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+    </div>
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;padding:4px 20px 0"><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ resCount }}</span><span style="font-size:12.5px;font-weight:600;color:#5B6B84"> for “home services”</span></div>
+    </sc-if>
+    <div style="flex:none;display:flex;align-items:center;gap:8px;padding:10px 20px 0">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3;flex:none">Sort</span>
+      <sc-for list="{{ sortChips }}" as="sc" hint-placeholder-count="3"><dc-import name="Chip" label="{{ sc.label }}" kind="filter" selected="{{ sc.sel }}" on-tap="{{ sc.tap }}" hint-size="86px,38px"></dc-import></sc-for>
+    </div>
+    <div class="hscroll" style="flex:none;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;padding:10px 20px 4px">
+      <button onClick="{{ allFilters }}" aria-label="All filters" style="flex:none;width:38px;height:38px;border:1px solid #E3EAF3;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#F7FAFD" style-active="transform:scale(.95)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.1" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"></path></svg></button>
+      <span style="flex:none;width:1px;height:22px;background:#E3EAF3" aria-hidden="true"></span>
+      <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="4">
+        <button onClick="{{ f.tap }}" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 13px;border:1px solid {{ f.bd }};border-radius:12px;background:{{ f.bg }};color:{{ f.fg }};font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s" style-active="transform:scale(.97)">
+          <sc-if value="{{ f.check }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+          <span style="white-space:nowrap">{{ f.label }}</span>
+          <sc-if value="{{ f.dd }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;opacity:.7"><path d="M6 9l6 6 6-6"></path></svg></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:10px 20px 28px">
+        <sc-if value="{{ resSkel }}">
+          <sc-for list="{{ skel4 }}" as="k" hint-placeholder-count="4"><dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import></sc-for>
+        </sc-if>
+        <sc-if value="{{ resErr }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+            <span style="width:44px;height:44px;border-radius:50%;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg></span>
+            <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Results didn't load</div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Your connection dropped. Nothing was filtered out — this is a loading problem.</div>
+            <button onClick="{{ retry }}" style="margin-top:4px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;display:inline-flex;align-items:center;gap:8px" style-hover="background:#DDEAFE" style-active="transform:scale(.98)">
+              <sc-if value="{{ retrying }}"><span style="width:15px;height:15px;border:2.5px solid #B9CFF7;border-top-color:#1D4ED8;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span></sc-if>
+              <span>{{ retryLbl }}</span>
+            </button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ resEmptySearch }}">
+          <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+              <sc-for list="{{ mockFilters }}" as="m" hint-placeholder-count="2"><dc-import name="Chip" label="{{ m.label }}" kind="input" on-remove="{{ m.remove }}" hint-size="140px,38px"></dc-import></sc-for>
+            </div>
+            <dc-import name="EmptyState" icon="search" title="No services matched" body="‘Under MVR 300’ and ‘Hulhumalé’ are filtering everything out — services on Hulhumalé currently start above MVR 300. Try removing one." action-label="Clear filters" on-action="{{ clearFilters }}" hint-size="340px,240px"></dc-import>
+          </div>
+        </sc-if>
+        <sc-if value="{{ resEmptyCat }}">
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+            <dc-import name="EmptyState" icon="pin" title="{{ catEmptyTitle }}" body="Providers join every week, and most categories are still filling in island by island. Try another island, or browse everything on offer today." action-label="Change island" on-action="{{ openIsland }}" hint-size="340px,240px"></dc-import>
+            <button onClick="{{ goExplore }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">Browse all services</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ resOk }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ resList }}" as="r" hint-placeholder-count="4">
+            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" sponsored="{{ r.sp }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,150px"></dc-import>
+          </sc-for>
+          <sc-if value="{{ showMore }}">
+            <button onClick="{{ showMoreTap }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFD">Show 12 more</button>
+          </sc-if>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ scrSaved }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="Saved" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <div style="flex:none;padding:14px 20px 8px;display:flex;align-items:center;gap:10px">
+      <button onClick="{{ goExplore }}" aria-label="Back" style="width:40px;height:40px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+      <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:18px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Saved</span>
+        <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ savedSub }}</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:8px 20px 28px">
+        <sc-if value="{{ savSkel }}">
+          <sc-for list="{{ skel4 }}" as="k" hint-placeholder-count="4"><dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import></sc-for>
+        </sc-if>
+        <sc-if value="{{ savErr }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+            <span style="width:44px;height:44px;border-radius:50%;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg></span>
+            <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Saved items didn't load</div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Everything you saved is safe — it just didn't load this time.</div>
+            <button onClick="{{ retry }}" style="margin-top:4px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;display:inline-flex;align-items:center;gap:8px" style-hover="background:#DDEAFE" style-active="transform:scale(.98)">
+              <sc-if value="{{ retrying }}"><span style="width:15px;height:15px;border:2.5px solid #B9CFF7;border-top-color:#1D4ED8;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span></sc-if>
+              <span>{{ retryLbl }}</span>
+            </button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ savEmpty }}">
+          <div style="display:flex;justify-content:center"><dc-import name="EmptyState" icon="heart" title="Nothing saved yet" body="Tap the heart on any service or provider and it stays here. There's no phone number to write down — this is how you remember people." action-label="Browse services" on-action="{{ goExplore }}" hint-size="340px,240px"></dc-import></div>
+        </sc-if>
+        <sc-if value="{{ hasSavedSvc }}" hint-placeholder-val="{{ true }}">
+          <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D;padding-top:4px">Saved services</span>
+          <sc-for list="{{ savedSvcs }}" as="r" hint-placeholder-count="2">
+            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,150px"></dc-import>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{ hasSavedProv }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:3px;padding-top:6px">
+            <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Saved providers</span>
+            <span style="font-size:12.5px;font-weight:500;line-height:1.5;color:#5B6B84;text-wrap:pretty">The people you've kept. There's no number to write down — message them from here any time.</span>
+          </div>
+          <sc-for list="{{ savedProvs }}" as="pr" hint-placeholder-count="2">
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+              <span style="width:42px;height:42px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">{{ pr.init }}</span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:700;color:#0F1B2D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pr.name }}</span><dc-import name="VerificationBadge" tier="{{ pr.tier }}" size="chip" hint-size="60px,20px"></dc-import></div>
+                <span style="font-size:12px;font-weight:600;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pr.sub }}</span>
+                <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#41526B"><svg width="12" height="12" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">{{ pr.rating }}</span></span>
+              </div>
+              <button onClick="{{ pr.msg }}" aria-label="Message" style="width:36px;height:36px;border:1px solid #CDDDFB;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#DDEAFE"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></button>
+              <button onClick="{{ pr.unsave }}" aria-label="Unsave" style="width:36px;height:36px;border:1px solid #E3EAF3;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-active="transform:scale(.9)"><svg width="15" height="15" viewBox="0 0 24 24" fill="#DC2626" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+            </div>
+          </sc-for>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <div style="flex:none;display:flex;justify-content:center;padding:6px 20px 12px">
+    <dc-import name="BottomNav" active="Explore" on-tap="{{ navTap }}" hint-size="372px,86px"></dc-import>
+  </div>
+
+  <sc-if value="{{ hasSheet }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:6px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:8px" aria-hidden="true"></div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;margin-bottom:4px">Choose your island</div>
+        <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px;margin-bottom:6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input value="{{ islandQ }}" onChange="{{ setIslandQ }}" placeholder="Search islands" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+        </div>
+        <sc-for list="{{ islands }}" as="i" hint-placeholder-count="6">
+          <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+            <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
+            <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+          </button>
+        </sc-for>
+        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Showing {{ islandShown }} of 187 inhabited islands — keep typing to narrow</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:100px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Explore&quot;,&quot;Search results&quot;,&quot;Category results&quot;,&quot;Saved&quot;],&quot;default&quot;:&quot;Explore&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Loading&quot;,&quot;Empty&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = { nav: null, q: '', island: 'Malé', islandQ: '', sheet: false, toast: null, sort: 'Distance',
+    fMv: false, cat: 'Plumbing', savedSvc: { p1: true, c1: true }, savedProv: { ibrahim: true, hussain: true },
+    override: {}, retrying: false };
+  CATS = [
+    { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
+    { n: 'Plumbing', bg: '#ECFDF5', fg: '#059669', d: 'M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z' },
+    { n: 'Electrical', bg: '#FFFBEB', fg: '#D97706', d: 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' },
+    { n: 'AC Repair', bg: '#EFF6FF', fg: '#2563EB', d: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2.5 2.5 0 1 1-2.5 2.5' },
+    { n: 'Beauty', bg: '#FDF2F8', fg: '#DB2777', d: 'M12 21s-7-4.8-9.2-9.4C1.2 8 3.3 5 6.5 5c2 0 3.7 1.2 4.5 3 .8-1.8 2.5-3 4.5-3 3.2 0 5.3 3 3.7 6.6C19 16.2 12 21 12 21z' },
+    { n: 'Photography', bg: '#FFF7ED', fg: '#EA580C', d: 'M4 8h3l2-2.5h6L17 8h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' },
+    { n: 'Gardening', bg: '#F0FDF4', fg: '#16A34A', d: 'M5 19C5 9 13 4 20 4c0 7-5 15-15 15zM5 19c2-5 6-9 10-11' },
+    { n: 'Computer', bg: '#F0F9FF', fg: '#0284C7', d: 'M3 5h18v11H3zM9 20h6M12 16v4' },
+    { n: 'Moving', bg: '#FFF7ED', fg: '#C2410C', d: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10' },
+    { n: 'Fitness', bg: '#F5F3FF', fg: '#7C3AED', d: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
+    { n: 'Events', bg: '#FEFCE8', fg: '#CA8A04', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
+  SVCS = [
+    { id: 'sp1', ph: 'uploads/cleaning.jpeg', title: 'Move-out & Deep Sofa Cleaning', prov: 'Sparkle Home Care', cat: 'Cleaning', tier: 'Bronze', rating: '4.7', count: 18, price: 'MVR 500', unit: '/session', island: 'Malé', mode: 'instant', nextSlot: 'today 16:00', sp: true, mv: true, dist: 800, pn: 500, rn: 4.7, inSearch: true },
+    { id: 'p1', ph: 'uploads/plumbing.jpeg', title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', tier: 'Gold', rating: '4.6', count: 31, price: 'From MVR 350', unit: '', island: 'Malé', mode: 'request', replyTime: '12 min', bookings: 44, cb: true, sp: false, mv: true, dist: 450, pn: 350, rn: 4.6, inSearch: true },
+    { id: 'c1', ph: 'uploads/cleaning.jpeg', title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', tier: 'Silver', rating: '4.8', count: 24, price: 'MVR 450', unit: '/session', island: 'Malé', mode: 'instant', nextSlot: 'tomorrow 09:00', cb: true, sp: false, mv: false, dist: 650, pn: 450, rn: 4.8, inSearch: true },
+    { id: 'a1', title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', tier: 'Silver', rating: '4.4', count: 12, price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', mode: 'request', replyTime: '25 min', bookings: 20, sp: false, mv: false, dist: 1900, pn: 600, rn: 4.4, inSearch: true },
+    { id: 'e1', ph: 'uploads/electrical.jpeg', title: 'Home Electrical Repairs', prov: 'Hassan Faiz', cat: 'Electrical', tier: null, rating: '4.2', count: 7, price: 'MVR 400', unit: '/visit', island: 'Malé', mode: 'request', bookings: 7, sp: false, mv: false, dist: 1200, pn: 400, rn: 4.2, inSearch: true },
+    { id: 'g1', title: 'Garden & Yard Maintenance', prov: 'Adam Naseer', cat: 'Gardening', tier: null, rating: '4.5', count: 9, price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', mode: 'instant', nextSlot: 'today 14:00', sp: false, mv: false, dist: 2400, pn: 300, rn: 4.5, inSearch: true },
+    { id: 'p2', ph: 'uploads/plumbing.jpeg', title: 'Bathroom & Kitchen Plumbing', prov: 'Ahmed Firaq', cat: 'Plumbing', tier: null, rating: '4.1', count: 5, price: 'MVR 300', unit: '/visit', island: 'Malé', mode: 'request', bookings: 5, sp: false, mv: false, dist: 900, pn: 300, rn: 4.1 },
+    { id: 'p3', ph: 'uploads/plumbing.jpeg', title: 'Water Pump Install & Repair', prov: 'AquaFix Maldives', cat: 'Plumbing', tier: 'Bronze', rating: '4.5', count: 14, price: 'From MVR 450', unit: '', island: 'Hulhumalé', mode: 'request', replyTime: '1 hr', bookings: 16, cb: true, sp: false, mv: true, dist: 2100, pn: 450, rn: 4.5 },
+    { id: 'p4', ph: 'uploads/plumbing.jpeg', title: 'Drain Cleaning & Unblocking', prov: 'Naseem Ali', cat: 'Plumbing', tier: 'Silver', rating: '4.3', count: 22, price: 'MVR 350', unit: '/visit', island: 'Malé', mode: 'instant', nextSlot: 'today 13:30', sp: false, mv: false, dist: 700, pn: 350, rn: 4.3 },
+    { id: 'p5', ph: 'uploads/plumbing.jpeg', title: 'Water Heater Installation', prov: 'Hulhumalé Plumbing Co', cat: 'Plumbing', tier: null, rating: '4.6', count: 8, price: 'MVR 550', unit: '/visit', island: 'Hulhumalé', mode: 'request', bookings: 8, sp: false, mv: false, dist: 2300, pn: 550, rn: 4.6 },
+    { id: 'p6', ph: 'uploads/plumbing.jpeg', title: '24hr Pipe Leak Response', prov: 'Fix It Malé', cat: 'Plumbing', tier: 'Bronze', rating: '4.0', count: 11, price: 'From MVR 500', unit: '', island: 'Malé', mode: 'request', replyTime: '18 min', bookings: 15, cb: false, sp: false, mv: true, dist: 1100, pn: 500, rn: 4.0 }];
+  PROV = [
+    { id: 'ibrahim', name: 'Ibrahim Rasheed', sub: 'Rasheed Plumbing Services · Plumbing', tier: 'Gold', rating: '4.6 (31)', fail: false },
+    { id: 'hussain', name: 'Hussain Nizar', sub: 'Photography', tier: 'Gold', rating: '4.9 (58)', fail: true }];
+  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Maafushi', 'Thulusdhoo', 'Hithadhoo'];
+  KEY = { 'Explore': 'explore', 'Search results': 'search', 'Category results': 'category', 'Saved': 'saved' };
+  componentDidUpdate(prev) {
+    if (prev.screen !== this.props.screen && this.state.nav) this.setState({ nav: null });
+    if (prev.scenario !== this.props.scenario && Object.keys(this.state.override).length) this.setState({ override: {} });
+  }
+  componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._rt); clearTimeout(this._pb); }
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2200); }
+  go(scr) { this.setState({ nav: scr }); }
+  setSvcSaved(id, next) { const sv = { ...this.state.savedSvc }; sv[id] = next; this.setState({ savedSvc: sv }); this.toastMsg(next ? 'Saved' : 'Removed from saved'); }
+  mkR(s) {
+    const saved = !!this.state.savedSvc[s.id];
+    return { title: s.title, prov: s.prov, tier: s.tier, rating: s.rating, count: s.count, price: s.price, unit: s.unit,
+      photo: s.ph ?? '', island: s.island, cat: s.cat, mode: s.mode, cb: !!s.cb, nextSlot: s.nextSlot ?? '', replyTime: s.replyTime ?? '', bookings: s.bookings ?? 0, sp: !!s.sp, saved,
+      onSave: (next) => this.setSvcSaved(s.id, next) };
+  }
+  renderVals() {
+    const S = this.state, p = this.props;
+    const screen = S.nav ?? (p.screen ?? 'Explore');
+    const key = this.KEY[screen];
+    const eff = S.override[key] ?? (p.scenario ?? 'Populated');
+    const loading = eff === 'Loading', err = eff === 'Error', empty = eff === 'Empty';
+    const isSearch = screen === 'Search results', isCategory = screen === 'Category results';
+    const cmp = { Distance: (a, b) => a.dist - b.dist, Rating: (a, b) => b.rn - a.rn, Price: (a, b) => a.pn - b.pn }[S.sort];
+    const flt = x => (!S.fMv || x.mv);
+    const base = isCategory ? this.SVCS.filter(x => x.cat === S.cat) : this.SVCS.filter(x => x.inSearch);
+    const matching = base.filter(flt);
+    const ordered = [...matching.filter(x => x.sp), ...matching.filter(x => !x.sp).sort(cmp)];
+    const resList = ordered.map(x => this.mkR(x));
+    const filtersOn = S.fMv;
+    const resEmptyCat = isCategory && (empty || resList.length === 0);
+    const resEmptySearch = isSearch && empty;
+    const resOk = !loading && !err && !resEmptyCat && !resEmptySearch;
+    const savedSvcs = this.SVCS.filter(x => S.savedSvc[x.id]).map(x => this.mkR(x));
+    const savedProvs = this.PROV.filter(x => S.savedProv[x.id]).map(pr => ({
+      name: pr.name, sub: pr.sub, tier: pr.tier, rating: pr.rating,
+      init: pr.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase(),
+      msg: () => this.toastMsg('Opens chat with ' + pr.name),
+      unsave: () => {
+        const sv = { ...this.state.savedProv }; sv[pr.id] = false; this.setState({ savedProv: sv });
+        if (pr.fail) { this._pb = setTimeout(() => { const r = { ...this.state.savedProv }; r[pr.id] = true; this.setState({ savedProv: r }); this.toastMsg("Couldn't remove — restored. Check your connection."); }, 900); }
+        else this.toastMsg('Removed from saved');
+      } }));
+    const savNatEmpty = savedSvcs.length === 0 && savedProvs.length === 0;
+    const savOk = screen === 'Saved' && !loading && !err && !empty && !savNatEmpty;
+    const islandsF = this.ISLANDS.filter(n => n.toLowerCase().includes(S.islandQ.toLowerCase()));
+    const catObj = this.CATS.find(c => c.n === S.cat);
+    const retry = () => { if (this.state.retrying) return; this.setState({ retrying: true });
+      this._rt = setTimeout(() => { const o = { ...this.state.override }; o[this.KEY[this.state.nav ?? (this.props.screen ?? 'Explore')]] = 'Populated'; this.setState({ retrying: false, override: o }); }, 1000); };
+    const clearFilters = () => { const o = { ...this.state.override }; o.search = 'Populated'; this.setState({ override: o, fMv: false }); this.toastMsg('Filters cleared'); };
+    return {
+      scrExplore: screen === 'Explore', scrResults: isSearch || isCategory, scrSaved: screen === 'Saved',
+      isSearch, isCategory, resLabel: isSearch ? 'Search results' : 'Category results',
+      islandLbl: S.island, catName: S.cat,
+      q: S.q, setQ: e => this.setState({ q: e.target.value }),
+      goSearch: () => this.go('Search results'), goExplore: () => this.go('Explore'), goSaved: () => this.go('Saved'),
+      bellTap: () => this.toastMsg('Opens notifications'),
+      urgentTap: () => this.toastMsg('Opens the ASAP request'),
+      editSearch: () => this.toastMsg('Edits the search'),
+      cats: this.CATS.map(c => ({ ...c, tap: () => { this.setState({ cat: c.n, nav: 'Category results' }); } })),
+      skel12: [1,2,3,4,5,6,7,8,9,10,11,12], skel4: [1,2,3,4],
+      expSkel: screen === 'Explore' && loading, expErr: screen === 'Explore' && err,
+      expEmpty: screen === 'Explore' && empty, expOk: screen === 'Explore' && !loading && !err && !empty,
+      resSkel: (isSearch || isCategory) && loading, resErr: (isSearch || isCategory) && err,
+      resEmptySearch, resEmptyCat, resOk: (isSearch || isCategory) && resOk,
+      catEmptyTitle: S.cat === 'Plumbing' ? 'No plumbers on ' + S.island + ' yet' : 'No ' + S.cat + ' providers on ' + S.island + ' yet',
+      resCount: isCategory ? resList.length + ' services' : (filtersOn ? resList.length + ' services' : '18 services'),
+      resList,
+      showMore: isSearch && resOk && !filtersOn, showMoreTap: () => this.toastMsg('Loads 12 more results'),
+      sortChips: ['Distance', 'Rating', 'Price'].map(n => ({ label: n, sel: S.sort === n, tap: () => this.setState({ sort: n }) })),
+      filterChips: [
+        { label: S.island, dd: true, on: true, tap: () => this.setState({ sheet: true }) },
+        ...(isSearch ? [{ label: 'Category', dd: true, tap: () => this.toastMsg('Opens category picker') }] : []),
+        { label: 'Price', dd: true, tap: () => this.toastMsg('Opens price range') },
+        { label: 'Mode', dd: true, tap: () => this.toastMsg('Opens booking mode') },
+        { label: 'Maldivian-owned', check: S.fMv, on: S.fMv, tap: () => this.setState({ fMv: !S.fMv }) }
+      ].map(f => ({ ...f, bd: f.on ? '#CDDDFB' : '#E3EAF3', bg: f.on ? '#E8F0FE' : '#fff', fg: f.on ? '#1D4ED8' : '#41526B' })),
+      allFilters: () => this.toastMsg('Opens all filters'),
+      mockFilters: [
+        { label: 'Under MVR 300', remove: clearFilters },
+        { label: 'Hulhumalé', remove: clearFilters }],
+      clearFilters,
+      savSkel: screen === 'Saved' && loading, savErr: screen === 'Saved' && err,
+      savEmpty: screen === 'Saved' && !loading && !err && (empty || savNatEmpty),
+      savedSub: savedSvcs.length + ' services · ' + savedProvs.length + ' providers',
+      hasSavedSvc: savOk && savedSvcs.length > 0, hasSavedProv: savOk && savedProvs.length > 0,
+      savedSvcs, savedProvs,
+      retry, retrying: S.retrying, retryLbl: S.retrying ? 'Loading…' : 'Retry',
+      navTap: (tab) => { if (tab === 'Explore') this.go('Explore'); else this.toastMsg('Opens ' + tab); },
+      hasSheet: S.sheet, openIsland: () => this.setState({ sheet: true }),
+      closeSheet: () => this.setState({ sheet: false }), stopProp: e => e.stopPropagation(),
+      islandQ: S.islandQ, setIslandQ: e => this.setState({ islandQ: e.target.value }),
+      islandShown: islandsF.length,
+      islands: islandsF.map(n => { const on = n === S.island; return { n, on,
+        bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
+        pick: () => { this.setState({ island: n, sheet: false, islandQ: '' }); this.toastMsg('Browsing ' + n); } }; }),
+      toast: S.toast, hasToast: !!S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
