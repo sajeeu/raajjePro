@@ -254,7 +254,18 @@ Enforced server-side on the listing publish and update paths, and re-checked at 
 
 ### 🔧 Discovery must signal booking mode
 
-Search results, category results, and Home cards show a mode affordance — **"Book instantly"** for slot-based, **"Request a time"** for request-based, plus an **"Emergency available"** marker where applicable. v3 had no signal at all: a customer expecting to pick a time got a form, or vice versa. This is also a genuine differentiator worth surfacing.
+Search results, category results, and Home cards show a mode affordance — **"Book instantly"** for slot-based, **"Request a time"** for request-based. v3 had no signal at all: a customer expecting to pick a time got a form, or vice versa.
+
+🔧 **The "Emergency available" marker is removed from cards and from search filters — Round 23.** It was appended to the sentence above without a case of its own, and it cannot have one: **emergency dispatch never targets a provider.** A request broadcasts to every eligible provider at once (below), so a marker on one provider's card advertises an action that does not exist. A customer with water spreading who browses to a card *because* of that marker, taps through, and discovers the request goes to everyone has spent their scarcest resource believing they were summoning a particular person. It is also a category fact in provider clothing — it means "this category has emergency dispatch and this provider clears its tier bar", and the actionable half is the category. Removing it takes nothing away, because nothing could be done with it.
+
+🔧 **What the second card signal carries instead — Round 23.** The two booking modes raise different questions, so the signal is mode-appropriate rather than generic:
+  - **`slot`** — *how soon can someone come?* → the next open time, e.g. `Next: today 14:00`. `Book instantly` promises immediacy; this is the evidence for it.
+  - **`request`** — *how long until I hear back?* → the provider's median response time from §1f, e.g. `Usually replies in 12 min`. Below the ten-booking floor it reads `New provider`, exactly as §1f requires everywhere else.
+  Both are numbers computed from real data, never labels, so §1f's ban on editorial judgements is untouched.
+
+🔧 **The callback guarantee becomes a card badge — Round 23.** §1h already specifies it as "opt-in per listing, displayed as a badge" and calls it "the clearest answer to 'why book here instead of calling them directly'", and it had never reached a card. It takes the space the emergency marker occupied: per-listing, enforceable by RaajjePro, and genuinely differentiating — unlike the marker it replaces.
+
+🔧 **Emergency becomes an entry point, not a marker — Round 23.** A person in an emergency is not browsing cards. A distinct emergency action sits on **Home and Explore** and goes straight to the ASAP request, which is honest about what happens next because that flow really does reach every eligible provider. The Service Preview toggle (§Phase 12) stays as it is.
 
 ### Slot-based flow
 
@@ -1033,7 +1044,7 @@ Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic
 
 - Search endpoint with filters, sort, pagination, appropriate indexes
 - 🔧 **Sort options, in this order — Round 12: distance, then rating, then price.** Distance leads because a provider who cannot reach your island is not a result at all. Price-range filter alongside. v1 had four fixed chips and no sort, thin for the primary discovery mechanism
-- 🔧 **Booking-mode affordance on every result card** (§1c): "Book instantly" / "Request a time", plus an "Emergency available" marker
+- 🔧 **Booking-mode affordance on every result card** (§1c): "Book instantly" / "Request a time", plus the mode-appropriate second signal and the callback-guarantee badge (Round 23). 🔧 **No "Emergency available" marker and no emergency filter** — Round 23 removed both; a filter that narrows by something the customer cannot act on produced dead-end result sets
 - **Priority placement** for premium subscribers affects ordering *within* the genuinely relevant result set, never membership in it
 - **Any paid influence on ordering carries a visible "Sponsored" label.** No unlabelled paid placement.
 - **No visibility difference between verified and unverified providers** in baseline search. Verification affects the badge, not findability.
@@ -1048,6 +1059,7 @@ Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic
 - **Deep links / web fallback:** listings and provider profiles resolve via real URLs with universal links / app links and a minimal web fallback page. v1 justified open guest browsing partly on SEO while having no web surface to index, and shipped a Share button with nothing to share.
 - **Trust grid** — 🔧 "Verified" copy must state what it means. In the Maldives a customer may read "Verified Provider" as "has a good track record" rather than "passed an ID and trade check." Use explicit copy: *"ID and trade checked by RaajjePro."*
 - "Become a Provider" routes into the wizard, resuming an existing draft if one exists
+- 🔧 **A distinct emergency entry — Round 23.** Home and Explore each carry an action that goes straight to the ASAP request. This replaces the per-card "Emergency available" marker (§1c): someone with a burst pipe is not scrolling a feed, and the marker advertised targeting that the broadcast flow never supported. The entry is honest about what follows — the request reaches every eligible provider and up to three bid.
 
 **Done when:** every section shows live, correctly-empty, or correctly-loading state; launch mode renders convincingly against a twenty-listing seed; a shared listing URL opens the app when installed and the fallback page when not.
 

@@ -124,7 +124,11 @@ Verification is **three tiers, not a yes/no**, and the tier decides what a provi
 
 ### Booking mode is on every card
 
-Every listing card, search result and Home card states how it is booked: **`Book instantly`** (the customer picks a published time) or **`Request a time`** (the provider comes back with a time and a price), plus **`Emergency available`** where it applies. A customer must never be uncertain which kind of wait they are in.
+Every listing card, search result and Home card states how it is booked: **`Book instantly`** (the customer picks a published time) or **`Request a time`** (the provider comes back with a time and a price). A customer must never be uncertain which kind of wait they are in.
+
+Alongside it sits a **second signal matched to the mode** — the next open time for `Book instantly`, the provider's typical reply time for `Request a time` — and the **callback guarantee** badge where a listing offers one.
+
+**There is no `Emergency available` marker.** Emergency dispatch broadcasts to every eligible provider, so it can never be aimed at the provider whose card you are looking at.
 
 ## Every screen needs four states
 
