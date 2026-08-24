@@ -90,6 +90,25 @@ Never expose internal error details (stack traces, raw DB errors) in API respons
 
 ---
 
+# Working across machines
+
+`HANDOVER.md` is the entry point for a fresh checkout. Keep it true — if a workflow changes, that file changes with it.
+
+**Everything of value lives in git.** Never leave a decision, a design or a piece of reasoning only in a chat session. If it matters tomorrow, it is a file.
+
+**End of day:** `scripts/eod-push.sh` verifies the design prototypes, checks the remote, commits and pushes. A scheduled task runs it at 16:30 Maldives time as a backstop.
+
+# Working with Claude Design
+
+The app is being rebuilt as working `.dc.html` prototypes in the Claude Design project `065ca2ad-ff8f-4eac-a8f8-e860a77561ff`. `docs/design/redesign-plan.md` carries the thirteen-session sequence; `docs/design/sessions/` carries the prompts.
+
+- **Read a project file with the DesignSync connector** — `list_files`, then `get_file`. That project is `PROJECT_TYPE_PROJECT`, so it never appears in `list_projects`, which filters to design-system projects. Address it by id.
+- **Audit every imported artboard against the plan before it is committed.** This is the step that catches what a design review cannot: invented endpoints, claims the product cannot keep, numbers that contradict a category's configuration. It has caught something material in every prototype so far.
+- **Write corrections as a follow-up prompt** naming what to change and what to leave alone. Never rework a design directly — the project is the source and the repo is the copy.
+- **`python3 docs/design/verify-dc.py <files>` gates the commit.** Structure plus the locked rules.
+- **Components are files.** `<dc-import>` mounts a sibling `.dc.html`; seven exist and must be imported, never copied. The tier copy lives in `VerificationBadge` and the status labels in `StatusPill` — duplicating either into a screen is a defect.
+- **Prototypes beat images.** Where `mockups/design-composer/` and `mockups/*.jpg` cover the same screen, the prototype is current and the JPEG is provenance.
+
 # Scope Discipline
 
 - Build exactly what the current phase's prompt describes. Do not build ahead into a later phase because it seems convenient.
