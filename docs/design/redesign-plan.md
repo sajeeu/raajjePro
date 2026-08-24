@@ -99,6 +99,12 @@ Emergency needed four correction rounds. It was the worst case — no mockup, no
 
 **The real island list is still outstanding.** Sessions 2, 9 and 11 all render an island picker. Until the seed list exists they will show six placeholder islands and a note. That is fine for design, but it is the one input from your side that three sessions depend on.
 
+## Two rules the sessions keep re-learning
+
+**Images must be uploaded, never hotlinked.** A published page blocks every external host except Google Fonts, so a remote image URL renders as nothing outside the editor — and it is a dependency on someone else's server inside a file meant to be the durable reference. Upload the photo and reference it by filename.
+
+**A screen's most urgent action cannot live below the fold.** Session 2 moved the emergency entry off the cards for the right reason — someone in an emergency is not browsing — and then placed the replacement under twelve category tiles. Whatever a screen exists to make possible in a hurry has to be visible when it opens.
+
 ## Not in this plan
 
 The admin panel — roughly fifteen screens, React web, desktop, different visual language, its own brief. It does not belong in a Flutter component vocabulary and would corrupt the shared sheet if folded in.
