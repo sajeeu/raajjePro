@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+</helmet>
+<sc-if value="{{ isHorizontal }}" hint-placeholder-val="{{ true }}">
+<div style="width:250px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);font-family:'Inter',system-ui,-apple-system,sans-serif">
+  <div style="position:relative;height:126px;background:{{ catBg }};display:flex;align-items:center;justify-content:center;overflow:hidden">
+    <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ photo }}" alt="{{ title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+    <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ true }}"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ catFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ catD }}"></path></svg></sc-if>
+    <sc-if value="{{ sponsored }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);color:#5B6B84;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">Sponsored</span></sc-if>
+    <button onClick="{{ onHeart }}" aria-label="Save" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(15,27,45,.12);cursor:pointer;padding:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ heartFill }}" stroke="{{ heartStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+    <sc-if value="{{ hasCategory }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:{{ catFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ category }}</span></sc-if>
+  </div>
+  <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px">
+    <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3">{{ title }}</div>
+    <div style="display:flex;align-items:center;gap:7px">
+      <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">{{ initials }}</span>
+      <span style="font-size:12.5px;font-weight:600;color:#41526B">{{ provider }}</span>
+      <sc-if value="{{ hasTier }}" hint-placeholder-val="{{ false }}"><dc-import name="VerificationBadge" tier="{{ tier }}" size="chip" hint-size="60px,20px"></dc-import></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
+      <sc-if value="{{ hasRating }}" hint-placeholder-val="{{ true }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">{{ ratingText }}</span></sc-if>
+      <span style="flex:1"></span>
+      <sc-if value="{{ hasIsland }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ island }}</span></sc-if>
+    </div>
+    <div style="border-top:1px solid #EEF3FA;padding-top:10px"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ price }}<sc-if value="{{ hasUnit }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ unit }}</span></sc-if></span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span style="display:inline-flex;align-items:center;gap:5px;background:{{ modeBg }};color:{{ modeFg }};border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ modeD }}"></path></svg>{{ modeLabel }}</span>
+      <sc-if value="{{ emergency }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ isFull }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05);font-family:'Inter',system-ui,-apple-system,sans-serif">
+  <div style="width:96px;height:96px;border-radius:14px;background:{{ catBg }};display:flex;align-items:center;justify-content:center;flex:none;position:relative;overflow:hidden">
+    <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ photo }}" alt="{{ title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+    <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ true }}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="{{ catFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ catD }}"></path></svg></sc-if>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1;font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3">{{ title }}</div>
+      <button onClick="{{ onHeart }}" aria-label="Save" style="flex:none;width:28px;height:28px;border:none;border-radius:50%;background:#F7FAFD;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="{{ heartFill }}" stroke="{{ heartStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <span style="font-size:12.5px;font-weight:600;color:#41526B">{{ provider }}</span>
+      <sc-if value="{{ hasTier }}" hint-placeholder-val="{{ false }}"><dc-import name="VerificationBadge" tier="{{ tier }}" size="chip" hint-size="60px,20px"></dc-import></sc-if>
+      <sc-if value="{{ hasCategory }}" hint-placeholder-val="{{ true }}"><span style="background:#EEF3FA;color:{{ catFg }};border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800">{{ category }}</span></sc-if>
+      <sc-if value="{{ sponsored }}" hint-placeholder-val="{{ false }}"><span style="background:#EEF3FA;color:#5B6B84;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800">Sponsored</span></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:#41526B">
+      <sc-if value="{{ hasRating }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">{{ ratingText }}</span></span></sc-if>
+      <sc-if value="{{ hasIsland }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:4px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ island }}</span></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ price }}<sc-if value="{{ hasUnit }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ unit }}</span></sc-if></span>
+      <span style="flex:1"></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:{{ modeBg }};color:{{ modeFg }};border-radius:9px;padding:5px 9px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ modeD }}"></path></svg>{{ modeLabel }}</span>
+      <sc-if value="{{ emergency }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:5px 9px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:290,&quot;height&quot;:400},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;horizontal&quot;,&quot;full&quot;],&quot;default&quot;:&quot;horizontal&quot;,&quot;tsType&quot;:&quot;'horizontal' | 'full'&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Emergency Plumbing &amp; Pipe Repair&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;provider&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Ibrahim Rasheed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Gold&quot;,&quot;Silver&quot;,&quot;Bronze&quot;,&quot;none&quot;],&quot;default&quot;:&quot;Gold&quot;,&quot;tsType&quot;:&quot;'Gold' | 'Silver' | 'Bronze' | null&quot;,&quot;section&quot;:&quot;Trust&quot;},&quot;rating&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;4.6&quot;,&quot;tsType&quot;:&quot;string | number&quot;,&quot;section&quot;:&quot;Trust&quot;},&quot;count&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:31,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Trust&quot;},&quot;price&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;From MVR 350&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;unit&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | null&quot;},&quot;island&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Malé&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;category&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Cleaning&quot;,&quot;Plumbing&quot;,&quot;Electrical&quot;,&quot;Moving&quot;,&quot;Gardening&quot;,&quot;Beauty&quot;,&quot;Photography&quot;,&quot;Computer&quot;,&quot;AC Repair&quot;,&quot;Fitness&quot;,&quot;Events&quot;,&quot;Boat Charter&quot;],&quot;default&quot;:&quot;Plumbing&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;instant&quot;,&quot;request&quot;],&quot;default&quot;:&quot;request&quot;,&quot;tsType&quot;:&quot;'instant' | 'request'&quot;},&quot;emergency&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;sponsored&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;saved&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(next: boolean) =&gt; void&quot;},&quot;photo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string | null&quot;}}">
+class Component extends DCLogic {
+  CATS = {
+    Cleaning:    { bg:'#EEF2FF', fg:'#4F46E5', d:'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
+    Plumbing:    { bg:'#ECFDF5', fg:'#059669', d:'M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z' },
+    Electrical:  { bg:'#FFFBEB', fg:'#D97706', d:'M13 2L5 13h6l-1 9 8-11h-6l1-9z' },
+    Moving:      { bg:'#FFF7ED', fg:'#EA580C', d:'M1 7h11v9H1zM12 10h4l3 3v3h-7zM5.5 18.5a1.5 1.5 0 1 0 .01 0zM17.5 18.5a1.5 1.5 0 1 0 .01 0z' },
+    Gardening:   { bg:'#F0FDF4', fg:'#16A34A', d:'M5 19C5 9 12 4 20 4c0 8-5 15-15 15zM5 19c2-5 6-9 10-11' },
+    Beauty:      { bg:'#FDF2F8', fg:'#DB2777', d:'M12 3c.5 3.5 2 5 5.5 5.5C14 9 12.5 10.5 12 14c-.5-3.5-2-5-5.5-5.5C10 8 11.5 6.5 12 3zM17.5 14.5l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z' },
+    Photography: { bg:'#F5F3FF', fg:'#7C3AED', d:'M4 8h3l2-3h6l2 3h3v11H4zM12 17a3.5 3.5 0 1 0-.01 0' },
+    Computer:    { bg:'#EFF6FF', fg:'#2563EB', d:'M3 5h18v11H3zM9 20h6M12 16v4' },
+    'AC Repair':    { bg:'#EFF6FF', fg:'#2563EB', d:'M12 3v18M5.2 6.5l13.6 11M18.8 6.5l-13.6 11M8.5 4.5L12 7l3.5-2.5M8.5 19.5L12 17l3.5 2.5' },
+    Fitness:        { bg:'#F5F3FF', fg:'#7C3AED', d:'M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11' },
+    Events:         { bg:'#FEFCE8', fg:'#CA8A04', d:'M12 3a5 5 0 0 1 5 5c0 3.2-2.4 6-5 6s-5-2.8-5-6a5 5 0 0 1 5-5zM12 14c.3 2.8-.8 4.6-1 7M10.5 21h3' },
+    'Boat Charter': { bg:'#ECFEFF', fg:'#0891B2', d:'M4 17h16l-1.5 3.5h-13zM12 4v13M12 4c4.5 1.5 6.5 5 6.5 9.5H12z' } };
+  DEFAULT_CAT = { bg:'#EEF3FA', fg:'#41526B', d:'M14.7 6.3a4.5 4.5 0 0 0-6 5.9L3 18l3 3 5.8-5.7a4.5 4.5 0 0 0 5.9-6l-3 3-2.8-.7-.7-2.8z' };
+  renderVals() {
+    const p = this.props;
+    const cat = this.CATS[p.category] ?? this.DEFAULT_CAT;
+    const tier = (p.tier && p.tier !== 'none') ? p.tier : null;
+    const saved = !!p.saved;
+    const instant = (p.mode ?? 'request') === 'instant';
+    const provider = p.provider ?? '';
+    const hasPhoto = !!p.photo;
+    const hasRating = p.rating != null && p.rating !== '';
+    return {
+      isHorizontal: (p.variant ?? 'horizontal') === 'horizontal',
+      isFull: (p.variant ?? 'horizontal') === 'full',
+      title: p.title ?? '', provider,
+      initials: provider.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      tier, hasTier: !!tier,
+      category: p.category ?? '', hasCategory: !!p.category,
+      catBg: cat.bg, catFg: cat.fg, catD: cat.d,
+      hasPhoto, noPhoto: !hasPhoto, photo: p.photo ?? '',
+      hasRating, ratingText: hasRating ? `${p.rating} (${p.count ?? 0})` : '',
+      hasIsland: !!p.island, island: p.island ?? '',
+      price: p.price ?? '', hasUnit: !!p.unit, unit: p.unit ?? '',
+      modeLabel: instant ? 'Book instantly' : 'Request a time',
+      modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
+      modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
+      emergency: !!p.emergency, sponsored: !!p.sponsored,
+      heartFill: saved ? '#DC2626' : 'none', heartStroke: saved ? '#DC2626' : '#41526B',
+      onHeart: (e) => { e && e.stopPropagation && e.stopPropagation(); (p.onSave ?? (() => {}))(!saved); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -84,9 +84,24 @@ Seven divergences from the plan were found in Round 16 and confirmed in Round 18
 | Prototype | Screens | Supersedes |
 |---|---|---|
 | `Home.dc.html` | Home + launch mode | `HomePage1.jpg` · `HomePage2.jpg` |
-| `Components.dc.html` | the shared component sheet | — |
+| `Components.dc.html` | the component gallery — mounts the seven below | — |
+| `ServiceCard.dc.html` | the card, horizontal and full-width | — |
+| `VerificationBadge.dc.html` | Bronze / Silver / Gold, and nothing at all | — |
+| `Chip.dc.html` | filter · input · static | — |
+| `StatusPill.dc.html` | the twelve booking statuses | — |
+| `BottomNav.dc.html` | the five tabs | — |
+| `SkeletonCard.dc.html` | loading, per card variant | — |
+| `EmptyState.dc.html` | icon, title, body, action | — |
 | `Emergency Flow.dc.html` | emergency booking, customer side | — |
 | `Provider Emergency.dc.html` | emergency offer, provider side | — |
 | `Become a Provider.dc.html` | Phase 6a onboarding | — |
 
 The JPEGs stay as the provenance record of what was originally delivered. This table grows as each session in `docs/design/redesign-plan.md` lands.
+
+### Components are files, not sections
+
+`<dc-import>` mounts a **sibling `.dc.html`**. The seven components above are the unit of reuse — a screen imports them and never copies their markup. Two mappings live inside them deliberately and must not be duplicated into a screen: the tier copy in `VerificationBadge`, the twelve status labels in `StatusPill`.
+
+`Home.dc.html` still carries inline copies from before the split. Migrating it is worth doing; it was deliberately kept out of the extraction so a pixel-identical refactor stayed pixel-identical.
+
+Check any file with `python3 docs/design/verify-dc.py mockups/design-composer/*.dc.html`.

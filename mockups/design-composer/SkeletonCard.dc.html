@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>
+</helmet>
+<sc-if value="{{ isHorizontal }}" hint-placeholder-val="{{ true }}">
+<div aria-hidden="true" style="width:250px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+  <div style="height:126px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:10px">
+    <div style="height:15px;width:80%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:12px;width:60%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:12px;width:70%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:26px;width:120px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+<sc-if value="{{ isFull }}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+  <div style="width:96px;height:96px;border-radius:14px;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center">
+    <div style="height:15px;width:65%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:12px;width:85%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:12px;width:50%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:290,&quot;height&quot;:280},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;horizontal&quot;,&quot;full&quot;],&quot;default&quot;:&quot;horizontal&quot;,&quot;tsType&quot;:&quot;'horizontal' | 'full'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const v = this.props.variant ?? 'horizontal';
+    return { isHorizontal: v === 'horizontal', isFull: v === 'full' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+</helmet>
+<sc-if value="{{ isFilter }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tap }}" style="height:38px;border:1.5px solid {{ fBd }};border-radius:999px;background:{{ fBg }};color:{{ fFg }};display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',system-ui,-apple-system,sans-serif">{{ label }}</button></sc-if>
+<sc-if value="{{ isInput }}" hint-placeholder-val="{{ false }}"><span style="height:38px;border:1.5px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:7px;padding:0 10px 0 14px;font-size:12.5px;font-weight:700;font-family:'Inter',system-ui,-apple-system,sans-serif">{{ label }}<button onClick="{{ remove }}" aria-label="Remove" style="border:none;background:none;color:inherit;padding:0;cursor:pointer;display:inline-flex;align-items:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span></sc-if>
+<sc-if value="{{ isStatic }}" hint-placeholder-val="{{ false }}"><span style="height:28px;border-radius:999px;background:#EEF3FA;color:#41526B;display:inline-flex;align-items:center;padding:0 11px;font-size:11px;font-weight:800;font-family:'Inter',system-ui,-apple-system,sans-serif">{{ label }}</span></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:200,&quot;height&quot;:60},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Near me&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;filter&quot;,&quot;input&quot;,&quot;static&quot;],&quot;default&quot;:&quot;filter&quot;,&quot;tsType&quot;:&quot;'filter' | 'input' | 'static'&quot;},&quot;selected&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onTap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onRemove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, kind = p.kind ?? 'filter', sel = !!p.selected;
+    return {
+      isFilter: kind === 'filter', isInput: kind === 'input', isStatic: kind === 'static',
+      label: p.label ?? '',
+      fBd: sel ? '#2563EB' : '#E3EAF3', fBg: sel ? '#2563EB' : '#fff', fFg: sel ? '#fff' : '#41526B',
+      tap: p.onTap ?? (() => {}),
+      remove: (e) => { e && e.stopPropagation && e.stopPropagation(); (p.onRemove ?? (() => {}))(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+</helmet>
+<div style="width:340px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;font-family:'Inter',system-ui,-apple-system,sans-serif">
+  <span style="width:48px;height:48px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ iconD }}"></path></svg></span>
+  <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">{{ title }}</div>
+  <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">{{ body }}</div>
+  <sc-if value="{{ hasAction }}" hint-placeholder-val="{{ true }}"><button onClick="{{ action }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px;font-family:inherit">{{ actionLabel }}</button></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:240},&quot;icon&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;calendar&quot;,&quot;search&quot;,&quot;heart&quot;,&quot;pin&quot;,&quot;message&quot;],&quot;default&quot;:&quot;calendar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;No bookings yet&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;body&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;When you book a service it appears here, with its status and chat.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;actionLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Explore services&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onAction&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  ICONS = {
+    calendar:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
+    search:'M15.5 15.5L21 21M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15z',
+    heart:'M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z',
+    pin:'M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11zM12 12.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8z',
+    message:'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' };
+  renderVals() {
+    const p = this.props;
+    return {
+      iconD: this.ICONS[p.icon] ?? this.ICONS.calendar,
+      title: p.title ?? '', body: p.body ?? '', actionLabel: p.actionLabel ?? '', hasAction: !!p.actionLabel,
+      action: p.onAction ?? (() => {})
+    };
+  }
+}
+</script>
+</body>
+</html>

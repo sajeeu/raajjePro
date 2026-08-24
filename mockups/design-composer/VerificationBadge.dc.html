@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+</helmet>
+<sc-if value="{{ showChip }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ bg }};color:{{ fg }};border:1px solid {{ bd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;font-family:'Inter',system-ui,-apple-system,sans-serif">◆ {{ tier }}</span></sc-if>
+<sc-if value="{{ showFull }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:8px;background:{{ bg }};border:1px solid {{ bd }};border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;color:{{ fg }};font-family:'Inter',system-ui,-apple-system,sans-serif">◆ {{ tier }}<span style="font-weight:600;color:{{ wfg }}">{{ words }}</span></span></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:70},&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Gold&quot;,&quot;Silver&quot;,&quot;Bronze&quot;,&quot;none&quot;],&quot;default&quot;:&quot;Gold&quot;,&quot;tsType&quot;:&quot;'Gold' | 'Silver' | 'Bronze' | null&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chip&quot;,&quot;full&quot;],&quot;default&quot;:&quot;chip&quot;,&quot;tsType&quot;:&quot;'chip' | 'full'&quot;}}">
+class Component extends DCLogic {
+  TIERS = {
+    Bronze: { bg:'#FBEDE3', bd:'#E8C4A0', fg:'#9A5B2D', wfg:'#7A4A26', words:'ID checked by RaajjePro' },
+    Silver: { bg:'#F1F5F9', bd:'#CBD5E1', fg:'#475569', wfg:'#3B4A5E', words:'ID checked, work verified' },
+    Gold:   { bg:'#FEF3C7', bd:'#FCD34D', fg:'#B45309', wfg:'#92400E', words:'ID checked, registered trade' } };
+  renderVals() {
+    const t = this.props.tier, c = this.TIERS[t];
+    if (!c) return { showChip:false, showFull:false }; // null tier: nothing renders
+    const full = (this.props.size ?? 'chip') === 'full';
+    return { showChip:!full, showFull:full, tier:t, bg:c.bg, bd:c.bd, fg:c.fg, wfg:c.wfg, words:c.words };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+</helmet>
+<span style="display:inline-flex;align-items:center;gap:6px;background:{{ bg }};color:{{ fg }};border:1px solid {{ bd }};border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800;font-family:'Inter',system-ui,-apple-system,sans-serif"><span style="width:6px;height:6px;border-radius:50%;background:{{ dot }}"></span>{{ label }}</span>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:56},&quot;status&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;waiting_provider&quot;,&quot;quote_received&quot;,&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;receipt_confirmed&quot;,&quot;confirmed&quot;,&quot;completed&quot;,&quot;declined&quot;,&quot;cancelled&quot;,&quot;disputed&quot;,&quot;unresolved&quot;,&quot;pending_offline&quot;],&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  P = { amber:['#FEF3DC','#A15C00','#F3C77B','#D97706'], green:['#E5F6EC','#166534','#A7DDBB','#16A34A'],
+        blue:['#E8F0FE','#1D4ED8','#CDDDFB','#2563EB'], red:['#FEF2F2','#B91C1C','#F5C6C6','#DC2626'],
+        grey:['#EEF3FA','#41526B','#E1EAF5','#8296B3'] };
+  S = { waiting_provider:['Waiting for provider','amber'], quote_received:['Quote received','blue'],
+        awaiting_payment:['Awaiting payment','amber'], payment_sent:['Payment sent','blue'],
+        receipt_confirmed:['Provider confirmed receipt','green'], confirmed:['Confirmed','green'],
+        completed:['Completed','blue'], declined:['Declined','red'], cancelled:['Cancelled','red'],
+        disputed:['Disputed','red'], unresolved:['Unresolved','red'],
+        pending_offline:['Pending — sends on reconnect','grey'] };
+  renderVals() {
+    const s = this.S[this.props.status] ?? [this.props.status ?? '', 'grey'];
+    const [bg, fg, bd, dot] = this.P[s[1]];
+    return { label:s[0], bg, fg, bd, dot };
+  }
+}
+</script>
+</body>
+</html>

@@ -23,7 +23,7 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 
   <div style="display:flex;flex-direction:column;gap:6px">
     <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Raajje<span style="color:#2563EB">Pro</span> — components</div>
-    <div style="font-size:14px;font-weight:500;line-height:1.55;color:#5B6B84;max-width:640px;text-wrap:pretty">The shared vocabulary. Later sessions import from this sheet rather than re-deriving each piece. Inter throughout; nothing lighter than 600 for UI text; 20px screen padding; page background #F2F6FB.</div>
+    <div style="font-size:14px;font-weight:500;line-height:1.55;color:#5B6B84;max-width:640px;text-wrap:pretty">The shared vocabulary. Each piece below lives in its own importable file — this sheet mounts the real components rather than holding copies. Inter throughout; nothing lighter than 600 for UI text; 20px screen padding; page background #F2F6FB.</div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
@@ -61,116 +61,61 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Chip</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Chip</div><div style="font-size:11px;font-weight:700;color:#8296B3">Chip.dc.html</div></div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end">
-      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px"><span style="height:38px;border:1.5px solid #E3EAF3;border-radius:999px;background:#fff;color:#41526B;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px;font-weight:700">Near me</span><span style="height:38px;border:1.5px solid #2563EB;border-radius:999px;background:#2563EB;color:#fff;display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px;font-weight:700">Available today</span></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Filter — selected inverts to primary</span></div>
-      <div style="display:flex;flex-direction:column;gap:8px"><span style="height:38px;border:1.5px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:7px;padding:0 10px 0 14px;font-size:12.5px;font-weight:700">Hulhumalé<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Input — removable</span></div>
-      <div style="display:flex;flex-direction:column;gap:8px"><span style="height:28px;border-radius:999px;background:#EEF3FA;color:#41526B;display:inline-flex;align-items:center;padding:0 11px;font-size:11px;font-weight:800">Cleaning</span><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Static label</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px"><dc-import name="Chip" label="Near me" kind="filter" hint-size="90px,38px"></dc-import><dc-import name="Chip" label="Available today" kind="filter" selected="{{ true }}" hint-size="130px,38px"></dc-import></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Filter — selected inverts to primary</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex"><dc-import name="Chip" label="Hulhumalé" kind="input" hint-size="120px,38px"></dc-import></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Input — removable</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex"><dc-import name="Chip" label="Cleaning" kind="static" hint-size="80px,28px"></dc-import></div><span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Static label</span></div>
     </div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Service card</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Service card</div><div style="font-size:11px;font-weight:700;color:#8296B3">ServiceCard.dc.html</div></div>
     <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84;max-width:640px;text-wrap:pretty">Booking mode is on every card, always — <b style="color:#0F1B2D">Book instantly</b> (customer picks a published time) or <b style="color:#0F1B2D">Request a time</b> (provider comes back with a time and a price), plus <b style="color:#0F1B2D">Emergency available</b> where it applies.</div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="width:250px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-          <div style="position:relative;height:126px;background:#ECFDF5;display:flex;align-items:center;justify-content:center">
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z"></path></svg>
-            <span style="position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(15,27,45,.12)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></span>
-            <span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:#059669;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">Plumbing</span>
-          </div>
-          <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px">
-            <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3">Emergency Plumbing &amp; Pipe Repair</div>
-            <div style="display:flex;align-items:center;gap:7px">
-              <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">IR</span>
-              <span style="font-size:12.5px;font-weight:600;color:#41526B">Ibrahim Rasheed</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#B45309;border:1px solid #FCD34D;border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800">◆ Gold</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
-              <span style="font-variant-numeric:tabular-nums">4.6 (31)</span><span style="flex:1"></span>
-              <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>Malé</span>
-            </div>
-            <div style="border-top:1px solid #EEF3FA;padding-top:10px"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">From MVR 350</span></div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span>
-              <span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span>
-            </div>
-          </div>
-        </div>
+        <dc-import name="ServiceCard" variant="horizontal" title="Emergency Plumbing &amp; Pipe Repair" provider="Ibrahim Rasheed" tier="Gold" rating="4.6" count="31" price="From MVR 350" island="Malé" category="Plumbing" mode="request" emergency="{{ true }}" hint-size="250px,330px"></dc-import>
         <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Horizontal — 250px, in section runs</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:340px">
-        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-          <div style="width:96px;height:96px;border-radius:14px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex:none;position:relative">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"></path></svg>
-          </div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
-            <div style="display:flex;align-items:flex-start;gap:8px">
-              <div style="flex:1;font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3">Home Deep Cleaning</div>
-              <span style="flex:none;width:28px;height:28px;border-radius:50%;background:#F7FAFD;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-              <span style="font-size:12.5px;font-weight:600;color:#41526B">Mariyam Shifa</span>
-              <span style="display:inline-flex;align-items:center;gap:3px;background:#F1F5F9;color:#475569;border:1px solid #CBD5E1;border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800">◆ Silver</span>
-              <span style="background:#EEF3FA;color:#4F46E5;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800">Cleaning</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:#41526B">
-              <span style="display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">4.8 (24)</span></span>
-              <span style="display:inline-flex;align-items:center;gap:4px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>Malé</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450<span style="font-size:11.5px;font-weight:600;color:#5B6B84">/session</span></span>
-              <span style="flex:1"></span>
-              <span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:5px 9px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span>
-            </div>
-          </div>
-        </div>
+        <dc-import name="ServiceCard" variant="full" title="Home Deep Cleaning" provider="Mariyam Shifa" tier="Silver" rating="4.8" count="24" price="MVR 450" unit="/session" island="Malé" category="Cleaning" mode="instant" hint-size="100%,124px"></dc-import>
         <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Full-width — search results, lists</span>
       </div>
     </div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Verification badge</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Verification badge</div><div style="font-size:11px;font-weight:700;color:#8296B3">VerificationBadge.dc.html</div></div>
     <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84;max-width:640px;text-wrap:pretty">Three tiers, each with its own words — never a bare "Verified". When a provider has no tier the badge is <b style="color:#0F1B2D">absent</b>: no grey "unverified" chip, and the provider is still fully listed and bookable.</div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:grid;grid-template-columns:auto 1fr;gap:18px 28px;align-items:center">
-      <span style="display:inline-flex;align-items:center;gap:3px;background:#FBEDE3;color:#9A5B2D;border:1px solid #E8C4A0;border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;justify-self:start">◆ Bronze</span>
-      <span style="display:inline-flex;align-items:center;gap:8px;background:#FBEDE3;border:1px solid #E8C4A0;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;color:#9A5B2D;justify-self:start">◆ Bronze<span style="font-weight:600;color:#7A4A26">ID checked by RaajjePro</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;background:#F1F5F9;color:#475569;border:1px solid #CBD5E1;border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;justify-self:start">◆ Silver</span>
-      <span style="display:inline-flex;align-items:center;gap:8px;background:#F1F5F9;border:1px solid #CBD5E1;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;color:#475569;justify-self:start">◆ Silver<span style="font-weight:600;color:#3B4A5E">ID checked, work verified</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;background:#FEF3C7;color:#B45309;border:1px solid #FCD34D;border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;justify-self:start">◆ Gold</span>
-      <span style="display:inline-flex;align-items:center;gap:8px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;color:#B45309;justify-self:start">◆ Gold<span style="font-weight:600;color:#92400E">ID checked, registered trade</span></span>
+      <dc-import name="VerificationBadge" tier="Bronze" size="chip" style="justify-self:start" hint-size="70px,22px"></dc-import>
+      <dc-import name="VerificationBadge" tier="Bronze" size="full" style="justify-self:start" hint-size="250px,38px"></dc-import>
+      <dc-import name="VerificationBadge" tier="Silver" size="chip" style="justify-self:start" hint-size="70px,22px"></dc-import>
+      <dc-import name="VerificationBadge" tier="Silver" size="full" style="justify-self:start" hint-size="250px,38px"></dc-import>
+      <dc-import name="VerificationBadge" tier="Gold" size="chip" style="justify-self:start" hint-size="70px,22px"></dc-import>
+      <dc-import name="VerificationBadge" tier="Gold" size="full" style="justify-self:start" hint-size="250px,38px"></dc-import>
       <span style="font-size:11px;font-weight:700;color:#8296B3;font-style:italic;justify-self:start">(absent)</span>
       <span style="font-size:12.5px;font-weight:600;color:#5B6B84">None — nothing renders. Absence is the signal.</span>
     </div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Status pill</div>
-    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84">Semantic colour, never colour alone — always with a label.</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Status pill</div><div style="font-size:11px;font-weight:700;color:#8296B3">StatusPill.dc.html</div></div>
+    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84">Semantic colour, never colour alone — always with a label. The status → label mapping lives inside the component.</div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:10px;flex-wrap:wrap">
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#FEF3DC;color:#A15C00;border:1px solid #F3C77B;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#D97706"></span>Waiting for provider</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#E5F6EC;color:#166534;border:1px solid #A7DDBB;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#16A34A"></span>Confirmed</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#E8F0FE;color:#1D4ED8;border:1px solid #CDDDFB;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#2563EB"></span>Completed</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#FEF2F2;color:#B91C1C;border:1px solid #F5C6C6;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#DC2626"></span>Cancelled</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#EEF3FA;color:#41526B;border:1px solid #E1EAF5;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#8296B3"></span>Pending — sends on reconnect</span>
-      <span style="display:inline-flex;align-items:center;gap:6px;background:#E5F6EC;color:#166534;border:1px solid #A7DDBB;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#16A34A"></span>Provider confirmed receipt</span>
+      <dc-import name="StatusPill" status="waiting_provider" hint-size="160px,30px"></dc-import>
+      <dc-import name="StatusPill" status="confirmed" hint-size="110px,30px"></dc-import>
+      <dc-import name="StatusPill" status="completed" hint-size="110px,30px"></dc-import>
+      <dc-import name="StatusPill" status="cancelled" hint-size="110px,30px"></dc-import>
+      <dc-import name="StatusPill" status="pending_offline" hint-size="210px,30px"></dc-import>
+      <dc-import name="StatusPill" status="receipt_confirmed" hint-size="200px,30px"></dc-import>
     </div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Bottom navigation</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Bottom navigation</div><div style="font-size:11px;font-weight:700;color:#8296B3">BottomNav.dc.html</div></div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;justify-content:flex-start">
-      <div style="width:372px;background:#fff;border:1px solid #EEF3FA;border-radius:18px;display:flex;padding:8px 10px 12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-        <sc-for list="{{ navTabs }}" as="t" hint-placeholder-count="5">
-          <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:48px;justify-content:center">
-            <span style="display:flex;align-items:center;justify-content:center;height:30px;width:52px;border-radius:999px;background:{{ t.pBg }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ t.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></span>
-            <span style="font-size:10.5px;font-weight:700;color:{{ t.fg }}">{{ t.n }}</span>
-          </span>
-        </sc-for>
-      </div>
+      <dc-import name="BottomNav" active="Home" hint-size="372px,80px"></dc-import>
     </div>
   </div>
 
@@ -184,47 +129,24 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Skeleton</div>
-    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84">Every loading state shimmers in the shape of the real layout — never a centred spinner.</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Skeleton</div><div style="font-size:11px;font-weight:700;color:#8296B3">SkeletonCard.dc.html</div></div>
+    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84">Every loading state shimmers in the shape of the real layout — never a centred spinner. One variant per card variant.</div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start" aria-hidden="true">
-      <div style="width:250px;height:180px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-      <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px">
-        <div style="height:16px;width:60%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-        <div style="height:12px;width:85%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-        <div style="height:12px;width:70%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-        <div style="height:44px;width:140px;border-radius:13px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-      </div>
+      <dc-import name="SkeletonCard" variant="horizontal" hint-size="250px,240px"></dc-import>
+      <div style="flex:1;min-width:340px"><dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import></div>
     </div>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:14px">
-    <div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Empty state</div>
+    <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Empty state</div><div style="font-size:11px;font-weight:700;color:#8296B3">EmptyState.dc.html</div></div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:20px;flex-wrap:wrap">
-      <div style="width:340px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
-        <span style="width:48px;height:48px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
-        <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No bookings yet</div>
-        <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">When you book a service it appears here, with its status and chat.</div>
-        <button style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Explore services</button>
-      </div>
+      <dc-import name="EmptyState" icon="calendar" title="No bookings yet" body="When you book a service it appears here, with its status and chat." action-label="Explore services" hint-size="340px,210px"></dc-import>
     </div>
   </div>
 
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900}}">
-class Component extends DCLogic {
-  TABS = [
-    { n: 'Home', d: 'M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z' },
-    { n: 'Explore', d: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z' },
-    { n: 'Bookings', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
-    { n: 'Messages', d: 'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' },
-    { n: 'Profile', d: 'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5' }];
-  renderVals() {
-    return { navTabs: this.TABS.map((t, i) => ({ n: t.n, d: t.d,
-      pBg: i === 0 ? '#E8F0FE' : 'transparent', fg: i === 0 ? '#1D4ED8' : '#8296B3' })) };
-  }
-}
-</script>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900}}"></script>
 </body>
 </html>
