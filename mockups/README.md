@@ -92,6 +92,7 @@ Seven divergences from the plan were found in Round 16 and confirmed in Round 18
 | `BottomNav.dc.html` | the five tabs | — |
 | `SkeletonCard.dc.html` | loading, per card variant | — |
 | `EmptyState.dc.html` | icon, title, body, action | — |
+| `Discovery.dc.html` | Explore · search · category results · saved | `Explore_services.jpg` |
 | `Emergency Flow.dc.html` | emergency booking, customer side | — |
 | `Provider Emergency.dc.html` | emergency offer, provider side | — |
 | `Become a Provider.dc.html` | Phase 6a onboarding | — |
@@ -105,3 +106,7 @@ The JPEGs stay as the provenance record of what was originally delivered. This t
 `Home.dc.html` still carries inline copies from before the split. Migrating it is worth doing; it was deliberately kept out of the extraction so a pixel-identical refactor stayed pixel-identical.
 
 Check any file with `python3 docs/design/verify-dc.py mockups/design-composer/*.dc.html`.
+
+### Photos live in the design project, not here
+
+A prototype that shows real imagery references it as `uploads/<name>.jpeg` — those files are uploaded to the Claude Design project and are **not** in this repository. An exported `.dc.html` therefore shows its category-icon fallback locally, which is correct behaviour rather than a defect. Never replace them with hotlinked URLs: an external image is blocked wherever the page is published, and it rots.
