@@ -69,17 +69,6 @@ button:focus{outline:none}
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:14px">
 
-    <sc-if value="{{ unverified }}" hint-placeholder-val="{{ false }}">
-    <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
-      <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><path d="M3 7l9 6 9-6"></path></svg></span>
-      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
-        <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email first</span>
-        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, you can't mark this booking as paid.</span>
-        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
-      </span>
-    </div>
-    </sc-if>
-
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="background:#EEF3FA;color:#41526B;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">{{ B.amountLabel }}</span>
@@ -129,7 +118,7 @@ button:focus{outline:none}
       <span style="width:36px;height:36px;border-radius:11px;background:#fff;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.5v.5"></path></svg></span>
       <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
         <span style="font-size:13px;font-weight:800;color:#0F1B2D">This payment never touches RaajjePro</span>
-        <span style="font-size:12px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">It goes straight from your bank to {{ B.accountShort }}'s account. RaajjePro can't see it, hold it or refund it — keep your transfer receipt. If something goes wrong, report it from this booking: disputes are recorded against the provider's account.</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">It goes straight from your bank to {{ B.accountShort }}'s account. RaajjePro can't see it, hold it or refund it — keep your transfer receipt. If something goes wrong, report it from this booking and RaajjePro will look into it. The booking record — what was agreed, when, and both sides' messages — is the evidence.</span>
       </span>
     </div>
   </div>
@@ -159,7 +148,7 @@ button:focus{outline:none}
       <span style="width:64px;height:64px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4z"></path></svg></span>
       <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You've told {{ B.first }} it's sent</span>
       <dc-import name="StatusPill" status="payment_sent" hint-size="120px,28px"></dc-import>
-      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">That's your word, not a check — RaajjePro hasn't verified anything. {{ B.first }} will confirm receipt in this booking; most providers confirm within a few hours.</span>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">That's your word, not a check — RaajjePro hasn't verified anything. {{ B.first }} confirms receipt in this booking, and you'll be notified when they do.</span>
     </div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What happens next</div>
@@ -172,7 +161,7 @@ button:focus{outline:none}
       <span style="font-size:13px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ B.amount }} → {{ B.accountName }} · {{ B.account }}</span>
       <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">Keep your bank's transfer receipt — it's your proof, not RaajjePro's.</span>
     </div>
-    <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">No confirmation from {{ B.first }} by tomorrow? Report it from this booking — RaajjePro records the dispute against the provider's account.</div>
+    <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Hasn't {{ B.first }} confirmed yet? You can report it from this booking at any time — RaajjePro will look into it. The booking record — what was agreed, when, and both sides' messages — is the evidence.</div>
     <a href="Home.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View booking</a>
     <button onClick="{{ undo }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">I haven't actually paid yet — undo</button>
   </div>
@@ -182,7 +171,7 @@ button:focus{outline:none}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;booking&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cleaning_flat&quot;,&quot;cleaning_hourly&quot;,&quot;plumbing_quote&quot;,&quot;emergency_callout&quot;],&quot;default&quot;:&quot;plumbing_quote&quot;,&quot;tsType&quot;:&quot;'cleaning_flat' | 'cleaning_hourly' | 'plumbing_quote' | 'emergency_callout'&quot;,&quot;section&quot;:&quot;Booking&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;awaiting_payment&quot;,&quot;tsType&quot;:&quot;'awaiting_payment' | 'payment_sent' | 'loading' | 'error' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;booking&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cleaning_flat&quot;,&quot;cleaning_hourly&quot;,&quot;plumbing_quote&quot;,&quot;emergency_callout&quot;],&quot;default&quot;:&quot;plumbing_quote&quot;,&quot;tsType&quot;:&quot;'cleaning_flat' | 'cleaning_hourly' | 'plumbing_quote' | 'emergency_callout'&quot;,&quot;section&quot;:&quot;Booking&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;awaiting_payment&quot;,&quot;tsType&quot;:&quot;'awaiting_payment' | 'payment_sent' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
   state = { phase: 'pay', copied: false };
   // The amount kind is determined by the booking that produced it — never free-floating.
@@ -213,12 +202,10 @@ class Component extends DCLogic {
     const p = this.props, s = this.state, sc = p.scenario ?? 'awaiting_payment';
     const B = this.BOOKINGS[p.booking ?? 'plumbing_quote'] ?? this.BOOKINGS.plumbing_quote;
     const isLoading = sc==='loading', isError = sc==='error';
-    const unverified = sc==='email_unverified';
     const isPaid = (sc==='payment_sent' || s.phase==='paid') && !isLoading && !isError;
     const isPay = !isLoading && !isError && !isPaid;
-    const canPay = !unverified;
     return {
-      isLoading, isError, isPay, isPaid, unverified, B,
+      isLoading, isError, isPay, isPaid, B,
       isEmergency: B.emergency, backHref: B.back,
       hasNameNote: !!B.nameNote,
       steps: [
@@ -232,12 +219,13 @@ class Component extends DCLogic {
         clearTimeout(this._c); this._c = setTimeout(() => this.setState({ copied:false }), 1800); },
       copyLabel: s.copied ? 'Copied' : 'Copy',
       copyBd: s.copied ? '#A7DDBB' : '#CDDDFB', copyBg: s.copied ? '#E5F6EC' : '#E8F0FE', copyFg: s.copied ? '#166534' : '#1D4ED8',
-      ctaLabel: unverified ? 'Verify email first' : 'I’ve Paid',
-      ctaBg: canPay ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
-      ctaCursor: canPay ? 'pointer' : 'default',
-      ctaShadow: canPay ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      ctaLabel: 'I’ve Paid',
+      ctaBg: 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)',
+      ctaCursor: 'pointer',
+      ctaShadow: '0 8px 18px rgba(37,99,235,.28)',
       footNote: 'Tapping this tells ' + B.first + ' you’ve sent the transfer. Nothing is checked — ' + B.first + ' confirms receipt separately.',
-      markPaid: () => { if (canPay) this.setState({ phase:'paid' }); },
+      markPaid: () => this.setState({ phase:'paid' }),
+      // OPEN QUESTION (not in spec): retracting a payment claim. Kept per session 4 review; do not build further behaviour on it.
       undo: () => this.setState({ phase:'pay' }),
       noop: () => {}
     };
