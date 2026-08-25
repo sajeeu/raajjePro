@@ -1,8 +1,10 @@
 # Plan question: can a customer retract "I've Paid"?
 
-**Status:** open — needs a decision before Phase 17.1 is built.
-**Raised by:** the session 4 Payment Step prototype, which shipped an undo control that the plan does not specify.
-**Affects:** `01_Development_Plan_v5.md` §1c (the flow, steps 7–9), the state diagram, and Phase 17.1's endpoint list.
+**Status:** ✅ **decided — Option A, window open until the provider acts.** Folded into the plan as **Round 24** at revision 5.10.
+**Raised by:** the session 4 Payment Step prototype, which shipped an undo control the plan did not specify.
+**Landed in:** §1c step 7 and its state diagram · §1f's new "What does not feed conduct" · Phase 17.1's endpoint list, endpoint 8a, and the Phase 17 Done-when.
+
+> This document is kept as the reasoning behind the decision. **The plan is the source of truth** — if this file and `01_Development_Plan_v5.md` ever disagree, the plan wins and this file is wrong.
 
 ---
 

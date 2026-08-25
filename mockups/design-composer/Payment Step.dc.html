@@ -225,7 +225,7 @@ class Component extends DCLogic {
       ctaShadow: '0 8px 18px rgba(37,99,235,.28)',
       footNote: 'Tapping this tells ' + B.first + ' you’ve sent the transfer. Nothing is checked — ' + B.first + ' confirms receipt separately.',
       markPaid: () => this.setState({ phase:'paid' }),
-      // OPEN QUESTION (not in spec): retracting a payment claim. Kept per session 4 review; do not build further behaviour on it.
+      // Withdraw an unanswered payment claim — §1c step 7 (Round 24). Allowed only while the provider has not responded; once per booking.
       undo: () => this.setState({ phase:'pay' }),
       noop: () => {}
     };
