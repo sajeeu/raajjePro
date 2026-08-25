@@ -77,7 +77,7 @@ button:focus{outline:none}
       <span style="width:34px;height:34px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg></span>
       <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
         <span style="font-size:13px;font-weight:800;color:#B91C1C">You disputed this booking · 23 Aug 18:40</span>
-        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A3A3A;text-wrap:pretty">RaajjePro is reviewing the record — the timeline below and both sides' messages. An admin may read this chat during the dispute. You'll hear back here.</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A3A3A;text-wrap:pretty">RaajjePro is reviewing the record — the timeline below and both sides' messages. You'll hear back here.</span>
       </span>
     </div>
     </sc-if>
@@ -103,15 +103,15 @@ button:focus{outline:none}
     <sc-if value="{{ isEmergency }}" hint-placeholder-val="{{ false }}">
       <sc-if value="{{ naIdle }}" hint-placeholder-val="{{ true }}">
       <div style="background:#fff;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-        <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A15C00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg><span style="font-size:13px;font-weight:800;color:#A15C00">Expected by 21:26 — the 45-minute window has passed</span></span>
-        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Ibrahim accepted at 20:41. If he isn't with you yet, tell RaajjePro — it checks with him straight away and it counts on his record.</span>
+        <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A15C00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg><span style="font-size:13px;font-weight:800;color:#A15C00">Ibrahim estimated 45 minutes — that was 21:26</span></span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Ibrahim accepted at 20:41. If he isn't with you yet, release him — your request goes straight back out to other plumbers, at no extra cost, and the no-show goes on his record.</span>
         <button onClick="{{ naReport }}" style="height:48px;border:1.5px solid #F5C6C6;border-radius:13px;background:#fff;color:#B91C1C;font-size:13.5px;font-weight:800;cursor:pointer" style-hover="background:#FEF7F7">Provider has not arrived</button>
       </div>
       </sc-if>
       <sc-if value="{{ naSent }}" hint-placeholder-val="{{ false }}">
       <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:4px">
-        <span style="font-size:13px;font-weight:800;color:#A15C00">Reported — RaajjePro is checking with Ibrahim now</span>
-        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">Keep the chat open — he may already be replying. You'll hear back here within minutes.</span>
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Ibrahim has been released — we're finding someone else</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">Your request has gone back out to other qualified plumbers. There's no second dispatch fee. Ibrahim's record carries the no-show.</span>
       </div>
       </sc-if>
       <a href="Reveal%20Contact.dc.html" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05)">
@@ -288,7 +288,7 @@ class Component extends DCLogic {
       notes:'Water heater leaking into the hallway — mains off.', amount:'MVR 350', amountLabel:'Callout fee',
       status:'confirmed', emergency:true, agPrice:'MVR 350', agPriceWas:null, scope:'Attend and diagnose — work quoted before it starts',
       lockNote:'Locked when Ibrahim accepted the call-out (Today 20:41).',
-      tl:[['Requested — emergency','you','Today 20:38'],['Accepted — 45 min response window','Ibrahim Rasheed','Today 20:41'],['Callout fee · “I’ve Paid” sent','you','Today 20:52'],['Provider confirmed receipt','Ibrahim Rasheed','Today 21:04']] },
+      tl:[['Requested — emergency','you','Today 20:38'],['Accepted \u00b7 45 min arrival estimate','Ibrahim Rasheed','Today 20:41'],['Callout fee · “I’ve Paid” sent','you','Today 20:52'],['Provider confirmed receipt','Ibrahim Rasheed','Today 21:04']] },
     completed: {
       service:'Home Deep Cleaning', provider:'Mariyam Shifa', first:'Mariyam', tier:'Silver', initials:'MS', avBg:'#E8F0FE', avFg:'#1D4ED8',
       biz:'Independent · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
