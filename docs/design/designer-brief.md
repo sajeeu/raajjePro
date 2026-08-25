@@ -38,8 +38,8 @@ A fixed cast. Use these names; invent no others.
 ### Services
 
 - `Home Deep Cleaning` — Cleaning — `Mariyam Shifa` — `MVR 450/session` — **Book instantly**
-- `Emergency Plumbing & Pipe Repair` — Plumbing — `Ibrahim Rasheed` — `From MVR 350` — **Request a time** · **Emergency available**
-- `AC Servicing & Gas Refill` — AC Repair — `Ahmed Shakir` — `MVR 600/visit` — **Request a time** · **Emergency available**
+- `Emergency Plumbing & Pipe Repair` — Plumbing — `Ibrahim Rasheed` — `From MVR 350` — **Request a time**
+- `AC Servicing & Gas Refill` — AC Repair — `Ahmed Shakir` — `MVR 600/visit` — **Request a time**
 
 ### Islands
 
@@ -250,9 +250,9 @@ The customer's landing screen. Where a customer who does not yet know what they 
 - Search entry
 - The twelve-category grid, or a route to it
 - Sections, each a horizontal set of service cards: `Popular near you` · `Featured providers` · `Popular this week` · `Nearby` · `Recently viewed`
-- **A service card carries:** cover image, service name, provider name, category, rating with review count, price with its unit, island, verification badge where the provider has one, save control, and **its booking mode** — `Book instantly` or `Request a time`, plus `Emergency available` where it applies
+- **A service card carries:** cover image, service name, provider name, category, rating with review count, price with its unit, island, verification badge where the provider has one, save control, and **its booking mode** — `Book instantly` or `Request a time`; a **callback guarantee** badge where the listing offers one; and a **mode-appropriate second signal** — the next open time for `Book instantly`, the median reply time for `Request a time`, or `New provider` below ten completed bookings
   - `Home Deep Cleaning` — `Mariyam Shifa` — `Cleaning` — `4.8 (24)` — `MVR 450/session` — `Malé` — Silver — **Book instantly**
-  - `Emergency Plumbing & Pipe Repair` — `Ibrahim Rasheed` — `Plumbing` — `4.6 (31)` — `From MVR 350` — `Malé` — Gold — **Request a time · Emergency available**
+  - `Emergency Plumbing & Pipe Repair` — `Ibrahim Rasheed` — `Plumbing` — `4.6 (31)` — `From MVR 350` — `Malé` — Gold — **Request a time**
 - A **Become a Provider** entry
 - **Trust content**, and its wording is corrected data: `Private messaging — your contact details are never shared`. The delivered mockup says "Secure Messaging — Private, encrypted communication within the app", which is **false and must not be reproduced**
 - The featured card in the delivered mockup is a Tuition listing. **There is no Tuition category** — replace it
@@ -282,7 +282,7 @@ What matched, and how to narrow it.
 
 - The query, and a result count: `18 services`
 - **Sort, in this order:** `Distance` · `Rating` · `Price`. Distance leads — a provider who cannot reach your island is not a result at all
-- **Filters:** island, category, price range, booking mode, `Emergency available`, `Maldivian-owned business`
+- **Filters:** island, category, price range, booking mode, `Maldivian-owned business`
 - Result cards carrying everything a Home card carries, **including the booking-mode label on every one**
 - Fact: some results are **paid placement, and each one says so** — a visible `Sponsored` label. No unlabelled paid placement anywhere
 - Fact that must be conveyed: verification does not affect whether a provider appears in results, only what badge they carry
