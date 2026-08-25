@@ -14,15 +14,34 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **14 screens built**, across three artboards:
+**71 page briefs** in `designer-brief.md`. **Three of the thirteen sessions are done.**
 
-| Artboard | Screens | Status |
+| Artboard | Session | Status |
 |---|---|---|
-| `Become a Provider.dc.html` | 3 | Reviewed, corrected, committed |
-| `Emergency Flow.dc.html` | 5 | Reviewed across 3 rounds, at plan revision 5.9 |
-| `Provider Emergency.dc.html` | 6 | Reviewed across 2 rounds, at plan revision 5.9 |
+| `Become a Provider.dc.html` | pre-sequence | Reviewed, corrected, committed |
+| `Emergency Flow.dc.html` | pre-sequence | Reviewed across 3 rounds, at plan revision 5.9 |
+| `Provider Emergency.dc.html` | pre-sequence | Reviewed across 2 rounds, at plan revision 5.9 |
+| `Home.dc.html` | 1 | Reviewed, corrected; two false trust claims removed |
+| Seven components + `Components.dc.html` | 2b | Split to one file per component; cross-chat import confirmed |
+| `Discovery.dc.html` | 2 | Reviewed, corrected; Round 23 card signals applied |
+| `Service Preview.dc.html` | 3 | Reviewed across 3 rounds |
+| `Provider Profile.dc.html` | 3 | Reviewed across 2 rounds |
 
-**57 screens remain**, across thirteen sessions.
+**Sessions 4–13 remain.** `verify-dc.py` passes on all fifteen files.
+
+### What auditing has caught that design review would not
+
+Every prototype so far has had at least one defect that looked completely fine on
+screen and was only visible against the plan: invented endpoints, a claim the
+product cannot keep, a fee named as the wrong fee, numbers contradicting a
+category's configuration. Budget a correction round per session; two is normal.
+
+🔧 **Check reachable prop combinations, not just prop content — added after session 3.**
+A screen with two or more scenario props can render a listing that cannot exist:
+Service Preview allowed a `range` price with `instant` booking, which advertises a
+starting price as bookable. Each prop was individually correct. For every screen
+with multiple scenario props, enumerate the combinations and confirm each one is
+legal — the verifier reads markup and cannot do this.
 
 ## Session 1 is Home, and it is different from the other twelve
 
