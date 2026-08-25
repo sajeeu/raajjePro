@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+.hscroll::-webkit-scrollbar{display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Service preview — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="height:250px;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  <div style="flex:1;padding:18px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:22px;width:70%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:13px;width:50%;border-radius:6px;background:#E8EEF6"></div>
+    <div style="height:96px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:78px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <div style="height:34px;width:110px;border-radius:8px;background:#E8EEF6"></div>
+    <span style="flex:1"></span>
+    <div style="height:54px;width:150px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBody }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Service preview" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+  <div style="position:relative;height:250px;background:#EEF2FF">
+    <img src="uploads/cleaning.jpeg" alt="Home Deep Cleaning" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,27,45,.38),rgba(15,27,45,0) 34%,rgba(15,27,45,0) 62%,rgba(15,27,45,.42))"></div>
+    <div style="position:absolute;top:14px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
+      <a href="Discovery.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(15,27,45,.18)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+      <span style="flex:1"></span>
+      <button onClick="{{ toggleSave }}" aria-label="{{ saveLabel }}" style="width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(15,27,45,.18);padding:0"><svg width="19" height="19" viewBox="0 0 24 24" fill="{{ heartFill }}" stroke="{{ heartStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
+      <button onClick="{{ report }}" aria-label="Report this listing" style="width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(15,27,45,.18);padding:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"></path><path d="M5 4h13l-2.5 4L18 12H5"></path></svg></button>
+    </div>
+    <div style="position:absolute;left:16px;bottom:14px"><span style="background:rgba(255,255,255,.95);color:#4F46E5;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:800">Cleaning</span></div>
+    <div style="position:absolute;right:16px;bottom:12px;display:flex;gap:6px">
+      <span style="width:42px;height:42px;border-radius:10px;border:2px solid #fff;overflow:hidden;flex:none"><img src="uploads/cleaning.jpeg" alt="" style="width:100%;height:100%;object-fit:cover"></span>
+      <span title="photo 2" style="width:42px;height:42px;border-radius:10px;border:2px solid rgba(255,255,255,.7);background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);flex:none"></span>
+      <span title="photo 3" style="width:42px;height:42px;border-radius:10px;border:2px solid rgba(255,255,255,.7);background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);flex:none"></span>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px;padding:18px 20px 26px">
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.2;color:#0F1B2D;text-wrap:balance">Home Deep Cleaning</div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#41526B"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">4.8 (24 reviews)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:#5B6B84"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>Malé</span>
+        <span style="font-size:12.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">86 jobs completed</span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ priceBig }}</span>
+        <sc-if value="{{ hasUnit }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;font-weight:600;color:#5B6B84">{{ priceUnit }}</span></sc-if>
+        <span style="flex:1"></span>
+        <span style="background:#EEF3FA;color:#41526B;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">{{ priceLabel }}</span>
+      </div>
+      <div style="font-size:12.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ priceNote }}</div>
+      <div style="display:flex;align-items:center;gap:11px;background:{{ modeBg }};border-radius:14px;padding:12px 13px">
+        <span style="width:36px;height:36px;border-radius:11px;background:#fff;color:{{ modeFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="{{ modeD }}"></path></svg></span>
+        <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font-size:13.5px;font-weight:800;color:{{ modeFg }}">{{ modeTitle }}</span>
+          <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">{{ modeSub }}</span>
+        </span>
+      </div>
+      <sc-if value="{{ emerg }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:12px 13px">
+          <span style="width:36px;height:36px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+            <span style="font-size:13.5px;font-weight:800;color:#991B1B">Emergency call-out also available</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">Call-out fee MVR 200 applies — confirmed with you before anyone is dispatched.</span>
+          </span>
+          <a href="Emergency%20Flow.dc.html" aria-label="Get emergency help" style="flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#fff;color:#DC2626"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></a>
+        </div>
+      </sc-if>
+    </div>
+
+    <a href="Provider%20Profile.dc.html" style="text-decoration:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:none">MS</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:14.5px;font-weight:800;color:#0F1B2D">Mariyam Shifa</span><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="60px,20px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">Usually replies in ~1 hour · 86 jobs completed</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">About this service</div>
+      <div style="font-size:13.5px;font-weight:500;line-height:1.55;color:#41526B;text-wrap:pretty">Full deep cleaning for apartments and small offices in Malé and Hulhumalé. Kitchen degrease, bathroom descale, interior windows, floors and skirting — all supplies included. Larger homes may take two sessions.</div>
+      <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What's included</div>
+        <sc-for list="{{ included }}" as="it" hint-placeholder-count="4">
+          <div style="display:flex;align-items:flex-start;gap:9px;font-size:13px;font-weight:600;color:#41526B;line-height:1.5"><span style="width:6px;height:6px;border-radius:50%;background:#2563EB;flex:none;margin-top:7px"></span>{{ it }}</div>
+        </sc-for>
+      </div>
+      <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Service areas</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <dc-import name="Chip" kind="static" label="Malé" hint-size="70px,28px"></dc-import>
+          <dc-import name="Chip" kind="static" label="Hulhumalé" hint-size="90px,28px"></dc-import>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">From the provider</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B"><span style="color:#5B6B84">Provider states:</span> 90-day workmanship warranty</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;border-top:1px solid #EEF3FA;padding-top:10px"><span style="color:#5B6B84">Provider states:</span> public liability insurance held</div>
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">These are the provider's own statements. RaajjePro has not checked them.</div>
+    </div>
+
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:20px;padding:16px;display:flex;gap:12px">
+      <span style="width:40px;height:40px;border-radius:12px;background:#047857;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7-7 8.5-4.1-1.5-7-4.3-7-8.5V6z"></path><path d="M9 11.8l2.1 2.1 3.9-4"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13.5px;font-weight:800;color:#065F46">RaajjePro callback guarantee</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#047857;text-wrap:pretty">Free return visit within 7 days if the same problem comes back.</span>
+        <span style="font-size:11px;font-weight:700;color:#059669">Enforced by RaajjePro — request it from your booking.</span>
+      </span>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D;padding:12px 0 6px">Common questions</div>
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="3">
+        <div style="border-top:1px solid #EEF3FA">
+          <button onClick="{{ f.toggle }}" style="width:100%;border:none;background:none;padding:13px 0;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left">
+            <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F1B2D">{{ f.q }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:rotate({{ f.rot }});transition:transform .2s"><path d="M6 9l6 6 6-6"></path></svg>
+          </button>
+          <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:500;line-height:1.55;color:#5B6B84;padding:0 0 13px;text-wrap:pretty">{{ f.a }}</div></sc-if>
+        </div>
+      </sc-for>
+      <button onClick="{{ message }}" style="margin:6px 0 14px;height:48px;border:1.5px solid #CDDDFB;border-radius:14px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#DDEAFE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Ask Mariyam a question before booking</button>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Reviews</span>
+        <span style="flex:1"></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:#0F1B2D"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>4.8 <span style="font-weight:600;color:#5B6B84;font-size:12.5px">(24)</span></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ bars }}" as="b" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="width:10px;font-size:11.5px;font-weight:700;color:#5B6B84;font-variant-numeric:tabular-nums;text-align:right">{{ b.s }}</span>
+            <span style="flex:1;height:7px;border-radius:4px;background:#EEF3FA;overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ b.w }};border-radius:4px;background:#D97706"></span></span>
+            <span style="width:18px;font-size:11.5px;font-weight:600;color:#9AA9C0;font-variant-numeric:tabular-nums">{{ b.n }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <sc-for list="{{ tags }}" as="t" hint-placeholder-count="4">
+          <span style="height:30px;border-radius:999px;background:#EEF3FA;color:#41526B;display:inline-flex;align-items:center;padding:0 12px;font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums">{{ t }}</span>
+        </sc-for>
+      </div>
+      <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="2">
+        <div style="border-top:1px solid #EEF3FA;padding-top:13px;display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="width:32px;height:32px;border-radius:50%;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">{{ r.ini }}</span>
+            <span style="display:flex;flex-direction:column;gap:0px">
+              <span style="font-size:12.5px;font-weight:700;color:#0F1B2D">{{ r.name }}</span>
+              <span style="font-size:11px;font-weight:600;color:#9AA9C0">{{ r.when }}</span>
+            </span>
+            <span style="flex:1"></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#41526B"><svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>{{ r.stars }}</span>
+          </div>
+          <div style="font-size:13px;font-weight:500;line-height:1.55;color:#41526B;text-wrap:pretty">{{ r.text }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <button onClick="{{ report }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;padding:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"></path><path d="M5 4h13l-2.5 4L18 12H5"></path></svg>Report this listing</button>
+  </div>
+</div>
+
+<div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 16px;display:flex;align-items:center;gap:12px">
+  <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+    <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ footPrice }}</span>
+    <span style="font-size:11px;font-weight:600;color:#5B6B84;white-space:nowrap">{{ footSub }}</span>
+  </span>
+  <span style="flex:1"></span>
+  <button onClick="{{ message }}" aria-label="Message Mariyam" style="width:54px;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></button>
+  <button onClick="{{ book }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:0 26px;box-shadow:0 8px 18px rgba(37,99,235,.28);flex:none" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGone }}">
+<div data-screen-label="Service preview — unavailable" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Discovery.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Service</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="search" title="This listing is unavailable" body="The provider has taken it down or isn't active on RaajjePro right now, so it can't be booked." action-label="Browse cleaning services" on-action="{{ goExplore }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Service preview — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Discovery.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Service</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this service" body="Your connection may have dropped — that happens. Nothing is lost; try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;unavailable&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'loading' | 'error' | 'unavailable'&quot;,&quot;section&quot;:&quot;State&quot;},&quot;priceKind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;flat&quot;,&quot;hourly&quot;,&quot;daily&quot;,&quot;range&quot;,&quot;on_request&quot;],&quot;default&quot;:&quot;flat&quot;,&quot;tsType&quot;:&quot;'flat' | 'hourly' | 'daily' | 'range' | 'on_request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;instant&quot;,&quot;request&quot;],&quot;default&quot;:&quot;instant&quot;,&quot;tsType&quot;:&quot;'instant' | 'request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;emergencyPath&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Listing&quot;}}">
+class Component extends DCLogic {
+  state = { saved: false, faq: -1, override: null };
+  PRICE = {
+    flat:      { big:'MVR 450', unit:'/session', label:'Flat rate', note:'One session, one price. What you see is what you pay.', foot:'MVR 450 /session', sub:'per session' },
+    hourly:    { big:'MVR 150', unit:'/hr', label:'Hourly rate', note:'Charged per hour worked — the hours are agreed with you as you book.', foot:'MVR 150 /hr', sub:'per hour' },
+    daily:     { big:'MVR 900', unit:'/day', label:'Daily rate', note:'Charged per working day.', foot:'MVR 900 /day', sub:'per day' },
+    range:     { big:'From MVR 350', unit:'', label:'Starting price', note:'This is a starting price, not the final amount. Mariyam quotes your actual price before you confirm anything.', foot:'From MVR 350', sub:'final price quoted first' },
+    on_request:{ big:'Price on request', unit:'', label:'Quoted per job', note:'Describe the job and Mariyam replies with a quote before anything is booked.', foot:'Price on request', sub:'quote before booking' } };
+  FAQS = [
+    { q:'How long does a session take?', a:'2–4 hours for a typical two-bedroom apartment. Larger homes may need two sessions.' },
+    { q:'Do I need to be home?', a:'No — many customers hand over keys via a neighbour and follow along in chat. Photos are sent when the work is done.' },
+    { q:'Are supplies included?', a:'Yes, everything is brought along. Mention in chat if anyone at home is sensitive to particular products.' } ];
+  renderVals() {
+    const p = this.props, s = this.state;
+    const sc = s.override ?? (p.scenario ?? 'populated');
+    const pr = this.PRICE[p.priceKind ?? 'flat'] ?? this.PRICE.flat;
+    const instant = (p.mode ?? 'instant') === 'instant';
+    return {
+      isLoading: sc === 'loading', isBody: sc === 'populated', isGone: sc === 'unavailable', isError: sc === 'error',
+      priceBig: pr.big, priceUnit: pr.unit, hasUnit: !!pr.unit, priceLabel: pr.label, priceNote: pr.note,
+      footPrice: pr.foot, footSub: pr.sub,
+      modeTitle: instant ? 'Book instantly' : 'Request a time',
+      modeSub: instant ? "Pick one of Mariyam's published times — confirmed straight away." : 'You suggest a time; Mariyam usually replies within 1 hour with a time and price.',
+      modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
+      modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
+      ctaLabel: instant ? 'Book now' : 'Request a time',
+      emerg: !!p.emergencyPath,
+      included: ['All cleaning supplies and equipment', 'Kitchen deep clean, incl. oven exterior', 'Bathrooms, floors and interior windows', 'Balcony wash where there is one'],
+      bars: [ {s:5,n:20,w:'83%'}, {s:4,n:3,w:'13%'}, {s:3,n:1,w:'4%'}, {s:2,n:0,w:'0%'}, {s:1,n:0,w:'0%'} ],
+      tags: ['On time (19)', 'Thorough (14)', 'Fair price (12)', 'Arrived late (3)'],
+      reviews: [
+        { ini:'AN', name:'Aishath N.', when:'2 weeks ago', stars:'5', text:'Spotless — kitchen and both bathrooms done in three hours. On time and brought everything.' },
+        { ini:'AR', name:'Ahmed R.', when:'1 month ago', stars:'4', text:'Good deep clean. Arrived a little after the slot but stayed until everything was finished.' } ],
+      faqs: this.FAQS.map((f, i) => ({ ...f, open: s.faq === i, rot: s.faq === i ? '180deg' : '0deg',
+        toggle: () => this.setState({ faq: s.faq === i ? -1 : i }) })),
+      saveLabel: s.saved ? 'Remove from saved' : 'Save this service',
+      heartFill: s.saved ? '#DC2626' : 'none', heartStroke: s.saved ? '#DC2626' : '#41526B',
+      toggleSave: () => this.setState({ saved: !s.saved }),
+      report: () => {}, message: () => {}, book: () => {},
+      goExplore: () => { location.href = 'Discovery.dc.html'; },
+      retry: () => { this.setState({ override: 'loading' }); setTimeout(() => this.setState({ override: 'populated' }), 1200); }
+    };
+  }
+}
+</script>
+</body>
+</html>
