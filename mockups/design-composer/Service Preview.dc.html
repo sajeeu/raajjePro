@@ -46,7 +46,8 @@ button:focus{outline:none}
 <div data-screen-label="Service preview" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
   <div style="position:relative;height:250px;background:#EEF2FF">
-    <img src="uploads/cleaning.jpeg" alt="Home Deep Cleaning" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    <sc-if value="{{ isClean }}" hint-placeholder-val="{{ true }}"><img src="uploads/cleaning.jpeg" alt="{{ L.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+    <sc-if value="{{ isPlumb }}" hint-placeholder-val="{{ false }}"><img src="uploads/plumbing.jpeg" alt="{{ L.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,27,45,.38),rgba(15,27,45,0) 34%,rgba(15,27,45,0) 62%,rgba(15,27,45,.42))"></div>
     <div style="position:absolute;top:14px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
       <a href="Discovery.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(15,27,45,.18)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
@@ -54,9 +55,9 @@ button:focus{outline:none}
       <button onClick="{{ toggleSave }}" aria-label="{{ saveLabel }}" style="width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(15,27,45,.18);padding:0"><svg width="19" height="19" viewBox="0 0 24 24" fill="{{ heartFill }}" stroke="{{ heartStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
       <button onClick="{{ report }}" aria-label="Report this listing" style="width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(15,27,45,.18);padding:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"></path><path d="M5 4h13l-2.5 4L18 12H5"></path></svg></button>
     </div>
-    <div style="position:absolute;left:16px;bottom:14px"><span style="background:rgba(255,255,255,.95);color:#4F46E5;border-radius:999px;padding:6px 12px;font-size:11px;font-weight:800">Cleaning</span></div>
+    <div style="position:absolute;left:16px;bottom:14px"><span style="background:rgba(255,255,255,.95);color:{{ L.catFg }};border-radius:999px;padding:6px 12px;font-size:11px;font-weight:800">{{ L.cat }}</span></div>
     <div style="position:absolute;right:16px;bottom:12px;display:flex;gap:6px">
-      <span style="width:42px;height:42px;border-radius:10px;border:2px solid #fff;overflow:hidden;flex:none"><img src="uploads/cleaning.jpeg" alt="" style="width:100%;height:100%;object-fit:cover"></span>
+      <span style="width:42px;height:42px;border-radius:10px;border:2px solid #fff;overflow:hidden;flex:none"><sc-if value="{{ isClean }}" hint-placeholder-val="{{ true }}"><img src="uploads/cleaning.jpeg" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if><sc-if value="{{ isPlumb }}" hint-placeholder-val="{{ false }}"><img src="uploads/plumbing.jpeg" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if></span>
       <span title="photo 2" style="width:42px;height:42px;border-radius:10px;border:2px solid rgba(255,255,255,.7);background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);flex:none"></span>
       <span title="photo 3" style="width:42px;height:42px;border-radius:10px;border:2px solid rgba(255,255,255,.7);background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);flex:none"></span>
     </div>
@@ -65,11 +66,11 @@ button:focus{outline:none}
   <div style="display:flex;flex-direction:column;gap:16px;padding:18px 20px 26px">
 
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.2;color:#0F1B2D;text-wrap:balance">Home Deep Cleaning</div>
+      <div style="font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.2;color:#0F1B2D;text-wrap:balance">{{ L.title }}</div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#41526B"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">4.8 (24 reviews)</span></span>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:#5B6B84"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>Malé</span>
-        <span style="font-size:12.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">86 jobs completed</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#41526B"><svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg><span style="font-variant-numeric:tabular-nums">{{ L.ratingLine }}</span></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:#5B6B84"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ L.island }}</span>
+        <span style="font-size:12.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ L.jobsLine }}</span>
       </div>
     </div>
 
@@ -93,7 +94,7 @@ button:focus{outline:none}
           <span style="width:36px;height:36px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
           <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
             <span style="font-size:13.5px;font-weight:800;color:#991B1B">Emergency call-out also available</span>
-            <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">Call-out fee MVR 200 applies — confirmed with you before anyone is dispatched.</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">Offers arrive with each provider's own callout fee and arrival estimate. Choosing one adds RaajjePro's MVR 200 dispatch fee, settled later by bank transfer.</span>
           </span>
           <a href="Emergency%20Flow.dc.html" aria-label="Get emergency help" style="flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#fff;color:#DC2626"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></a>
         </div>
@@ -101,17 +102,17 @@ button:focus{outline:none}
     </div>
 
     <a href="Provider%20Profile.dc.html" style="text-decoration:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:none">MS</span>
+      <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:none">{{ L.ini }}</span>
       <span style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
-        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:14.5px;font-weight:800;color:#0F1B2D">Mariyam Shifa</span><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="60px,20px"></dc-import></span>
-        <span style="font-size:11.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">Usually replies in ~1 hour · 86 jobs completed</span>
+        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:14.5px;font-weight:800;color:#0F1B2D">{{ L.provName }}</span><dc-import name="VerificationBadge" tier="{{ L.tier }}" size="chip" hint-size="60px,20px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ provLine }}</span>
       </span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
     </a>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">About this service</div>
-      <div style="font-size:13.5px;font-weight:500;line-height:1.55;color:#41526B;text-wrap:pretty">Full deep cleaning for apartments and small offices in Malé and Hulhumalé. Kitchen degrease, bathroom descale, interior windows, floors and skirting — all supplies included. Larger homes may take two sessions.</div>
+      <div style="font-size:13.5px;font-weight:500;line-height:1.55;color:#41526B;text-wrap:pretty">{{ L.about }}</div>
       <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:8px">
         <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What's included</div>
         <sc-for list="{{ included }}" as="it" hint-placeholder-count="4">
@@ -121,16 +122,17 @@ button:focus{outline:none}
       <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:8px">
         <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Service areas</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <dc-import name="Chip" kind="static" label="Malé" hint-size="70px,28px"></dc-import>
-          <dc-import name="Chip" kind="static" label="Hulhumalé" hint-size="90px,28px"></dc-import>
+          <sc-for list="{{ areas }}" as="a" hint-placeholder-count="2">
+            <dc-import name="Chip" kind="static" label="{{ a }}" hint-size="80px,28px"></dc-import>
+          </sc-for>
         </div>
       </div>
     </div>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">From the provider</div>
-      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B"><span style="color:#5B6B84">Provider states:</span> 90-day workmanship warranty</div>
-      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;border-top:1px solid #EEF3FA;padding-top:10px"><span style="color:#5B6B84">Provider states:</span> public liability insurance held</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B"><span style="color:#5B6B84">Provider states:</span> {{ stated1 }}</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;border-top:1px solid #EEF3FA;padding-top:10px"><span style="color:#5B6B84">Provider states:</span> {{ stated2 }}</div>
       <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">These are the provider's own statements. RaajjePro has not checked them.</div>
     </div>
 
@@ -154,14 +156,14 @@ button:focus{outline:none}
           <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:500;line-height:1.55;color:#5B6B84;padding:0 0 13px;text-wrap:pretty">{{ f.a }}</div></sc-if>
         </div>
       </sc-for>
-      <button onClick="{{ message }}" style="margin:6px 0 14px;height:48px;border:1.5px solid #CDDDFB;border-radius:14px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#DDEAFE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Ask Mariyam a question before booking</button>
+      <button onClick="{{ message }}" style="margin:6px 0 14px;height:48px;border:1.5px solid #CDDDFB;border-radius:14px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#DDEAFE"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>{{ askLabel }}</button>
     </div>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Reviews</span>
         <span style="flex:1"></span>
-        <span style="display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:#0F1B2D"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>4.8 <span style="font-weight:600;color:#5B6B84;font-size:12.5px">(24)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:#0F1B2D"><svg width="15" height="15" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>{{ L.rating }} <span style="font-weight:600;color:#5B6B84;font-size:12.5px">{{ revCount }}</span></span>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
         <sc-for list="{{ bars }}" as="b" hint-placeholder-count="5">
@@ -203,7 +205,7 @@ button:focus{outline:none}
     <span style="font-size:11px;font-weight:600;color:#5B6B84;white-space:nowrap">{{ footSub }}</span>
   </span>
   <span style="flex:1"></span>
-  <button onClick="{{ message }}" aria-label="Message Mariyam" style="width:54px;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></button>
+  <button onClick="{{ message }}" aria-label="{{ msgAria }}" style="width:54px;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></button>
   <button onClick="{{ book }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:0 26px;box-shadow:0 8px 18px rgba(37,99,235,.28);flex:none" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
 </div>
 </sc-if>
@@ -235,7 +237,7 @@ button:focus{outline:none}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;unavailable&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'loading' | 'error' | 'unavailable'&quot;,&quot;section&quot;:&quot;State&quot;},&quot;priceKind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;flat&quot;,&quot;hourly&quot;,&quot;daily&quot;,&quot;range&quot;,&quot;on_request&quot;],&quot;default&quot;:&quot;flat&quot;,&quot;tsType&quot;:&quot;'flat' | 'hourly' | 'daily' | 'range' | 'on_request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;instant&quot;,&quot;request&quot;],&quot;default&quot;:&quot;instant&quot;,&quot;tsType&quot;:&quot;'instant' | 'request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;emergencyPath&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Listing&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;listing&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cleaning&quot;,&quot;emergency_plumbing&quot;],&quot;default&quot;:&quot;cleaning&quot;,&quot;tsType&quot;:&quot;'cleaning' | 'emergency_plumbing'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;unavailable&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'loading' | 'error' | 'unavailable'&quot;,&quot;section&quot;:&quot;State&quot;},&quot;priceKind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;flat&quot;,&quot;hourly&quot;,&quot;daily&quot;,&quot;range&quot;,&quot;on_request&quot;],&quot;default&quot;:&quot;flat&quot;,&quot;tsType&quot;:&quot;'flat' | 'hourly' | 'daily' | 'range' | 'on_request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;instant&quot;,&quot;request&quot;],&quot;default&quot;:&quot;instant&quot;,&quot;tsType&quot;:&quot;'instant' | 'request'&quot;,&quot;section&quot;:&quot;Listing&quot;},&quot;emergencyPath&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Listing&quot;}}">
 class Component extends DCLogic {
   state = { saved: false, faq: -1, override: null };
   PRICE = {
@@ -244,32 +246,68 @@ class Component extends DCLogic {
     daily:     { big:'MVR 900', unit:'/day', label:'Daily rate', note:'Charged per working day.', foot:'MVR 900 /day', sub:'per day' },
     range:     { big:'From MVR 350', unit:'', label:'Starting price', note:'This is a starting price, not the final amount. Mariyam quotes your actual price before you confirm anything.', foot:'From MVR 350', sub:'final price quoted first' },
     on_request:{ big:'Price on request', unit:'', label:'Quoted per job', note:'Describe the job and Mariyam replies with a quote before anything is booked.', foot:'Price on request', sub:'quote before booking' } };
-  FAQS = [
-    { q:'How long does a session take?', a:'2–4 hours for a typical two-bedroom apartment. Larger homes may need two sessions.' },
-    { q:'Do I need to be home?', a:'No — many customers hand over keys via a neighbour and follow along in chat. Photos are sent when the work is done.' },
-    { q:'Are supplies included?', a:'Yes, everything is brought along. Mention in chat if anyone at home is sensitive to particular products.' } ];
+  PLUMB_PRICE = { big:'From MVR 350', unit:'', label:'Starting price', note:'This is a starting price, not the final amount. Ibrahim quotes your actual price before you confirm anything.', foot:'From MVR 350', sub:'final price quoted first' };
+  LISTINGS = {
+    cleaning: {
+      photo:'uploads/cleaning.jpeg', cat:'Cleaning', catFg:'#4F46E5', title:'Home Deep Cleaning', island:'Malé',
+      ratingLine:'4.8 (24 reviews)', rating:'4.8', revCount:'(24)', jobsLine:'86 jobs completed',
+      provName:'Mariyam Shifa', ini:'MS', tier:'Silver', first:'Mariyam', nextSlot:'tomorrow 09:00', reply:'~1 hour',
+      requestSub:'You suggest a time; Mariyam usually replies within 1 hour with a time and price.',
+      about:'Full deep cleaning for apartments and small offices in Malé and Hulhumalé. Kitchen degrease, bathroom descale, interior windows, floors and skirting — all supplies included. Larger homes may take two sessions.',
+      included:['All cleaning supplies and equipment', 'Kitchen deep clean, incl. oven exterior', 'Bathrooms, floors and interior windows', 'Balcony wash where there is one'],
+      areas:['Malé', 'Hulhumalé'],
+      stated:['90-day workmanship warranty', 'public liability insurance held'],
+      faqs:[
+        { q:'How long does a session take?', a:'2–4 hours for a typical two-bedroom apartment. Larger homes may need two sessions.' },
+        { q:'Do I need to be home?', a:'No — many customers hand over keys via a neighbour and follow along in chat. Photos are sent when the work is done.' },
+        { q:'Are supplies included?', a:'Yes, everything is brought along. Mention in chat if anyone at home is sensitive to particular products.' } ],
+      bars:[ {s:5,n:20,w:'83%'}, {s:4,n:3,w:'13%'}, {s:3,n:1,w:'4%'}, {s:2,n:0,w:'0%'}, {s:1,n:0,w:'0%'} ],
+      tags:['On time (19)', 'Quality materials (14)', 'Fair price (12)', 'Arrived late (3)'],
+      reviewItems:[
+        { ini:'AN', name:'Aishath N.', when:'2 weeks ago', stars:'5', text:'Spotless — kitchen and both bathrooms done in three hours. On time and brought everything.' },
+        { ini:'AR', name:'Ahmed R.', when:'1 month ago', stars:'4', text:'Good deep clean. Arrived a little after the slot but stayed until everything was finished.' } ] },
+    emergency_plumbing: {
+      photo:'uploads/plumbing.jpeg', cat:'Plumbing', catFg:'#059669', title:'Emergency Plumbing & Pipe Repair', island:'Malé',
+      ratingLine:'4.6 (22 reviews)', rating:'4.6', revCount:'(22)', jobsLine:'47 jobs completed',
+      provName:'Ibrahim Rasheed', ini:'IR', tier:'Gold', first:'Ibrahim', nextSlot:'', reply:'~12 min',
+      requestSub:'You suggest a time; Ibrahim usually replies within 12 minutes with a time and price.',
+      about:'Burst pipes, leaks, blocked drains and pump faults across Malé — day or night. Inspection and diagnosis first, then a fixed quote before any work starts. Larger installations are booked as a separate visit.',
+      included:['Call-out, inspection and diagnosis', 'Leak, burst-pipe and joint repair', 'Drain and toilet unblocking', 'Parts priced and agreed before fitting'],
+      areas:['Malé'],
+      stated:['6-month warranty on fitted parts', 'licensed for mains and pump work'],
+      faqs:[
+        { q:'How fast can someone come?', a:'Routine requests are usually answered within 12 minutes. For a burst pipe or flooding, use the emergency call-out instead — offers arrive with arrival estimates.' },
+        { q:'What does the callout fee cover?', a:'Attendance and diagnosis. The fee is set per job and stated in the offer before you accept.' },
+        { q:'Are parts included?', a:'No — the starting price covers labour for a standard repair. Parts are priced separately and agreed before fitting.' } ],
+      bars:[ {s:5,n:15,w:'68%'}, {s:4,n:6,w:'27%'}, {s:3,n:1,w:'5%'}, {s:2,n:0,w:'0%'}, {s:1,n:0,w:'0%'} ],
+      tags:['On time (17)', 'Fair price (13)', 'Quality materials (9)', 'Arrived late (4)'],
+      reviewItems:[
+        { ini:'HA', name:'Hawwa A.', when:'1 week ago', stars:'5', text:'Kitchen pipe burst in the evening — he arrived fast, stopped the leak and the price matched the quote exactly.' },
+        { ini:'MN', name:'Mohamed N.', when:'3 weeks ago', stars:'4', text:'Cleared a badly blocked drain. Took longer than expected but he kept me updated and tidied up after.' } ] } };
   renderVals() {
     const p = this.props, s = this.state;
     const sc = s.override ?? (p.scenario ?? 'populated');
-    const pr = this.PRICE[p.priceKind ?? 'flat'] ?? this.PRICE.flat;
-    const instant = (p.mode ?? 'instant') === 'instant';
+    const plumb = (p.listing ?? 'cleaning') === 'emergency_plumbing';
+    const L = this.LISTINGS[plumb ? 'emergency_plumbing' : 'cleaning'];
+    const pr = plumb ? this.PLUMB_PRICE : (this.PRICE[p.priceKind ?? 'flat'] ?? this.PRICE.flat);
+    const instant = plumb ? false : (p.mode ?? 'instant') === 'instant';
     return {
+      L,
       isLoading: sc === 'loading', isBody: sc === 'populated', isGone: sc === 'unavailable', isError: sc === 'error',
       priceBig: pr.big, priceUnit: pr.unit, hasUnit: !!pr.unit, priceLabel: pr.label, priceNote: pr.note,
       footPrice: pr.foot, footSub: pr.sub,
       modeTitle: instant ? 'Book instantly' : 'Request a time',
-      modeSub: instant ? "Pick one of Mariyam's published times — confirmed straight away." : 'You suggest a time; Mariyam usually replies within 1 hour with a time and price.',
+      modeSub: instant ? "Pick one of " + L.first + "'s published times — confirmed straight away." : L.requestSub,
       modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
       modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
       ctaLabel: instant ? 'Book now' : 'Request a time',
-      emerg: !!p.emergencyPath,
-      included: ['All cleaning supplies and equipment', 'Kitchen deep clean, incl. oven exterior', 'Bathrooms, floors and interior windows', 'Balcony wash where there is one'],
-      bars: [ {s:5,n:20,w:'83%'}, {s:4,n:3,w:'13%'}, {s:3,n:1,w:'4%'}, {s:2,n:0,w:'0%'}, {s:1,n:0,w:'0%'} ],
-      tags: ['On time (19)', 'Thorough (14)', 'Fair price (12)', 'Arrived late (3)'],
-      reviews: [
-        { ini:'AN', name:'Aishath N.', when:'2 weeks ago', stars:'5', text:'Spotless — kitchen and both bathrooms done in three hours. On time and brought everything.' },
-        { ini:'AR', name:'Ahmed R.', when:'1 month ago', stars:'4', text:'Good deep clean. Arrived a little after the slot but stayed until everything was finished.' } ],
-      faqs: this.FAQS.map((f, i) => ({ ...f, open: s.faq === i, rot: s.faq === i ? '180deg' : '0deg',
+      emerg: plumb && !!p.emergencyPath, isPlumb: plumb, isClean: !plumb,
+      provLine: (instant ? 'Next available: ' + L.nextSlot : 'Usually replies in ' + L.reply) + ' · ' + L.jobsLine,
+      included: L.included, areas: L.areas, stated1: L.stated[0], stated2: L.stated[1],
+      bars: L.bars, tags: L.tags, reviews: L.reviewItems, revCount: L.revCount,
+      askLabel: 'Ask ' + L.first + ' a question before booking',
+      msgAria: 'Message ' + L.first,
+      faqs: L.faqs.map((f, i) => ({ ...f, open: s.faq === i, rot: s.faq === i ? '180deg' : '0deg',
         toggle: () => this.setState({ faq: s.faq === i ? -1 : i }) })),
       saveLabel: s.saved ? 'Remove from saved' : 'Save this service',
       heartFill: s.saved ? '#DC2626' : 'none', heartStroke: s.saved ? '#DC2626' : '#41526B',
