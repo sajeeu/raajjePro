@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Booking detail — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:180px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:190px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:220px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;gap:12px">
+    <div style="height:52px;flex:1;border-radius:16px;background:#E8EEF6"></div>
+    <div style="height:52px;flex:1;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Booking detail — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="My%20Bookings.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Booking</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this booking" body="Your connection may have dropped. The record is safe — nothing here is lost. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBooking }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Booking detail" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <sc-if value="{{ D.emergency }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:none;background:#DC2626;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>
+    <span style="font-size:11.5px;font-weight:800;letter-spacing:.03em">Emergency call-out · dispatched via RaajjePro Emergency</span>
+  </div>
+  </sc-if>
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="My%20Bookings.dc.html" aria-label="Back to bookings" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ D.service }}</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ D.provider }} · {{ D.when }}</span>
+    </span>
+    <dc-import name="StatusPill" status="{{ statusKey }}" hint-size="120px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isDisputed }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#B91C1C">You disputed this booking · 23 Aug 18:40</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A3A3A;text-wrap:pretty">RaajjePro is reviewing the record — the timeline below and both sides' messages. An admin may read this chat during the dispute. You'll hear back here.</span>
+      </span>
+    </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="padding:13px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EEF3FA">
+        <span style="width:42px;height:42px;border-radius:50%;background:{{ D.avBg }};color:{{ D.avFg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">{{ D.initials }}</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="display:flex;align-items:center;gap:7px"><a href="Provider%20Profile.dc.html" style="font-size:13.5px;font-weight:800;color:#0F1B2D;text-decoration:none">{{ D.provider }}</a><dc-import name="VerificationBadge" tier="{{ D.tier }}" size="chip" hint-size="55px,18px"></dc-import></span>
+          <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ D.biz }}</span>
+        </span>
+      </div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:11px">
+        <div style="display:flex;gap:12px">
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">When</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Your notes</span><span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">{{ D.notes }}</span></div>
+      </div>
+    </div>
+
+    <sc-if value="{{ isEmergency }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ naIdle }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fff;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A15C00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg><span style="font-size:13px;font-weight:800;color:#A15C00">Expected by 21:26 — the 45-minute window has passed</span></span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Ibrahim accepted at 20:41. If he isn't with you yet, tell RaajjePro — it checks with him straight away and it counts on his record.</span>
+        <button onClick="{{ naReport }}" style="height:48px;border:1.5px solid #F5C6C6;border-radius:13px;background:#fff;color:#B91C1C;font-size:13.5px;font-weight:800;cursor:pointer" style-hover="background:#FEF7F7">Provider has not arrived</button>
+      </div>
+      </sc-if>
+      <sc-if value="{{ naSent }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Reported — RaajjePro is checking with Ibrahim now</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">Keep the chat open — he may already be replying. You'll hear back here within minutes.</span>
+      </div>
+      </sc-if>
+      <a href="Reveal%20Contact.dc.html" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="width:38px;height:38px;border-radius:12px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 2.9a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.4 1.9.7 2.9.8a2 2 0 0 1 1.6 2z"></path></svg></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:13px;font-weight:800;color:#0F1B2D">Need to call each other?</span>
+          <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">On an accepted emergency booking you can share numbers — both ways at once, for a limited time.</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+      <a href="Dispatch%20Fee.dc.html" style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:center;text-decoration:none">
+        <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:12.5px;font-weight:800;color:#A15C00">MVR 200 dispatch fee to RaajjePro · ref RP-4471-EMG</span>
+          <span style="font-size:11px;font-weight:600;line-height:1.45;color:#8A6A2E;text-wrap:pretty">For this dispatch — separate from Ibrahim's callout fee. Settle it to book anything new.</span>
+        </span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A15C00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+    </sc-if>
+
+    <sc-if value="{{ showWithdraw }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ wIdle }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="font-size:13px;font-weight:800;color:#0F1B2D">Sent "I've Paid" by mistake?</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">You can withdraw it while Ibrahim hasn't confirmed or disputed it — and only once on this booking. He'll be notified, and it goes on the record below.</span>
+        <button onClick="{{ wAsk }}" style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#fff;color:#41526B;font-size:13px;font-weight:800;cursor:pointer" style-hover="background:#F7FAFD">Withdraw my "I've Paid"</button>
+      </div>
+      </sc-if>
+      <sc-if value="{{ wConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Withdraw it?</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">The booking goes back to Awaiting payment, Ibrahim is notified, and you can't withdraw again on this booking.</span>
+        <div style="display:flex;gap:9px">
+          <button onClick="{{ wKeep }}" style="flex:1;height:46px;border:1.5px solid #E8D9B5;border-radius:13px;background:#fff;color:#41526B;font-size:13px;font-weight:800;cursor:pointer">Keep it</button>
+          <button onClick="{{ wDo }}" style="flex:1;height:46px;border:none;border-radius:13px;background:#D97706;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Yes, withdraw</button>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ wUsed }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#EEF3FA;border:1px solid #E1EAF5;border-radius:20px;padding:14px 16px;display:flex;gap:11px;align-items:flex-start">
+        <span style="width:32px;height:32px;border-radius:10px;background:#fff;color:#8296B3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+        <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:12.5px;font-weight:800;color:#41526B">Withdrawn — that was this booking's one withdrawal</span>
+          <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">When you've actually paid, tap "I've Paid" again from the payment step. If something else is wrong, use chat or report a problem.</span>
+        </span>
+      </div>
+      </sc-if>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">The agreement</span></span>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #EEF3FA">
+          <span style="font-size:12.5px;font-weight:600;color:#5B6B84">Price</span>
+          <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.agPrice }}</span><sc-if value="{{ hasPriceWas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:600;color:#9AA9C0">{{ D.agPriceWas }}</span></sc-if></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Date &amp; time</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Scope</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right;max-width:200px">{{ D.scope }}</span></div>
+      </div>
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ D.lockNote }} Neither of you can change it alone — a change takes an amendment you both approve. RaajjePro records the agreement and holds no money.</div>
+    </div>
+
+    <sc-if value="{{ hasAmendment }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1.5px solid {{ amBd }};border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13.5px;font-weight:800;color:#0F1B2D;flex:1">{{ amTitle }}</span>
+        <span style="background:{{ amChipBg }};color:{{ amChipFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ amChip }}</span>
+      </span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original</span><span style="font-size:14.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        <span style="flex:1;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8">Proposed</span><span style="font-size:14.5px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">MVR 600</span></span>
+      </div>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Proposed by Mariyam Shifa · Today 09:20 — “Two extra rooms added on the day.”</span>
+      <sc-if value="{{ amPending }}" hint-placeholder-val="{{ false }}">
+      <a href="Propose%20Amendment.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review and decide</a>
+      <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">Nothing changes until you accept. The original stays on the record either way.</span>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">History</span><span style="font-size:11px;font-weight:600;color:#9AA9C0">Every change, who made it, and when — this is the booking's record.</span></span>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ timeline }}" as="e" hint-placeholder-count="4">
+          <div style="display:flex;gap:11px">
+            <span style="width:10px;display:flex;flex-direction:column;align-items:center;flex:none">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ e.dot }};margin-top:5px;flex:none"></span>
+              <span style="flex:1;width:2px;background:{{ e.line }}"></span>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:1px;padding-bottom:14px;min-width:0">
+              <span style="font-size:12.5px;font-weight:700;color:#0F1B2D;line-height:1.4;text-wrap:pretty">{{ e.t }}</span>
+              <span style="font-size:11px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ e.who }} · {{ e.when }}</span>
+            </span>
+          </div>
+        </sc-for>
+        <div style="display:flex;gap:11px;align-items:center">
+          <span style="width:10px;display:flex;justify-content:center;flex:none"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;box-shadow:0 0 0 3px #E8F0FE"></span></span>
+          <dc-import name="StatusPill" status="{{ statusKey }}" hint-size="130px,28px"></dc-import>
+          <span style="font-size:11px;font-weight:600;color:#9AA9C0">now</span>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ isCompleted }}" hint-placeholder-val="{{ false }}">
+    <a href="Service%20Preview.dc.html" style="background:#fff;border:1px solid #E9EFF7;border-radius:16px;padding:13px 16px;display:flex;align-items:center;gap:11px;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:34px;height:34px;border-radius:11px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg></span>
+      <span style="flex:1;font-size:13px;font-weight:800;color:#0F1B2D">Book Mariyam again</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    </sc-if>
+
+    <sc-for list="{{ textActions }}" as="ta" hint-placeholder-count="1">
+      <button onClick="{{ ta.tap }}" style="border:none;background:none;color:{{ ta.color }};font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">{{ ta.label }}</button>
+    </sc-for>
+  </div>
+
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;gap:10px">
+    <sc-for list="{{ foots }}" as="fb" hint-placeholder-count="2">
+      <button onClick="{{ fb.tap }}" style="flex:1;height:52px;border:{{ fb.border }};border-radius:16px;background:{{ fb.bg }};color:{{ fb.fg }};font-size:14px;font-weight:700;cursor:pointer;box-shadow:{{ fb.shadow }};display:flex;align-items:center;justify-content:center;gap:8px" style-active="transform:scale(.98)">{{ fb.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ rateOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(15,27,45,.4);display:flex;align-items:flex-end;z-index:20" onClick="{{ rateClose }}">
+    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1)" onClick="{{ stop }}">
+      <span style="width:40px;height:4px;border-radius:99px;background:#E3EAF3"></span>
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">How was Mariyam's work?</span>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{ stars }}" as="st" hint-placeholder-count="5">
+          <button onClick="{{ st.tap }}" aria-label="{{ st.label }}" style="width:46px;height:46px;border:none;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24" fill="{{ st.fill }}" stroke="{{ st.stroke }}" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z"></path></svg></button>
+        </sc-for>
+      </div>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-align:center;max-width:290px;text-wrap:pretty">{{ rateHint }}</span>
+      <sc-if value="{{ rated }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ rateDone }}" style="width:100%;height:50px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Post rating</button>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;confirmed&quot;,&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;emergency_active&quot;,&quot;completed&quot;,&quot;disputed&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;'confirmed' | 'awaiting_payment' | 'payment_sent' | 'emergency_active' | 'completed' | 'disputed' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { wPhase:'idle', naPhase:'idle', rateOpen:false, rating:0 };
+  D = {
+    awaiting_payment: {
+      service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      biz:'Rasheed Plumbing Services · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Leak under the kitchen sink — cabinet cleared out already.', amount:'MVR 650', amountLabel:'Quoted price',
+      status:'awaiting_payment', emergency:false, agPrice:'MVR 650', agPriceWas:null, scope:'Replace joint, reseal line — parts included',
+      lockNote:'Locked when you accepted Ibrahim’s quote (22 Aug 09:41).',
+      tl:[['Requested','you','22 Aug 09:14'],['Quote sent · MVR 650','Ibrahim Rasheed','22 Aug 09:32'],['Quote accepted — terms locked','you','22 Aug 09:41']] },
+    payment_sent: {
+      service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      biz:'Rasheed Plumbing Services · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Leak under the kitchen sink — cabinet cleared out already.', amount:'MVR 650', amountLabel:'Quoted price',
+      status:'payment_sent', emergency:false, agPrice:'MVR 650', agPriceWas:null, scope:'Replace joint, reseal line — parts included',
+      lockNote:'Locked when you accepted Ibrahim’s quote (22 Aug 09:41).',
+      tl:[['Requested','you','22 Aug 09:14'],['Quote sent · MVR 650','Ibrahim Rasheed','22 Aug 09:32'],['Quote accepted — terms locked','you','22 Aug 09:41'],['“I’ve Paid” sent','you','22 Aug 10:02']] },
+    confirmed: {
+      service:'Home Deep Cleaning', provider:'Mariyam Shifa', first:'Mariyam', tier:'Silver', initials:'MS', avBg:'#E8F0FE', avFg:'#1D4ED8',
+      biz:'Independent · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Two bedrooms and kitchen — keys with the caretaker.', amount:'MVR 450', amountLabel:'Agreed price',
+      status:'confirmed', emergency:false, agPrice:'MVR 450', agPriceWas:null, scope:'Deep clean — two bedrooms and kitchen',
+      lockNote:'Locked when Mariyam accepted your request (20 Aug 12:10).', amendment:'pending',
+      tl:[['Requested','you','20 Aug 11:05'],['Accepted — terms locked','Mariyam Shifa','20 Aug 12:10'],['“I’ve Paid” sent','you','20 Aug 12:44'],['Provider confirmed receipt','Mariyam Shifa','20 Aug 13:30'],['Amendment proposed · MVR 450 → MVR 600','Mariyam Shifa','Today 09:20']] },
+    emergency_active: {
+      service:'Emergency plumbing call-out', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      biz:'Rasheed Plumbing Services · Malé', when:'Today · on the way', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Water heater leaking into the hallway — mains off.', amount:'MVR 350', amountLabel:'Callout fee',
+      status:'confirmed', emergency:true, agPrice:'MVR 350', agPriceWas:null, scope:'Attend and diagnose — work quoted before it starts',
+      lockNote:'Locked when Ibrahim accepted the call-out (Today 20:41).',
+      tl:[['Requested — emergency','you','Today 20:38'],['Accepted — 45 min response window','Ibrahim Rasheed','Today 20:41'],['Callout fee · “I’ve Paid” sent','you','Today 20:52'],['Provider confirmed receipt','Ibrahim Rasheed','Today 21:04']] },
+    completed: {
+      service:'Home Deep Cleaning', provider:'Mariyam Shifa', first:'Mariyam', tier:'Silver', initials:'MS', avBg:'#E8F0FE', avFg:'#1D4ED8',
+      biz:'Independent · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Two bedrooms and kitchen — keys with the caretaker.', amount:'MVR 600', amountLabel:'Agreed price',
+      status:'completed', emergency:false, agPrice:'MVR 600', agPriceWas:'was MVR 450 · amendment accepted Today 09:48', scope:'Deep clean — four rooms and kitchen',
+      lockNote:'Locked when Mariyam accepted your request (20 Aug 12:10); amended once, with both of you agreeing.', amendment:'accepted',
+      tl:[['Requested','you','20 Aug 11:05'],['Accepted — terms locked','Mariyam Shifa','20 Aug 12:10'],['“I’ve Paid” sent','you','20 Aug 12:44'],['Provider confirmed receipt','Mariyam Shifa','20 Aug 13:30'],['Amendment proposed · MVR 450 → MVR 600','Mariyam Shifa','Today 09:20'],['Amendment accepted — MVR 600 agreed','you','Today 09:48'],['Marked complete','Mariyam Shifa','Today 17:05']] },
+    disputed: {
+      service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      biz:'Rasheed Plumbing Services · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      notes:'Leak under the kitchen sink — cabinet cleared out already.', amount:'MVR 650', amountLabel:'Quoted price',
+      status:'disputed', emergency:false, agPrice:'MVR 650', agPriceWas:null, scope:'Replace joint, reseal line — parts included',
+      lockNote:'Locked when you accepted Ibrahim’s quote (22 Aug 09:41).',
+      tl:[['Requested','you','22 Aug 09:14'],['Quote sent · MVR 650','Ibrahim Rasheed','22 Aug 09:32'],['Quote accepted — terms locked','you','22 Aug 09:41'],['“I’ve Paid” sent','you','22 Aug 10:02'],['Disputed','you','23 Aug 18:40']] }
+  };
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'confirmed';
+    const isLoading = sc==='loading', isError = sc==='error';
+    const D = this.D[sc] ?? this.D.confirmed;
+    const isBooking = !isLoading && !isError;
+    const isPaymentSent = sc==='payment_sent';
+    const withdrawn = isPaymentSent && s.wPhase==='done';
+    const statusKey = withdrawn ? 'awaiting_payment' : D.status;
+    let tl = D.tl.slice();
+    if (withdrawn) tl = tl.concat([['“I’ve Paid” withdrawn','you','Just now']]);
+    const timeline = tl.map((e,i) => ({ t:e[0], who:e[1], when:e[2],
+      dot: i===tl.length-1 ? '#5B8DF6' : '#C6D4EA', line:'#E8EEF6' }));
+    const chat = { label:'Message '+D.first, tap:() => {} };
+    const primary = { border:'none', bg:'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)', fg:'#fff', shadow:'0 8px 18px rgba(37,99,235,.28)' };
+    const outline = { border:'1.5px solid #E3EAF3', bg:'#fff', fg:'#41526B', shadow:'none' };
+    let foots;
+    if (sc==='awaiting_payment' || withdrawn)
+      foots = [{ ...outline, label:chat.label, tap:chat.tap }, { ...primary, label:'Continue to payment', tap:() => { window.location='Payment%20Step.dc.html'; } }];
+    else if (sc==='completed')
+      foots = [{ ...outline, label:'Chat — still open', tap:chat.tap }, { ...primary, label:'Rate Mariyam', tap:() => this.setState({ rateOpen:true }) }];
+    else if (sc==='confirmed')
+      foots = [{ ...outline, label:'Propose a change', tap:() => { window.location='Propose%20Amendment.dc.html'; } }, { ...primary, label:chat.label, tap:chat.tap }];
+    else
+      foots = [{ ...primary, label:chat.label, tap:chat.tap }];
+    const textActions = ({ awaiting_payment:[['Cancel this booking','#B91C1C']], payment_sent:[['Report a problem','#5B6B84']],
+      confirmed:[['Cancel this booking','#B91C1C'],['Report a problem','#5B6B84']], emergency_active:[['Report a problem','#5B6B84']],
+      completed:[['Report a problem','#5B6B84']], disputed:[] }[sc] ?? []).map(a => ({ label:a[0], color:a[1], tap:() => {} }));
+    const rated = s.rating > 0;
+    return {
+      isLoading, isError, isBooking, D, statusKey, timeline, foots, textActions,
+      isDisputed: sc==='disputed', isEmergency: sc==='emergency_active', isCompleted: sc==='completed',
+      naIdle: s.naPhase==='idle', naSent: s.naPhase==='sent', naReport: () => this.setState({ naPhase:'sent' }),
+      showWithdraw: isPaymentSent, wIdle: s.wPhase==='idle', wConfirm: s.wPhase==='confirm', wUsed: withdrawn,
+      wAsk: () => this.setState({ wPhase:'confirm' }), wKeep: () => this.setState({ wPhase:'idle' }), wDo: () => this.setState({ wPhase:'done' }),
+      hasAmendment: !!D.amendment, amPending: D.amendment==='pending',
+      amTitle: D.amendment==='pending' ? 'Change proposed — your decision' : 'Amendment',
+      amBd: D.amendment==='pending' ? '#CDDDFB' : '#E9EFF7',
+      amChip: D.amendment==='pending' ? 'Awaiting you' : 'Accepted · you · Today 09:48',
+      amChipBg: D.amendment==='pending' ? '#FEF3DC' : '#E5F6EC', amChipFg: D.amendment==='pending' ? '#A15C00' : '#166534',
+      hasPriceWas: !!D.agPriceWas,
+      rateOpen: s.rateOpen, rated,
+      rateClose: () => this.setState({ rateOpen:false }), rateDone: () => this.setState({ rateOpen:false }),
+      stop: (e) => e.stopPropagation(),
+      stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=s.rating ? '#F3B23E' : 'none', stroke: n<=s.rating ? '#D99A1E' : '#C6D4EA', tap:() => this.setState({ rating:n }) })),
+      rateHint: rated ? 'Your rating is public on Mariyam’s profile, alongside the job count.' : 'Ratings are public and stay on the record — like everything else on this booking.',
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

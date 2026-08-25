@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Dispatch fee — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:140px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:140px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:180px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Dispatch fee — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Dispatch fee</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load the fee details" body="Never transfer to an account you got outside this screen. Try again to load RaajjePro's details." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isOwed }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Dispatch fee — owed" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Dispatch fee</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Owed to RaajjePro — not to a provider</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="background:#0F1B2D;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 20px rgba(15,27,45,.22)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="background:rgba(255,255,255,.12);color:#DCE6F5;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">Pay RaajjePro</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;font-weight:700;color:#8FA3C2;font-variant-numeric:tabular-nums;letter-spacing:.04em">REF · RP-4471-EMG</span>
+      </div>
+      <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:#fff;font-variant-numeric:tabular-nums">MVR 200</div>
+      <div style="font-size:12.5px;font-weight:600;line-height:1.55;color:#B9C7DD;text-wrap:pretty">For dispatching Ibrahim Rasheed to your <span style="color:#fff;font-weight:700">Emergency plumbing call-out · Today</span>. Separate from Ibrahim's callout fee — that one went to him.</div>
+    </div>
+
+    <div style="background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#fff;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.5v.5"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:12.5px;font-weight:800;color:#1D4ED8">This one works differently from paying a provider</span>
+        <span style="font-size:11.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">You upload proof of the transfer, and a RaajjePro admin checks it against the reference. Payments to providers are never checked by anyone — this one is.</span>
+      </span>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Transfer to RaajjePro</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Account holder</span>
+        <span style="font-size:14.5px;font-weight:800;color:#0F1B2D">RaajjePro Pvt Ltd</span>
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">The platform's own account — never a provider's</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Bank</span>
+        <span style="font-size:13.5px;font-weight:700;color:#0F1B2D">Bank of Maldives</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:11px 13px">
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font-size:11px;font-weight:600;color:#9AA9C0">Account number</span>
+          <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;letter-spacing:.03em">7701 2000 000 415</span>
+        </span>
+        <button onClick="{{ copyAcc }}" style="flex:none;height:36px;border:1.5px solid {{ accBd }};border-radius:10px;background:{{ accBg }};color:{{ accFg }};font-size:12px;font-weight:800;cursor:pointer;padding:0 13px">{{ accLabel }}</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#0F1B2D;border-radius:13px;padding:11px 13px">
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font-size:11px;font-weight:600;color:#8FA3C2">Transfer reference — use it exactly</span>
+          <span style="font-size:16px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.06em">RP-4471-EMG</span>
+        </span>
+        <button onClick="{{ copyRef }}" style="flex:none;height:36px;border:1.5px solid rgba(255,255,255,.25);border-radius:10px;background:{{ refBg }};color:#fff;font-size:12px;font-weight:800;cursor:pointer;padding:0 13px">{{ refLabel }}</button>
+      </div>
+      <div style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">The reference is how the admin matches your transfer to this fee — without it the match is manual and slow.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Proof of transfer</div>
+      <sc-if value="{{ noProof }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ attach }}" style="border:1.5px dashed #C6D4EA;border-radius:14px;background:#F7FAFD;padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer" style-hover="border-color:#2563EB;background:#F3F8FF">
+        <span style="width:38px;height:38px;border-radius:12px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M4 20h16"></path></svg></span>
+        <span style="font-size:13px;font-weight:800;color:#1D4ED8">Add your transfer receipt</span>
+        <span style="font-size:11.5px;font-weight:600;color:#9AA9C0;text-wrap:pretty">A photo or PDF from your banking app</span>
+      </button>
+      </sc-if>
+      <sc-if value="{{ hasProof }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:11px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:11px 13px">
+        <span style="width:36px;height:36px;border-radius:10px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7z"></path><path d="M15 3v4h4"></path></svg></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font-size:12.5px;font-weight:800;color:#0F1B2D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">transfer-receipt.jpg</span>
+          <span style="font-size:11px;font-weight:600;color:#9AA9C0">312 KB · added just now</span>
+        </span>
+        <button onClick="{{ removeProof }}" aria-label="Remove receipt" style="width:36px;height:36px;border:none;background:none;color:#8296B3;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:7px">
+    <button onClick="{{ submit }}" style="height:54px;border:none;border-radius:16px;background:{{ subBg }};color:{{ subFg }};font-size:14.5px;font-weight:700;cursor:{{ subCursor }};box-shadow:{{ subShadow }}" style-active="transform:scale(.98)">Submit proof — lifts the hold now</button>
+    <span style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">New bookings unblock the moment you submit. An admin confirms the transfer afterwards.</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSubmitted }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dispatch fee — proof submitted" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Booking%20Detail.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">New bookings are unblocked</span>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">That happened the moment you submitted — you're not waiting on anyone. An admin will confirm the transfer against your reference later; if something doesn't match, they'll contact you here.</span>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Paid to</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D">RaajjePro Pvt Ltd</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Amount</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 200</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Reference</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;letter-spacing:.04em">RP-4471-EMG</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Proof</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D">transfer-receipt.jpg</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;align-items:center"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Admin check</span><span style="background:#EEF3FA;color:#41526B;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">Pending — doesn't hold you up</span></div>
+    </div>
+    <a href="Discovery.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Book a service</a>
+    <a href="My%20Bookings.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to your bookings</a>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBlocked }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dispatch fee — blocked new booking" style="flex:1;display:flex;flex-direction:column;min-height:0;position:relative">
+  <div aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden;filter:blur(2px);opacity:.55">
+    <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+      <div style="height:18px;width:150px;border-radius:8px;background:#E8EEF6"></div>
+    </div>
+    <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px">
+      <div style="height:130px;border-radius:20px;background:#E8EEF6"></div>
+      <div style="height:56px;border-radius:16px;background:#E8EEF6"></div>
+      <div style="height:56px;border-radius:16px;background:#E8EEF6"></div>
+      <div style="height:170px;border-radius:20px;background:#E8EEF6"></div>
+    </div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(15,27,45,.42);display:flex;align-items:flex-end">
+    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 22px 24px;display:flex;flex-direction:column;gap:13px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1)">
+      <span style="width:40px;height:4px;border-radius:99px;background:#E3EAF3;align-self:center"></span>
+      <span style="display:flex;flex-direction:column;gap:5px">
+        <span style="font-size:18px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">New bookings are on hold</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty">The MVR 200 dispatch fee from your <span style="font-weight:700;color:#41526B">Emergency plumbing call-out · Today</span> hasn't been settled yet. Settling it lifts the hold immediately.</span>
+      </span>
+      <div style="display:flex;gap:10px">
+        <span style="flex:1;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#166534">Unaffected</span><span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#1F5C38">Your existing bookings — they run as agreed</span></span>
+        <span style="flex:1;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#166534">Also fine</span><span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#1F5C38">Your account — not suspended, chat works</span></span>
+      </div>
+      <button onClick="{{ settle }}" style="height:54px;border:none;border-radius:16px;background:#0F1B2D;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(15,27,45,.28)" style-active="transform:scale(.98)">Settle MVR 200 now</button>
+      <button onClick="{{ noop }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px">Not now</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;owed&quot;,&quot;submitted&quot;,&quot;blocked&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;owed&quot;,&quot;tsType&quot;:&quot;'owed' | 'submitted' | 'blocked' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { phase:null, proof:false, copied:null };
+  renderVals() {
+    const s = this.state, sc = this.props.scenario ?? 'owed';
+    const eff = s.phase ?? sc;
+    const isLoading = eff==='loading', isError = eff==='error';
+    const canSubmit = s.proof;
+    const copyBtn = (key) => () => {
+      const v = key==='acc' ? '7701 2000 000 415'.replace(/\s/g,'') : 'RP-4471-EMG';
+      if (navigator.clipboard) navigator.clipboard.writeText(v);
+      this.setState({ copied:key });
+      clearTimeout(this._c); this._c = setTimeout(() => this.setState({ copied:null }), 1800);
+    };
+    return {
+      isLoading, isError,
+      isOwed: eff==='owed', isSubmitted: eff==='submitted', isBlocked: eff==='blocked',
+      noProof: !s.proof, hasProof: s.proof,
+      attach: () => this.setState({ proof:true }),
+      removeProof: () => this.setState({ proof:false }),
+      copyAcc: copyBtn('acc'), copyRef: copyBtn('ref'),
+      accLabel: s.copied==='acc' ? 'Copied' : 'Copy',
+      accBd: s.copied==='acc' ? '#A7DDBB' : '#CDDDFB', accBg: s.copied==='acc' ? '#E5F6EC' : '#E8F0FE', accFg: s.copied==='acc' ? '#166534' : '#1D4ED8',
+      refLabel: s.copied==='ref' ? 'Copied' : 'Copy', refBg: s.copied==='ref' ? 'rgba(22,163,74,.45)' : 'rgba(255,255,255,.1)',
+      subBg: canSubmit ? '#0F1B2D' : '#C6D4EA', subFg: canSubmit ? '#fff' : '#8296B3',
+      subCursor: canSubmit ? 'pointer' : 'default', subShadow: canSubmit ? '0 8px 18px rgba(15,27,45,.28)' : 'none',
+      submit: () => { if (canSubmit) this.setState({ phase:'submitted' }); },
+      settle: () => this.setState({ phase:'owed' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

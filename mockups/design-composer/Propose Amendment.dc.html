@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Amendment — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:170px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:190px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Amendment — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Change the agreement</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load the agreement" body="Your connection may have dropped. Anything you typed is kept on this phone — try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMain }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Propose an amendment" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ title }}</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · {{ otherParty }}</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isCompose }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What's changing</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ fieldChips }}" as="fc" hint-placeholder-count="4">
+            <dc-import name="Chip" label="{{ fc.label }}" kind="filter" selected="{{ fc.sel }}" on-tap="{{ fc.tap }}" hint-size="76px,38px"></dc-import>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:stretch;gap:10px">
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;justify-content:center"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original — stays on record</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;line-height:1.35">{{ origValue }}</span></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;align-self:center"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <input value="{{ propValue }}" onChange="{{ setProp }}" placeholder="{{ propPlaceholder }}" aria-label="Proposed value" style="width:100%;height:100%;min-height:58px;border:1.5px solid #CDDDFB;border-radius:13px;background:#fff;padding:10px 12px;font-size:13.5px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Why — {{ otherFirst }} sees this</span>
+          <textarea value="{{ reason }}" onChange="{{ setReason }}" placeholder="e.g. Two extra rooms added on the day" rows="3" style="width:100%;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:12px 13px;font-size:13px;font-weight:600;color:#0F1B2D;line-height:1.5;resize:none"></textarea>
+          <span style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:right;font-variant-numeric:tabular-nums">{{ reasonCount }}/200</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ isProvider }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+        <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-8 4 4 8-9"></path><path d="M15 4h6v6"></path></svg></span>
+        <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="font-size:12.5px;font-weight:800;color:#A15C00">This is how a higher charge stays clean</span>
+          <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">Charging more than the agreed price without an accepted amendment shows on your public price-adherence number. Propose it here — if Aishath accepts, MVR 600 becomes the agreed price and your record stays intact.</span>
+        </span>
+      </div>
+      </sc-if>
+
+      <div style="background:#EEF3FA;border-radius:16px;padding:12px 14px;font-size:11.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Nothing changes unless {{ otherFirst }} accepts. Every proposal is kept on the booking's record — accepted or not — and the original terms stay visible either way.</div>
+    </sc-if>
+
+    <sc-if value="{{ isReceiving }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1.5px solid #CDDDFB;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:38px;height:38px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none">MS</span>
+          <span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Mariyam proposes a new price</span><span style="font-size:11px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">Today 09:20 · everything else stays the same</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          <span style="flex:1;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8">Proposed</span><span style="font-size:15px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">MVR 600</span></span>
+        </div>
+        <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Mariyam's reason</span>
+          <span style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">“Two extra rooms added on the day.”</span>
+        </div>
+      </div>
+      <div style="background:#EEF3FA;border-radius:16px;padding:12px 14px;font-size:11.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">If you accept, MVR 600 becomes the agreed price. If you reject, MVR 450 stands. Either way the proposal stays on the booking's record, with the original terms beside it.</div>
+    </sc-if>
+
+    <sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:14px;animation:fadeUp .35s ease">
+        <span style="width:64px;height:64px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4z"></path></svg></span>
+        <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Sent to {{ otherFirst }}</span>
+        <span style="background:#FEF3DC;border:1px solid #F3C77B;color:#A15C00;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800">Waiting for {{ otherFirst }} to respond</span>
+        <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">The agreement hasn't changed — {{ sentSummary }} takes effect only if {{ otherFirst }} accepts. You'll be notified either way.</span>
+      </div>
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Your proposal · on the record</span>
+        <span style="font-size:13px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ sentLine }}</span>
+        <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">{{ sentReason }}</span>
+      </div>
+      <a href="Booking%20Detail.dc.html" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
+    </sc-if>
+
+    <sc-if value="{{ isAccepted }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:14px;animation:fadeUp .35s ease">
+        <span style="width:64px;height:64px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+        <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">MVR 600 is now the agreed price</span>
+        <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">Both of you agreed, so the agreement changed. The original — MVR 450 — stays visible on the booking's record, next to what replaced it.</span>
+      </div>
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Agreed price</span><span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 600</span><span style="font-size:10.5px;font-weight:600;color:#9AA9C0">was MVR 450</span></span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Proposed by</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D">Mariyam Shifa · Today 09:20</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Accepted by</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D">you · just now</span></div>
+      </div>
+      <a href="Booking%20Detail.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Back to the booking</a>
+    </sc-if>
+
+    <sc-if value="{{ isRejected }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:14px;animation:fadeUp .35s ease">
+        <span style="width:64px;height:64px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+        <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">The original terms stand</span>
+        <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">MVR 450 stays the agreed price. The proposal — and your decision — stay on the booking's record. If the day's work really did grow, chat is the place to sort it out.</span>
+      </div>
+      <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Mariyam</button>
+      <a href="Booking%20Detail.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ isCompose }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:7px">
+    <button onClick="{{ send }}" style="height:54px;border:none;border-radius:16px;background:{{ sendBg }};color:{{ sendFg }};font-size:14.5px;font-weight:700;cursor:{{ sendCursor }};box-shadow:{{ sendShadow }}" style-active="transform:scale(.98)">Send to {{ otherFirst }}</button>
+    <span style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">{{ otherFirst }} must accept before anything changes. Recorded either way.</span>
+  </div>
+  </sc-if>
+  <sc-if value="{{ isReceiving }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;gap:10px">
+    <button onClick="{{ reject }}" style="flex:1;height:52px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Reject</button>
+    <button onClick="{{ accept }}" style="flex:1;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Accept MVR 600</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;receiving&quot;,&quot;compose&quot;,&quot;compose_provider&quot;,&quot;sent&quot;,&quot;accepted&quot;,&quot;rejected&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;receiving&quot;,&quot;tsType&quot;:&quot;'receiving' | 'compose' | 'compose_provider' | 'sent' | 'accepted' | 'rejected' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { phase:null, field:'time', propVal:'', reason:'', pFedited:false };
+  FIELDS = {
+    price:{ label:'Price', orig:'MVR 450', ph:'MVR …' },
+    date:{ label:'Date', orig:'Tue 25 Aug', ph:'e.g. Wed 26 Aug' },
+    time:{ label:'Time', orig:'14:00', ph:'e.g. 16:00' },
+    scope:{ label:'Scope', orig:'Deep clean — two bedrooms and kitchen', ph:'Describe the new scope' } };
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'receiving';
+    const isProvider = sc==='compose_provider';
+    const eff = s.phase ?? (sc==='compose_provider' ? 'compose' : sc);
+    const isLoading = eff==='loading', isError = eff==='error';
+    const isCompose = eff==='compose', isReceiving = eff==='receiving';
+    const isSent = eff==='sent', isAccepted = eff==='accepted', isRejected = eff==='rejected';
+    const otherParty = isProvider ? 'Aishath Nazim' : 'Mariyam Shifa';
+    const otherFirst = isProvider ? 'Aishath' : 'Mariyam';
+    const field = isProvider ? 'price' : s.field;
+    const F = this.FIELDS[field];
+    const defProp = isProvider && !s.pFedited ? 'MVR 600' : '';
+    const propValue = s.propVal || defProp;
+    const defReason = isProvider && !s.pFedited ? 'Two extra rooms added on the day' : '';
+    const reason = s.reason || defReason;
+    const canSend = propValue.trim().length > 0 && reason.trim().length > 0;
+    const sentField = isProvider ? 'price' : field;
+    return {
+      isLoading, isError, isMain: !isLoading && !isError,
+      isCompose, isReceiving, isSent, isAccepted, isRejected, isProvider,
+      title: isCompose ? 'Propose a change' : isReceiving ? 'A change to decide' : 'Change the agreement',
+      otherParty, otherFirst,
+      fieldChips: Object.keys(this.FIELDS).map(k => ({ label:this.FIELDS[k].label, sel:k===field,
+        tap:() => { if (!isProvider) this.setState({ field:k, propVal:'' }); } })),
+      origValue: F.orig, propValue, propPlaceholder: F.ph,
+      setProp: (e) => this.setState({ propVal:e.target.value, pFedited:true }),
+      reason, reasonCount: reason.length,
+      setReason: (e) => this.setState({ reason:e.target.value.slice(0,200), pFedited:true }),
+      sendBg: canSend ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C6D4EA',
+      sendFg: canSend ? '#fff' : '#8296B3',
+      sendCursor: canSend ? 'pointer' : 'default',
+      sendShadow: canSend ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      send: () => { if (canSend) this.setState({ phase:'sent', propVal:propValue, reason:reason }); },
+      sentSummary: this.FIELDS[sentField].label.toLowerCase()==='price' ? 'the new price' : 'the new '+this.FIELDS[sentField].label.toLowerCase(),
+      sentLine: this.FIELDS[sentField].label + ': ' + this.FIELDS[sentField].orig + ' → ' + (s.propVal || 'MVR 600'),
+      sentReason: '“' + (s.reason || defReason || '—') + '”',
+      accept: () => this.setState({ phase:'accepted' }),
+      reject: () => this.setState({ phase:'rejected' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>
