@@ -217,7 +217,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Service</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="search" title="This listing is unavailable" body="The provider has taken it down or isn't active on RaajjePro right now, so it can't be booked." action-label="Browse cleaning services" on-action="{{ goExplore }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="search" title="This listing is unavailable" body="The provider has taken it down or isn't active on RaajjePro right now, so it can't be booked." action-label="Browse services" on-action="{{ goExplore }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -274,7 +274,7 @@ class Component extends DCLogic {
       about:'Burst pipes, leaks, blocked drains and pump faults across Malé — day or night. Inspection and diagnosis first, then a fixed quote before any work starts. Larger installations are booked as a separate visit.',
       included:['Call-out, inspection and diagnosis', 'Leak, burst-pipe and joint repair', 'Drain and toilet unblocking', 'Parts priced and agreed before fitting'],
       areas:['Malé'],
-      stated:['6-month warranty on fitted parts', 'licensed for mains and pump work'],
+      stated:['6-month warranty on fitted parts', 'public liability insurance held'],
       faqs:[
         { q:'How fast can someone come?', a:'Routine requests are usually answered within 12 minutes. For a burst pipe or flooding, use the emergency call-out instead — offers arrive with arrival estimates.' },
         { q:'What does the callout fee cover?', a:'Attendance and diagnosis. The fee is set per job and stated in the offer before you accept.' },
@@ -290,7 +290,8 @@ class Component extends DCLogic {
     const plumb = (p.listing ?? 'cleaning') === 'emergency_plumbing';
     const L = this.LISTINGS[plumb ? 'emergency_plumbing' : 'cleaning'];
     const pr = plumb ? this.PLUMB_PRICE : (this.PRICE[p.priceKind ?? 'flat'] ?? this.PRICE.flat);
-    const instant = plumb ? false : (p.mode ?? 'instant') === 'instant';
+    const kind = plumb ? 'range' : (p.priceKind ?? 'flat');
+    const instant = (kind === 'range' || kind === 'on_request') ? false : (p.mode ?? 'instant') === 'instant';
     return {
       L,
       isLoading: sc === 'loading', isBody: sc === 'populated', isGone: sc === 'unavailable', isError: sc === 'error',
