@@ -124,6 +124,8 @@ Emergency needed four correction rounds. It was the worst case — no mockup, no
 
 **A screen's most urgent action cannot live below the fold.** Session 2 moved the emergency entry off the cards for the right reason — someone in an emergency is not browsing — and then placed the replacement under twelve category tiles. Whatever a screen exists to make possible in a hurry has to be visible when it opens.
 
+**Visible is not the same as loud.** The fix for that was a red banner card, and on both Home and Explore it took over the page — a browsing surface that reads like an incident. Session 4 replaced it with a compact single-line row, small red bolt, `Something urgent? Get help now`, still above the fold on both screens, and moved the explanation of how dispatch works into the emergency flow itself. Ordinary features are what these pages are for; emergency has to be findable, not dominant. Do not reintroduce the banner.
+
 ## Not in this plan
 
 The admin panel — roughly fifteen screens, React web, desktop, different visual language, its own brief. It does not belong in a Flutter component vocabulary and would corrupt the shared sheet if folded in.
