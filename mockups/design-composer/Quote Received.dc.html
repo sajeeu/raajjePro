@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Quote received — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:140px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:74px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:210px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <div style="height:34px;width:110px;border-radius:8px;background:#E8EEF6"></div>
+    <span style="flex:1"></span>
+    <div style="height:54px;width:160px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Quote received — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Home.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Quote</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this quote" body="Your connection may have dropped. The quote is safe; try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isQuote }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Quote received" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Home.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Quote from Ibrahim</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Emergency Plumbing &amp; Pipe Repair</span></span>
+    <sc-if value="{{ notExpired }}" hint-placeholder-val="{{ true }}"><dc-import name="StatusPill" status="quote_received" hint-size="120px,28px"></dc-import></sc-if>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ unverified }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><path d="M3 7l9 6 9-6"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email to accept</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, this quote can't be accepted — the countdown still runs.</span>
+        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+      </span>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isExpired }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#B91C1C">This quote expired</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A3A3A;text-wrap:pretty">The {{ CAT.approveCopy }} window to accept ran out, so Tue 25 Aug · 14:00 was released back to Ibrahim's calendar. Your chat is still open — ask him for a new quote.</span>
+      </span>
+    </div>
+    </sc-if>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);opacity:{{ cardOpacity }}">
+      <div style="padding:13px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EEF3FA">
+        <span style="width:42px;height:42px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">IR</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Ibrahim Rasheed</span><dc-import name="VerificationBadge" tier="Gold" size="chip" hint-size="55px,18px"></dc-import></span>
+          <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Rasheed Plumbing Services · Malé</span>
+        </span>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:13px">
+        <div style="display:flex;gap:12px">
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:11px 13px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Time offered</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">Tue 25 Aug · 14:00</span></span>
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:11px 13px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Quoted price</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 650</span></span>
+        </div>
+        <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:11px 13px;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Ibrahim's note</span>
+          <span style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">“I can replace the joint and reseal the line. Price includes parts and cleanup.”</span>
+        </div>
+        <div style="font-size:11.5px;font-weight:600;color:#9AA9C0;text-wrap:pretty">Your request: tomorrow morning — leak under the kitchen sink.</div>
+        <sc-if value="{{ notExpired }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:8px;background:{{ cdBg }};border:1px solid {{ cdBd }};border-radius:12px;padding:9px 13px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ cdFg }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg>
+          <span style="font-size:13px;font-weight:800;color:{{ cdFg }};font-variant-numeric:tabular-nums">{{ countdown }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:{{ cdFg }};opacity:.8">{{ cdSub }}</span>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <sc-if value="{{ notExpired }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#E8F0FE;border:1px solid #CDDDFB;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:11px;align-items:flex-start">
+        <span style="width:36px;height:36px;border-radius:11px;background:#fff;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></span>
+        <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+          <span style="font-size:13.5px;font-weight:800;color:#1D4ED8">Nearly right? Say so in chat</span>
+          <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Your chat with Ibrahim is already open. If the time or price is close, a message usually moves it — declining just ends it.</span>
+        </span>
+      </div>
+      <button onClick="{{ noop }}" style="height:48px;border:1.5px solid #CDDDFB;border-radius:13px;background:#fff;color:#1D4ED8;font-size:13.5px;font-weight:800;cursor:pointer" style-hover="background:#F5F9FF">Message Ibrahim about the time or price</button>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:36px;height:36px;border-radius:11px;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 4v14H3V3z"></path><path d="M8 12h8M8 16h5"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#0F1B2D">What accepting means</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty">The price, date, time and scope become fixed — changing any of them afterwards takes an amendment you both approve. RaajjePro records the agreement; it doesn't hold or move any money.</span>
+      </span>
+    </div>
+
+    <button onClick="{{ decline }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">Decline this quote</button>
+    </sc-if>
+
+    <sc-if value="{{ isExpired }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Ask Ibrahim again in chat</button>
+    <a href="Request%20a%20Time.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Send a new request</a>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ notExpired }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 16px;display:flex;align-items:center;gap:12px">
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">MVR 650</span>
+      <span style="font-size:11px;font-weight:600;color:{{ cdFootFg }};white-space:nowrap;font-variant-numeric:tabular-nums">{{ countdown }}</span>
+    </span>
+    <span style="flex:1"></span>
+    <button onClick="{{ accept }}" style="height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:{{ ctaCursor }};padding:0 26px;box-shadow:{{ ctaShadow }};flex:none" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAccepted }}">
+<div data-screen-label="Quote received — accepted" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 4v14H3V3z"></path><path d="M8 12h8M8 16h5"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">It's agreed</span>
+      <dc-import name="StatusPill" status="awaiting_payment" hint-size="140px,28px"></dc-import>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">These terms are now fixed — changing any of them takes an amendment you and Ibrahim both approve. RaajjePro recorded the agreement; it holds no money.</span>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Price</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 650</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Time</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">Tue 25 Aug · 14:00</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Scope</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">Replace joint, reseal line — parts included</span></div>
+    </div>
+    <a href="Payment%20Step.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Continue to payment</a>
+    <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-align:center;text-wrap:pretty">You'll pay Ibrahim directly by bank transfer — his details are on the next step.</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDeclined }}">
+<div data-screen-label="Quote received — declined" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Quote declined</span>
+      <dc-import name="StatusPill" status="declined" hint-size="100px,28px"></dc-import>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">The 14:00 hold was released. Your chat with Ibrahim stays open — if it was nearly right, you can still ask for a different time or price.</span>
+    </div>
+    <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
+    <a href="Request%20a%20Time.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Send a new request</a>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;near_expiry&quot;,&quot;expired&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'near_expiry' | 'expired' | 'loading' | 'error' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { phase: 'quote', secs: null };
+  // Approval window is a category rule (Plumbing: 4 hours to accept).
+  CAT = { name: 'Plumbing', approveCopy: '4 hours' };
+  componentDidMount() { this.startClock(); }
+  componentWillUnmount() { clearInterval(this._t); }
+  startClock() {
+    clearInterval(this._t);
+    this._t = setInterval(() => {
+      if (this.state.secs !== null && this.state.secs > 0 && this.state.phase === 'quote')
+        this.setState(s => ({ secs: Math.max(0, s.secs - 1) }));
+    }, 1000);
+  }
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'live';
+    const isLoading = sc==='loading', isError = sc==='error';
+    const unverified = sc==='email_unverified';
+    const init = sc==='near_expiry' ? 12*60+40 : 3*3600+42*60; // 3h 42m per sample
+    let secs = s.secs ?? init;
+    if (s.secs === null && !isLoading && !isError) setTimeout(() => this.setState({ secs: init }), 0);
+    const isExpired = sc==='expired' || secs === 0;
+    const isAccepted = s.phase==='accepted' && !isLoading && !isError && !isExpired;
+    const isDeclined = s.phase==='declined' && !isLoading && !isError && !isExpired;
+    const isQuote = !isLoading && !isError && !isAccepted && !isDeclined;
+    const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), sec = secs%60;
+    const countdown = isExpired ? 'Expired' : (h > 0 ? h+'h '+m+'m left' : m+'m '+String(sec).padStart(2,'0')+'s left');
+    const urgent = secs <= 15*60, soon = secs <= 3600;
+    const canAccept = !unverified && !isExpired;
+    return {
+      isLoading, isError, isQuote, isAccepted, isDeclined, isExpired, unverified,
+      notExpired: !isExpired, CAT: this.CAT,
+      cardOpacity: isExpired ? '.55' : '1',
+      countdown,
+      cdSub: 'to accept · ' + this.CAT.approveCopy + ' window',
+      cdBg: urgent ? '#FEF2F2' : soon ? '#FEF3DC' : '#EEF3FA',
+      cdBd: urgent ? '#F5C6C6' : soon ? '#F3C77B' : '#E1EAF5',
+      cdFg: urgent ? '#B91C1C' : soon ? '#A15C00' : '#41526B',
+      cdFootFg: urgent ? '#B91C1C' : soon ? '#A15C00' : '#5B6B84',
+      ctaLabel: unverified ? 'Verify email to accept' : 'Accept quote',
+      ctaBg: canAccept ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
+      ctaCursor: canAccept ? 'pointer' : 'default',
+      ctaShadow: canAccept ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      accept: () => { if (canAccept) this.setState({ phase:'accepted' }); },
+      decline: () => this.setState({ phase:'declined' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

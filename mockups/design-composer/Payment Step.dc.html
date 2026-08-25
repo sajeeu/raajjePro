@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Payment step — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:150px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:170px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <div style="height:34px;width:110px;border-radius:8px;background:#E8EEF6"></div>
+    <span style="flex:1"></span>
+    <div style="height:54px;width:130px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Payment step — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Home.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Payment</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load the payment details" body="Never transfer to an account you got outside this screen. Try again to load the details." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPay }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Payment step" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <sc-if value="{{ isEmergency }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:none;background:#DC2626;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:8px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>
+    <span style="font-size:11.5px;font-weight:800;letter-spacing:.03em">Emergency call-out · dispatched via RaajjePro Emergency</span>
+  </div>
+  </sc-if>
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="{{ backHref }}" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Pay {{ B.first }} directly</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ B.service }} · {{ B.when }}</span></span>
+    <dc-import name="StatusPill" status="awaiting_payment" hint-size="130px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ unverified }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><path d="M3 7l9 6 9-6"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email first</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, you can't mark this booking as paid.</span>
+        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+      </span>
+    </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="background:#EEF3FA;color:#41526B;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">{{ B.amountLabel }}</span>
+        <span style="flex:1"></span>
+      </div>
+      <div style="font-size:30px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ B.amount }}</div>
+      <div style="font-size:12.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ B.amountNote }}</div>
+      <sc-if value="{{ isEmergency }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">RaajjePro's MVR 200 dispatch fee is billed separately — this transfer is only {{ B.first }}'s callout fee.</div>
+      </sc-if>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">How this payment works</div>
+      <sc-for list="{{ steps }}" as="st" hint-placeholder-count="3">
+        <div style="display:flex;gap:11px;align-items:flex-start">
+          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:1px">{{ st.n }}</span>
+          <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">{{ st.text }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Transfer to</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Account holder</span>
+        <span style="font-size:14.5px;font-weight:800;color:#0F1B2D">{{ B.accountName }}</span>
+      </div>
+      <sc-if value="{{ hasNameNote }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#EEF3FA;border-radius:12px;padding:10px 12px;font-size:11.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">{{ B.nameNote }}</div>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Bank</span>
+        <span style="font-size:13.5px;font-weight:700;color:#0F1B2D">{{ B.bank }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:11px 13px">
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font-size:11px;font-weight:600;color:#9AA9C0">Account number</span>
+          <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;letter-spacing:.03em">{{ B.account }}</span>
+        </span>
+        <button onClick="{{ copy }}" style="flex:none;height:36px;border:1.5px solid {{ copyBd }};border-radius:10px;background:{{ copyBg }};color:{{ copyFg }};font-size:12px;font-weight:800;cursor:pointer;padding:0 13px;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a1 1 0 0 1 1-1h9"></path></svg>{{ copyLabel }}</button>
+      </div>
+      <div style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">These details are for this transfer only — they aren't a way to contact {{ B.first }}. Everything else stays in the booking chat.</div>
+    </div>
+
+    <div style="background:#EEF3FA;border:1px solid #E1EAF5;border-radius:20px;padding:16px;display:flex;gap:12px">
+      <span style="width:36px;height:36px;border-radius:11px;background:#fff;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.5v.5"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#0F1B2D">This payment never touches RaajjePro</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">It goes straight from your bank to {{ B.accountShort }}'s account. RaajjePro can't see it, hold it or refund it — keep your transfer receipt. If something goes wrong, report it from this booking: disputes are recorded against the provider's account.</span>
+      </span>
+    </div>
+  </div>
+
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+        <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ B.amount }}</span>
+        <span style="font-size:11px;font-weight:600;color:#5B6B84;white-space:nowrap">{{ B.amountLabel }}</span>
+      </span>
+      <span style="flex:1"></span>
+      <button onClick="{{ markPaid }}" style="height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:{{ ctaCursor }};padding:0 30px;box-shadow:{{ ctaShadow }};flex:none" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+    </div>
+    <div style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">{{ footNote }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPaid }}">
+<div data-screen-label="Payment step — payment sent" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4z"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You've told {{ B.first }} it's sent</span>
+      <dc-import name="StatusPill" status="payment_sent" hint-size="120px,28px"></dc-import>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">That's your word, not a check — RaajjePro hasn't verified anything. {{ B.first }} will confirm receipt in this booking; most providers confirm within a few hours.</span>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What happens next</div>
+      <div style="display:flex;align-items:center;gap:11px"><span style="width:20px;font-size:11px;font-weight:800;color:#9AA9C0">Now</span><dc-import name="StatusPill" status="payment_sent" hint-size="120px,28px"></dc-import></div>
+      <div style="display:flex;align-items:center;gap:11px"><span style="width:20px;font-size:11px;font-weight:800;color:#9AA9C0">Then</span><dc-import name="StatusPill" status="receipt_confirmed" hint-size="180px,28px"></dc-import><span style="font-size:11px;font-weight:600;color:#9AA9C0">— {{ B.first }} does this</span></div>
+      <div style="display:flex;align-items:center;gap:11px"><span style="width:20px;font-size:11px;font-weight:800;color:#9AA9C0">Then</span><dc-import name="StatusPill" status="confirmed" hint-size="100px,28px"></dc-import></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="font-size:11px;font-weight:600;color:#9AA9C0">You reported sending</span>
+      <span style="font-size:13px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ B.amount }} → {{ B.accountName }} · {{ B.account }}</span>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">Keep your bank's transfer receipt — it's your proof, not RaajjePro's.</span>
+    </div>
+    <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">No confirmation from {{ B.first }} by tomorrow? Report it from this booking — RaajjePro records the dispute against the provider's account.</div>
+    <a href="Home.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View booking</a>
+    <button onClick="{{ undo }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">I haven't actually paid yet — undo</button>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;booking&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cleaning_flat&quot;,&quot;cleaning_hourly&quot;,&quot;plumbing_quote&quot;,&quot;emergency_callout&quot;],&quot;default&quot;:&quot;plumbing_quote&quot;,&quot;tsType&quot;:&quot;'cleaning_flat' | 'cleaning_hourly' | 'plumbing_quote' | 'emergency_callout'&quot;,&quot;section&quot;:&quot;Booking&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;awaiting_payment&quot;,&quot;tsType&quot;:&quot;'awaiting_payment' | 'payment_sent' | 'loading' | 'error' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { phase: 'pay', copied: false };
+  // The amount kind is determined by the booking that produced it — never free-floating.
+  BOOKINGS = {
+    cleaning_flat: { first:'Mariyam', service:'Home Deep Cleaning', when:'Tue 25 Aug · 14:00',
+      amountLabel:'Agreed price', amount:'MVR 450',
+      amountNote:'The flat session price you booked at. Nothing was added on top.',
+      accountName:'Mariyam Shifa', accountShort:'Mariyam', bank:'Bank of Maldives', account:'7730 0000 145 872',
+      nameNote:null, emergency:false, back:'Pick%20a%20Time.dc.html' },
+    cleaning_hourly: { first:'Mariyam', service:'Home Deep Cleaning', when:'Tue 25 Aug · 14:00',
+      amountLabel:'Agreed total', amount:'MVR 600',
+      amountNote:'3 hours at MVR 200/hour, as agreed with Mariyam when you booked.',
+      accountName:'Mariyam Shifa', accountShort:'Mariyam', bank:'Bank of Maldives', account:'7730 0000 145 872',
+      nameNote:null, emergency:false, back:'Pick%20a%20Time.dc.html' },
+    plumbing_quote: { first:'Ibrahim', service:'Emergency Plumbing & Pipe Repair', when:'Tue 25 Aug · 14:00',
+      amountLabel:'Quoted price', amount:'MVR 650',
+      amountNote:'The price you accepted in Ibrahim’s quote. It’s fixed — any change takes an amendment you both approve.',
+      accountName:'Rasheed Plumbing Services', accountShort:'the business', bank:'Bank of Maldives', account:'7730 0000 291 604',
+      nameNote:'The account is under Rasheed Plumbing Services — that’s Ibrahim Rasheed’s registered business, so the name won’t match his. This is the right account.',
+      emergency:false, back:'Quote%20Received.dc.html' },
+    emergency_callout: { first:'Ibrahim', service:'Emergency plumbing call-out', when:'Today · Ibrahim is on the way',
+      amountLabel:'Callout fee', amount:'MVR 350',
+      amountNote:'What Ibrahim charges to attend and diagnose. The final bill may differ once he’s seen the job — he’ll quote any work before starting it.',
+      accountName:'Rasheed Plumbing Services', accountShort:'the business', bank:'Bank of Maldives', account:'7730 0000 291 604',
+      nameNote:'The account is under Rasheed Plumbing Services — that’s Ibrahim Rasheed’s registered business, so the name won’t match his. This is the right account.',
+      emergency:true, back:'Provider%20Emergency.dc.html' } };
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'awaiting_payment';
+    const B = this.BOOKINGS[p.booking ?? 'plumbing_quote'] ?? this.BOOKINGS.plumbing_quote;
+    const isLoading = sc==='loading', isError = sc==='error';
+    const unverified = sc==='email_unverified';
+    const isPaid = (sc==='payment_sent' || s.phase==='paid') && !isLoading && !isError;
+    const isPay = !isLoading && !isError && !isPaid;
+    const canPay = !unverified;
+    return {
+      isLoading, isError, isPay, isPaid, unverified, B,
+      isEmergency: B.emergency, backHref: B.back,
+      hasNameNote: !!B.nameNote,
+      steps: [
+        { n:'1', text:'Transfer ' + B.amount + ' from your banking app to the account below. Use your booking name — ' + 'Aishath Nazim' + ' — as the reference so ' + B.first + ' can match it.' },
+        { n:'2', text:'Tap “I’ve Paid”. That tells ' + B.first + ' you’ve sent it — RaajjePro doesn’t check or hold the money.' },
+        { n:'3', text:B.first + ' confirms receipt in this booking, and the work goes ahead as agreed.' } ],
+      copy: () => {
+        const num = B.account.replace(/\s/g,'');
+        if (navigator.clipboard) navigator.clipboard.writeText(num);
+        this.setState({ copied:true });
+        clearTimeout(this._c); this._c = setTimeout(() => this.setState({ copied:false }), 1800); },
+      copyLabel: s.copied ? 'Copied' : 'Copy',
+      copyBd: s.copied ? '#A7DDBB' : '#CDDDFB', copyBg: s.copied ? '#E5F6EC' : '#E8F0FE', copyFg: s.copied ? '#166534' : '#1D4ED8',
+      ctaLabel: unverified ? 'Verify email first' : 'I’ve Paid',
+      ctaBg: canPay ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
+      ctaCursor: canPay ? 'pointer' : 'default',
+      ctaShadow: canPay ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      footNote: 'Tapping this tells ' + B.first + ' you’ve sent the transfer. Nothing is checked — ' + B.first + ' confirms receipt separately.',
+      markPaid: () => { if (canPay) this.setState({ phase:'paid' }); },
+      undo: () => this.setState({ phase:'pay' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

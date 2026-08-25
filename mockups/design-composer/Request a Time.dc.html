@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+.hscroll::-webkit-scrollbar{display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Request a time — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:150px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:74px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:170px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:140px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:110px;border-radius:20px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <div style="height:34px;width:110px;border-radius:8px;background:#E8EEF6"></div>
+    <span style="flex:1"></span>
+    <div style="height:54px;width:150px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Request a time — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Service%20Preview.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Request a time</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this listing" body="Your connection may have dropped. Nothing was sent; try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Request a time" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Service%20Preview.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Request a time</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Emergency Plumbing &amp; Pipe Repair · Ibrahim Rasheed</span></span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ unverified }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><path d="M3 7l9 6 9-6"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email to book</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, requests can't be sent.</span>
+        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+      </span>
+    </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:42px;height:42px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">IR</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Ibrahim Rasheed</span><dc-import name="VerificationBadge" tier="Gold" size="chip" hint-size="55px,18px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Plumbing · Malé · replies in ~12 min</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none">
+        <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">From MVR 350</span>
+        <span style="font-size:10.5px;font-weight:600;color:#5B6B84">starting price</span>
+      </span>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">When suits you?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ windows }}" as="w" hint-placeholder-count="4">
+          <dc-import name="Chip" kind="filter" label="{{ w.label }}" selected="{{ w.sel }}" on-tap="{{ w.tap }}" hint-size="130px,38px"></dc-import>
+        </sc-for>
+      </div>
+      <input onChange="{{ onWindowText }}" placeholder="Or say exactly when — “Thursday after 16:00”" style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 14px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">This is a preference, not a slot — Ibrahim replies with a concrete time.</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What's the job?</div>
+      <textarea onChange="{{ onDesc }}" rows="3" placeholder="What's wrong and what needs doing — e.g. steady leak under the kitchen sink, cupboard base is wet" style="border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:11px 14px;font-size:13px;font-weight:600;line-height:1.5;color:#0F1B2D;outline:none;resize:none"></textarea>
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Photos</span><span style="font-size:11px;font-weight:600;color:#9AA9C0">optional — they help Ibrahim quote accurately</span></div>
+      <div style="display:flex;gap:9px">
+        <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="request-photo-1" shape="rounded" radius="14" placeholder="photo of the problem"></image-slot></span>
+        <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="request-photo-2" shape="rounded" radius="14" placeholder="another angle"></image-slot></span>
+        <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="request-photo-3" shape="rounded" radius="14" placeholder="wider shot"></image-slot></span>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Address</div>
+      <sc-for list="{{ addrs }}" as="a" hint-placeholder-count="2">
+        <button onClick="{{ a.tap }}" style="border:1.5px solid {{ a.bd }};border-radius:14px;background:{{ a.bg }};padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left">
+          <span style="width:19px;height:19px;border-radius:50%;border:2px solid {{ a.rim }};display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:{{ a.dot }}"></span></span>
+          <span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-size:13px;font-weight:800;color:#0F1B2D">{{ a.name }}</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ a.line }}</span></span>
+        </button>
+      </sc-for>
+      <sc-if value="{{ isNewAddr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:2px 2px 0">
+          <input placeholder="House / building and street" style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 14px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
+          <select style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 10px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
+            <option>Malé</option><option>Hulhumalé</option><option>Villimalé</option>
+          </select>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">What happens after you send</div>
+      <sc-for list="{{ steps }}" as="st" hint-placeholder-count="3">
+        <div style="display:flex;gap:11px;align-items:flex-start">
+          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none;margin-top:1px">{{ st.n }}</span>
+          <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">{{ st.text }}</span>
+        </div>
+      </sc-for>
+      <div style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ windowsNote }}</div>
+    </div>
+  </div>
+
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 16px;display:flex;align-items:center;gap:12px">
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">From MVR 350</span>
+      <span style="font-size:11px;font-weight:600;color:#5B6B84;white-space:nowrap">{{ footSub }}</span>
+    </span>
+    <span style="flex:1"></span>
+    <button onClick="{{ send }}" style="height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:#fff;font-size:14.5px;font-weight:700;cursor:{{ ctaCursor }};padding:0 24px;box-shadow:{{ ctaShadow }};flex:none;display:flex;align-items:center;gap:9px" style-active="transform:scale(.98)"><sc-if value="{{ isSending }}" hint-placeholder-val="{{ false }}"><span style="width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite"></span></sc-if>{{ ctaLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSent }}">
+<div data-screen-label="Request a time — sent" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#FEF3DC;color:#D97706;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Request sent to Ibrahim</span>
+      <dc-import name="StatusPill" status="waiting_provider" hint-size="150px,28px"></dc-import>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">{{ sentBody }}</span>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Service</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right">Emergency Plumbing &amp; Pipe Repair</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Preferred window</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right">{{ sentWindow }}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Address</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right">{{ sentAddr }}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Price so far</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">From MVR 350 — quote to come</span></div>
+    </div>
+    <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ sentChatNote }}</span>
+    </div>
+    <a href="Home.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
+    <button onClick="{{ cancelSent }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">Cancel this request</button>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;sending&quot;,&quot;sent&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'sending' | 'sent' | 'loading' | 'error' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { win: null, winText: '', desc: '', addr: 'home', phase: 'form' };
+  // Quote + approval windows are category rules, not screen constants.
+  CAT = { name: 'Plumbing', quoteCopy: '2 hours', approveCopy: '4 hours', replyDue: '12:30 today' };
+  WINDOWS = ['Tomorrow morning', 'Tomorrow afternoon', 'This week', 'This weekend'];
+  ADDRS = [
+    { id:'home', name:'Home', line:'M. Fehi Villa, Malé' },
+    { id:'office', name:'Office', line:'H. Athama Building, Malé' },
+    { id:'new', name:'Somewhere else', line:'Enter a new address' } ];
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'populated';
+    const isLoading = sc==='loading', isError = sc==='error';
+    const unverified = sc==='email_unverified';
+    const phase = (sc==='sending' && s.phase==='form') ? 'sending' : (sc==='sent' && s.phase==='form') ? 'sent' : s.phase;
+    const isSent = phase==='sent' && !isLoading && !isError;
+    const isSending = phase==='sending';
+    const isForm = !isLoading && !isError && !isSent;
+    const hasWindow = s.win !== null || s.winText.trim().length > 0;
+    const canSend = hasWindow && s.desc.trim().length > 0 && !unverified && !isSending;
+    const addr = this.ADDRS.find(a => a.id===s.addr);
+    return {
+      isLoading, isError, isForm, isSent, isSending, unverified,
+      windows: this.WINDOWS.map((label, i) => ({ label, sel: s.win===i,
+        tap: () => this.setState({ win: s.win===i ? null : i }) })),
+      onWindowText: (e) => this.setState({ winText: e.target.value }),
+      onDesc: (e) => this.setState({ desc: e.target.value }),
+      addrs: this.ADDRS.map(a => { const sel = a.id===s.addr; return { ...a, sel,
+        bd: sel?'#2563EB':'#E3EAF3', bg: sel?'#F5F9FF':'#fff', rim: sel?'#2563EB':'#C6D2E3', dot: sel?'#2563EB':'transparent',
+        tap: () => this.setState({ addr:a.id }) }; }),
+      isNewAddr: s.addr==='new',
+      steps: [
+        { n:'1', text:'Your request goes to Ibrahim — no time or price is fixed yet.' },
+        { n:'2', text:'He has ' + this.CAT.quoteCopy + ' to reply with a concrete time and a real price. He usually replies in about 12 minutes.' },
+        { n:'3', text:'You then get ' + this.CAT.approveCopy + ' to accept his quote. Nothing is booked and nothing is owed until you do.' } ],
+      windowsNote: 'These windows are set by the ' + this.CAT.name + ' category. Chat with Ibrahim opens the moment his quote arrives.',
+      footSub: unverified ? 'Verify your email first' : 'final price quoted first',
+      ctaLabel: unverified ? 'Verify email to send' : (isSending ? 'Sending…' : (canSend ? 'Send request' : 'Add a window and the job')),
+      ctaBg: (canSend || isSending) ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
+      ctaCursor: canSend ? 'pointer' : 'default',
+      ctaShadow: (canSend || isSending) ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      send: () => { if (!canSend) return;
+        this.setState({ phase:'sending' });
+        setTimeout(() => this.setState({ phase:'sent' }), 900); },
+      sentBody: 'Ibrahim has ' + this.CAT.quoteCopy + ' — until ' + this.CAT.replyDue + ' — to reply with a time and price. If he doesn’t, the request expires and you owe nothing.',
+      sentWindow: s.win !== null ? this.WINDOWS[s.win] : (s.winText.trim() || 'Tomorrow morning'),
+      sentAddr: addr.id==='new' ? 'New address, Malé' : addr.name + ' · ' + addr.line,
+      sentChatNote: 'Chat with Ibrahim opens the moment his quote arrives — you’ll get ' + this.CAT.approveCopy + ' to accept it.',
+      cancelSent: () => this.setState({ phase:'form' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+.hscroll::-webkit-scrollbar{display:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Pick a time — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:130px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:74px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:190px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:110px;border-radius:20px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px">
+    <div style="height:34px;width:110px;border-radius:8px;background:#E8EEF6"></div>
+    <span style="flex:1"></span>
+    <div style="height:54px;width:170px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Pick a time — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Service%20Preview.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Pick a time</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load the open times" body="Your connection may have dropped. Nothing was sent; try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isNoTimes }}">
+<div data-screen-label="Pick a time — no times published" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Service%20Preview.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800;color:#0F1B2D">Pick a time</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">Home Deep Cleaning</span></span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="No times published yet" body="Mariyam hasn't put up open times right now. You can ask her in chat — messaging is open before you book." action-label="Message Mariyam" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Pick a time" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Service%20Preview.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Pick a time</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · Mariyam Shifa</span></span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 20px 20px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ unverified }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
+      <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"></path><path d="M3 7l9 6 9-6"></path></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email to book</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, requests can't be sent.</span>
+        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+      </span>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ takenBanner }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start;animation:fadeUp .3s ease">
+      <span style="width:34px;height:34px;border-radius:11px;background:#DC2626;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"></path><path d="M12 16.5v.5"></path><circle cx="12" cy="12" r="9"></circle></svg></span>
+      <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#B91C1C">14:00 is no longer available</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A3A3A;text-wrap:pretty">Someone else took it while you were deciding. Nothing was sent — the times below are still open.</span>
+      </span>
+    </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:42px;height:42px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">MS</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Mariyam Shifa</span><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="55px,18px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Cleaning · Malé</span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none">
+        <span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span>
+        <span style="font-size:10.5px;font-weight:600;color:#5B6B84">/session · flat rate</span>
+      </span>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Date</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0">{{ leadNote }}</span>
+      </div>
+      <div class="hscroll" style="display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px">
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+          <button onClick="{{ d.tap }}" style="flex:none;width:52px;height:62px;border:1.5px solid {{ d.bd }};border-radius:14px;background:{{ d.bg }};color:{{ d.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer"><span style="font-size:10.5px;font-weight:700;opacity:.75">{{ d.dow }}</span><span style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums">{{ d.num }}</span></button>
+        </sc-for>
+      </div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84;padding-top:2px">Open times · {{ selDayLabel }}</div>
+      <sc-if value="{{ hasTimes }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
+          <sc-for list="{{ times }}" as="t" hint-placeholder-count="3">
+            <button onClick="{{ t.tap }}" style="height:48px;border:1.5px solid {{ t.bd }};border-radius:13px;background:{{ t.bg }};color:{{ t.fg }};font-size:14px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums">{{ t.t }}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ someHidden }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">{{ hiddenNote }}</div></sc-if>
+      </sc-if>
+      <sc-if value="{{ todayEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#EEF3FA;border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12.5px;font-weight:700;line-height:1.5;color:#41526B;text-wrap:pretty">{{ emptyReason }}</span>
+          <button onClick="{{ jumpTomorrow }}" style="align-self:flex-start;height:34px;border:1.5px solid #CDDDFB;border-radius:10px;background:#E8F0FE;color:#1D4ED8;font-size:12px;font-weight:800;cursor:pointer;padding:0 13px">See tomorrow's times</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Address</div>
+      <sc-for list="{{ addrs }}" as="a" hint-placeholder-count="2">
+        <button onClick="{{ a.tap }}" style="border:1.5px solid {{ a.bd }};border-radius:14px;background:{{ a.bg }};padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left">
+          <span style="width:19px;height:19px;border-radius:50%;border:2px solid {{ a.rim }};display:flex;align-items:center;justify-content:center;flex:none"><span style="width:9px;height:9px;border-radius:50%;background:{{ a.dot }}"></span></span>
+          <span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-size:13px;font-weight:800;color:#0F1B2D">{{ a.name }}</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ a.line }}</span></span>
+        </button>
+      </sc-for>
+      <sc-if value="{{ isNewAddr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:2px 2px 0">
+          <input placeholder="House / building and street" style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 14px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
+          <select style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 10px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
+            <option>Malé</option><option>Hulhumalé</option><option>Villimalé</option>
+          </select>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Job notes</span><span style="font-size:11px;font-weight:600;color:#9AA9C0">optional</span></div>
+      <textarea rows="3" placeholder="Anything Mariyam should know — access, pets, areas to focus on" style="border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:11px 14px;font-size:13px;font-weight:600;line-height:1.5;color:#0F1B2D;outline:none;resize:none"></textarea>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:9px;padding:0 4px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l2.5 2.5"></path></svg>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">Sending this asks Mariyam for the time — it isn't booked until she accepts. Chat opens when she does.</span>
+    </div>
+  </div>
+
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 16px;display:flex;align-items:center;gap:12px">
+    <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">MVR 450</span>
+      <span style="font-size:11px;font-weight:600;color:#5B6B84;white-space:nowrap">{{ footSub }}</span>
+    </span>
+    <span style="flex:1"></span>
+    <button onClick="{{ confirm }}" style="height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:{{ ctaFg }};font-size:14.5px;font-weight:700;cursor:{{ ctaCursor }};padding:0 22px;box-shadow:{{ ctaShadow }};flex:none" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSent }}">
+<div data-screen-label="Pick a time — request sent" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <span style="flex:1"></span>
+    <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
+      <span style="width:64px;height:64px;border-radius:50%;background:#FEF3DC;color:#D97706;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v4.7l3 2.3"></path></svg></span>
+      <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Request sent to Mariyam</span>
+      <dc-import name="StatusPill" status="waiting_provider" hint-size="150px,28px"></dc-import>
+      <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Nothing is booked yet — Mariyam has to accept this time. She usually replies within 1 hour.</span>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Service</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right">Home Deep Cleaning</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Requested time</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums;text-align:right">{{ sentWhen }}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Address</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right">{{ sentAddr }}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Total if accepted</span><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></div>
+    </div>
+    <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">No chat yet — it opens the moment Mariyam accepts. You'll get a notification either way.</span>
+    </div>
+    <a href="Home.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
+    <button onClick="{{ cancelSent }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">Cancel this request</button>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;slot_taken&quot;,&quot;lead_today_empty&quot;,&quot;no_times&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'loading' | 'error' | 'slot_taken' | 'lead_today_empty' | 'no_times' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { day: 0, time: null, addr: 'home', phase: 'form' };
+  // Lead time is a category rule, not a screen constant.
+  CAT = { name: 'Cleaning', leadH: 3, leadCopy: '3 hours' };
+  SLOTS = ['09:00', '11:00', '14:00'];
+  DOWS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  ADDRS = [
+    { id:'home', name:'Home', line:'M. Fehi Villa, Malé' },
+    { id:'office', name:'Office', line:'H. Athama Building, Malé' },
+    { id:'new', name:'Somewhere else', line:'Enter a new address' } ];
+  min(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+  fmt(m) { return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
+  renderVals() {
+    const p = this.props, s = this.state, sc = p.scenario ?? 'populated';
+    const isLoading = sc==='loading', isError = sc==='error', isNoTimes = sc==='no_times';
+    const unverified = sc==='email_unverified', taken = sc==='slot_taken', leadEmpty = sc==='lead_today_empty';
+    const isSent = s.phase==='sent' && !isLoading && !isError && !isNoTimes;
+    const isForm = !isLoading && !isError && !isNoTimes && !isSent;
+    const nowMin = leadEmpty ? 12*60 : 10*60+30; // demo clock, Tue 25 Aug
+    const cutoff = nowMin + this.CAT.leadH*60;
+    const days = [];
+    for (let i=0;i<7;i++) {
+      const d = new Date(2026,7,25+i), sel = i===s.day;
+      days.push({ dow:this.DOWS[d.getDay()], num:d.getDate(), sel,
+        full:this.DOWS[d.getDay()]+' '+d.getDate()+' '+this.MONS[d.getMonth()],
+        bd: sel?'#2563EB':'#E3EAF3', bg: sel?'#2563EB':'#fff', fg: sel?'#fff':'#41526B',
+        tap: () => this.setState({ day:i, time:null }) });
+    }
+    let slots = this.SLOTS.filter(t => s.day>0 || this.min(t) >= cutoff);
+    if (taken) slots = slots.filter(t => t!=='14:00');
+    const effTime = slots.includes(s.time) ? s.time : null;
+    const times = slots.map(t => { const sel = t===effTime; return { t, sel,
+      bd: sel?'#2563EB':'#E3EAF3', bg: sel?'#2563EB':'#fff', fg: sel?'#fff':'#0F1B2D',
+      tap: () => this.setState({ time:t }) }; });
+    const hiddenCount = s.day===0 ? this.SLOTS.length - this.SLOTS.filter(t=>this.min(t)>=cutoff).length : 0;
+    const todayEmpty = s.day===0 && slots.length===0;
+    const addr = this.ADDRS.find(a => a.id===s.addr);
+    const canSend = !!effTime && !unverified;
+    return {
+      isLoading, isError, isNoTimes, isForm, isSent, unverified, takenBanner: taken,
+      leadNote: this.CAT.name + ' needs ' + this.CAT.leadCopy + '’ notice',
+      days, selDayLabel: days[s.day].full, times, hasTimes: times.length>0,
+      someHidden: hiddenCount>0 && !todayEmpty,
+      hiddenNote: 'Earlier times today fall inside the ' + this.CAT.leadCopy + ' notice window, so they aren’t offered.',
+      todayEmpty,
+      emptyReason: 'All of today’s times fall inside the ' + this.CAT.leadCopy + ' notice ' + this.CAT.name + ' needs — nothing before ' + this.fmt(cutoff) + ' can be booked, and today’s last time is ' + this.SLOTS[this.SLOTS.length-1] + '.',
+      jumpTomorrow: () => this.setState({ day:1, time:null }),
+      addrs: this.ADDRS.map(a => { const sel = a.id===s.addr; return { ...a, sel,
+        bd: sel?'#2563EB':'#E3EAF3', bg: sel?'#F5F9FF':'#fff', rim: sel?'#2563EB':'#C6D2E3', dot: sel?'#2563EB':'transparent',
+        tap: () => this.setState({ addr:a.id }) }; }),
+      isNewAddr: s.addr==='new',
+      footSub: unverified ? 'Verify your email first' : 'Mariyam must accept — not booked yet',
+      ctaLabel: unverified ? 'Verify email to send' : (effTime ? 'Send booking request' : 'Pick a time first'),
+      ctaBg: canSend ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
+      ctaFg: '#fff', ctaCursor: canSend ? 'pointer' : 'default',
+      ctaShadow: canSend ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      confirm: () => { if (canSend) this.setState({ phase:'sent' }); },
+      sentWhen: days[s.day].full + ' · ' + (effTime ?? '14:00'),
+      sentAddr: addr.id==='new' ? 'New address, Malé' : addr.name + ' · ' + addr.line,
+      cancelSent: () => this.setState({ phase:'form', time:null }),
+      retry: () => {}, noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

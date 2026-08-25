@@ -65,6 +65,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <button onClick="{{ ch.tap }}" style="flex:none;height:38px;border:1.5px solid {{ ch.bd }};border-radius:999px;background:{{ ch.bg }};color:{{ ch.fg }};padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s" style-active="transform:scale(.97)">{{ ch.label }}</button>
           </sc-for>
         </div>
+        <button onClick="{{ urgentTap }}" style="display:flex;align-items:center;gap:9px;background:none;border:none;padding:2px 2px;cursor:pointer;text-align:left" style-hover="opacity:.85" style-active="transform:scale(.99)">
+        <span style="width:26px;height:26px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
+        <span style="flex:1;font-size:12.5px;font-weight:700;color:#41526B;min-width:0">Something urgent? <span style="color:#B91C1C;font-weight:800">Get help now</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
       </div>
 
       <sc-if value="{{ skel }}">
@@ -428,6 +433,7 @@ class Component extends DCLogic {
       q: S.q, setQ: e => this.setState({ q: e.target.value }),
       searchTap: () => this.toastMsg(S.q ? 'Searches "' + S.q + '"' : 'Opens search'),
       bellTap: () => this.toastMsg('Opens notifications'),
+      urgentTap: () => this.toastMsg('Opens the ASAP request'),
       quickChips: this.QUICK.map(n => { const on = !!S.chips[n]; return { label: n,
         bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
         tap: () => { const ch = { ...this.state.chips }; ch[n] = !ch[n]; this.setState({ chips: ch }); } }; }),
