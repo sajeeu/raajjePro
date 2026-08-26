@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Verify email" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div style="padding:22px 24px 34px;display:flex;flex-direction:column;gap:20px;animation:fadeUp .3s ease both">
+
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <a href="./Register.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none;box-shadow:0 1px 2px rgba(15,27,45,.05);text-decoration:none" style-hover="background:#EDF3FB"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+    <span title="Prototype: the code that works is 482913" style="font-size:9.5px;font-weight:800;letter-spacing:.04em;color:#5B6B84;background:#E6EDF7;border:1px solid #D6E1F0;border-radius:999px;padding:3px 8px;white-space:nowrap">Prototype · code 482913</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+    <span style="position:relative;width:96px;height:96px;flex:none">
+      <span style="position:absolute;inset:0;border-radius:28px;background:#DBE7FD;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"></rect><path d="M4.5 7l7.5 6 7.5-6"></path></svg></span>
+      <span style="position:absolute;right:-8px;bottom:-6px;width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 4px 12px rgba(15,27,45,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>
+    </span>
+    <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Verify your email</div>
+    <div style="font-size:14px;line-height:1.55;font-weight:500;color:#5B6B84;max-width:300px;text-wrap:pretty">We emailed a 6-digit code to<br><span style="font-weight:800;color:#0F1B2D">{{ email }}</span></div>
+    <a href="./Register.dc.html" style="font-size:13px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l4 4L8 19l-5 1 1-5L15 4z"></path></svg>Not your address? Change it</a>
+  </div>
+
+  <sc-if value="{{ rateLimited }}">
+    <div style="display:flex;flex-direction:column;gap:14px;animation:fadeIn .25s ease both">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:26px 22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="width:64px;height:64px;border-radius:50%;background:#FEF3DC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">A short wait before the next code</div>
+        <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">You've requested several codes in a row. You can send another in</div>
+        <div style="font-size:30px;font-weight:800;color:#A15C00;font-variant-numeric:tabular-nums">{{ rlClock }}</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:11px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:13px 15px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5v.1"></path></svg>
+        <div style="font-size:12.5px;line-height:1.55;font-weight:600;color:#1D4ED8;text-wrap:pretty">Codes are limited to 3 per address every 15 minutes, and 5 per account each hour. Codes already in your inbox still work until they expire.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ entryOn }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div style="display:flex;justify-content:center;gap:9px" role="group" aria-label="6-digit verification code">
+        <sc-for list="{{ boxes }}" as="b" hint-placeholder-count="6">
+          <input value="{{ b.val }}" onChange="{{ b.change }}" onKeyDown="{{ b.key }}" ref="{{ b.ref }}" inputMode="numeric" maxLength="1" aria-label="{{ b.aria }}" disabled="{{ boxesOff }}" style="width:48px;height:58px;border:1.5px solid {{ boxBd }};border-radius:14px;background:{{ boxBg }};text-align:center;font-size:22px;font-weight:800;color:#0F1B2D;box-shadow:0 1px 3px rgba(15,27,45,.04)" style-focus="border-color:#2563EB;background:#fff">
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ wrongOn }}">
+        <div role="alert" style="display:flex;align-items:flex-start;gap:11px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:13px 15px;animation:fadeIn .2s ease both">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.1"></path></svg>
+          <div style="font-size:12.5px;line-height:1.5;font-weight:700;color:#B91C1C">{{ wrongMsg }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ invalidatedOn }}">
+        <div role="alert" style="display:flex;flex-direction:column;gap:10px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:15px 16px;animation:fadeIn .2s ease both">
+          <div style="font-size:12.5px;line-height:1.55;font-weight:700;color:#B91C1C;text-wrap:pretty">That code has been invalidated after 5 incorrect attempts. Request a fresh one to continue.</div>
+          <button onClick="{{ resend }}" style="height:44px;border:none;border-radius:12px;background:#DC2626;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;align-self:flex-start;padding:0 18px" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Send a fresh code</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ resentOn }}">
+        <div style="display:flex;align-items:center;gap:10px;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:14px;padding:11px 14px;animation:fadeIn .2s ease both">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4.5 12.5l5 5 10-11"></path></svg>
+          <span style="font-size:12.5px;font-weight:700;color:#166534">A new code is on its way to your inbox.</span>
+        </div>
+      </sc-if>
+
+      <button onClick="{{ verify }}" disabled="{{ verifyOff }}" style="height:54px;border:none;border-radius:16px;background:{{ verifyBg }};color:#fff;font-size:15px;font-weight:700;cursor:{{ verifyCur }};box-shadow:{{ verifyShadow }};display:flex;align-items:center;justify-content:center;gap:9px" style-active="transform:scale(.98)">
+        <sc-if value="{{ checking }}"><span aria-hidden="true" style="width:17px;height:17px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite"></span></sc-if>
+        {{ verifyLabel }}
+      </button>
+
+      <div style="display:flex;justify-content:center">
+        <sc-if value="{{ resendWaiting }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">Resend code in {{ resendClock }}</span></sc-if>
+        <sc-if value="{{ resendReady }}"><button onClick="{{ resend }}" style="border:none;background:none;color:#2563EB;font-size:13.5px;font-weight:800;cursor:pointer;padding:6px 10px" style-hover="color:#1D4ED8">Resend code</button></sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ successOn }}">
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeIn .25s ease both">
+      <div style="width:64px;height:64px;border-radius:50%;background:#E5F6EC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Email verified</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">You're all set — booking, enquiries and messaging are now open to you.</div>
+      <a href="./Home.dc.html" style="margin-top:4px;height:48px;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;padding:0 26px;display:inline-flex;align-items:center;text-decoration:none;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)">Continue</a>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ footerOn }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:2px;text-align:center">
+      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#8296B3;max-width:300px;text-wrap:pretty">Booking, enquiring and messaging need a verified email. Browsing doesn't — you can finish this any time.</div>
+      <a href="./Home.dc.html" style="font-size:13px;font-weight:700;color:#5B6B84;text-decoration:none" style-hover="color:#41526B">I'll do this later</a>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;entry&quot;,&quot;resent&quot;,&quot;wrong_code&quot;,&quot;code_invalidated&quot;,&quot;rate_limited&quot;],&quot;default&quot;:&quot;entry&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;email&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;aishath@example.mv&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;}}">
+class Component extends DCLogic {
+  CODE = '482913';
+  constructor(p){ super(p);
+    const m = p.state ?? 'entry';
+    this.state = {
+      mode: m === 'rate_limited' ? 'rate_limited' : (m === 'code_invalidated' ? 'invalidated' : (m === 'wrong_code' ? 'wrong' : (m === 'resent' ? 'resent' : 'entry'))),
+      digits: ['','','','','',''],
+      resendLeft: m === 'resent' ? 60 : 47,
+      rlLeft: 272,
+      attempts: m === 'wrong_code' ? 3 : 0,
+      sends: 1, checking: false, success: false,
+    };
+    this.refs6 = [null,null,null,null,null,null];
+  }
+  componentDidMount(){
+    this.t = setInterval(() => this.setState(s => ({
+      resendLeft: Math.max(0, s.resendLeft - 1),
+      rlLeft: s.mode === 'rate_limited' ? Math.max(0, s.rlLeft - 1) : s.rlLeft,
+      mode: s.mode === 'rate_limited' && s.rlLeft <= 1 ? 'entry' : s.mode,
+      sends: s.mode === 'rate_limited' && s.rlLeft <= 1 ? 0 : s.sends,
+    })), 1000);
+  }
+  componentWillUnmount(){ clearInterval(this.t); }
+  clock(n){ return Math.floor(n/60) + ':' + String(n%60).padStart(2,'0'); }
+  renderVals(){
+    const s = this.state, m = s.mode;
+    const full = s.digits.every(d => d !== '');
+    const boxes = s.digits.map((d, i) => ({
+      val: d, aria: 'Digit ' + (i+1),
+      ref: el => { this.refs6[i] = el; },
+      change: e => {
+        const v = e.target.value.replace(/\D/g,'').slice(-1);
+        const digits = s.digits.slice(); digits[i] = v;
+        this.setState({ digits, mode: (m==='wrong'||m==='resent') ? 'entry' : m });
+        if (v && i < 5 && this.refs6[i+1]) this.refs6[i+1].focus();
+      },
+      key: e => {
+        if (e.key === 'Backspace' && !s.digits[i] && i > 0 && this.refs6[i-1]) this.refs6[i-1].focus();
+      },
+    }));
+    const wrongLeft = Math.max(0, 5 - s.attempts);
+    return {
+      email: this.props.email ?? 'aishath@example.mv',
+      rateLimited: m === 'rate_limited',
+      rlClock: this.clock(s.rlLeft),
+      entryOn: m !== 'rate_limited' && !s.success,
+      successOn: s.success,
+      footerOn: !s.success,
+      boxes,
+      boxesOff: m === 'invalidated',
+      boxBd: (m === 'wrong' || m === 'invalidated') ? '#F5C6C6' : '#E3EAF3',
+      boxBg: m === 'invalidated' ? '#F7FAFD' : '#fff',
+      wrongOn: m === 'wrong',
+      wrongMsg: "That code isn't right — " + wrongLeft + (wrongLeft === 1 ? ' attempt' : ' attempts') + ' left before it needs a fresh send.',
+      invalidatedOn: m === 'invalidated',
+      resentOn: m === 'resent',
+      checking: s.checking,
+      verifyOff: !full || s.checking || m === 'invalidated',
+      verifyBg: (!full || m === 'invalidated') ? '#A9C6F5' : 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)',
+      verifyShadow: (!full || m === 'invalidated') ? 'none' : '0 8px 18px rgba(37,99,235,.28)',
+      verifyCur: (!full || m === 'invalidated') ? 'default' : 'pointer',
+      verifyLabel: s.checking ? 'Checking…' : 'Verify Email',
+      verify: () => {
+        if (!full || s.checking || m === 'invalidated') return;
+        this.setState({ checking: true });
+        setTimeout(() => {
+          if (s.digits.join('') === this.CODE) this.setState({ checking:false, success:true });
+          else {
+            const attempts = s.attempts + 1;
+            this.setState({ checking:false, attempts, mode: attempts >= 5 ? 'invalidated' : 'wrong', digits: attempts >= 5 ? s.digits : ['','','','','',''] });
+            if (attempts < 5 && this.refs6[0]) this.refs6[0].focus();
+          }
+        }, 800);
+      },
+      resendWaiting: s.resendLeft > 0,
+      resendReady: s.resendLeft === 0,
+      resendClock: this.clock(s.resendLeft),
+      resend: () => {
+        const sends = s.sends + 1;
+        if (sends > 3) this.setState({ mode:'rate_limited', rlLeft:272, sends });
+        else this.setState({ mode:'resent', resendLeft:60, sends, attempts:0, digits:['','','','','',''] });
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

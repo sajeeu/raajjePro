@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Sign in" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+  <div style="position:relative;background:linear-gradient(160deg,#5B8DF6,#2563EB 55%,#1D4ED8);padding:54px 24px 26px;overflow:hidden">
+    <span aria-hidden="true" style="position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08);top:-46px;right:-34px"></span>
+    <span aria-hidden="true" style="position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.07);top:64px;right:64px"></span>
+    <span aria-hidden="true" style="position:absolute;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-20px;left:-30px"></span>
+    <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+        <span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#fff">Raajje<span style="color:#BFD7FE">Pro</span></span>
+      </div>
+      <div style="font-size:13.5px;font-weight:600;color:#CFE0FD">🇲🇻 Maldives Local Service Marketplace</div>
+    </div>
+  </div>
+  <svg viewBox="0 0 412 34" preserveAspectRatio="none" aria-hidden="true" style="display:block;width:100%;height:34px;margin-top:-34px;position:relative"><path d="M0 20 C 90 36 210 4 412 16 L 412 34 L 0 34 Z" fill="#F2F6FB"></path></svg>
+
+  <div style="padding:22px 24px 34px;display:flex;flex-direction:column;gap:18px;animation:fadeUp .3s ease both">
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div style="font-size:28px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Welcome back</div>
+      <div style="font-size:14px;font-weight:500;color:#5B6B84">Sign in to your RaajjePro account</div>
+    </div>
+
+    <sc-if value="{{ fail }}">
+      <div role="alert" style="display:flex;align-items:flex-start;gap:11px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:13px 15px;animation:fadeIn .2s ease both">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.1"></path></svg>
+        <div style="font-size:13px;line-height:1.5;font-weight:600;color:#B91C1C;text-wrap:pretty">That email and password combination didn't work. Check both and try again.</div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label for="si-email" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Email address</label>
+      <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid {{ emailBd }};border-radius:16px;height:54px;padding:0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"></rect><path d="M4.5 7l7.5 6 7.5-6"></path></svg>
+        <input id="si-email" type="email" value="{{ email }}" onChange="{{ setEmail }}" placeholder="aishath@example.mv" autocomplete="email" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label for="si-pw" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Password</label>
+      <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid {{ pwBd }};border-radius:16px;height:54px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+        <input id="si-pw" type="{{ pwType }}" value="{{ pw }}" onChange="{{ setPw }}" placeholder="Enter your password" autocomplete="current-password" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+        <button onClick="{{ eyeTap }}" aria-label="{{ eyeLbl }}" style="width:40px;height:40px;border:none;background:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9AA9C0;flex:none" style-hover="background:#F2F6FB;color:#5B6B84">
+          <sc-if value="{{ pwHidden }}" hint-placeholder-val="{{ true }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg></sc-if>
+          <sc-if value="{{ pwShown }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.8"></circle><path d="M4 20L20 4"></path></svg></sc-if>
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px">
+      <a href="./Forgot%20Password.dc.html" style="font-size:13.5px;font-weight:700;color:#2563EB;text-decoration:none">Forgot password?</a>
+    </div>
+
+    <button onClick="{{ signIn }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28);display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+      <sc-if value="{{ busy }}"><span aria-hidden="true" style="width:17px;height:17px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite"></span></sc-if>
+      {{ btnLabel }}
+    </button>
+
+    <sc-if value="{{ showSocial }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px"><span style="flex:1;height:1px;background:#E1EAF5"></span><span style="font-size:12.5px;font-weight:600;color:#8296B3;white-space:nowrap">or continue with</span><span style="flex:1;height:1px;background:#E1EAF5"></span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{ socials }}" as="s" hint-placeholder-count="4">
+            <button onClick="{{ s.tap }}" title="Icon placeholder — replace with the official uploaded asset" style="height:50px;border:1px solid #E3EAF3;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;box-shadow:0 1px 3px rgba(15,27,45,.04)" style-hover="background:#F7FAFD" style-active="transform:scale(.98)">
+              <span aria-hidden="true" style="width:24px;height:24px;border-radius:50%;background:#F2F6FB;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:{{ s.c }};flex:none">{{ s.g }}</span>
+              <span style="font-size:13.5px;font-weight:700;color:#0F1B2D">{{ s.name }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:4px;text-align:center">
+      <div style="font-size:13.5px;font-weight:600;color:#5B6B84">Don't have an account? <a href="./Register.dc.html" style="font-weight:800;text-decoration:none">Create Account</a></div>
+      <a href="./Home.dc.html" style="font-size:13.5px;font-weight:700;color:#5B6B84;text-decoration:none;display:inline-flex;align-items:center;gap:6px" style-hover="color:#41526B">Continue as Guest <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></a>
+      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#8296B3;max-width:290px;text-wrap:pretty">Browsing, searching and viewing providers need no account. Sign in when you want to save, book or message.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;default&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;default&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;showSocial&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Options&quot;}}">
+class Component extends DCLogic {
+  state = { email:null, pw:null, show:false, fail:null, busy:false };
+  renderVals() {
+    const propFail = (this.props.state ?? 'default') === 'failed';
+    const fail = this.state.fail ?? propFail;
+    const email = this.state.email ?? (propFail ? 'aishath@example.mv' : '');
+    const pw = this.state.pw ?? (propFail ? 'seabreeze-24' : '');
+    const errBd = '#F5C6C6', okBd = '#E3EAF3';
+    const socials = [
+      { name:'Google',   g:'G', c:'#4285F4', tap:()=>{} },
+      { name:'Apple',    g:'A', c:'#0F1B2D', tap:()=>{} },
+      { name:'Facebook', g:'f', c:'#1877F2', tap:()=>{} },
+      { name:'Viber',    g:'V', c:'#7360F2', tap:()=>{} },
+    ];
+    return {
+      email, pw, fail,
+      emailBd: fail ? errBd : okBd, pwBd: fail ? errBd : okBd,
+      setEmail: e => this.setState({ email:e.target.value, fail:false }),
+      setPw: e => this.setState({ pw:e.target.value, fail:false }),
+      pwType: this.state.show ? 'text' : 'password',
+      pwHidden: !this.state.show, pwShown: this.state.show,
+      eyeLbl: this.state.show ? 'Hide password' : 'Show password',
+      eyeTap: () => this.setState(s => ({ show:!s.show })),
+      busy: this.state.busy,
+      btnLabel: this.state.busy ? 'Signing in…' : 'Sign In',
+      signIn: () => {
+        if (this.state.busy) return;
+        this.setState({ busy:true, fail:false });
+        setTimeout(() => this.setState({ busy:false, fail:true }), 900);
+      },
+      showSocial: this.props.showSocial ?? true,
+      socials,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Create account" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div style="padding:22px 24px 34px;display:flex;flex-direction:column;gap:18px;animation:fadeUp .3s ease both">
+
+  <a href="./Sign%20In.dc.html" aria-label="Back to sign in" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none;box-shadow:0 1px 2px rgba(15,27,45,.05);text-decoration:none" style-hover="background:#EDF3FB"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+
+  <div style="display:flex;flex-direction:column;gap:5px">
+    <div style="font-size:28px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Create account</div>
+    <div style="font-size:14px;font-weight:500;color:#5B6B84">Join RaajjePro — it only takes a minute</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:13.5px;font-weight:700;color:#0F1B2D">I want to…</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" role="radiogroup" aria-label="Account type">
+      <button onClick="{{ pickCustomer }}" role="radio" aria-checked="{{ isCustomer }}" style="border:1.5px solid {{ custBd }};border-radius:18px;background:{{ custBg }};padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s" style-active="transform:scale(.98)">
+        <span style="width:40px;height:40px;border-radius:12px;background:{{ custIcBg }};color:{{ custIc }};display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></span>
+        <span style="font-size:13.5px;font-weight:800;color:{{ custTitle }}">Find Services</span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Book local providers</span>
+      </button>
+      <button onClick="{{ pickProvider }}" role="radio" aria-checked="{{ isProvider }}" style="border:1.5px solid {{ provBd }};border-radius:18px;background:{{ provBg }};padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:background .15s,border-color .15s" style-active="transform:scale(.98)">
+        <span style="width:40px;height:40px;border-radius:12px;background:{{ provIcBg }};color:{{ provIc }};display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4.2 4.2 0 0 0-5.6 5.3L3.5 17.2a2 2 0 1 0 2.8 2.8l5.6-5.6a4.2 4.2 0 0 0 5.3-5.6l-2.7 2.7-2.5-2.5 2.7-2.7z"></path></svg></span>
+        <span style="font-size:13.5px;font-weight:800;color:{{ provTitle }}">Offer Services</span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">List my services</span>
+      </button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="rg-name" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Full Name</label>
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:54px;padding:0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="8" r="3.6"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+      <input id="rg-name" value="{{ name }}" onChange="{{ setName }}" placeholder="Ahmed Rasheed" autocomplete="name" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="rg-email" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Email Address</label>
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid {{ emailBd }};border-radius:16px;height:54px;padding:0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"></rect><path d="M4.5 7l7.5 6 7.5-6"></path></svg>
+      <input id="rg-email" type="email" value="{{ email }}" onChange="{{ setEmail }}" placeholder="aishath@example.mv" autocomplete="email" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+    </div>
+    <sc-if value="{{ dupEmail }}">
+      <div role="alert" style="display:flex;flex-direction:column;gap:6px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:14px;padding:12px 14px;animation:fadeIn .2s ease both">
+        <div style="font-size:12.5px;line-height:1.5;font-weight:700;color:#B91C1C">This email already has a RaajjePro account.</div>
+        <div style="display:flex;gap:14px"><a href="./Sign%20In.dc.html" style="font-size:12.5px;font-weight:800;text-decoration:none">Sign in</a><a href="./Forgot%20Password.dc.html" style="font-size:12.5px;font-weight:800;text-decoration:none">Reset password</a></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="rg-phone" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Phone Number</label>
+    <div style="display:flex;align-items:stretch;background:#fff;border:1px solid {{ phoneBd }};border-radius:16px;height:54px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <div style="display:flex;align-items:center;gap:7px;padding:0 12px 0 14px;border-right:1px solid #EEF3FA;flex:none">
+        <span aria-hidden="true" style="font-size:14px">🇲🇻</span>
+        <input value="{{ dial }}" onChange="{{ setDial }}" aria-label="Dial code" style="width:44px;border:none;background:none;font-size:13.5px;font-weight:700;color:#41526B;padding:0">
+      </div>
+      <input id="rg-phone" type="tel" value="{{ phone }}" onChange="{{ setPhone }}" placeholder="7XX XXXX" autocomplete="tel" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;padding:0 16px">
+    </div>
+    <sc-if value="{{ dupPhone }}">
+      <div role="alert" style="display:flex;flex-direction:column;gap:6px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:14px;padding:12px 14px;animation:fadeIn .2s ease both">
+        <div style="font-size:12.5px;line-height:1.5;font-weight:700;color:#B91C1C;text-wrap:pretty">This number belongs to a verified provider account.</div>
+        <div style="font-size:12px;line-height:1.5;font-weight:600;color:#B91C1C;text-wrap:pretty">If it's yours, <a href="./Sign%20In.dc.html" style="font-weight:800;text-decoration:none">sign in</a> instead — or use a different number.</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ foreignHint }}"><div style="font-size:11.5px;font-weight:600;color:#8296B3">Foreign numbers welcome — 6 to 15 digits.</div></sc-if>
+  </div>
+
+  <sc-if value="{{ isProvider }}">
+    <div style="display:flex;flex-direction:column;gap:8px;animation:fadeIn .2s ease both">
+      <label for="rg-biz" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Business / Trade Name</label>
+      <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:54px;padding:0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="8" width="17" height="12" rx="2.5"></rect><path d="M8.5 8V6a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3.5 13h17"></path></svg>
+        <input id="rg-biz" value="{{ biz }}" onChange="{{ setBiz }}" placeholder="e.g. Cool Air Maldives" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+      </div>
+      <div style="font-size:11.5px;font-weight:600;color:#8296B3">The name customers will see on your listings</div>
+      <div style="display:flex;align-items:flex-start;gap:10px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:14px;padding:11px 13px;margin-top:2px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5v.1"></path></svg>
+        <div style="font-size:12px;line-height:1.5;font-weight:600;color:#1D4ED8;text-wrap:pretty">This creates your account only — you'll list services through Become a Provider after signing up.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="rg-pw" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Password</label>
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:54px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+      <input id="rg-pw" type="{{ pw1Type }}" value="{{ pw1 }}" onChange="{{ setPw1 }}" placeholder="At least 8 characters" autocomplete="new-password" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+      <button onClick="{{ eye1 }}" aria-label="Show password" style="width:40px;height:40px;border:none;background:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9AA9C0;flex:none" style-hover="background:#F2F6FB;color:#5B6B84"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg></button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <label for="rg-pw2" style="font-size:13.5px;font-weight:700;color:#0F1B2D">Confirm Password</label>
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:54px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+      <input id="rg-pw2" type="{{ pw2Type }}" value="{{ pw2 }}" onChange="{{ setPw2 }}" placeholder="Repeat your password" autocomplete="new-password" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+      <button onClick="{{ eye2 }}" aria-label="Show password" style="width:40px;height:40px;border:none;background:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#9AA9C0;flex:none" style-hover="background:#F2F6FB;color:#5B6B84"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.8"></circle></svg></button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <button onClick="{{ agreeTap }}" role="checkbox" aria-checked="{{ agree }}" style="display:flex;align-items:flex-start;gap:10px;border:none;background:none;padding:2px 0;cursor:pointer;text-align:left">
+      <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid {{ agreeBd }};background:{{ agreeBg }};display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s,border-color .15s"><sc-if value="{{ agree }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></sc-if></span>
+      <span style="font-size:12.5px;line-height:1.55;font-weight:600;color:#41526B">I agree to RaajjePro's <a href="#" title="Placeholder page — legal text to be supplied" style="font-weight:800;text-decoration:none">Terms of Service</a> and <a href="#" title="Placeholder page — legal text to be supplied" style="font-weight:800;text-decoration:none">Privacy Policy</a></span>
+    </button>
+    <sc-if value="{{ agreeErr }}"><div role="alert" style="font-size:12px;font-weight:700;color:#B91C1C;padding-left:32px;animation:fadeIn .2s ease both">Please accept the terms to continue.</div></sc-if>
+  </div>
+
+  <button onClick="{{ submit }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+
+  <div style="text-align:center;font-size:13.5px;font-weight:600;color:#5B6B84">Already have an account? <a href="./Sign%20In.dc.html" style="font-weight:800;text-decoration:none">Sign In</a></div>
+
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customer&quot;,&quot;provider&quot;],&quot;default&quot;:&quot;customer&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;dupEmail&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Duplicate blocks&quot;},&quot;dupPhone&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Duplicate blocks&quot;}}">
+class Component extends DCLogic {
+  state = { role:null, name:'', email:null, phone:null, dial:'+960', biz:'', pw1:'', pw2:'', show1:false, show2:false, agree:false, agreeErr:false };
+  renderVals() {
+    const role = this.state.role ?? this.props.role ?? 'customer';
+    const isProvider = role === 'provider', isCustomer = !isProvider;
+    const dupEmail = this.props.dupEmail ?? false;
+    const dupPhone = this.props.dupPhone ?? false;
+    const email = this.state.email ?? (dupEmail ? 'aishath@example.mv' : '');
+    const phone = this.state.phone ?? (dupPhone ? '777 1234' : '');
+    const dial = this.state.dial;
+    const foreign = dial.trim() !== '+960' && dial.trim().length > 1;
+    const sel = ['#2563EB','#E8F0FE'], off = ['#E3EAF3','#fff'];
+    return {
+      isCustomer, isProvider,
+      pickCustomer: () => this.setState({ role:'customer' }),
+      pickProvider: () => this.setState({ role:'provider' }),
+      custBd: isCustomer?sel[0]:off[0], custBg: isCustomer?sel[1]:off[1],
+      custIcBg: isCustomer?'#DDEAFE':'#F2F6FB', custIc: isCustomer?'#2563EB':'#5B6B84',
+      custTitle: isCustomer?'#1D4ED8':'#0F1B2D',
+      provBd: isProvider?sel[0]:off[0], provBg: isProvider?sel[1]:off[1],
+      provIcBg: isProvider?'#DDEAFE':'#F2F6FB', provIc: isProvider?'#2563EB':'#5B6B84',
+      provTitle: isProvider?'#1D4ED8':'#0F1B2D',
+      name:this.state.name, setName:e=>this.setState({name:e.target.value}),
+      email, setEmail:e=>this.setState({email:e.target.value}),
+      emailBd: dupEmail && this.state.email===null ? '#F5C6C6' : '#E3EAF3',
+      dupEmail: dupEmail && this.state.email===null,
+      phone, setPhone:e=>this.setState({phone:e.target.value}),
+      dial, setDial:e=>this.setState({dial:e.target.value}),
+      phoneBd: dupPhone && this.state.phone===null ? '#F5C6C6' : '#E3EAF3',
+      dupPhone: dupPhone && this.state.phone===null,
+      foreignHint: foreign,
+      biz:this.state.biz, setBiz:e=>this.setState({biz:e.target.value}),
+      pw1:this.state.pw1, setPw1:e=>this.setState({pw1:e.target.value}),
+      pw2:this.state.pw2, setPw2:e=>this.setState({pw2:e.target.value}),
+      pw1Type:this.state.show1?'text':'password', pw2Type:this.state.show2?'text':'password',
+      eye1:()=>this.setState(s=>({show1:!s.show1})), eye2:()=>this.setState(s=>({show2:!s.show2})),
+      agree:this.state.agree, agreeErr:this.state.agreeErr,
+      agreeBd:this.state.agree?'#2563EB':'#C6D3E4', agreeBg:this.state.agree?'#2563EB':'#fff',
+      agreeTap:()=>this.setState(s=>({agree:!s.agree, agreeErr:false})),
+      ctaLabel: isProvider ? 'Create Provider Account' : 'Create Account',
+      submit: () => {
+        if (!this.state.agree) { this.setState({ agreeErr:true }); return; }
+        window.location.href = './Verify%20Email.dc.html';
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>
