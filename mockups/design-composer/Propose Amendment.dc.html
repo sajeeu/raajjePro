@@ -176,10 +176,10 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
 class Component extends DCLogic {
   state = { phase:null, field:'time', propVal:'', reason:'', pFedited:false, fieldTouched:false };
   FIELDS = {
-    price:{ label:'Price', orig:'MVR 450', ph:'MVR …' },
-    date:{ label:'Date', orig:'Tue 25 Aug', ph:'e.g. Wed 26 Aug' },
-    time:{ label:'Time', orig:'14:00', ph:'e.g. 16:00' },
-    scope:{ label:'Scope', orig:'Deep clean — two bedrooms and kitchen', ph:'Describe the new scope' } };
+    price:{ label:'Price', orig:'MVR 450', ph:'MVR …', demo:'MVR 600' },
+    date:{ label:'Date', orig:'Tue 25 Aug', ph:'e.g. Wed 26 Aug', demo:'Wed 26 Aug' },
+    time:{ label:'Time', orig:'14:00', ph:'e.g. 16:00', demo:'16:00' },
+    scope:{ label:'Scope', orig:'Deep clean — two bedrooms and kitchen', ph:'Describe the new scope', demo:'Deep clean — three bedrooms and kitchen' } };
   renderVals() {
     const p = this.props, s = this.state, sc = p.scenario ?? 'receiving';
     const isProvider = sc==='compose_provider';
@@ -216,8 +216,8 @@ class Component extends DCLogic {
       sendShadow: canSend ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
       send: () => { if (canSend) this.setState({ phase:'sent', propVal:propValue, reason:reason }); },
       sentSummary: this.FIELDS[sentField].label.toLowerCase()==='price' ? 'the new price' : 'the new '+this.FIELDS[sentField].label.toLowerCase(),
-      sentLine: this.FIELDS[sentField].label + ': ' + this.FIELDS[sentField].orig + ' \u2192 ' + (s.propVal || defProp),
-      sentReason: '\u201c' + (s.reason || defReason || '\u2014') + '\u201d',
+      sentLine: this.FIELDS[sentField].label + ': ' + this.FIELDS[sentField].orig + ' \u2192 ' + (s.propVal || defProp || this.FIELDS[sentField].demo),
+      sentReason: '\u201c' + (s.reason || defReason || 'Afternoon slot works better for both of us') + '\u201d',
       accept: () => this.setState({ phase:'accepted' }),
       reject: () => this.setState({ phase:'rejected' }),
       noop: () => {}
