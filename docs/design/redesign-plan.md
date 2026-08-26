@@ -14,7 +14,7 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **Seven of the thirteen sessions are done.**
+**71 page briefs** in `designer-brief.md`. **Eight of the thirteen sessions are done.**
 
 | Artboard | Session | Status |
 |---|---|---|
@@ -30,8 +30,9 @@ That framing is the most important line in this document, because it decides how
 | `My Bookings` · `Booking Detail` · `Propose Amendment` · `Reveal Contact` · `Dispatch Fee` | 5 | Reviewed across 3 rounds |
 | `Did This Happen` · `Rate This Job` · `Cancel Booking` · `Raise Dispute` · `Report` · `Book Again` · `Recurring Booking` | 6 | Reviewed across 2 rounds |
 | `Messages` · `Enquiry Thread` · `Booking Thread` · `Mute Block Decline` | 7 | Reviewed across 1 round |
+| `Sign In` · `Register` · `Verify Email` · `Forgot Password` · `App States` | 8 | Reviewed across 1 round |
 
-**Sessions 8–13 remain.** `verify-dc.py` passes on all thirty-five files.
+**Sessions 9–13 remain.** `verify-dc.py` passes on all forty files.
 
 ### What auditing has caught that design review would not
 
