@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Recurring — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:170px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:90px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:200px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:52px;border-radius:16px;background:#E8EEF6"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Recurring — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Weekly series</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load the series" body="Your connection may have dropped. The series itself is unchanged. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isOffer }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Recurring — same time next week" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Same time next week?</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · Mariyam Shifa</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ notAsked }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <div style="display:flex;align-items:center;gap:11px">
+          <span style="width:38px;height:38px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none">MS</span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+            <span style="font-size:12.5px;font-weight:800;color:#0F1B2D">Tue 25 Aug · 14:00 went well</span>
+            <span style="font-size:11px;font-weight:600;color:#5B6B84">Completed · you rated ★ 5</span>
+          </span>
+          <dc-import name="StatusPill" status="completed" hint-size="100px,28px"></dc-import>
+        </div>
+        <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Next Tuesday</span>
+          <span style="font-size:19px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">Tue 1 Sep · 14:00 · MVR 450</span>
+          <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Same address, same notes — nothing to re-enter.</span>
+        </div>
+      </div>
+      <button onClick="{{ ask }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Ask Mariyam for next Tuesday</button>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:0 8px">This starts a weekly ask, not a subscription — every week is a fresh request that Mariyam accepts or declines. You can stop any time.</span>
+    </sc-if>
+
+    <sc-if value="{{ asked }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+        <span style="width:52px;height:52px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Asked — Tuesdays are now a series</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">Tue 1 Sep · 14:00 is with Mariyam to accept. Each week after that, the ask goes out again — she says yes every time, or that week simply doesn't happen.</span>
+        <dc-import name="StatusPill" status="waiting_provider" hint-size="150px,28px"></dc-import>
+      </div>
+      <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSeries }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Recurring — series" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="My%20Bookings.dc.html" aria-label="Back to bookings" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Tuesdays · 14:00</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · Mariyam Shifa · MVR 450 a visit</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isPaused }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;background:#FEF3DC;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#A15C00">Series paused — three weeks weren't confirmed</span>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#8A6A2E;text-wrap:pretty">Mariyam didn't confirm 18 Aug, 25 Aug or 1 Sep, so the weekly ask has stopped going out. Keep asking, or end the series — nothing is charged either way.</span>
+      <div style="display:flex;gap:9px">
+        <button onClick="{{ resume }}" style="flex:1;height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(37,99,235,.24)">Keep asking weekly</button>
+        <button onClick="{{ endAsk }}" style="flex:1;height:48px;border:1.5px solid #F5C6C6;border-radius:13px;background:#fff;color:#B91C1C;font-size:13px;font-weight:800;cursor:pointer">End the series</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <div style="flex:none;background:#EEF3FA;border:1px solid #E1EAF5;border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16v.5"></path></svg>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">A series is a weekly ask, not a standing booking — Mariyam accepts each week herself. A week she doesn't confirm simply doesn't happen; the series carries on.</span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid {{ w.line }}">
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:13px;font-weight:800;color:{{ w.dateColor }};font-variant-numeric:tabular-nums">{{ w.date }}</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.45;color:{{ w.subColor }};text-wrap:pretty">{{ w.sub }}</span>
+          </span>
+          <sc-if value="{{ w.hasPill }}" hint-placeholder-val="{{ true }}">
+            <span style="background:{{ w.pillBg }};color:{{ w.pillFg }};border:1px solid {{ w.pillBd }};border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:800;flex:none">{{ w.pill }}</span>
+          </sc-if>
+          <sc-if value="{{ w.canSkip }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ w.skip }}" style="height:34px;border:1.5px solid #E3EAF3;border-radius:11px;background:#fff;color:#41526B;font-size:11.5px;font-weight:800;cursor:pointer;padding:0 13px;flex:none" style-hover="background:#F7FAFD">Skip</button>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <span style="flex:none;font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty;padding:0 4px">Skipping frees one week and tells Mariyam — the series continues. Ending the series stops the weekly ask for good; past bookings keep their records.</span>
+
+    <sc-if value="{{ notPaused }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ endIdle }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ endAsk }}" style="flex:none;border:none;background:none;color:#B91C1C;font-size:12.5px;font-weight:700;cursor:pointer;padding:6px;align-self:center">End the series</button>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{ endConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#FEF3DC;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .25s ease both">
+        <span style="font-size:13px;font-weight:800;color:#A15C00">End the series?</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A6A2E;text-wrap:pretty">The weekly ask stops and any week Mariyam hasn't accepted yet is withdrawn. Confirmed and past weeks are untouched.</span>
+        <div style="display:flex;gap:9px">
+          <button onClick="{{ endKeep }}" style="flex:1;height:46px;border:1.5px solid #E8D9B5;border-radius:13px;background:#fff;color:#41526B;font-size:13px;font-weight:800;cursor:pointer">Keep it going</button>
+          <button onClick="{{ endDo }}" style="flex:1;height:46px;border:none;border-radius:13px;background:#DC2626;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Yes, end it</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ended }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#EEF3FA;border:1px solid #E1EAF5;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:4px;animation:fadeUp .25s ease both">
+        <span style="font-size:13px;font-weight:800;color:#41526B">Series ended</span>
+        <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Mariyam has been told, pending asks are withdrawn, and every past booking keeps its record. You can start a new series from any completed slot booking.</span>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:880},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;offer&quot;,&quot;series&quot;,&quot;skipped_week&quot;,&quot;paused&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;offer&quot;,&quot;tsType&quot;:&quot;'offer' | 'series' | 'skipped_week' | 'paused' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { asked:false, endPhase:'idle', skipped:{}, resumed:false };
+  W = {
+    series: [
+      { date:'Tue 1 Sep · 14:00', sub:'Mariyam accepted Thu 27 Aug', st:'confirmed' },
+      { date:'Tue 8 Sep · 14:00', sub:'Asked — Mariyam hasn’t answered yet', st:'waiting' },
+      { date:'Tue 15 Sep · 14:00', sub:'The ask goes out on Tue 8 Sep', st:'future' } ],
+    skipped_week: [
+      { date:'Tue 25 Aug · 14:00', sub:'Completed · you rated ★ 5', st:'done' },
+      { date:'Tue 1 Sep · 14:00', sub:'This week was not confirmed; your series continues next week', st:'missed' },
+      { date:'Tue 8 Sep · 14:00', sub:'Asked — Mariyam hasn’t answered yet', st:'waiting' } ],
+    paused: [
+      { date:'Tue 18 Aug · 14:00', sub:'Not confirmed', st:'missed' },
+      { date:'Tue 25 Aug · 14:00', sub:'Not confirmed', st:'missed' },
+      { date:'Tue 1 Sep · 14:00', sub:'Not confirmed — third in a row, series paused', st:'missed' } ] };
+  PILL = {
+    confirmed: { pill:'Confirmed', bg:'#E5F6EC', fg:'#166534', bd:'#A7DDBB' },
+    waiting: { pill:'Waiting', bg:'#FEF3DC', fg:'#A15C00', bd:'#F3C77B' },
+    done: { pill:'Completed', bg:'#E8F0FE', fg:'#1D4ED8', bd:'#CDDDFB' },
+    missed: { pill:'Not confirmed', bg:'#EEF3FA', fg:'#41526B', bd:'#E1EAF5' },
+    skippedByYou: { pill:'Skipped by you', bg:'#EEF3FA', fg:'#41526B', bd:'#E1EAF5' } };
+  renderVals() {
+    const sc = this.props.scenario ?? 'offer', s = this.state;
+    const isLoading = sc==='loading', isError = sc==='error';
+    const isOffer = sc==='offer';
+    const isSeries = sc==='series' || sc==='skipped_week' || sc==='paused';
+    const rows = this.W[sc] ?? this.W.series;
+    const isPaused = sc==='paused' && !s.resumed;
+    const weeks = rows.map((w,i) => {
+      const skippedByYou = !!s.skipped[i];
+      const st = skippedByYou ? 'skippedByYou' : w.st;
+      const P = this.PILL[st];
+      const canSkip = !skippedByYou && (w.st==='waiting' || w.st==='future') && !isPaused && s.endPhase!=='done';
+      return {
+        date:w.date, sub: skippedByYou ? 'You freed this week — Mariyam has been told. The series continues.' : w.sub,
+        dateColor: (w.st==='missed'||skippedByYou) ? '#5B6B84' : '#0F1B2D',
+        subColor: w.st==='missed' ? '#5B6B84' : '#9AA9C0',
+        hasPill: !canSkip, pill:P.pill, pillBg:P.bg, pillFg:P.fg, pillBd:P.bd,
+        canSkip, skip:() => this.setState(st2 => ({ skipped:{ ...st2.skipped, [i]:true } })),
+        line: i < rows.length-1 ? '#EEF3FA' : 'transparent' };
+    });
+    return {
+      isLoading, isError, isOffer: !isLoading && !isError && isOffer,
+      isSeries: !isLoading && !isError && isSeries,
+      notAsked: !s.asked, asked: s.asked, ask: () => this.setState({ asked:true }),
+      weeks, isPaused, notPaused: !isPaused && s.endPhase==='idle',
+      endIdle: s.endPhase==='idle', endConfirm: s.endPhase==='confirm', ended: s.endPhase==='done',
+      endAsk: () => this.setState({ endPhase:'confirm' }),
+      endKeep: () => this.setState({ endPhase:'idle' }),
+      endDo: () => this.setState({ endPhase:'done' }),
+      resume: () => this.setState({ resumed:true }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

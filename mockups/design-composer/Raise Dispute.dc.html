@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+textarea:focus{outline:none;border-color:#CDDDFB}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Dispute — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:160px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:120px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:220px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:120px;border-radius:20px;background:#E8EEF6"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Dispute — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Raise a dispute</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost, and no dispute was raised. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Raise a dispute" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#B91C1C">Raise a dispute</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ D.sub }}</span>
+    </span>
+    <dc-import name="StatusPill" status="{{ D.pill }}" hint-size="110px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 20px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="flex:none;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#B91C1C">Something went wrong — put it on the record</span>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#8A3A3A;text-wrap:pretty">{{ D.intro }}</span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">What is being disputed?</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+          <button onClick="{{ r.tap }}" style="border:1.5px solid {{ r.bd }};border-radius:14px;background:{{ r.bg }};padding:12px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left" style-hover="border-color:#C6D4EA">
+            <span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ r.rim }};background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:10px;height:10px;border-radius:50%;background:{{ r.dot }}"></span></span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:13px;font-weight:800;color:#0F1B2D">{{ r.label }}</span>
+              <span style="font-size:11px;font-weight:600;line-height:1.45;color:#5B6B84;text-wrap:pretty">{{ r.hint }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">What happened?</span>
+      <textarea value="{{ desc }}" onChange="{{ setDesc }}" placeholder="Stick to what you saw and when — the record does the rest." rows="4" style="border:1.5px solid #E3EAF3;border-radius:13px;padding:12px;font-size:13px;font-weight:500;color:#0F1B2D;line-height:1.5;resize:vertical;background:#fff;width:100%"></textarea>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Photos</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+        <div style="display:flex;gap:9px">
+          <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="dispute-photo-1" shape="rounded" radius="14" placeholder="what you found"></image-slot></span>
+          <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="dispute-photo-2" shape="rounded" radius="14" placeholder="another angle"></image-slot></span>
+          <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="dispute-photo-3" shape="rounded" radius="14" placeholder="wider shot"></image-slot></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">What RaajjePro holds — and acts on</span></span>
+      <span style="font-size:12px;font-weight:600;line-height:1.6;color:#41526B;text-wrap:pretty">This booking's full record: the agreed terms, every amendment, the chat, and both sides' payment attestations. An admin reviews exactly that, and patterns across bookings count against a provider.</span>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:9px;text-wrap:pretty">The payment itself moved outside RaajjePro, so it can't be refunded or reversed from here.</span>
+    </div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px">
+    <button onClick="{{ submit }}" style="height:52px;border:none;border-radius:16px;background:{{ btnBg }};color:#fff;font-size:14px;font-weight:700;cursor:{{ btnCursor }};box-shadow:{{ btnShadow }}" style-active="transform:scale(.98)">{{ btnLabel }}</button>
+    <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">{{ D.footNote }}</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dispute — open" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;flex:1">Dispute</span>
+    <dc-import name="StatusPill" status="disputed" hint-size="100px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 20px 24px;display:flex;flex-direction:column;gap:13px">
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+      <span style="width:52px;height:52px;border-radius:50%;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg></span>
+      <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Your dispute is open</span>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.6;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ doneReason }} An admin will look at it, and you'll hear back here.</span>
+    </div>
+    <sc-if value="{{ wasCompleted }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;background:#EEF3FA;border:1px solid #E1EAF5;border-radius:16px;padding:13px 14px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16v.5"></path></svg>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">The booking stays completed — the dispute runs on its own track and doesn't reopen it.</span>
+    </div>
+    </sc-if>
+    <a href="Booking%20Detail.dc.html" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:940},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;active&quot;,&quot;completed&quot;,&quot;submitted&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;active&quot;,&quot;tsType&quot;:&quot;'active' | 'completed' | 'submitted' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { reason:null, desc:'', done:false };
+  REASONS = [
+    { key:'work_not_done', label:'The work wasn’t done', hint:'Nobody came, or the job was left unfinished' },
+    { key:'price_changed_on_site', label:'The price changed on site', hint:'You were asked for more than the agreed terms' },
+    { key:'unsafe_work', label:'The work was unsafe', hint:'Something was left dangerous or damaged' },
+    { key:'payment_dispute', label:'A payment disagreement', hint:'You and the provider disagree about what was paid' } ];
+  D = {
+    active: { sub:'Emergency Plumbing & Pipe Repair · Ibrahim Rasheed', pill:'confirmed',
+      intro:'A dispute is serious — it flags this booking for an admin and becomes part of both sides’ permanent record. For a change of plans, cancel instead; for content or behaviour, use report.',
+      footNote:'This is not a cancellation and doesn’t change the booking by itself.' },
+    completed: { sub:'Home Deep Cleaning · Mariyam Shifa', pill:'completed',
+      intro:'This booking is completed — you can still dispute it. The dispute runs on its own track and doesn’t reopen the booking.',
+      footNote:'The booking stays completed. The dispute is its own track.' } };
+  renderVals() {
+    const sc = this.props.scenario ?? 'active', s = this.state;
+    const isLoading = sc==='loading', isError = sc==='error';
+    const done = sc==='submitted' || s.done;
+    const D = this.D[sc==='completed' ? 'completed' : 'active'];
+    const reasonIdx = sc==='submitted' ? 1 : s.reason;
+    const canSend = s.reason != null && s.desc.trim().length > 0;
+    return {
+      isLoading, isError,
+      isForm: !isLoading && !isError && !done,
+      isDone: !isLoading && !isError && done,
+      D,
+      reasons: this.REASONS.map((r,i) => { const on = s.reason===i; return {
+        label:r.label, hint:r.hint,
+        bd: on ? '#F5C6C6' : '#E9EFF7', bg: on ? '#FEF7F7' : '#fff',
+        rim: on ? '#DC2626' : '#C6D4EA', dot: on ? '#DC2626' : 'transparent',
+        tap:() => this.setState({ reason:i }) }; }),
+      desc: s.desc, setDesc: (e) => this.setState({ desc:e.target.value }),
+      btnBg: canSend ? '#DC2626' : '#E8B4B4', btnShadow: canSend ? '0 8px 18px rgba(220,38,38,.24)' : 'none',
+      btnCursor: canSend ? 'pointer' : 'default',
+      btnLabel: canSend ? 'Raise this dispute' : 'Pick a reason and describe it',
+      submit: () => { if (this.state.reason != null && this.state.desc.trim()) this.setState({ done:true }); },
+      doneReason: 'Recorded as “' + this.REASONS[reasonIdx ?? 0].label + '”.',
+      wasCompleted: sc==='completed' || sc==='submitted',
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

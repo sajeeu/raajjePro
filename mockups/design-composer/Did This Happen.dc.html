@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Did this happen — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:170px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:56px;border-radius:14px;background:#E8EEF6;width:85%"></div>
+    <div style="height:180px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:52px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:52px;border-radius:16px;background:#E8EEF6"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Did this happen — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Did this happen?</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. Your answer isn't due yet — nothing is lost. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMain }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Did this happen" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Did this happen?</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ D.service }} · {{ D.when }}</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isAsk }}" hint-placeholder-val="{{ true }}">
+      <span style="flex:none;font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1.3;color:#0F1B2D;text-wrap:pretty;padding:4px 2px 0">{{ D.question }}</span>
+      <span style="flex:none;font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty;padding:0 2px">{{ D.context }}</span>
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <div style="padding:13px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #EEF3FA">
+          <span style="width:42px;height:42px;border-radius:50%;background:{{ D.avBg }};color:{{ D.avFg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">{{ D.initials }}</span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+            <span style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ D.provider }}</span><dc-import name="VerificationBadge" tier="{{ D.tier }}" size="chip" hint-size="55px,18px"></dc-import></span>
+            <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ D.service }}</span>
+          </span>
+        </div>
+        <div style="padding:13px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:12px">
+            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Booked for</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
+        </div>
+      </div>
+      <button onClick="{{ sayYes }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Yes — the job was done</button>
+      <button onClick="{{ sayNo }}" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFD" style-active="transform:scale(.98)">No — it didn't happen</button>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:2px 8px 0">{{ D.silence }}</span>
+    </sc-if>
+
+    <sc-if value="{{ isYes }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+        <span style="width:52px;height:52px;border-radius:50%;background:#E5F6EC;color:#16A34A;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Marked complete</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">{{ D.yesBody }}</span>
+        <dc-import name="StatusPill" status="completed" hint-size="110px,28px"></dc-import>
+      </div>
+      <a href="Rate%20This%20Job.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Rate this job</a>
+      <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
+    </sc-if>
+
+    <sc-if value="{{ isNo }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+        <span style="width:52px;height:52px;border-radius:50%;background:#FEF3DC;color:#D97706;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5V12M12 15.5v.5"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">We'll look into it</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">{{ D.noBody }}</span>
+        <dc-import name="StatusPill" status="disputed" hint-size="100px,28px"></dc-import>
+      </div>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:0 8px">Repeated no-shows count against a provider across all their bookings — your answer matters beyond this one.</span>
+      <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cleaning&quot;,&quot;emergency&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;cleaning&quot;,&quot;tsType&quot;:&quot;'cleaning' | 'emergency' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { phase:'ask' };
+  D = {
+    cleaning: {
+      service:'Home Deep Cleaning', provider:'Mariyam Shifa', tier:'Silver', initials:'MS', avBg:'#E8F0FE', avFg:'#1D4ED8',
+      when:'Tue 18 Aug · 14:00', amount:'MVR 600', amountLabel:'Agreed price', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      question:'Did Mariyam Shifa complete this job?',
+      context:'The booked time has passed and Mariyam hasn’t marked it complete. One tap from you settles it.',
+      silence:'If we don’t hear from you, this booking is marked complete on Fri 28 Aug — silence doesn’t leave it open, and you’ll still be able to review the job.',
+      yesBody:'The record closes normally and Mariyam’s job count ticks up. You can rate the job now — it takes two taps.',
+      noBody:'This booking is flagged as a possible no-show. An admin reviews the record — the agreed terms, the chat, and both sides’ payment attestations. You’ll hear back here.' },
+    emergency: {
+      service:'Emergency plumbing call-out', provider:'Ibrahim Rasheed', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      when:'Tue 18 Aug · 21:00', amount:'MVR 350', amountLabel:'Callout fee', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
+      question:'Did Ibrahim Rasheed complete this call-out?',
+      context:'The call-out has passed and Ibrahim hasn’t marked it complete. One tap from you settles it.',
+      silence:'If we don’t hear from you, this booking is marked complete on Fri 28 Aug — silence doesn’t leave it open, and you’ll still be able to review the job.',
+      yesBody:'The record closes normally and Ibrahim’s job count ticks up. You can rate the job now — it takes two taps.',
+      noBody:'This booking is flagged as a possible no-show. An admin reviews the record — the agreed terms, the chat, and both sides’ payment attestations. You’ll hear back here.' }
+  };
+  renderVals() {
+    const sc = this.props.scenario ?? 'cleaning';
+    const isLoading = sc==='loading', isError = sc==='error';
+    const D = this.D[sc] ?? this.D.cleaning;
+    const ph = this.state.phase;
+    return {
+      isLoading, isError, isMain: !isLoading && !isError, D,
+      isAsk: ph==='ask', isYes: ph==='yes', isNo: ph==='no',
+      sayYes: () => this.setState({ phase:'yes' }), sayNo: () => this.setState({ phase:'no' }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Cancel — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:180px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:110px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:150px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:52px;border-radius:16px;background:#E8EEF6"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Cancel — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Cancel booking</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. The booking is unchanged — nothing was cancelled. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCustomer }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Cancel — customer" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Cancel this booking</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · Mariyam Shifa</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ notDone }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Plans change — this one's simple</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty">You haven't paid anything yet. Tue 25 Aug · 14:00 goes back into Mariyam's calendar, she's told right away, and nobody is penalised.</span>
+        <div style="border-top:1px solid #EEF3FA;padding-top:10px;display:flex;align-items:center;gap:11px">
+          <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">MS</span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+            <span style="font-size:12.5px;font-weight:800;color:#0F1B2D">Home Deep Cleaning · MVR 450</span>
+            <span style="font-size:11px;font-weight:600;color:#5B6B84">Mariyam Shifa · Tue 25 Aug · 14:00</span>
+          </span>
+        </div>
+      </div>
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Why are you cancelling?</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional — skip it if you like</span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+            <dc-import name="Chip" label="{{ r.label }}" kind="filter" selected="{{ r.on }}" on-tap="{{ r.tap }}" hint-size="110px,38px"></dc-import>
+          </sc-for>
+        </div>
+        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">Only RaajjePro sees this — it never appears on your or Mariyam's profile.</span>
+      </div>
+      <button onClick="{{ doCancel }}" style="flex:none;height:54px;border:none;border-radius:16px;background:#0F1B2D;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#1C2B44" style-active="transform:scale(.98)">Cancel booking</button>
+      <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Keep this booking</a>
+    </sc-if>
+
+    <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+        <span style="width:52px;height:52px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Cancelled — the time is freed</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">Mariyam has been told. Nothing goes on anyone's record, and there's nothing to pay.</span>
+        <dc-import name="StatusPill" status="cancelled" hint-size="100px,28px"></dc-import>
+      </div>
+      <a href="Pick%20a%20Time.dc.html" style="flex:none;height:54px;border:1.5px solid #CDDDFB;border-radius:16px;background:#E8F0FE;color:#1D4ED8;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Find another time with Mariyam</a>
+      <a href="My%20Bookings.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to my bookings</a>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProvider }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Cancel — provider cancelled" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="My%20Bookings.dc.html" aria-label="Back to bookings" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ P.title }}</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ P.sub }}</span>
+    </span>
+    <dc-import name="StatusPill" status="{{ P.pill }}" hint-size="110px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;text-wrap:pretty">{{ P.factTitle }}</span>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty">{{ P.factBody }}</span>
+    </div>
+
+    <sc-if value="{{ isNormal }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;background:#fff;border:1.5px solid #CDDDFB;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Your booking, ready to send again</span>
+          <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Everything is carried over — you only pick the new time.</span>
+        </span>
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Service</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Home Deep Cleaning · MVR 450</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Address</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">H. Faiha, 2nd floor · Ameenee Magu, Malé</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Preferred time</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Tuesday afternoons</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0"><span style="font-size:12px;font-weight:600;color:#5B6B84">Your notes</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">Two bedrooms and kitchen — keys with the caretaker</span></div>
+        </div>
+        <a href="Pick%20a%20Time.dc.html" style="height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Pick a new time</a>
+        <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">This goes only to Mariyam's calendar — it isn't sent out to other providers.</span>
+      </div>
+      <a href="Discovery.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#2563EB;text-decoration:none;padding:6px">Find a different cleaner instead</a>
+    </sc-if>
+
+    <sc-if value="{{ isEmg }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;background:#fff;border:1.5px solid #CDDDFB;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+        <span style="display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Your request is already back out</span></span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;text-wrap:pretty">The moment Ibrahim cancelled, your request went to the other qualified plumbers near you — excluding him. Nothing for you to redo.</span>
+        <div style="background:#E5F6EC;border:1px solid #A7DDBB;border-radius:13px;padding:11px 13px;display:flex;gap:9px;align-items:flex-start">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+          <span style="font-size:12px;font-weight:700;line-height:1.5;color:#166534;text-wrap:pretty">No second dispatch fee. Your MVR 200 covers this dispatch — re-sends included.</span>
+        </div>
+        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">As plumbers accept you'll get their offers together — callout fee and arrival estimate — and you choose, exactly like the first time.</span>
+      </div>
+      <a href="Booking%20Detail.dc.html" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Watch the booking</a>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customer_cancel&quot;,&quot;provider_cancelled&quot;,&quot;provider_cancelled_emergency&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;customer_cancel&quot;,&quot;tsType&quot;:&quot;'customer_cancel' | 'provider_cancelled' | 'provider_cancelled_emergency' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { picked:null, done:false };
+  REASONS = ['Change of plans','Found someone else','Timing doesn’t work','No longer needed','Prefer not to say'];
+  P = {
+    provider_cancelled: { title:'Booking cancelled', sub:'Home Deep Cleaning · Mariyam Shifa', pill:'cancelled',
+      factTitle:'Mariyam cancelled Sat 30 Aug · 10:00',
+      factBody:'The cancellation goes on her record, not yours. You hadn’t paid anything, so there’s nothing to recover — and your booking details are saved below.' },
+    provider_cancelled_emergency: { title:'Finding you someone else', sub:'Emergency plumbing call-out', pill:'waiting_provider',
+      factTitle:'Ibrahim can no longer attend',
+      factBody:'He cancelled at 21:12. The cancellation goes on his record. Here’s what happens next — automatically.' }
+  };
+  renderVals() {
+    const sc = this.props.scenario ?? 'customer_cancel', s = this.state;
+    const isLoading = sc==='loading', isError = sc==='error';
+    const isProvider = sc==='provider_cancelled' || sc==='provider_cancelled_emergency';
+    return {
+      isLoading, isError,
+      isCustomer: !isLoading && !isError && !isProvider,
+      isProvider: !isLoading && !isError && isProvider,
+      isNormal: sc==='provider_cancelled', isEmg: sc==='provider_cancelled_emergency',
+      P: this.P[sc] ?? this.P.provider_cancelled,
+      notDone: !s.done, isDone: s.done,
+      reasons: this.REASONS.map((r,i) => ({ label:r, on: s.picked===i, tap:() => this.setState({ picked: s.picked===i ? null : i }) })),
+      doCancel: () => this.setState({ done:true }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+textarea:focus{outline:none;border-color:#CDDDFB}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Rate this job — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:150px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:76px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:140px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:170px;border-radius:20px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px;display:flex"><div style="height:52px;flex:1;border-radius:16px;background:#E8EEF6"></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Rate this job — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Rate this job</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost — try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Rate this job" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Rate this job</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · Tue 25 Aug</span>
+    </span>
+    <dc-import name="StatusPill" status="completed" hint-size="110px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 20px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:42px;height:42px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">MS</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Mariyam Shifa</span><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="55px,18px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Home Deep Cleaning · MVR 600 · completed Tue 25 Aug</span>
+      </span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">How was Mariyam's work?</span>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{ stars }}" as="st" hint-placeholder-count="5">
+          <button onClick="{{ st.tap }}" aria-label="{{ st.label }}" style="width:48px;height:48px;border:none;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="{{ st.fill }}" stroke="{{ st.stroke }}" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z"></path></svg></button>
+        </sc-for>
+      </div>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-align:center;max-width:290px;text-wrap:pretty">{{ starHint }}</span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Add a word or two</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ tags }}" as="tg" hint-placeholder-count="8">
+          <dc-import name="Chip" label="{{ tg.label }}" kind="filter" selected="{{ tg.on }}" on-tap="{{ tg.tap }}" hint-size="100px,38px"></dc-import>
+        </sc-for>
+      </div>
+      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">A tag appears on Mariyam's profile only after three different customers have applied it — one review brands nobody.</span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Written review</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+      <textarea value="{{ review }}" onChange="{{ setReview }}" placeholder="What should the next customer know?" rows="4" style="border:1.5px solid #E3EAF3;border-radius:13px;padding:12px;font-size:13px;font-weight:500;color:#0F1B2D;line-height:1.5;resize:vertical;background:#fff;width:100%"></textarea>
+    </div>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px">
+    <button onClick="{{ submit }}" style="height:52px;border:none;border-radius:16px;background:{{ btnBg }};color:#fff;font-size:14px;font-weight:700;cursor:{{ btnCursor }};box-shadow:{{ btnShadow }}" style-active="transform:scale(.98)">{{ btnLabel }}</button>
+    <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">One review per booking. Stars and your words are public on Mariyam's profile.</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Rate this job — submitted" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;flex:1">Rate this job</span>
+    <dc-import name="StatusPill" status="completed" hint-size="110px,28px"></dc-import>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px 20px 24px;display:flex;flex-direction:column;gap:13px">
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+      <span style="width:52px;height:52px;border-radius:50%;background:#E5F6EC;color:#16A34A;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+      <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Your review is on the record</span>
+      <div style="display:flex;gap:4px">
+        <sc-for list="{{ doneStars }}" as="ds" hint-placeholder-count="5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="{{ ds.fill }}" stroke="{{ ds.stroke }}" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z"></path></svg>
+        </sc-for>
+      </div>
+      <sc-if value="{{ hasDoneTags }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+        <sc-for list="{{ doneTags }}" as="dt" hint-placeholder-count="2">
+          <dc-import name="Chip" label="{{ dt }}" kind="static" hint-size="80px,28px"></dc-import>
+        </sc-for>
+      </div>
+      </sc-if>
+      <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">It's public on Mariyam's profile, alongside her job count. This was this booking's one review.</span>
+    </div>
+    <a href="Book%20Again.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Book Mariyam again</a>
+    <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;unrated&quot;,&quot;submitted&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;unrated&quot;,&quot;tsType&quot;:&quot;'unrated' | 'submitted' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { rating:0, picked:{}, review:'', done:false };
+  TAGS = ['On time','Fair price','Quality materials','Good communication','Left a mess','Arrived late','Poor communication','Price changed on site'];
+  renderVals() {
+    const sc = this.props.scenario ?? 'unrated', s = this.state;
+    const isLoading = sc==='loading', isError = sc==='error';
+    const done = sc==='submitted' || s.done;
+    const rating = sc==='submitted' ? 5 : s.rating;
+    const rated = rating > 0;
+    const pickedLabels = sc==='submitted' ? ['On time','Good communication'] : this.TAGS.filter((t,i) => s.picked[i]);
+    return {
+      isLoading, isError,
+      isForm: !isLoading && !isError && !done,
+      isDone: !isLoading && !isError && done,
+      stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#D99A1E' : '#C6D4EA', tap:() => this.setState({ rating:n }) })),
+      starHint: rated ? 'The only required part — everything below is up to you.' : 'Stars are the only required part. Two taps finishes this: stars, then post.',
+      tags: this.TAGS.map((t,i) => ({ label:t, on: !!s.picked[i], tap:() => this.setState(st => ({ picked:{ ...st.picked, [i]: !st.picked[i] } })) })),
+      review: s.review, setReview: (e) => this.setState({ review:e.target.value }),
+      btnBg: rated ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C6D4EA',
+      btnShadow: rated ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
+      btnCursor: rated ? 'pointer' : 'default',
+      btnLabel: rated ? 'Post review' : 'Tap the stars to post',
+      submit: () => { if (this.state.rating > 0) this.setState({ done:true }); },
+      doneStars: [1,2,3,4,5].map(n => ({ fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#D99A1E' : '#C6D4EA' })),
+      doneTags: pickedLabels, hasDoneTags: pickedLabels.length > 0,
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

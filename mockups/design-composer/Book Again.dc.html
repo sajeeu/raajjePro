@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<sc-if value="{{ isLoading }}">
+<div data-screen-label="Book again — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
+    <div style="height:18px;width:150px;border-radius:8px;background:#E8EEF6"></div>
+  </div>
+  <div style="flex:1;padding:4px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+    <div style="height:80px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:210px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    <div style="height:52px;border-radius:16px;background:#E8EEF6"></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}">
+<div data-screen-label="Book again — error" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Book again</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. Your saved details are safe. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDelisted }}">
+<div data-screen-label="Book again — no longer offered" style="flex:1;display:flex;flex-direction:column">
+  <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="font-size:15px;font-weight:800;color:#0F1B2D">Book again</span>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:13px">
+    <dc-import name="EmptyState" icon="search" title="This service is no longer offered" body="Mariyam has taken Home Deep Cleaning off RaajjePro. Your past booking and its record stay in place, and your saved details stay yours." action-label="Find similar cleaners" on-action="{{ goDiscovery }}" hint-size="340px,240px"></dc-import>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMain }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Book again" style="flex:1;display:flex;flex-direction:column;min-height:0">
+  <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+    <a href="Booking%20Detail.dc.html" aria-label="Back to booking" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <span style="display:flex;flex-direction:column;min-width:0;flex:1">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Book again</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Home Deep Cleaning · last done Tue 25 Aug</span>
+    </span>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 20px 24px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:42px;height:42px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">MS</span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><a href="Provider%20Profile.dc.html" style="font-size:13.5px;font-weight:800;color:#0F1B2D;text-decoration:none">Mariyam Shifa</a><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="55px,18px"></dc-import></span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Home Deep Cleaning · MVR 450 · you rated ★ 5</span>
+      </span>
+    </div>
+
+    <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Everything is carried over</span>
+        <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">A repeat booking is one confirmation — not a re-entry of what RaajjePro already knows.</span>
+      </span>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Service</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Home Deep Cleaning · MVR 450</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Address</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">H. Faiha, 2nd floor · Ameenee Magu, Malé</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Preferred window</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Tuesday afternoons</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0"><span style="font-size:12px;font-weight:600;color:#5B6B84">Standing notes</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">Gate code 4471 — keys with the caretaker</span></div>
+      </div>
+      <button onClick="{{ noop }}" style="border:none;background:none;color:#2563EB;font-size:12px;font-weight:700;cursor:pointer;padding:0;align-self:flex-start">Change something</button>
+    </div>
+
+    <sc-if value="{{ isRequestMode }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;background:#EEF3FA;border:1px solid #E1EAF5;border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16v.5"></path></svg>
+      <span style="font-size:11.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">Since your last booking, Mariyam switched from open slots to requests — she now confirms each time herself.</span>
+    </div>
+    </sc-if>
+  </div>
+  <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px">
+    <a href="{{ ctaHref }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">{{ ctaLabel }}</a>
+    <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">{{ ctaNote }}</span>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:860},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;slot&quot;,&quot;request&quot;,&quot;delisted&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;slot&quot;,&quot;tsType&quot;:&quot;'slot' | 'request' | 'delisted' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const sc = this.props.scenario ?? 'slot';
+    const isLoading = sc==='loading', isError = sc==='error', isDelisted = sc==='delisted';
+    const isRequestMode = sc==='request';
+    return {
+      isLoading, isError, isDelisted,
+      isMain: !isLoading && !isError && !isDelisted,
+      isRequestMode,
+      ctaHref: isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html',
+      ctaLabel: isRequestMode ? 'Request a time' : 'Choose a slot',
+      ctaNote: isRequestMode ? 'Your details go with the request — Mariyam confirms the time.' : 'Mariyam still has to accept — picking a slot sends her the request.',
+      goDiscovery: () => { window.location = 'Discovery.dc.html'; },
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>
