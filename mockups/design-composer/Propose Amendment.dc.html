@@ -82,7 +82,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         </div>
       </div>
 
-      <sc-if value="{{ isProvider }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ showAdherence }}" hint-placeholder-val="{{ false }}">
       <div style="background:#FEF3DC;border:1px solid #F3C77B;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start">
         <span style="width:34px;height:34px;border-radius:11px;background:#D97706;color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-8 4 4 8-9"></path><path d="M15 4h6v6"></path></svg></span>
         <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
@@ -191,15 +191,17 @@ class Component extends DCLogic {
     const otherFirst = isProvider ? 'Aishath' : 'Mariyam';
     const field = s.fieldTouched ? s.field : (isProvider ? 'price' : 'time');
     const F = this.FIELDS[field];
-    const defProp = isProvider && !s.pFedited ? 'MVR 600' : '';
+    const defProp = isProvider && !s.pFedited && field==='price' ? 'MVR 600' : '';
     const propValue = s.propVal || defProp;
     const defReason = isProvider && !s.pFedited ? 'Two extra rooms added on the day' : '';
     const reason = s.reason || defReason;
     const canSend = propValue.trim().length > 0 && reason.trim().length > 0;
-    const sentField = isProvider ? 'price' : field;
+    const wasSentByMe = sc==='sent' || (s.phase==='sent');
+    const sentField = field;
     return {
       isLoading, isError, isMain: !isLoading && !isError,
       isCompose, isReceiving, isSent, isAccepted, isRejected, isProvider,
+      showAdherence: isProvider && field==='price',
       title: isCompose ? 'Propose a change' : isReceiving ? 'A change to decide' : 'Change the agreement',
       otherParty, otherFirst,
       fieldChips: Object.keys(this.FIELDS).map(k => ({ label:this.FIELDS[k].label, sel:k===field,
@@ -214,8 +216,8 @@ class Component extends DCLogic {
       sendShadow: canSend ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
       send: () => { if (canSend) this.setState({ phase:'sent', propVal:propValue, reason:reason }); },
       sentSummary: this.FIELDS[sentField].label.toLowerCase()==='price' ? 'the new price' : 'the new '+this.FIELDS[sentField].label.toLowerCase(),
-      sentLine: this.FIELDS[sentField].label + ': ' + this.FIELDS[sentField].orig + ' → ' + (s.propVal || 'MVR 600'),
-      sentReason: '“' + (s.reason || defReason || '—') + '”',
+      sentLine: this.FIELDS[sentField].label + ': ' + this.FIELDS[sentField].orig + ' \u2192 ' + (s.propVal || defProp),
+      sentReason: '\u201c' + (s.reason || defReason || '\u2014') + '\u201d',
       accept: () => this.setState({ phase:'accepted' }),
       reject: () => this.setState({ phase:'rejected' }),
       noop: () => {}
