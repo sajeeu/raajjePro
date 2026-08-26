@@ -1,6 +1,6 @@
 # Decision 02 — Category changes and booking models
 
-**Status: proposed. Nothing below is in the plan until a Round adopts it.** This touches locked text — the twelve-category list (§1c), the per-category quote windows (invariant 13), Phase 4's seed, and two Round-20 notes — so it is a plan revision, not a Discovery design change. The prototypes keep rendering the current twelve until this is decided.
+**Status: adopted as Round 25 (2026-08-26)** — Appliance Repair as the label · Pest Control on the 2h/4h window · `occasion` ships in v1. Plan amended at revision 5.11, with CLAUDE.md and the designer brief brought along. The prototype corrections (Home, Discovery, ServiceCard) ride the Round 25 design prompt.
 
 ---
 

@@ -20,6 +20,8 @@ FORBIDDEN = [
      "Uniqueness is not ownership. A phone number is never rendered as verified."),
     ("Tuition category", r"Tuition",
      "There are twelve categories and Tuition is not one. Boat Charter replaced it."),
+    ("pre-Round-25 category", r"(?<![A-Za-z])Gardening(?![A-Za-z])|'Computer'|>Computer<|&quot;Computer&quot;",
+     "Round 25: Pest Control replaced Gardening, and Computer is now Appliance Repair."),
     ("encryption claim", r"[Ee]ncrypt",
      "Chat is admin-readable in a dispute. Say 'your contact details are never shared'."),
     ("editorial provider label", r"Prone to|Unreliable|Top rated|Best value|Most reliable|Recommended provider",
