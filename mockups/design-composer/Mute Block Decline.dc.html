@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+button:focus{outline:none}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Mute, block, decline" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div aria-hidden="true" style="position:absolute;inset:0;padding:70px 16px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+    <div style="align-self:flex-start;width:58%;height:52px;border-radius:18px 18px 18px 6px;background:#E8EEF6"></div>
+    <div style="align-self:flex-end;width:64%;height:64px;border-radius:18px 18px 6px 18px;background:#DDE7F3"></div>
+    <div style="align-self:flex-end;width:44%;height:44px;border-radius:18px 18px 6px 18px;background:#DDE7F3"></div>
+    <div style="align-self:flex-start;width:52%;height:52px;border-radius:18px 18px 18px 6px;background:#E8EEF6"></div>
+  </div>
+  <a href="Booking%20Thread.dc.html" aria-label="Close" style="position:absolute;inset:0;background:rgba(15,27,45,.45)"></a>
+
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -12px 40px rgba(15,27,45,.18);padding:10px 18px 18px;display:flex;flex-direction:column;gap:6px">
+    <span style="width:44px;height:5px;border-radius:999px;background:#E1EAF5;align-self:center"></span>
+
+    <sc-if value="{{ viewMenu }}" hint-placeholder-val="{{ true }}">
+      <span style="display:flex;flex-direction:column;gap:2px;padding:6px 2px 4px">
+        <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ person }}</span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ context }}</span>
+      </span>
+      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="3">
+        <button onClick="{{ a.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;border:none;background:none;cursor:pointer;padding:11px 2px;border-top:1px solid #EEF3FA">
+          <span style="width:40px;height:40px;border-radius:13px;background:{{ a.iBg }};color:{{ a.iFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ a.iD }}"></path></svg></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ a.title }}</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ a.sum }}</span>
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:12px"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+      </sc-for>
+      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-align:center;padding:2px 10px 6px;text-wrap:pretty">A live booking's chat survives all of these — coordination never gets cut off mid-job.</span>
+      <a href="Booking%20Thread.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Cancel</a>
+    </sc-if>
+
+    <sc-if value="{{ viewConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:8px 2px 0">
+        <span style="display:flex;gap:12px;align-items:center">
+          <span style="width:46px;height:46px;border-radius:15px;background:{{ cIBg }};color:{{ cIFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ cID }}"></path></svg></span>
+          <span style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ cTitle }}</span>
+            <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ context }}</span>
+          </span>
+        </span>
+        <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:16px;display:flex;flex-direction:column">
+          <span style="display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-bottom:1px solid #EEF3FA">
+            <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Stops</span>
+            <span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#23324A;text-wrap:pretty">{{ cStops }}</span>
+          </span>
+          <span style="display:flex;flex-direction:column;gap:3px;padding:12px 14px">
+            <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Doesn't stop</span>
+            <span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#23324A;text-wrap:pretty">{{ cKeeps }}</span>
+          </span>
+        </div>
+        <button onClick="{{ confirm }}" style="height:52px;border:none;border-radius:16px;background:{{ cBtnBg }};color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:{{ cBtnShadow }}" style-active="transform:scale(.98)">{{ cLabel }}</button>
+        <button onClick="{{ backMenu }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px 4px 6px">Cancel</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ viewDone }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 6px 4px;text-align:center">
+        <span style="width:58px;height:58px;border-radius:50%;background:{{ cIBg }};color:{{ cIFg }};display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ dTitle }}</span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ dBody }}</span>
+        <a href="Booking%20Thread.dc.html" style="height:50px;border-radius:15px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28);align-self:stretch;margin-top:6px">Back to chat</a>
+        <button onClick="{{ backMenu }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px 4px 6px">{{ dUndo }}</button>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customer&quot;,&quot;provider&quot;],&quot;default&quot;:&quot;customer&quot;,&quot;tsType&quot;:&quot;'customer' | 'provider'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { view: 'menu', action: null };
+  defs(other, isProvider) {
+    const A = {
+      mute: { title: 'Mute this conversation', iD: 'M18 17H4s2-2 2-8a6 6 0 1 1 12 0c0 6 2 8 2 8zM10 21h4M4 4l16 16',
+        iBg: '#EEF3FA', iFg: '#41526B', btnBg: 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)', btnShadow: '0 8px 18px rgba(37,99,235,.28)',
+        sum: 'No pings from this chat. ' + other + ' can still message you, and nothing changes on their side.',
+        stops: 'Notifications from this conversation. Nothing else.',
+        keeps: other + '’s messages still arrive, and bookings are untouched. Unmute any time.',
+        label: 'Mute conversation', dTitle: 'Muted',
+        dBody: 'You won’t be notified about this chat. Messages still arrive, and everything else is unchanged.', dUndo: 'Unmute' },
+      block: { title: 'Block ' + other, iD: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM5.8 5.8l12.4 12.4',
+        iBg: '#FEF2F2', iFg: '#B91C1C', btnBg: '#DC2626', btnShadow: '0 8px 18px rgba(220,38,38,.25)',
+        sum: 'Neither of you can message or book the other again.',
+        stops: 'New messages and new bookings between you and ' + other + ', both directions, from now on.',
+        keeps: 'The Tue 25 Aug booking. Its chat stays open until that booking ends, so the visit can still be coordinated.',
+        label: 'Block ' + other, dTitle: 'Blocked',
+        dBody: 'The Tue 25 Aug chat stays open until the booking ends. After that, neither of you can message or book the other.', dUndo: 'Unblock' },
+      decline: { title: 'Decline future bookings', iD: 'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5M16 16l5 5M21 16l-5 5',
+        iBg: '#FEF3DC', iFg: '#A15C00', btnBg: '#D97706', btnShadow: '0 8px 18px rgba(217,119,6,.25)',
+        sum: other + ' can’t send you new booking requests. Messages keep working.',
+        stops: 'New booking requests from ' + other + '.',
+        keeps: 'This conversation, and the booking already underway. Not a report — nothing goes to review, and ' + other + ' isn’t told why.',
+        label: 'Decline future bookings', dTitle: 'Future bookings declined',
+        dBody: other + ' can no longer send you new booking requests. The conversation stays open, and the booking underway continues.', dUndo: 'Allow again' } };
+    return isProvider ? A : { mute: A.mute, block: A.block };
+  }
+  renderVals() {
+    const isProvider = (this.props.role ?? 'customer') === 'provider';
+    const other = isProvider ? 'Aishath' : 'Mariyam';
+    const person = isProvider ? 'Aishath Naeem' : 'Mariyam Shifa';
+    const context = 'Home Deep Cleaning · Tue 25 Aug' + (isProvider ? ' · your customer' : '');
+    const defs = this.defs(other, isProvider);
+    const s = this.state;
+    const cur = defs[s.action] ?? defs.mute;
+    return {
+      person, context,
+      viewMenu: s.view === 'menu', viewConfirm: s.view === 'confirm', viewDone: s.view === 'done',
+      actions: Object.keys(defs).map(k => ({ ...defs[k], pick: () => this.setState({ view: 'confirm', action: k }) })),
+      cTitle: cur.title, cStops: cur.stops, cKeeps: cur.keeps, cLabel: cur.label,
+      cIBg: cur.iBg, cIFg: cur.iFg, cID: cur.iD, cBtnBg: cur.btnBg, cBtnShadow: cur.btnShadow,
+      dTitle: cur.dTitle, dBody: cur.dBody, dUndo: cur.dUndo,
+      confirm: () => this.setState({ view: 'done' }),
+      backMenu: () => this.setState({ view: 'menu', action: null })
+    };
+  }
+}
+</script>
+</body>
+</html>
