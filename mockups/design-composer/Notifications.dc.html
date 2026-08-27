@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<div style="flex:none;display:flex;align-items:center;gap:12px;padding:14px 20px 12px;background:#F7FAFD;border-bottom:1px solid #EEF3FA">
+  <a href="./Profile.dc.html" aria-label="Back to Profile" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none;text-decoration:none;box-shadow:0 1px 2px rgba(15,27,45,.05)" style-hover="background:#EDF3FB"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+  <div style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+    <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Notifications</div>
+    <div style="font-size:12px;font-weight:600;color:#5B6B84">{{ unreadLine }}</div>
+  </div>
+  <sc-if value="{{ markAllOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ markAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:800;cursor:pointer;padding:8px 2px;flex:none" style-hover="color:#1D4ED8">Mark all read</button></sc-if>
+</div>
+
+<div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+<sc-if value="{{ isPopulated }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Notifications" style="padding:14px 20px 26px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .3s ease both">
+  <sc-for list="{{ items }}" as="n" hint-placeholder-count="5">
+    <button onClick="{{ n.tap }}" style="display:flex;align-items:flex-start;gap:12px;background:{{ n.bg }};border:1.5px solid {{ n.bd }};border-radius:18px;padding:13px 14px;cursor:pointer;text-align:left;width:100%" style-hover="border-color:#CDDDFB">
+      <span style="width:42px;height:42px;border-radius:50%;background:{{ n.tint }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ n.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg></span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="display:flex;align-items:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:{{ n.dot }};flex:none"></span><span style="font-size:14px;font-weight:{{ n.tw }};color:{{ n.tc }}">{{ n.t }}</span></span>
+        <span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#5B6B84">{{ n.s }}</span>
+      </span>
+      <span style="font-size:11.5px;font-weight:700;color:#8296B3;flex:none;margin-top:2px;white-space:nowrap">{{ n.age }}</span>
+    </button>
+  </sc-for>
+  <div style="font-size:11.5px;font-weight:500;color:#8296B3;text-align:center;padding-top:8px;text-wrap:pretty">Booking updates like these are always sent — marketing and the weekly digest are separate, and off unless you opt in.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Notifications — empty" style="padding:60px 20px;display:flex;justify-content:center">
+  <dc-import name="EmptyState" icon="message" title="Nothing new." body="Booking updates, messages and payment confirmations land here as they happen." action-label="Explore services" on-action="{{ goExplore }}" hint-size="340px,220px"></dc-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Notifications — loading" aria-hidden="true" style="padding:14px 20px 26px;display:flex;flex-direction:column;gap:10px">
+  <sc-for list="{{ skels }}" as="k" hint-placeholder-count="5">
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:13px 14px;display:flex;gap:12px;align-items:center">
+      <div style="width:42px;height:42px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:13px;width:40%;border-radius:7px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        <div style="height:11px;width:70%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Notifications — error" style="padding:60px 20px;display:flex;justify-content:center">
+  <dc-import name="EmptyState" icon="message" title="Couldn't load notifications" body="Your connection may have dropped. Nothing is lost — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:fadeIn .25s ease both;pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3)">{{ toast }}</span></div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { view:null, read:{}, toast:'' };
+  ITEMS = [
+    { id:'accepted', unread:true, tint:'#E5F6EC', fg:'#16A34A', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5', t:'Booking accepted', s:'Home Deep Cleaning · Mariyam Shifa', age:'2h', dest:'Opens the booking' },
+    { id:'payment', unread:true, tint:'#E8F0FE', fg:'#2563EB', d:'M6 3h12v18l-3-2-3 2-3-2-3 2zM9.5 8.5h5M9.5 12h5', t:'Payment confirmed', s:'Ibrahim Rasheed confirmed receipt', age:'1d', dest:'Opens the booking record' },
+    { id:'message', unread:true, tint:'#E8F0FE', fg:'#2563EB', d:'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z', t:'New message', s:'Ibrahim Rasheed', age:'1d', dest:'Opens the conversation' },
+    { id:'completed', unread:false, tint:'#EEF3FA', fg:'#5B6B84', d:'M4.5 12.5l5 5 10-11', t:'Booking completed', s:'Home Deep Cleaning · Mariyam Shifa', age:'1w', dest:'Opens the booking record' },
+    { id:'welcome', unread:false, tint:'#EEF3FA', fg:'#5B6B84', d:'M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11zM12 12.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8z', t:'Welcome to RaajjePro', s:'Your account is ready', age:'7 Jan', dest:'Opens Home' } ];
+  toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2400); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  renderVals(){
+    const view = this.state.view ?? this.props.state ?? 'populated';
+    const read = this.state.read;
+    const items = this.ITEMS.map(n => {
+      const unread = n.unread && !read[n.id];
+      return { ...n,
+        bg: unread ? '#fff' : '#F7FAFD', bd: unread ? '#CDDDFB' : '#E7EEF6',
+        dot: unread ? '#2563EB' : 'transparent',
+        tw: unread ? '800' : '700', tc: unread ? '#0F1B2D' : '#41526B',
+        tap: () => { this.setState(s => ({ read: { ...s.read, [n.id]: true } })); this.toastMsg(n.dest); } };
+    });
+    const unreadCount = items.filter((it, i) => this.ITEMS[i].unread && !read[this.ITEMS[i].id]).length;
+    return {
+      isPopulated: view === 'populated', isEmpty: view === 'empty', isLoading: view === 'loading', isError: view === 'error',
+      items, skels: [1,2,3,4,5],
+      unreadLine: view === 'populated' ? (unreadCount > 0 ? unreadCount + ' unread' : "You're all caught up") : ' ',
+      markAllOn: view === 'populated' && unreadCount > 0,
+      markAll: () => this.setState({ read: { accepted:true, payment:true, message:true } }),
+      goExplore: () => { window.location = 'Discovery.dc.html'; },
+      retry: () => this.setState({ view:'populated' }),
+      toastOn: !!this.state.toast, toast: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+<div style="flex:none;display:flex;align-items:center;gap:12px;padding:14px 20px 12px;background:#F7FAFD;border-bottom:1px solid #EEF3FA">
+  <button onClick="{{ back }}" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none;cursor:pointer;box-shadow:0 1px 2px rgba(15,27,45,.05)" style-hover="background:#EDF3FB"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+  <div style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
+    <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ title }}</div>
+    <div style="font-size:12px;font-weight:600;color:#5B6B84">Aishath Nazim · aishath@example.mv</div>
+  </div>
+</div>
+
+<div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+<sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Account settings" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+    <button onClick="{{ r.tap }}" style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;cursor:pointer;text-align:left;width:100%;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#CDDDFB">
+      <span style="width:46px;height:46px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.d }}"></path></svg></span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:750;color:#0F1B2D">{{ r.t }}</span><span style="font-size:12.5px;font-weight:600;color:#5B6B84">{{ r.s }}</span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+  </sc-for>
+
+  <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+    <div style="font-size:13px;font-weight:800;color:#0F1B2D">Email notifications</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Marketing</span><span style="font-size:12px;font-weight:600;color:#5B6B84">Offers and announcements</span></span>
+      <button onClick="{{ toggleMarketing }}" role="switch" aria-checked="{{ marketingAria }}" aria-label="Marketing emails" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ marketingBg }};position:relative;cursor:pointer;flex:none;transition:background .2s"><span style="position:absolute;top:3px;left:{{ marketingLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left .2s"></span></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Weekly digest</span><span style="font-size:12px;font-weight:600;color:#5B6B84">A summary of activity, once a week</span></span>
+      <button onClick="{{ toggleDigest }}" role="switch" aria-checked="{{ digestAria }}" aria-label="Weekly digest" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ digestBg }};position:relative;cursor:pointer;flex:none;transition:background .2s"><span style="position:absolute;top:3px;left:{{ digestLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left .2s"></span></button>
+    </div>
+    <div style="font-size:11.5px;font-weight:600;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:11px;text-wrap:pretty">Booking updates are always sent — they keep your bookings running and have no switch.</div>
+  </div>
+
+  <button onClick="{{ goDelete }}" style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;cursor:pointer;text-align:left;width:100%;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#F5C6C6">
+    <span style="width:46px;height:46px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5"></path></svg></span>
+    <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:750;color:#B91C1C">Delete account</span><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Accepted immediately, completes within 30 days</span></span>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+  </button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSessions }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Active sessions" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+  <div style="font-size:12.5px;font-weight:600;color:#5B6B84;line-height:1.55;text-wrap:pretty">Everywhere you're signed in. Revoking a device signs out only that device.</div>
+  <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="2">
+    <div style="background:#fff;border:1.5px solid {{ s.bd }};border-radius:20px;padding:14px 15px;display:flex;align-items:center;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="width:46px;height:46px;border-radius:50%;background:{{ s.tint }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ s.fg }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2.5h10v19H7zM10.5 18.5h3"></path></svg></span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:750;color:#0F1B2D">{{ s.name }}</span><sc-if value="{{ s.current }}" hint-placeholder-val="{{ false }}"><span style="height:22px;border-radius:999px;background:#E5F6EC;color:#15803D;border:1px solid #BBE5CB;display:inline-flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:800">This device</span></sc-if></span>
+        <span style="font-size:12.5px;font-weight:600;color:#5B6B84">{{ s.meta }}</span>
+      </span>
+      <sc-if value="{{ s.current }}" hint-placeholder-val="{{ false }}"><a href="./Sign%20In.dc.html" style="font-size:13px;font-weight:800;color:#5B6B84;text-decoration:none;padding:10px 6px;flex:none" style-hover="color:#0F1B2D">Sign out</a></sc-if>
+      <sc-if value="{{ s.revocable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.revoke }}" style="border:1.5px solid #F5C6C6;border-radius:999px;background:#fff;color:#B91C1C;font-size:13px;font-weight:800;padding:9px 14px;cursor:pointer;flex:none" style-hover="background:#FEF2F2">Revoke</button></sc-if>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDownload }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Download my data" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+  <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+    <span style="width:54px;height:54px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5l4.5 4.5 4.5-4.5M4 17v3h16v-3"></path></svg></span>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">A copy of everything you've put in</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.6;color:#5B6B84;text-wrap:pretty">Your export includes your profile, bookings, reviews and messages. It arrives as a file sent to <span style="color:#0F1B2D;font-weight:750">aishath@example.mv</span>, usually within a day.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ dataItems }}" as="it" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:10px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4.5 12.5l5 5 10-11"></path></svg><span style="font-size:13.5px;font-weight:700;color:#0F1B2D">{{ it }}</span></div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ notRequested }}" hint-placeholder-val="{{ true }}"><button onClick="{{ requestData }}" style="height:52px;border:none;border-radius:16px;background:#2563EB;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(37,99,235,.25)" style-hover="background:#1D4ED8">Request my data</button></sc-if>
+    <sc-if value="{{ requested }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;background:#E5F6EC;border:1px solid #BBE5CB;border-radius:16px;padding:13px 15px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4.5 12.5l5 5 10-11"></path></svg><span style="font-size:13px;font-weight:700;color:#15803D;line-height:1.5">Requested — the file will be sent to your email, usually within a day.</span></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDeleteConfirm }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Delete account — confirm" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+  <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+    <span style="width:54px;height:54px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"></path></svg></span>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Delete your account</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.6;color:#5B6B84;text-wrap:pretty">Your request is accepted immediately — open bookings don't block it. Here's exactly what happens:</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ deleteFacts }}" as="f" hint-placeholder-count="4">
+        <div style="display:flex;align-items:flex-start;gap:10px"><span style="width:6px;height:6px;border-radius:50%;background:#DC2626;flex:none;margin-top:6px"></span><span style="font-size:13px;font-weight:600;line-height:1.55;color:#0F1B2D;text-wrap:pretty">{{ f }}</span></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #EEF3FA;padding-top:14px">
+      <label for="del-confirm" style="font-size:13px;font-weight:700;color:#0F1B2D">Type <span style="font-family:ui-monospace,monospace;background:#FEF2F2;color:#B91C1C;padding:2px 6px;border-radius:6px">DELETE</span> to confirm</label>
+      <input id="del-confirm" type="text" value="{{ deleteTyped }}" onChange="{{ typeDelete }}" autocomplete="off" placeholder="DELETE" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;padding:0 15px;font-size:15px;font-weight:700;color:#0F1B2D;background:#F7FAFD;letter-spacing:.08em" style-focus="border-color:#DC2626;background:#fff">
+    </div>
+    <button onClick="{{ confirmDelete }}" disabled="{{ deleteDisabled }}" style="height:52px;border:none;border-radius:16px;background:{{ deleteBtnBg }};color:#fff;font-size:15px;font-weight:800;cursor:{{ deleteBtnCursor }};transition:background .2s">Delete my account</button>
+    <button onClick="{{ back }}" style="height:48px;border:none;border-radius:14px;background:#EEF3FA;color:#41526B;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:#E3EAF3">Keep my account</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDeleteFrozen }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Delete account — frozen" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+  <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:22px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+    <span style="width:60px;height:60px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;align-self:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 11h13v9.5h-13zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
+    <div style="display:flex;flex-direction:column;gap:6px;text-align:center">
+      <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your deletion request is in</div>
+      <div style="font-size:13px;font-weight:600;line-height:1.6;color:#5B6B84;text-wrap:pretty">Your account is frozen as of now — no new bookings, no new listings, and it's hidden from search.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:18px;padding:15px">
+      <sc-for list="{{ frozenFacts }}" as="f" hint-placeholder-count="3">
+        <div style="display:flex;align-items:flex-start;gap:10px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M4.5 12.5l5 5 10-11"></path></svg><span style="font-size:13px;font-weight:600;line-height:1.55;color:#0F1B2D;text-wrap:pretty">{{ f }}</span></div>
+      </sc-for>
+    </div>
+    <a href="./Home.dc.html" style="height:52px;border-radius:16px;background:#2563EB;color:#fff;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 6px 14px rgba(37,99,235,.25)" style-hover="background:#1D4ED8">Done</a>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Account settings — loading" aria-hidden="true" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ skels }}" as="k" hint-placeholder-count="6">
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;display:flex;gap:13px;align-items:center">
+      <div style="width:46px;height:46px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:13px;width:42%;border-radius:7px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        <div style="height:11px;width:68%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Account settings — error" style="padding:60px 20px;display:flex;justify-content:center">
+  <dc-import name="EmptyState" icon="pin" title="Couldn't load settings" body="Your connection may have dropped. Nothing is lost — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:fadeIn .25s ease both;pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3);text-align:center">{{ toast }}</span></div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;sessions&quot;,&quot;download&quot;,&quot;delete_confirm&quot;,&quot;delete_frozen&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
+class Component extends DCLogic {
+  state = { view:null, typed:'', revoked:{}, requested:false, marketing:false, digest:false, toast:'' };
+  TITLES = { list:'Account settings', sessions:'Active sessions', download:'Download my data', delete_confirm:'Delete account', delete_frozen:'Delete account', loading:'Account settings', error:'Account settings' };
+  DELETE_FACTS = [
+    'Your account freezes at once — no new bookings, no new listings, hidden from search.',
+    'Deletion completes when your open bookings finish — and within 30 days regardless.',
+    'Reviews you wrote stay, with your name removed.',
+    'Identity documents are deleted outright — not anonymised.' ];
+  FROZEN_FACTS = [
+    'Deletion completes when your open bookings finish, and within 30 days regardless.',
+    'Reviews you wrote stay, with your name removed.',
+    'Identity documents are deleted outright.' ];
+  toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2600); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  go(v){ this.setState({ view:v }); }
+  renderVals(){
+    const view = this.state.view ?? this.props.scenario ?? 'list';
+    const typedOk = this.state.typed.trim().toUpperCase() === 'DELETE';
+    const rows = [
+      { t:'Change password', s:'Current password required', d:'M5.5 11h13v9.5h-13zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11', tap:() => this.toastMsg('Opens change password') },
+      { t:'Change email', s:'A code goes to the new address first', d:'M3.5 5.5h17v13h-17zM3.5 7l8.5 6 8.5-6', tap:() => this.toastMsg('Opens change email — verify pattern') },
+      { t:'Change phone', s:'Shown as you enter it, like registration', d:'M8 2.5h8v19H8zM11 18.5h2', tap:() => this.toastMsg('Opens change phone') },
+      { t:'Active sessions', s:'2 devices signed in', d:'M2.5 5h19v11h-19zM8 19.5h8', tap:() => this.go('sessions') },
+      { t:'Saved preferences', s:'Addresses, time windows, instructions', d:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1.5 14h5M9.5 8h5M17.5 16h5', tap:() => { window.location = 'Saved%20Preferences.dc.html'; } },
+      { t:'Download my data', s:'Profile, bookings, reviews, messages', d:'M12 3v11M7.5 9.5l4.5 4.5 4.5-4.5M4 17v3h16v-3', tap:() => this.go('download') } ];
+    const sessions = [
+      { name:'iPhone 14', meta:'Malé · active now', current:true, revocable:false, tint:'#E8F0FE', fg:'#2563EB', bd:'#CDDDFB' },
+      this.state.revoked.pixel ? null : { name:'Pixel 7', meta:'Last used 3 days ago', current:false, revocable:true, tint:'#EEF3FA', fg:'#5B6B84', bd:'#E9EFF7', revoke:() => { this.setState(s => ({ revoked:{ ...s.revoked, pixel:true } })); this.toastMsg('Pixel 7 signed out — only that device'); } } ].filter(Boolean);
+    return {
+      title: this.TITLES[view] || 'Account settings',
+      isList: view === 'list', isSessions: view === 'sessions', isDownload: view === 'download',
+      isDeleteConfirm: view === 'delete_confirm', isDeleteFrozen: view === 'delete_frozen',
+      isLoading: view === 'loading', isError: view === 'error',
+      rows, sessions, skels:[1,2,3,4,5,6],
+      dataItems: ['Profile details', 'Bookings and their records', 'Reviews you wrote', 'Message history'],
+      deleteFacts: this.DELETE_FACTS, frozenFacts: this.FROZEN_FACTS,
+      back: () => { if (view === 'list' || view === 'loading' || view === 'error') window.location = 'Profile.dc.html'; else if (view === 'delete_frozen') this.go('list'); else this.go('list'); },
+      goDelete: () => this.go('delete_confirm'),
+      deleteTyped: this.state.typed,
+      typeDelete: (e) => this.setState({ typed: e.target.value }),
+      deleteDisabled: !typedOk,
+      deleteBtnBg: typedOk ? '#DC2626' : '#F1B7B7',
+      deleteBtnCursor: typedOk ? 'pointer' : 'not-allowed',
+      confirmDelete: () => { if (typedOk) this.setState({ view:'delete_frozen', typed:'' }); },
+      notRequested: !this.state.requested, requested: this.state.requested,
+      requestData: () => this.setState({ requested:true }),
+      marketingBg: this.state.marketing ? '#2563EB' : '#D5DEEA', marketingLeft: this.state.marketing ? '23px' : '3px', marketingAria: String(this.state.marketing),
+      digestBg: this.state.digest ? '#2563EB' : '#D5DEEA', digestLeft: this.state.digest ? '23px' : '3px', digestAria: String(this.state.digest),
+      toggleMarketing: () => this.setState(s => ({ marketing:!s.marketing })),
+      toggleDigest: () => this.setState(s => ({ digest:!s.digest })),
+      retry: () => this.go('list'),
+      toastOn: !!this.state.toast, toast: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
