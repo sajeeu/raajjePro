@@ -14,7 +14,7 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **Nine of the thirteen sessions are done.**
+**71 page briefs** in `designer-brief.md`. **Ten of the thirteen sessions are done.**
 
 | Artboard | Session | Status |
 |---|---|---|
@@ -32,10 +32,9 @@ That framing is the most important line in this document, because it decides how
 | `Messages` · `Enquiry Thread` · `Booking Thread` · `Mute Block Decline` | 7 | Reviewed across 1 round |
 | `Sign In` · `Register` · `Verify Email` · `Forgot Password` · `App States` | 8 | Reviewed across 1 round |
 | `Profile` · `Account Settings` · `Saved Preferences` · `Notifications` · `Help Support` · `Legal` | 9 | Reviewed across 1 round |
+| `Create Service.dc.html` — all seven wizard steps in one shell | 10 | Reviewed across 2 rounds |
 
-**Sessions 10–13 remain.** `verify-dc.py` passes on all forty-six files.
-
-⚠ **`Become a Provider.dc.html` is in the repo but missing from the Claude Design project.** Session 9 could only link to it because the repo holds it; the design chat saw no such sibling. Re-upload it before session 11, which inherits from it.
+**Sessions 11–13 remain.** `verify-dc.py` passes on all forty-seven files.
 
 ### What auditing has caught that design review would not
 
@@ -50,6 +49,13 @@ Service Preview allowed a `range` price with `instant` booking, which advertises
 starting price as bookable. Each prop was individually correct. For every screen
 with multiple scenario props, enumerate the combinations and confirm each one is
 legal — the verifier reads markup and cannot do this.
+
+🔧 **A brief that says "import the components" is not enough — added after session 10.**
+The wizard hand-rolled its own tag and island chips despite `Chip.dc.html` supporting
+both cases exactly. Nothing looked wrong; it was a silent fork of a component that
+exists. Grep every imported artboard for `<dc-import` and check the count against what
+the screen actually renders — a screen with chips, badges, pills, skeletons or empty
+states and zero imports has copied something.
 
 ## Session 1 is Home, and it is different from the other twelve
 

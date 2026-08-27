@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus,select:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes barGrow{from{width:12%}to{width:64%}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:16px 20px 0;display:flex;flex-direction:column;gap:12px;background:#F2F6FB">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onClick="{{ headerBack }}" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0F1B2D;flex:none;box-shadow:0 1px 2px rgba(15,27,45,.05)" style-hover="background:#EDF3FB" style-active="transform:scale(.94)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+      </button>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+        <div style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:{{ headlineFg }}">{{ reqHeadline }}</div>
+        <div style="font-size:11.5px;font-weight:700;color:#5B6B84">{{ stepSub }}</div>
+      </div>
+      <div style="flex:none;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;background:{{ saveBg }};border:1px solid {{ saveBd }};font-size:11px;font-weight:700;color:{{ saveFg }}">
+        <sc-if value="{{ isSaving }}"><span style="width:11px;height:11px;border:2px solid #C7D5E8;border-top-color:#2563EB;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span></sc-if>
+        <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+        <sc-if value="{{ isOffline }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a4 4 0 0 1 3-6.9A5.5 5.5 0 0 1 17.5 9M3 3l18 18"></path></svg></sc-if>
+        <span>{{ saveLabel }}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px" aria-hidden="true">
+      <sc-for list="{{ segs }}" as="g" hint-placeholder-count="7">
+        <div style="flex:1;height:4px;border-radius:999px;background:{{ g.bg }};transition:background .3s ease"></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin:-2px -2px 0;scrollbar-width:none">
+      <sc-for list="{{ pills }}" as="p" hint-placeholder-count="7">
+        <button onClick="{{ p.go }}" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};border:1.5px solid {{ p.bd }};font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s" style-active="transform:scale(.96)">
+          <span>{{ p.label }}</span>
+          <sc-if value="{{ p.dot }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.dotBg }};display:inline-block"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ isOffline }}">
+    <div style="flex:none;display:flex;align-items:center;gap:9px;background:#FEF3DC;border-top:1px solid #F3E2B8;border-bottom:1px solid #F3E2B8;padding:9px 20px;font-size:12.5px;font-weight:600;color:#8A5A08;animation:fadeIn .25s ease both">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 15a4 4 0 0 1 3-6.9A5.5 5.5 0 0 1 17.5 9M3 3l18 18"></path></svg>
+      <span>You're offline — changes are queued and will sync automatically.</span>
+    </div>
+  </sc-if>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ st1 }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="1 · Details" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:20px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Service details</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">A clear name and description help customers find and choose you.</p>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #E9EFF7;border-radius:16px;padding:12px 15px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="8.6"></circle><path d="M8.4 12.4l2.6 2.6 4.6-5"></path></svg>
+          <span style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">Saved as a draft as you go — <b>nothing here is required until you publish.</b></span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="svcname" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Service name<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></label>
+          <input id="svcname" type="text" maxLength="80" value="{{ name }}" onChange="{{ setName }}" placeholder="e.g. Wiring &amp; Fault Repair" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#5B6B84"><span>What customers see first in results.</span><span style="flex:none">{{ nameCount }}</span></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Category<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <sc-for list="{{ catTiles }}" as="c" hint-placeholder-count="12">
+              <button onClick="{{ c.tap }}" style="background:{{ c.tileBg }};border:1.5px solid {{ c.tileBd }};border-radius:16px;padding:13px 6px 11px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.96)">
+                <span style="width:40px;height:40px;border-radius:12px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ c.fg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.d }}"></path></svg></span>
+                <span style="font-size:11.5px;font-weight:700;color:#0F1B2D;text-align:center;line-height:1.25">{{ c.n }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="sdesc" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Short description<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></label>
+          <textarea id="sdesc" maxLength="120" rows="2" value="{{ shortDesc }}" onChange="{{ setShortDesc }}" placeholder="One sentence about your service…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#5B6B84"><span>Shown in search results. Be concise and specific.</span><span style="flex:none">{{ shortCount }}</span></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="ldesc" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Detailed description<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></label>
+          <textarea id="ldesc" maxLength="800" rows="4" value="{{ longDesc }}" onChange="{{ setLongDesc }}" placeholder="What's included, your process, why customers should choose you…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <div style="display:flex;justify-content:flex-end;font-size:12.5px;color:#5B6B84">{{ longCount }}</div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#0F1B2D">Tags<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></div>
+            <div style="font-size:12.5px;line-height:1.45;color:#5B6B84">Relevant tags help customers find you in search. Up to 10.</div>
+          </div>
+          <sc-if value="{{ noCat }}">
+            <div style="border:1.5px dashed #C9D7EA;border-radius:14px;padding:16px;display:flex;align-items:center;gap:11px;background:#F7FAFE">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 12.5V7l-8-4-8 4v10l8 4 4.5-2.25"></path></svg>
+              <span style="font-size:13px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Choose a category above first — we'll suggest tags customers actually search for.</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasCat }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:fadeUp .2s ease both">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">{{ tagSugHead }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ tagChips }}" as="t" hint-placeholder-count="6">
+                  <dc-import name="Chip" kind="filter" selected="{{ t.on }}" label="{{ t.label }}" on-tap="{{ t.tap }}" hint-size="90px,38px"></dc-import>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:10px">
+                <input aria-label="Add your own tag" type="text" value="{{ tagInput }}" onChange="{{ setTagInput }}" placeholder="Anything not covered? Add your own…" style="flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 14px;font-size:13.5px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                <button onClick="{{ addTag }}" style="flex:none;height:44px;padding:0 18px;border-radius:12px;border:none;background:{{ addTagBg }};color:{{ addTagFg }};font-size:13.5px;font-weight:700;cursor:{{ addTagCur }}" style-active="transform:scale(.96)">Add</button>
+              </div>
+              <sc-if value="{{ hasCustomTags }}">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ customChips }}" as="c" hint-placeholder-count="2">
+                    <span style="display:inline-flex;align-items:center;gap:6px;background:#E8F0FE;color:#1D4ED8;border:1px solid #CDDDFB;border-radius:999px;padding:7px 8px 7px 13px;font-size:12.5px;font-weight:700;animation:fadeUp .2s ease both">{{ c.label }}
+                      <button onClick="{{ c.rm }}" aria-label="Remove {{ c.label }}" style="width:20px;height:20px;border-radius:50%;border:none;background:rgba(37,99,235,.14);color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(37,99,235,.28)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                    </span>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st2 }}">
+      <div data-screen-label="2 · Location" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Location &amp; service area</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers only see services available on their island. At least one island is needed to publish.</p>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:13px 16px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+          <span style="font-size:13px;line-height:1.5;font-weight:600;color:#1D4ED8;text-wrap:pretty">Pre-filled from your default coverage areas. Edit freely — changes here apply to this service only.</span>
+        </div>
+        <div style="position:relative">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2" stroke-linecap="round" style="position:absolute;left:16px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.3-4.3"></path></svg>
+          <input type="text" value="{{ islandQ }}" onChange="{{ setIslandQ }}" placeholder="Search islands…" aria-label="Search islands" style="width:100%;height:52px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px 0 46px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+        </div>
+        <sc-if value="{{ hasIslands }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ islandChips }}" as="c" hint-placeholder-count="2">
+              <dc-import name="Chip" kind="input" label="{{ c.name }}" on-remove="{{ c.rm }}" hint-size="110px,38px"></dc-import>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noIslands }}">
+          <div style="border:1.5px dashed #C9D7EA;border-radius:16px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:6px;background:#F7FAFE;text-align:center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+            <span style="font-size:13.5px;font-weight:700;color:#0F1B2D">No islands selected yet</span>
+            <span style="font-size:12.5px;line-height:1.45;color:#5B6B84;max-width:250px;text-wrap:pretty">Customers browsing from islands not on your list won't see this service.</span>
+          </div>
+        </sc-if>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:4px 18px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
+            <div onClick="{{ i.go }}" role="checkbox" aria-checked="{{ i.on }}" tabIndex="0" style="display:flex;align-items:center;gap:14px;padding:14px 2px;border-bottom:1px solid #F0F4FA;cursor:pointer;min-height:56px" style-hover="background:#FAFCFF">
+              <div style="display:flex;flex-direction:column;gap:1px;flex:1"><div style="font-size:15px;font-weight:700;color:#0F1B2D">{{ i.name }}</div><div style="font-size:12.5px;color:#5B6B84">{{ i.atoll }}</div></div>
+              <div style="width:26px;height:26px;border-radius:50%;background:{{ i.cBg }};border:2px solid {{ i.cBd }};display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s,border-color .15s">
+                <sc-if value="{{ i.on }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noIslandResults }}">
+            <div style="padding:26px 8px;text-align:center;display:flex;flex-direction:column;gap:5px;align-items:center">
+              <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No islands found</div>
+              <div style="font-size:13px;color:#5B6B84">Try a different spelling.</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:9px;padding:0 4px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+          <span style="font-size:12.5px;line-height:1.5;color:#8A5A08;text-wrap:pretty">This is a placeholder list — the full island directory is still being added. More islands will appear here soon.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st3 }}">
+      <div data-screen-label="3 · Pricing" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Pricing</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Clear, transparent prices build trust and get more bookings. Always in MVR.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">How the price works<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
+          <div style="display:flex;flex-direction:column;gap:9px" role="radiogroup" aria-label="Pricing model">
+            <sc-for list="{{ modelCards }}" as="m" hint-placeholder-count="5">
+              <button onClick="{{ m.tap }}" role="radio" aria-checked="{{ m.on }}" style="display:flex;align-items:center;gap:13px;background:{{ m.bg }};border:1.5px solid {{ m.bd }};border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.985)">
+                <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ m.dotBd }};background:{{ m.dotBg }};display:flex;align-items:center;justify-content:center;flex:none;transition:border-color .15s,background .15s">
+                  <sc-if value="{{ m.on }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
+                </span>
+                <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">{{ m.label }}</span><span style="font-size:12.5px;line-height:1.4;color:#5B6B84">{{ m.sub }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:11px;background:{{ reqNoteBg }};border:1px solid {{ reqNoteBd }};border-radius:14px;padding:12px 15px;transition:background .2s,border-color .2s">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ reqNoteFg }}" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+          <span style="font-size:12.5px;line-height:1.5;font-weight:600;color:{{ reqNoteFg }};text-wrap:pretty">Price range and Price on request can't be booked as a fixed time slot — customers request a time instead, since no one can book a set time at an unknown price.</span>
+        </div>
+        <sc-if value="{{ isQuote }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeUp .2s ease both">
+            <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No price shown</div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers see "Price on request" and send you the job details. You reply with a quote in chat.</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ notQuote }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <sc-if value="{{ notRange }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label for="price1" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Price<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></label>
+                <div style="display:flex;align-items:center;gap:10px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px 0 8px;height:52px">
+                  <span style="flex:none;height:32px;display:inline-flex;align-items:center;padding:0 11px;border-radius:9px;background:#EEF3FA;color:#41526B;font-size:12.5px;font-weight:800">MVR</span>
+                  <input id="price1" type="text" inputMode="numeric" value="{{ price }}" onChange="{{ setPrice }}" placeholder="0" aria-label="Price in MVR" style="flex:1;min-width:0;border:none;background:none;font-size:16px;font-weight:700;color:#0F1B2D;padding:0 8px 0 0">
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isRange }}">
+              <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .2s ease both">
+                <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Price range<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
+                    <span style="flex:none;height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:9px;background:#EEF3FA;color:#41526B;font-size:12px;font-weight:800">MVR</span>
+                    <input type="text" inputMode="numeric" value="{{ price }}" onChange="{{ setPrice }}" placeholder="From" aria-label="Price from" style="flex:1;min-width:0;border:none;background:none;font-size:15px;font-weight:700;color:#0F1B2D;padding:0">
+                  </div>
+                  <span style="flex:none;color:#9AA9C0;font-weight:700">–</span>
+                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
+                    <span style="flex:none;height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:9px;background:#EEF3FA;color:#41526B;font-size:12px;font-weight:800">MVR</span>
+                    <input type="text" inputMode="numeric" value="{{ priceMax }}" onChange="{{ setPriceMax }}" placeholder="To" aria-label="Price to" style="flex:1;min-width:0;border:none;background:none;font-size:15px;font-weight:700;color:#0F1B2D;padding:0">
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label for="unitSel" style="font-size:14px;font-weight:700;color:#0F1B2D">Shown to customers as</label>
+              <div style="position:relative">
+                <select id="unitSel" value="{{ unit }}" onChange="{{ setUnit }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:#0F1B2D;appearance:none;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                  <sc-for list="{{ unitOpts }}" as="u" hint-placeholder-count="5"><option value="{{ u.v }}">{{ u.v }}</option></sc-for>
+                </select>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+              </div>
+              <div style="font-size:12.5px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Separate from how it's calculated — an hourly rate can still read "per visit".</div>
+            </div>
+          </div>
+        </sc-if>
+        <div style="display:flex;align-items:center;gap:11px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:14px;padding:13px 16px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+          <span style="font-size:13px;font-weight:600;color:#1D4ED8">On your card, customers see:&nbsp;<b>{{ pricePreview }}</b></span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st4 }}">
+      <div data-screen-label="4 · Media" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Photos &amp; media</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Good photos dramatically increase bookings. Show your work at its best.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#0F1B2D">Cover image<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
+            <div style="font-size:12.5px;line-height:1.45;color:#5B6B84;text-wrap:pretty">The first thing customers see — on every card, in every search result.</div>
+          </div>
+          <sc-if value="{{ coverNone }}">
+            <button onClick="{{ uploadCover }}" style="border:1.5px dashed #B9CBE6;border-radius:16px;background:#F7FAFE;padding:26px 16px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer" style-hover="background:#EFF5FD" style-active="transform:scale(.99)">
+              <span style="width:46px;height:46px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg></span>
+              <span style="font-size:14px;font-weight:700;color:#1D4ED8">Upload cover image</span>
+              <span style="font-size:12px;color:#5B6B84">JPG, PNG or WEBP · Max 10 MB · 1200×675 works best</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{ coverDone }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .2s ease both">
+              <div role="img" aria-label="Cover image" style="width:100%;aspect-ratio:16/9;border-radius:16px;background-image:{{ coverCss }};background-size:cover;background-position:center;border:1px solid #E3EAF3"></div>
+              <div style="display:flex;gap:10px">
+                <button onClick="{{ uploadCover }}" style="flex:1;height:40px;border-radius:11px;border:1.5px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;font-size:13px;font-weight:700;cursor:pointer" style-active="transform:scale(.97)">Replace</button>
+                <button onClick="{{ removeCover }}" style="flex:none;height:40px;padding:0 16px;border-radius:11px;border:1.5px solid #E3EAF3;background:#fff;color:#DC2626;font-size:13px;font-weight:700;cursor:pointer" style-active="transform:scale(.97)">Remove</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#0F1B2D">Gallery<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></div>
+            <div style="font-size:12.5px;line-height:1.45;color:#5B6B84">{{ galleryHead }} Use the arrows to reorder — the first photo shows first.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <sc-for list="{{ galleryTiles }}" as="g" hint-placeholder-count="2">
+              <div style="position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;border:1px solid #E3EAF3;background-image:{{ g.css }};background-size:cover;background-position:center">
+                <button onClick="{{ g.rm }}" aria-label="Remove photo" style="position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(10,20,40,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                <div style="position:absolute;bottom:5px;left:5px;right:5px;display:flex;justify-content:space-between">
+                  <sc-if value="{{ g.canL }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.mvL }}" aria-label="Move earlier" style="width:24px;height:24px;border-radius:8px;border:none;background:rgba(10,20,40,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></button></sc-if>
+                  <sc-if value="{{ g.noL }}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+                  <sc-if value="{{ g.canR }}" hint-placeholder-val="{{ false }}"><button onClick="{{ g.mvR }}" aria-label="Move later" style="width:24px;height:24px;border-radius:8px;border:none;background:rgba(10,20,40,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ showUploading }}">
+              <div style="aspect-ratio:1;border-radius:14px;border:1.5px solid #E3EAF3;background:#F7FAFE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px">
+                <span style="width:16px;height:16px;border:2.5px solid #C7D5E8;border-top-color:#2563EB;border-radius:50%;animation:spin .8s linear infinite;display:block"></span>
+                <span style="font-size:11px;font-weight:700;color:#41526B">Uploading…</span>
+                <div style="width:100%;height:4px;border-radius:999px;background:#E3EAF3;overflow:hidden"><div style="height:100%;border-radius:999px;background:#2563EB;animation:barGrow 1.6s ease both"></div></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ showFailed }}">
+              <div style="aspect-ratio:1;border-radius:14px;border:1.5px solid #F3C6C6;background:#FDF2F2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;text-align:center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+                <span style="font-size:11px;font-weight:700;color:#B42318;line-height:1.3">Upload failed</span>
+                <button onClick="{{ retryUpload }}" style="height:26px;padding:0 12px;border-radius:8px;border:none;background:#DC2626;color:#fff;font-size:11px;font-weight:700;cursor:pointer" style-active="transform:scale(.95)">Retry</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ canAddPhoto }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ addPhoto }}" style="aspect-ratio:1;border-radius:14px;border:1.5px dashed #B9CBE6;background:#F7FAFE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;color:#2563EB" style-hover="background:#EFF5FD" style-active="transform:scale(.97)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                <span style="font-size:11.5px;font-weight:700">Add</span>
+              </button>
+            </sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;background:#F4F8FD;border-radius:14px;padding:13px 15px">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#5B6B84">Photo tips</div>
+            <div style="font-size:12.5px;line-height:1.6;color:#41526B">Natural light where possible · show the finished result · landscape works best on cards. Photos are stored on RaajjePro, so they keep working even if the original goes away.</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st5 }}">
+      <div data-screen-label="5 · Availability" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Availability</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">How customers book this service, and when you work.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">How this service is booked</div>
+          <button onClick="{{ pickSlots }}" role="radio" aria-checked="{{ modeSlots }}" aria-disabled="{{ slotsDisabled }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ slotsBg }};border:1.5px solid {{ slotsBd }};border-radius:16px;padding:14px 16px;cursor:{{ slotsCur }};text-align:left;transition:border-color .15s,background .15s">
+            <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ slotsDotBd }};background:{{ slotsDotBg }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
+              <sc-if value="{{ modeSlots }}" hint-placeholder-val="{{ true }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:2px;flex:1">
+              <span style="display:flex;align-items:center;gap:7px;font-size:14.5px;font-weight:700;color:{{ slotsTitleFg }}">Fixed time slots
+                <sc-if value="{{ slotsDisabled }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></sc-if>
+              </span>
+              <span style="font-size:12.5px;line-height:1.45;color:{{ slotsSubFg }}">Customers pick a published time and it's confirmed instantly.</span>
+              <sc-if value="{{ slotsDisabled }}"><span style="font-size:12.5px;line-height:1.45;font-weight:700;color:#8A5A08;margin-top:3px">{{ slotsReason }}</span></sc-if>
+            </span>
+          </button>
+          <button onClick="{{ pickRequest }}" role="radio" aria-checked="{{ modeRequest }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ reqBg }};border:1.5px solid {{ reqBd }};border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.985)">
+            <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ reqDotBd }};background:{{ reqDotBg }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
+              <sc-if value="{{ modeRequest }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Request a time</span><span style="font-size:12.5px;line-height:1.45;color:#5B6B84">Customers send a request; you come back with a time.</span></span>
+          </button>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Working days</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ dayChips }}" as="d" hint-placeholder-count="7">
+              <button onClick="{{ d.tap }}" aria-pressed="{{ d.on }}" style="height:40px;min-width:52px;padding:0 13px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};border:1.5px solid {{ d.bd }};font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s" style-active="transform:scale(.95)">{{ d.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+              <label for="hFrom" style="font-size:13px;font-weight:700;color:#41526B">From</label>
+              <div style="position:relative">
+                <select id="hFrom" value="{{ hourFrom }}" onChange="{{ setHourFrom }}" style="width:100%;height:50px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 38px 0 15px;font-size:15px;font-weight:700;color:#0F1B2D;appearance:none;cursor:pointer" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                  <sc-for list="{{ hourOpts }}" as="h" hint-placeholder-count="6"><option value="{{ h.v }}">{{ h.v }}</option></sc-for>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+              <label for="hTo" style="font-size:13px;font-weight:700;color:#41526B">To</label>
+              <div style="position:relative">
+                <select id="hTo" value="{{ hourTo }}" onChange="{{ setHourTo }}" style="width:100%;height:50px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 38px 0 15px;font-size:15px;font-weight:700;color:#0F1B2D;appearance:none;cursor:pointer" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                  <sc-for list="{{ hourOpts }}" as="h" hint-placeholder-count="6"><option value="{{ h.v }}">{{ h.v }}</option></sc-for>
+                </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Your simple working window for this service. Recurring rules and time off live in your provider Availability settings.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;align-items:center;gap:13px">
+            <span style="width:40px;height:40px;border-radius:12px;background:#FFFBEB;color:#D97706;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
+            <div style="flex:1;display:flex;align-items:center;gap:7px;font-size:15px;font-weight:700;color:{{ emgTitleFg }}">Emergency callouts
+              <sc-if value="{{ emgLocked }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></sc-if>
+            </div>
+            <button onClick="{{ toggleEmg }}" role="switch" aria-checked="{{ emergency }}" aria-disabled="{{ emgLocked }}" aria-label="Emergency callouts" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ emgSwBd }};background:{{ emgSwBg }};padding:2px;flex:none;cursor:{{ emgSwCur }};display:flex;align-items:center;justify-content:{{ emgSwJustify }};transition:background .2s,border-color .2s">
+              <span style="width:24px;height:24px;border-radius:50%;background:{{ emgSwKnob }};display:block;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:background .2s"></span>
+            </button>
+          </div>
+          <sc-if value="{{ emgLocked }}">
+            <div style="display:flex;align-items:flex-start;gap:9px;background:#F4F8FD;border-radius:12px;padding:11px 13px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+              <span style="font-size:12.5px;line-height:1.5;font-weight:600;color:#41526B;text-wrap:pretty">{{ emgReason }}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ emgOpen }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers can reach you outside your working hours for urgent {{ emgCatWord }} jobs. <b>Customers expect a response within {{ emgWindow }} minutes.</b></div>
+              <sc-if value="{{ emergency }}">
+                <div style="display:flex;align-items:flex-start;gap:9px;background:#FFFBEB;border:1px solid #F3E2B8;border-radius:12px;padding:11px 13px;animation:fadeUp .2s ease both">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
+                  <span style="font-size:12.5px;line-height:1.5;font-weight:600;color:#8A5A08;text-wrap:pretty">Answering fast and arriving fast are different commitments — you state your own arrival estimate each time you answer. If you need two hours to load the van, say so when you reply.</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st6 }}">
+      <div data-screen-label="6 · Extras" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Extra information</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Everything on this step is optional — none of it blocks publishing. It builds trust with customers who are comparing.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label for="inc" style="font-size:14px;font-weight:700;color:#0F1B2D">What's included</label>
+            <textarea id="inc" rows="2" value="{{ included }}" onChange="{{ setIncluded }}" placeholder="e.g. Fault diagnosis, the repair itself, a safety check…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label for="ninc" style="font-size:14px;font-weight:700;color:#0F1B2D">What's not included</label>
+            <textarea id="ninc" rows="2" value="{{ notIncluded }}" onChange="{{ setNotIncluded }}" placeholder="e.g. Materials and new fittings — billed separately…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">FAQs</div>
+            <div style="font-size:12.5px;color:#5B6B84">Answer the questions you get asked in chat anyway.</div>
+          </div>
+          <sc-for list="{{ faqRows }}" as="f" hint-placeholder-count="1">
+            <div style="display:flex;align-items:flex-start;gap:10px;border:1px solid #EEF3FA;border-radius:14px;padding:12px 14px;background:#FAFCFF">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="font-size:13.5px;font-weight:700;color:#0F1B2D">{{ f.q }}</div><div style="font-size:12.5px;line-height:1.5;color:#5B6B84">{{ f.a }}</div></div>
+              <button onClick="{{ f.rm }}" aria-label="Remove FAQ" style="width:26px;height:26px;border-radius:8px;border:none;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#E3EAF3"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </div>
+          </sc-for>
+          <input aria-label="FAQ question" type="text" value="{{ faqQ }}" onChange="{{ setFaqQ }}" placeholder="Question, e.g. Do you supply materials?" style="width:100%;height:44px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 14px;font-size:13.5px;color:#0F1B2D" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <div style="display:flex;gap:10px">
+            <input aria-label="FAQ answer" type="text" value="{{ faqA }}" onChange="{{ setFaqA }}" placeholder="Your answer…" style="flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 14px;font-size:13.5px;color:#0F1B2D" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+            <button onClick="{{ addFaq }}" style="flex:none;height:44px;padding:0 16px;border-radius:12px;border:none;background:{{ addFaqBg }};color:{{ addFaqFg }};font-size:13.5px;font-weight:700;cursor:{{ addFaqCur }}" style-active="transform:scale(.96)">Add</button>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Warranty &amp; insurance</div>
+          <div style="display:flex;align-items:center;gap:13px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">I offer a warranty</span><span style="font-size:12.5px;color:#5B6B84">Your own terms, in your own words.</span></div>
+            <button onClick="{{ toggleWarranty }}" role="switch" aria-checked="{{ warrantyOn }}" aria-label="Offer a warranty" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ warSwBd }};background:{{ warSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ warSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+          </div>
+          <sc-if value="{{ warrantyOn }}" hint-placeholder-val="{{ true }}">
+            <textarea aria-label="Warranty terms" rows="2" value="{{ warrantyText }}" onChange="{{ setWarrantyText }}" placeholder="e.g. 90-day warranty on workmanship" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp .2s ease both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          </sc-if>
+          <div style="height:1px;background:#EEF3FA"></div>
+          <div style="display:flex;align-items:center;gap:13px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">I hold public liability insurance</span><span style="font-size:12.5px;color:#5B6B84">Insurer and what it covers.</span></div>
+            <button onClick="{{ toggleInsurance }}" role="switch" aria-checked="{{ insuranceOn }}" aria-label="Hold public liability insurance" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ insSwBd }};background:{{ insSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ insSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+          </div>
+          <sc-if value="{{ insuranceOn }}">
+            <textarea aria-label="Insurance details" rows="2" value="{{ insuranceText }}" onChange="{{ setInsuranceText }}" placeholder="e.g. Allied — public liability up to MVR 100,000" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp .2s ease both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          </sc-if>
+          <div style="display:flex;align-items:flex-start;gap:9px;background:#F4F8FD;border-radius:12px;padding:11px 13px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+            <span style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">RaajjePro doesn't check warranty or insurance details. Customers see them exactly as you write them, marked <b>"Provider states: …"</b></span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1.5px solid #B7E2C6;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;align-items:center;gap:13px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Callback guarantee</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#15803D;background:#E5F6EC;border-radius:999px;padding:3px 9px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.8v5.4c0 4.3-3 7.6-7 9.3-4-1.7-7-5-7-9.3V5.8z"></path></svg>Enforced by RaajjePro</span></div>
+            </div>
+            <button onClick="{{ toggleCallback }}" role="switch" aria-checked="{{ callback }}" aria-label="Callback guarantee" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ cbSwBd }};background:{{ cbSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ cbSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+          </div>
+          <div style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">A free return visit within <b>7 days</b> if the same problem comes back. Unlike the warranty and insurance above, <b>this one RaajjePro holds you to</b> — customers can report an unhonoured callback.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ st7 }}">
+      <div data-screen-label="7 · Review" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Review &amp; publish</h1>
+          <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Check everything looks right. Tap any section to edit it.</p>
+        </div>
+        <sc-if value="{{ hasMissing }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FEF3DC;border:1.5px solid {{ missBd }};border-radius:18px;padding:15px 17px;display:flex;flex-direction:column;gap:11px;transition:border-color .2s">
+            <div style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;color:#8A5A08">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
+              {{ missTitle }}
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ missingRows }}" as="m" hint-placeholder-count="3">
+                <button onClick="{{ m.fix }}" style="display:flex;align-items:center;gap:10px;background:none;border:none;border-top:1px solid #F3E2B8;padding:10px 2px;cursor:pointer;text-align:left;min-height:44px" style-hover="background:rgba(255,255,255,.5)">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#D97706;flex:none"></span>
+                  <span style="flex:1;font-size:13.5px;font-weight:700;color:#0F1B2D">{{ m.label }}</span>
+                  <span style="font-size:12px;font-weight:700;color:#8A5A08">{{ m.stepName }}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noneMissing }}">
+          <div style="background:#E5F6EC;border:1px solid #C6E9D4;border-radius:18px;padding:15px 17px;display:flex;align-items:flex-start;gap:11px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="8.6"></circle><path d="M8.4 12.4l2.6 2.6 4.6-5"></path></svg>
+            <span style="font-size:13.5px;line-height:1.5;font-weight:700;color:#15803D">Ready to publish — all six required fields are complete.</span>
+          </div>
+        </sc-if>
+        <sc-for list="{{ reviewCards }}" as="s" hint-placeholder-count="6">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:6px 17px 8px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #EEF3FA">
+              <span style="flex:1;font-size:14.5px;font-weight:700;color:#0F1B2D">{{ s.title }}</span>
+              <button onClick="{{ s.edit }}" style="display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:9px;border:none;background:#E8F0FE;color:#1D4ED8;font-size:12.5px;font-weight:700;cursor:pointer" style-active="transform:scale(.95)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.5-1L20 7.5 16.5 4 5 15.5zM13.5 7l3.5 3.5"></path></svg>Edit</button>
+            </div>
+            <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid #F5F8FC">
+                <span style="flex:none;width:92px;font-size:12.5px;font-weight:600;color:#5B6B84">{{ r.k }}</span>
+                <span style="flex:1;font-size:13.5px;font-weight:600;line-height:1.45;color:{{ r.fg }};text-align:right;overflow-wrap:anywhere">{{ r.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;padding:12px 20px 20px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:9px">
+    <sc-if value="{{ notLast }}" hint-placeholder-val="{{ true }}">
+      <div style="text-align:center;font-size:11.5px;font-weight:700;color:#8296B3">{{ nextHint }}</div>
+      <div style="display:flex;gap:12px">
+        <sc-if value="{{ canBack }}"><button onClick="{{ goPrev }}" style="flex:none;height:54px;padding:0 24px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;color:#0F1B2D;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFE" style-active="transform:scale(.97)">Back</button></sc-if>
+        <button onClick="{{ goNext }}" style="flex:1;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .1s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+          <sc-if value="{{ navWait }}"><span style="width:17px;height:17px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Saving this step…</span></sc-if>
+          <sc-if value="{{ notNavWait }}" hint-placeholder-val="{{ true }}"><span>Continue</span></sc-if>
+        </button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isLast }}">
+      <div style="display:flex;gap:12px">
+        <button onClick="{{ saveDraft }}" style="flex:none;height:54px;padding:0 20px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;color:#0F1B2D;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFE" style-active="transform:scale(.97)">Save draft</button>
+        <button onClick="{{ publish }}" style="flex:1;height:54px;border:none;border-radius:16px;background:{{ pubBg }};color:{{ pubFg }};font-size:16px;font-weight:700;cursor:pointer;box-shadow:{{ pubSh }};transition:transform .1s" style-active="transform:scale(.98)">Publish service</button>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ sheetSuccess }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.35);margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your service is live</div>
+        <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">{{ successBody }}</div>
+        <button onClick="{{ viewListing }}" style="width:100%;height:54px;margin-top:12px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">View listing</button>
+        <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Done</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ sheetLimit }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:76px;height:76px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;margin-bottom:6px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5zM4 12l8 4.5 8-4.5M4 16.5L12 21l8-4.5"></path></svg></div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-wrap:balance">Your plan publishes one service at a time</div>
+        <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:320px;text-wrap:pretty">Emergency Plumbing &amp; Pipe Repair is already live. This draft is saved and isn't going anywhere — upgrading lets you publish several services side by side, or you can swap which one is live.</div>
+        <button onClick="{{ seePlans }}" style="width:100%;height:54px;margin-top:12px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">See what upgrading allows</button>
+        <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep it as a draft</button>
+        <div style="font-size:12px;font-weight:600;color:#8296B3">Drafts stay in My Services — nothing is lost.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}">
+    <div style="position:absolute;left:50%;bottom:104px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;step&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:7,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;filled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;providerTier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Silver&quot;,&quot;Gold&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'Silver' | 'Gold'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;saveState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;saved&quot;,&quot;saving&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;saved&quot;,&quot;tsType&quot;:&quot;'saved' | 'saving' | 'offline'&quot;,&quot;section&quot;:&quot;Shell state&quot;},&quot;publishScenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;over-limit&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;'normal' | 'over-limit'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;mediaState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;uploading&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;'normal' | 'uploading' | 'failed'&quot;,&quot;section&quot;:&quot;Shell state&quot;}}">
+class Component extends DCLogic {
+  state = {
+    step: 1, navWait: false, toast: null, sheet: null, publishTried: false,
+    name: '', category: null, shortDesc: '', longDesc: '', tags: [], tagInput: '',
+    islandQ: '', islands: ['Malé', 'Hulhumalé'],
+    model: 'fixed', price: '', priceMax: '', unit: 'per job',
+    cover: null, gallery: [],
+    bookingMode: 'slots', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], hourFrom: '08:00', hourTo: '18:00', emergency: false,
+    included: '', notIncluded: '', faqs: [], faqQ: '', faqA: '',
+    warrantyOn: false, warrantyText: '', insuranceOn: false, insuranceText: '', callback: false
+  };
+  STEPS = ['Details', 'Location', 'Pricing', 'Media', 'Availability', 'Extras', 'Review'];
+  CATS = [
+    { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
+    { n: 'Plumbing', bg: '#ECFDF5', fg: '#059669', d: 'M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z' },
+    { n: 'Electrical', bg: '#FFFBEB', fg: '#D97706', d: 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' },
+    { n: 'AC Repair', bg: '#EFF6FF', fg: '#2563EB', d: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2.5 2.5 0 1 1-2.5 2.5' },
+    { n: 'Beauty', bg: '#FDF2F8', fg: '#DB2777', d: 'M12 21s-7-4.8-9.2-9.4C1.2 8 3.3 5 6.5 5c2 0 3.7 1.2 4.5 3 .8-1.8 2.5-3 4.5-3 3.2 0 5.3 3 3.7 6.6C19 16.2 12 21 12 21z' },
+    { n: 'Fitness', bg: '#F5F3FF', fg: '#7C3AED', d: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
+    { n: 'Photography', bg: '#FFF7ED', fg: '#EA580C', d: 'M4 8h3l2-2.5h6L17 8h3v11H4zM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' },
+    { n: 'Pest Control', bg: '#F0FDF4', fg: '#16A34A', d: 'M12 8a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0v-2a4 4 0 0 1 4-4zM9.5 8L7.5 5.5M14.5 8L16.5 5.5M8 12H4.5M16 12h3.5M8.5 16l-3 2.5M15.5 16l3 2.5' },
+    { n: 'Appliance Repair', bg: '#F0F9FF', fg: '#0284C7', d: 'M6 4h12v16H6zM6 8.5h12M12 17.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' },
+    { n: 'Moving', bg: '#FFF7ED', fg: '#C2410C', d: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10' },
+    { n: 'Events', bg: '#FEFCE8', fg: '#CA8A04', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
+  TAGS = {
+    'Cleaning': ['Deep cleaning', 'Move-out', 'Sofa & carpet', 'Kitchen', 'Windows', 'Weekly regular'],
+    'Plumbing': ['Leak repair', 'Pipe fitting', 'Water pump', 'Drain blockage', 'Bathroom', 'Water heater'],
+    'Electrical': ['Wiring', 'Fault finding', 'Rewiring', 'Lighting', 'Switchboards', 'New sockets', 'Safety check'],
+    'AC Repair': ['Servicing', 'Gas refill', 'Installation', 'Repair', 'Duct cleaning'],
+    'Beauty': ['Bridal', 'Hair', 'Makeup', 'Nails', 'Henna', 'Facials'],
+    'Fitness': ['Personal training', 'Yoga', 'Group sessions', 'Strength', 'Weight loss'],
+    'Photography': ['Weddings', 'Events', 'Portraits', 'Product', 'Drone'],
+    'Pest Control': ['Cockroaches', 'Ants', 'Termites', 'Bed bugs', 'Rodents', 'Fumigation'],
+    'Appliance Repair': ['Washing machine', 'Refrigerator', 'Oven', 'TV', 'Laptops & PCs', 'Phone'],
+    'Moving': ['House move', 'Office move', 'Furniture', 'Inter-island', 'Packing'],
+    'Events': ['Weddings', 'Birthdays', 'Corporate', 'Décor', 'Sound & lights'],
+    'Boat Charter': ['Airport transfer', 'Excursions', 'Fishing trips', 'Island hopping', 'Private charter'] };
+  ISLANDS = [
+    { n: 'Malé', a: 'Malé Region' }, { n: 'Hulhumalé', a: 'Malé Region' }, { n: 'Villimalé', a: 'Malé Region' },
+    { n: 'Maafushi', a: 'Kaafu' }, { n: 'Thulusdhoo', a: 'Kaafu' }, { n: 'Hithadhoo', a: 'Addu' }];
+  MODELS = [
+    { id: 'fixed', label: 'Fixed price', sub: 'One rate per job' },
+    { id: 'hourly', label: 'Hourly rate', sub: 'Charged per hour worked' },
+    { id: 'daily', label: 'Daily rate', sub: 'Charged per day' },
+    { id: 'range', label: 'Price range', sub: 'A from–to estimate' },
+    { id: 'quote', label: 'Price on request', sub: 'You quote after they ask' }];
+  UNITS = ['per job', 'per hour', 'per day', 'per session', 'per visit'];
+  DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  HOURS = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+  EMG = { 'Plumbing': { tier: 'Gold', window: 30 }, 'Electrical': { tier: 'Gold', window: 30 }, 'AC Repair': { tier: 'Silver', window: 30 }, 'Moving': { tier: 'Silver', window: 30 } };
+  TIER_RANK = { 'Bronze': 1, 'Silver': 2, 'Gold': 3 };
+
+  seed() {
+    if (this.props.filled ?? true) {
+      this.setState({
+        name: 'Wiring & Fault Repair', category: 'Electrical',
+        shortDesc: 'Fault finding, rewiring and new installations for homes and businesses.',
+        longDesc: 'I diagnose the fault first and explain what I find before any work starts. Rewiring, switchboard upgrades, new sockets and lighting — materials billed at cost after you approve the list.',
+        tags: ['Wiring', 'Fault finding', 'Rewiring'],
+        islands: ['Malé', 'Hulhumalé'],
+        model: 'fixed', price: '450', priceMax: '', unit: 'per visit',
+        cover: 'uploads/electrical.jpeg', gallery: ['uploads/electrical.jpeg'],
+        bookingMode: 'slots', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], hourFrom: '08:00', hourTo: '18:00', emergency: false,
+        included: 'Fault diagnosis, repair of the reported issue, and a safety check before I leave.',
+        notIncluded: 'Materials and new fittings — billed at cost after you approve the list.',
+        faqs: [{ q: 'Do you supply materials?', a: 'Yes — billed at cost after you approve the list in chat.' }],
+        warrantyOn: true, warrantyText: '90-day warranty on workmanship', insuranceOn: false, insuranceText: '', callback: true
+      });
+    } else {
+      this.setState({
+        name: '', category: null, shortDesc: '', longDesc: '', tags: [],
+        islands: ['Malé', 'Hulhumalé'], model: 'fixed', price: '', priceMax: '', unit: 'per job',
+        cover: null, gallery: [], bookingMode: 'slots', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        hourFrom: '08:00', hourTo: '18:00', emergency: false, included: '', notIncluded: '', faqs: [],
+        warrantyOn: false, warrantyText: '', insuranceOn: false, insuranceText: '', callback: false
+      });
+    }
+  }
+  emgInfo(category, tier) {
+    if (!category) return { locked: true, reason: 'Choose a category on the Details step first — emergency availability depends on it.' };
+    const cfg = this.EMG[category];
+    if (!cfg) return { locked: true, reason: 'Emergency callouts aren\u2019t offered on ' + category + ' services.' };
+    if (this.TIER_RANK[tier] < this.TIER_RANK[cfg.tier]) return { locked: true, reason: 'Emergency work on ' + category + ' needs ' + cfg.tier + ' verification. You are ' + tier + '.' };
+    return { locked: false, window: cfg.window };
+  }
+  componentDidMount() {
+    this.seed();
+    const s = Math.min(7, Math.max(1, Math.round(this.props.step ?? 1)));
+    if (s !== 1) this.setState({ step: s });
+  }
+  componentDidUpdate(prev) {
+    const p = this.props;
+    if (prev.step !== p.step) {
+      const s = Math.min(7, Math.max(1, Math.round(p.step ?? 1)));
+      if (s !== this.state.step) this.setState({ step: s });
+    }
+    if (prev.filled !== p.filled) this.seed();
+    if (prev.providerTier !== p.providerTier && this.state.emergency) {
+      if (this.emgInfo(this.state.category, p.providerTier ?? 'Silver').locked) this.setState({ emergency: false });
+    }
+  }
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  go(step) {
+    if (step === this.state.step) return;
+    if ((this.props.saveState ?? 'saved') === 'saving' && !this.state.navWait) {
+      this.setState({ navWait: true });
+      this._nt = setTimeout(() => this.setState({ navWait: false, step }), 650);
+      return;
+    }
+    this.setState({ step });
+  }
+  missing() {
+    const S = this.state, out = [];
+    if (!S.name.trim()) out.push({ label: 'Service name', step: 1 });
+    if (!S.category) out.push({ label: 'Category', step: 1 });
+    if (!S.shortDesc.trim()) out.push({ label: 'Short description', step: 1 });
+    if (!S.islands.length) out.push({ label: 'At least one island', step: 2 });
+    const priceOk = S.model === 'quote' ? true : (S.model === 'range' ? (S.price.trim() && S.priceMax.trim()) : !!S.price.trim());
+    if (!priceOk) out.push({ label: 'Price', step: 3 });
+    if (!S.cover) out.push({ label: 'Cover image', step: 4 });
+    return out;
+  }
+  renderVals() {
+    const S = this.state, P = this.props;
+    const tier = P.providerTier ?? 'Silver';
+    const saveState = P.saveState ?? 'saved';
+    const mediaState = P.mediaState ?? 'normal';
+    const blue = '#2563EB', line = '#E3EAF3';
+    const miss = this.missing();
+    const n = miss.length;
+    const set = k => e => this.setState({ [k]: e.target.value });
+    const num = k => e => this.setState({ [k]: e.target.value.replace(/[^\d]/g, '').slice(0, 6) });
+    const stepHasMiss = st => miss.some(m => m.step === st);
+    const sug = S.category ? (this.TAGS[S.category] ?? []) : [];
+    const customTags = S.tags.filter(t => !sug.includes(t));
+    const canAddTag = S.tagInput.trim().length > 0 && S.tags.length < 10;
+    const suffix = { 'per job': '/job', 'per hour': '/hr', 'per day': '/day', 'per session': '/session', 'per visit': '/visit' }[S.unit] ?? '';
+    const preview = S.model === 'quote' ? 'Price on request'
+      : S.model === 'range' ? (S.price && S.priceMax ? 'MVR ' + S.price + '–' + S.priceMax + suffix : 'MVR —' + suffix)
+      : (S.price ? 'MVR ' + S.price + suffix : 'MVR —' + suffix);
+    const slotsDisabled = S.model === 'range' || S.model === 'quote';
+    const slotsReason = (S.model === 'range' ? 'Range' : 'Price on request') + ' pricing can\u2019t be booked as a fixed slot — switch pricing to enable this.';
+    const emg = this.emgInfo(S.category, tier);
+    const modeSlots = S.bookingMode === 'slots' && !slotsDisabled;
+    const modeRequest = !modeSlots;
+    const q = S.islandQ.trim().toLowerCase();
+    const islandRowsF = this.ISLANDS.filter(i => !q || i.n.toLowerCase().includes(q));
+    const toggleIsland = name => this.setState({ islands: S.islands.includes(name) ? S.islands.filter(x => x !== name) : [...S.islands, name] });
+    const faqReady = S.faqQ.trim() && S.faqA.trim();
+    const swOff = { bd: '#D5DFEC', bg: '#E7EEF7' };
+    const daysLabel = S.days.length === 7 ? 'Every day' : (S.days.length ? this.DAYS.filter(d => S.days.includes(d)).join(', ') : 'None set');
+    const dash = '\u2014';
+    const emDash = v => v && String(v).trim() ? v : dash;
+    const missFg = '#B45309';
+    const islandsTxt = S.islands.length ? S.islands.join(', ') : 'None selected';
+    const modelLabel = (this.MODELS.find(m => m.id === S.model) ?? {}).label ?? dash;
+    const emgReview = emg.locked ? 'Not available' : (S.emergency ? 'On — ' + emg.window + ' min response expected' : 'Off');
+    const reviewCards = [
+      { title: 'Details', step: 1, rows: [
+        { k: 'Name', v: emDash(S.name), fg: S.name.trim() ? '#0F1B2D' : missFg },
+        { k: 'Category', v: S.category ?? dash, fg: S.category ? '#0F1B2D' : missFg },
+        { k: 'Description', v: emDash(S.shortDesc), fg: S.shortDesc.trim() ? '#0F1B2D' : missFg },
+        { k: 'Tags', v: S.tags.length ? S.tags.join(' · ') : dash, fg: '#0F1B2D' }] },
+      { title: 'Location', step: 2, rows: [
+        { k: 'Islands', v: islandsTxt, fg: S.islands.length ? '#0F1B2D' : missFg }] },
+      { title: 'Pricing', step: 3, rows: [
+        { k: 'How it works', v: modelLabel, fg: '#0F1B2D' },
+        { k: 'Customers see', v: preview, fg: preview.includes(dash) ? missFg : '#0F1B2D' }] },
+      { title: 'Media', step: 4, rows: [
+        { k: 'Cover image', v: S.cover ? 'Uploaded' : 'Missing', fg: S.cover ? '#0F1B2D' : missFg },
+        { k: 'Gallery', v: S.gallery.length ? S.gallery.length + (S.gallery.length === 1 ? ' photo' : ' photos') : 'None', fg: '#0F1B2D' }] },
+      { title: 'Availability', step: 5, rows: [
+        { k: 'Booked via', v: modeSlots ? 'Fixed time slots' : 'Request a time', fg: '#0F1B2D' },
+        { k: 'Days', v: daysLabel, fg: '#0F1B2D' },
+        { k: 'Hours', v: S.hourFrom + ' – ' + S.hourTo, fg: '#0F1B2D' },
+        { k: 'Emergency', v: emgReview, fg: '#0F1B2D' }] },
+      { title: 'Extras', step: 6, rows: [
+        { k: 'Warranty', v: S.warrantyOn && S.warrantyText.trim() ? 'Provider states: ' + S.warrantyText : dash, fg: '#0F1B2D' },
+        { k: 'Insurance', v: S.insuranceOn && S.insuranceText.trim() ? 'Provider states: ' + S.insuranceText : dash, fg: '#0F1B2D' },
+        { k: 'Callback', v: S.callback ? 'On — 7-day, enforced by RaajjePro' : 'Off', fg: '#0F1B2D' },
+        { k: 'FAQs', v: S.faqs.length ? String(S.faqs.length) : dash, fg: '#0F1B2D' }] }
+    ].map(c => ({ ...c, edit: () => this.go(c.step) }));
+    return {
+      st1: S.step === 1, st2: S.step === 2, st3: S.step === 3, st4: S.step === 4, st5: S.step === 5, st6: S.step === 6, st7: S.step === 7,
+      reqHeadline: n === 0 ? 'Ready to publish' : n + ' required field' + (n === 1 ? '' : 's') + ' left to publish',
+      headlineFg: n === 0 ? '#15803D' : '#0F1B2D',
+      stepSub: 'Step ' + S.step + ' of 7 · ' + this.STEPS[S.step - 1],
+      headerBack: () => { if (S.step > 1) this.go(S.step - 1); else this.toastMsg('Draft kept — finish anytime from My Services'); },
+      isSaving: saveState === 'saving', isSaved: saveState === 'saved', isOffline: saveState === 'offline',
+      saveLabel: saveState === 'saving' ? 'Saving…' : saveState === 'offline' ? 'Saved offline' : 'Saved just now',
+      saveBg: saveState === 'offline' ? '#FEF3DC' : '#fff', saveBd: saveState === 'offline' ? '#F3E2B8' : line,
+      saveFg: saveState === 'offline' ? '#8A5A08' : saveState === 'saving' ? '#41526B' : '#15803D',
+      segs: [1, 2, 3, 4, 5, 6, 7].map(i => ({ bg: i <= S.step ? blue : '#D8E2F0' })),
+      pills: this.STEPS.map((label, i) => ({
+        label, go: () => this.go(i + 1),
+        bg: S.step === i + 1 ? blue : '#fff', fg: S.step === i + 1 ? '#fff' : '#41526B', bd: S.step === i + 1 ? blue : line,
+        dot: S.step !== i + 1 && stepHasMiss(i + 1), dotBg: '#D97706'
+      })),
+      name: S.name, setName: set('name'), nameCount: S.name.length + '/80',
+      shortDesc: S.shortDesc, setShortDesc: set('shortDesc'), shortCount: S.shortDesc.length + '/120',
+      longDesc: S.longDesc, setLongDesc: set('longDesc'), longCount: S.longDesc.length + '/800',
+      catTiles: this.CATS.map(c => ({ ...c,
+        tileBg: S.category === c.n ? '#E8F0FE' : '#fff', tileBd: S.category === c.n ? blue : '#E9EFF7',
+        tap: () => {
+          const oldSug = S.category ? (this.TAGS[S.category] ?? []) : [];
+          const kept = S.tags.filter(t => !oldSug.includes(t));
+          const patch = { category: c.n, tags: kept };
+          if (S.emergency && this.emgInfo(c.n, tier).locked) patch.emergency = false;
+          this.setState(patch);
+        } })),
+      noCat: !S.category, hasCat: !!S.category,
+      tagSugHead: 'Suggested for ' + (S.category ?? ''),
+      tagChips: sug.map(t => { const on = S.tags.includes(t); return { label: t, on,
+        tap: () => { if (on) this.setState({ tags: S.tags.filter(x => x !== t) }); else if (S.tags.length < 10) this.setState({ tags: [...S.tags, t] }); else this.toastMsg('Up to 10 tags'); } }; }),
+      tagInput: S.tagInput, setTagInput: set('tagInput'),
+      addTag: () => { const v = S.tagInput.trim(); if (!v) return; if (S.tags.length >= 10) { this.toastMsg('Up to 10 tags'); return; } if (S.tags.includes(v)) { this.toastMsg('Already added'); return; } this.setState({ tags: [...S.tags, v], tagInput: '' }); },
+      addTagBg: canAddTag ? blue : '#C6D4EA', addTagFg: canAddTag ? '#fff' : '#8296B3', addTagCur: canAddTag ? 'pointer' : 'default',
+      hasCustomTags: customTags.length > 0,
+      customChips: customTags.map(t => ({ label: t, rm: () => this.setState({ tags: S.tags.filter(x => x !== t) }) })),
+      islandQ: S.islandQ, setIslandQ: set('islandQ'),
+      hasIslands: S.islands.length > 0, noIslands: S.islands.length === 0,
+      islandChips: S.islands.map(name => ({ name, rm: () => toggleIsland(name) })),
+      islandRows: islandRowsF.map(i => { const on = S.islands.includes(i.n); return { name: i.n, atoll: i.a, on, cBg: on ? blue : '#fff', cBd: on ? blue : '#C9D7EA', go: () => toggleIsland(i.n) }; }),
+      noIslandResults: islandRowsF.length === 0,
+      modelCards: this.MODELS.map(m => { const on = S.model === m.id; return { ...m, on,
+        bg: on ? '#E8F0FE' : '#fff', bd: on ? blue : '#E9EFF7', dotBd: on ? blue : '#C9D7EA', dotBg: on ? blue : '#fff',
+        tap: () => { const patch = { model: m.id }; if (m.id === 'range' || m.id === 'quote') patch.bookingMode = 'request'; this.setState(patch); } }; }),
+      isQuote: S.model === 'quote', notQuote: S.model !== 'quote', isRange: S.model === 'range', notRange: S.model !== 'range',
+      reqNoteBg: slotsDisabled ? '#FEF3DC' : '#F4F8FD', reqNoteBd: slotsDisabled ? '#F3E2B8' : '#E3EAF3', reqNoteFg: slotsDisabled ? '#8A5A08' : '#41526B',
+      price: S.price, setPrice: num('price'), priceMax: S.priceMax, setPriceMax: num('priceMax'),
+      unit: S.unit, setUnit: set('unit'), unitOpts: this.UNITS.map(v => ({ v })),
+      pricePreview: preview,
+      coverNone: !S.cover, coverDone: !!S.cover,
+      coverCss: S.cover ? 'url("' + S.cover + '")' : 'none',
+      uploadCover: () => this.setState({ cover: 'uploads/electrical.jpeg' }),
+      removeCover: () => this.setState({ cover: null }),
+      galleryHead: 'Up to 8 photos of your work (' + S.gallery.length + '/8).',
+      galleryTiles: S.gallery.map((img, i) => ({
+        css: 'url("' + img + '")',
+        canL: i > 0, noL: i === 0, canR: i < S.gallery.length - 1,
+        mvL: () => { const g = [...S.gallery]; const t = g[i - 1]; g[i - 1] = g[i]; g[i] = t; this.setState({ gallery: g }); },
+        mvR: () => { const g = [...S.gallery]; const t = g[i + 1]; g[i + 1] = g[i]; g[i] = t; this.setState({ gallery: g }); },
+        rm: () => this.setState({ gallery: S.gallery.filter((_, j) => j !== i) }) })),
+      showUploading: mediaState === 'uploading', showFailed: mediaState === 'failed',
+      retryUpload: () => this.toastMsg('Retrying upload…'),
+      canAddPhoto: S.gallery.length < 8 && mediaState === 'normal',
+      addPhoto: () => this.setState({ gallery: [...S.gallery, 'uploads/electrical.jpeg'] }),
+      modeSlots, modeRequest, slotsDisabled, slotsReason,
+      slotsBg: modeSlots ? '#E8F0FE' : slotsDisabled ? '#F4F8FD' : '#fff',
+      slotsBd: modeSlots ? blue : '#E9EFF7',
+      slotsCur: slotsDisabled ? 'not-allowed' : 'pointer',
+      slotsTitleFg: slotsDisabled ? '#8296B3' : '#0F1B2D', slotsSubFg: slotsDisabled ? '#9AA9C0' : '#5B6B84',
+      slotsDotBd: modeSlots ? blue : '#C9D7EA', slotsDotBg: modeSlots ? blue : slotsDisabled ? '#EDF2F9' : '#fff',
+      pickSlots: () => { if (slotsDisabled) { this.toastMsg(slotsReason); return; } this.setState({ bookingMode: 'slots' }); },
+      reqBg: modeRequest ? '#E8F0FE' : '#fff', reqBd: modeRequest ? blue : '#E9EFF7',
+      reqDotBd: modeRequest ? blue : '#C9D7EA', reqDotBg: modeRequest ? blue : '#fff',
+      pickRequest: () => this.setState({ bookingMode: 'request' }),
+      dayChips: this.DAYS.map(d => { const on = S.days.includes(d); return { label: d, on,
+        bg: on ? blue : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? blue : line,
+        tap: () => this.setState({ days: on ? S.days.filter(x => x !== d) : [...S.days, d] }) }; }),
+      hourFrom: S.hourFrom, setHourFrom: set('hourFrom'), hourTo: S.hourTo, setHourTo: set('hourTo'),
+      hourOpts: this.HOURS.map(v => ({ v })),
+      emergency: S.emergency, emgLocked: emg.locked, emgOpen: !emg.locked,
+      emgReason: emg.reason ?? '', emgWindow: emg.window ?? 30, emgCatWord: S.category ?? '',
+      emgTitleFg: emg.locked ? '#8296B3' : '#0F1B2D',
+      emgSwBd: emg.locked ? swOff.bd : S.emergency ? blue : '#D5DFEC',
+      emgSwBg: emg.locked ? swOff.bg : S.emergency ? blue : '#E7EEF7',
+      emgSwKnob: emg.locked ? '#F5F8FC' : '#fff',
+      emgSwCur: emg.locked ? 'not-allowed' : 'pointer',
+      emgSwJustify: S.emergency ? 'flex-end' : 'flex-start',
+      toggleEmg: () => { if (emg.locked) { this.toastMsg(emg.reason); return; } this.setState({ emergency: !S.emergency }); },
+      included: S.included, setIncluded: set('included'), notIncluded: S.notIncluded, setNotIncluded: set('notIncluded'),
+      faqRows: S.faqs.map((f, i) => ({ ...f, rm: () => this.setState({ faqs: S.faqs.filter((_, j) => j !== i) }) })),
+      faqQ: S.faqQ, setFaqQ: set('faqQ'), faqA: S.faqA, setFaqA: set('faqA'),
+      addFaq: () => { if (!faqReady) return; this.setState({ faqs: [...S.faqs, { q: S.faqQ.trim(), a: S.faqA.trim() }], faqQ: '', faqA: '' }); },
+      addFaqBg: faqReady ? blue : '#C6D4EA', addFaqFg: faqReady ? '#fff' : '#8296B3', addFaqCur: faqReady ? 'pointer' : 'default',
+      warrantyOn: S.warrantyOn, toggleWarranty: () => this.setState({ warrantyOn: !S.warrantyOn }),
+      warSwBd: S.warrantyOn ? blue : '#D5DFEC', warSwBg: S.warrantyOn ? blue : '#E7EEF7', warSwJustify: S.warrantyOn ? 'flex-end' : 'flex-start',
+      warrantyText: S.warrantyText, setWarrantyText: set('warrantyText'),
+      insuranceOn: S.insuranceOn, toggleInsurance: () => this.setState({ insuranceOn: !S.insuranceOn }),
+      insSwBd: S.insuranceOn ? blue : '#D5DFEC', insSwBg: S.insuranceOn ? blue : '#E7EEF7', insSwJustify: S.insuranceOn ? 'flex-end' : 'flex-start',
+      insuranceText: S.insuranceText, setInsuranceText: set('insuranceText'),
+      callback: S.callback, toggleCallback: () => this.setState({ callback: !S.callback }),
+      cbSwBd: S.callback ? '#16A34A' : '#D5DFEC', cbSwBg: S.callback ? '#16A34A' : '#E7EEF7', cbSwJustify: S.callback ? 'flex-end' : 'flex-start',
+      hasMissing: n > 0, noneMissing: n === 0,
+      missTitle: n + ' required field' + (n === 1 ? '' : 's') + ' missing',
+      missBd: S.publishTried ? '#D97706' : '#F3E2B8',
+      missingRows: miss.map(m => ({ label: m.label, stepName: this.STEPS[m.step - 1], fix: () => this.go(m.step) })),
+      reviewCards,
+      notLast: S.step < 7, isLast: S.step === 7, canBack: S.step > 1,
+      nextHint: S.step < 7 ? 'Next · ' + this.STEPS[S.step] : '',
+      navWait: S.navWait, notNavWait: !S.navWait,
+      goPrev: () => this.go(S.step - 1),
+      goNext: () => this.go(S.step + 1),
+      saveDraft: () => this.toastMsg('Draft saved — it\u2019s in My Services'),
+      pubBg: n > 0 ? '#C6D4EA' : 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)',
+      pubFg: n > 0 ? '#41526B' : '#fff',
+      pubSh: n > 0 ? 'none' : '0 10px 24px rgba(37,99,235,.32)',
+      publish: () => {
+        if (n > 0) { this.setState({ publishTried: true }); this.toastMsg(n + ' required field' + (n === 1 ? ' is' : 's are') + ' still missing'); return; }
+        this.setState({ sheet: (P.publishScenario ?? 'normal') === 'over-limit' ? 'limit' : 'success' });
+      },
+      sheetSuccess: S.sheet === 'success', sheetLimit: S.sheet === 'limit',
+      successBody: '\u201C' + (S.name || 'Your service') + '\u201D now appears in ' + (S.category ?? '') + ' search results on ' + islandsTxt + ', and on your provider profile.',
+      viewListing: () => this.toastMsg('Opens the live listing'),
+      seePlans: () => this.toastMsg('Opens plans — the draft stays saved'),
+      closeSheet: () => this.setState({ sheet: null }),
+      stopProp: e => e.stopPropagation(),
+      hasToast: !!S.toast, toast: S.toast ?? ''
+    };
+  }
+}
+</script>
+</body>
+</html>

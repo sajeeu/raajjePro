@@ -64,6 +64,8 @@ It was reviewed against the plan and corrected on 2026-08-15: bank transfer deta
 
 Seven divergences from the plan were found in Round 16 and confirmed in Round 18. **`round-16-redraws.html` is authoritative where the two disagree** — open it in a browser. Do not implement `Create_service_widget5.jpg` or `Explore_services.jpg` as delivered.
 
+🔧 **The five `Create_service_widget*` rows below are now historical.** Session 10 built `design-composer/Create Service.dc.html`, which applies every one of them; it is the wizard reference and these images are provenance. The rows stay so the record of what was wrong survives.
+
 | Screen | Correction |
 |---|---|
 | `Explore_services.jpg` · `Create_service_widget1.jpg` | Boat Charter replaces **Tuition** in both category grids |
@@ -96,8 +98,11 @@ Seven divergences from the plan were found in Round 16 and confirmed in Round 18
 | `Emergency Flow.dc.html` | emergency booking, customer side | — |
 | `Provider Emergency.dc.html` | emergency offer, provider side | — |
 | `Become a Provider.dc.html` | Phase 6a onboarding | — |
+| `Create Service.dc.html` | the Create/Edit Service wizard, all seven steps in one shell | `Create_service_widget1–7.jpg` |
 
 The JPEGs stay as the provenance record of what was originally delivered. This table grows as each session in `docs/design/redesign-plan.md` lands.
+
+⚠ **This table lags the sessions.** Sessions 3–9 (trust surfaces, booking entry, the booking record, closing, messaging, identity, account) landed reviewed prototypes that are not listed above. Backfilling it is worth doing; it has not been done.
 
 ### Components are files, not sections
 
