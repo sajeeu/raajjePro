@@ -14,7 +14,7 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **Eight of the thirteen sessions are done.**
+**71 page briefs** in `designer-brief.md`. **Nine of the thirteen sessions are done.**
 
 | Artboard | Session | Status |
 |---|---|---|
@@ -31,8 +31,11 @@ That framing is the most important line in this document, because it decides how
 | `Did This Happen` · `Rate This Job` · `Cancel Booking` · `Raise Dispute` · `Report` · `Book Again` · `Recurring Booking` | 6 | Reviewed across 2 rounds |
 | `Messages` · `Enquiry Thread` · `Booking Thread` · `Mute Block Decline` | 7 | Reviewed across 1 round |
 | `Sign In` · `Register` · `Verify Email` · `Forgot Password` · `App States` | 8 | Reviewed across 1 round |
+| `Profile` · `Account Settings` · `Saved Preferences` · `Notifications` · `Help Support` · `Legal` | 9 | Reviewed across 1 round |
 
-**Sessions 9–13 remain.** `verify-dc.py` passes on all forty files.
+**Sessions 10–13 remain.** `verify-dc.py` passes on all forty-six files.
+
+⚠ **`Become a Provider.dc.html` is in the repo but missing from the Claude Design project.** Session 9 could only link to it because the repo holds it; the design chat saw no such sibling. Re-upload it before session 11, which inherits from it.
 
 ### What auditing has caught that design review would not
 
