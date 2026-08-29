@@ -22,6 +22,8 @@ FORBIDDEN = [
      "There are twelve categories and Tuition is not one. Boat Charter replaced it."),
     ("pre-Round-25 category", r"(?<![A-Za-z])Gardening(?![A-Za-z])|'Computer'|>Computer<|&quot;Computer&quot;",
      "Round 25: Pest Control replaced Gardening, and Computer is now Appliance Repair."),
+    ("pre-Round-26 category", r"'Events'|>Events<|&quot;Events&quot;",
+     "Round 26: Home Repairs replaced Events."),
     ("encryption claim", r"[Ee]ncrypt",
      "Chat is admin-readable in a dispute. Say 'your contact details are never shared'."),
     ("editorial provider label", r"Prone to|Unreliable|Top rated|Best value|Most reliable|Recommended provider",

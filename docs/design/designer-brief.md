@@ -16,7 +16,7 @@ A mobile app for finding and booking local services in the Maldives — plumbers
 
 - Every value in this document is fixed data. Use it verbatim; invent no figure that is not here. Rows marked *(illustrative)* stand for "any record in this state" — their state is required, their figures are examples.
 - **Currency is code-first: `MVR 450`.** Decimals appear only when a value has them (`MVR 1,250.50`, but `MVR 450`). Never a decimal point on a whole number, never a currency symbol.
-- **There are twelve categories**, no more and no fewer: `Cleaning` · `Plumbing` · `Electrical` · `AC Repair` · `Beauty` · `Photography` · `Pest Control` · `Appliance Repair` · `Moving` · `Fitness` · `Events` · `Boat Charter`. There is no Tuition category. Any grid showing categories shows twelve.
+- **There are twelve categories**, no more and no fewer: `Cleaning` · `Plumbing` · `Electrical` · `AC Repair` · `Beauty` · `Photography` · `Pest Control` · `Appliance Repair` · `Moving` · `Fitness` · `Home Repairs` · `Boat Charter`. There is no Tuition category and no Events category. Any grid showing categories shows twelve.
 - **Every service is one of two booking modes**, and every card, result and listing must say which: **`slot`** — the customer picks a published time — labelled `Book instantly`; **`request`** — the customer proposes a window and the provider comes back with a time and a price — labelled `Request a time`.
 - **A card carries a second signal, matched to its mode**: `slot` shows the next open time (`Next: today 14:00`), `request` shows the provider's typical reply time (`Usually replies in 12 min`, or `New provider` below ten bookings). Both are measured numbers, never labels.
 - **There is no `Emergency available` marker on a card, and no emergency filter.** Emergency dispatch goes to every eligible provider at once, so it can never be aimed at the one whose card you are reading. Emergency is reached from its own entry on Home and Explore — **a compact single-line row above the fold (small red bolt, `Something urgent? Get help now`), never a full banner card.** It has to be findable in a hurry without setting the tone of a page whose job is ordinary browsing. How dispatch works — the broadcast, the 90-second collection window, the `MVR 200` fee — is explained inside the emergency flow, not on the entry.
@@ -271,7 +271,7 @@ The twelve categories.
 
 *A mockup exists: `mockups/Explore_services.jpg`. One correction applies.*
 
-- All twelve, each with a name and an icon: `Cleaning` · `Plumbing` · `Electrical` · `AC Repair` · `Beauty` · `Photography` · `Pest Control` · `Appliance Repair` · `Moving` · `Fitness` · `Events` · `Boat Charter`
+- All twelve, each with a name and an icon: `Cleaning` · `Plumbing` · `Electrical` · `AC Repair` · `Beauty` · `Photography` · `Pest Control` · `Appliance Repair` · `Moving` · `Fitness` · `Home Repairs` · `Boat Charter`
 - The delivered mockup shows **Tuition**. Replace it with **Boat Charter** — the grid stays twelve
 - Each opens its results
 - Fact: the grid is driven by live data. A thirteenth category must appear without a redesign
@@ -365,7 +365,7 @@ The **slot** flow. The provider has published times; the customer takes one.
 - The service and its price: `Home Deep Cleaning` — `MVR 450/session`
 - A date selection, and the open times on the chosen date: `09:00` · `11:00` · `14:00` *(illustrative)*
 - Fact that must be conveyed: **only genuinely open, not-yet-passed times are ever shown.** No greyed-out unavailable slots, no times that have already gone by
-- Fact: this category needs `3 hours` notice, so today's earliest time reflects that. Lead time varies by category — `1 hour` for Plumbing, `2 days` for Events
+- Fact: this category needs `3 hours` notice, so today's earliest time reflects that. Lead time varies by category — `1 hour` for Plumbing, `1 day` for Boat Charter
 - Address: chosen from saved addresses or entered, with the island
 - Job notes, free text
 - The total, shown before committing: `MVR 450`
@@ -384,7 +384,7 @@ The **request** flow. The customer proposes a window; the provider comes back wi
 - Photos of the problem, optional
 - Address and island
 - Fact that must be conveyed: **the price is not settled yet.** `From MVR 350` is an estimate; the provider will send a real price
-- Fact: the provider has `2 hours` to respond on this category, and the customer then has `4 hours` to accept. On Photography, Moving, Events and Boat Charter those become `24 hours` and `72 hours`. **The screen states the real numbers for the category being booked**
+- Fact: the provider has `2 hours` to respond on this category, and the customer then has `4 hours` to accept. On Photography, Moving and Boat Charter those become `24 hours` and `72 hours`. **The screen states the real numbers for the category being booked**
 - A send action
 
 ## Quote received
@@ -830,7 +830,7 @@ The provider's answer to a request-based booking.
 - A send action
 - Fact that must be conveyed: **sending this holds that time** for as long as the customer has to accept — nobody else can take it
 - Fact: sending it **opens the chat immediately**, so the provider lands in a conversation rather than back on a list. This is where the customer says "could we do 3pm instead"
-- Fact: the customer has `4 hours` to accept on this category — or `72 hours` on Photography, Moving, Events and Boat Charter. **The real number for the category is stated**
+- Fact: the customer has `4 hours` to accept on this category — or `72 hours` on Photography, Moving and Boat Charter. **The real number for the category is stated**
 
 ## Emergency — accept with your fee — PRIORITY
 
