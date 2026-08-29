@@ -243,12 +243,12 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .2s ease both">
                 <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Price range<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
+                  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
                     <span style="flex:none;height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:9px;background:#EEF3FA;color:#41526B;font-size:12px;font-weight:800">MVR</span>
                     <input type="text" inputMode="numeric" value="{{ price }}" onChange="{{ setPrice }}" placeholder="From" aria-label="Price from" style="flex:1;min-width:0;border:none;background:none;font-size:15px;font-weight:700;color:#0F1B2D;padding:0">
                   </div>
                   <span style="flex:none;color:#9AA9C0;font-weight:700">–</span>
-                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
+                  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
                     <span style="flex:none;height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:9px;background:#EEF3FA;color:#41526B;font-size:12px;font-weight:800">MVR</span>
                     <input type="text" inputMode="numeric" value="{{ priceMax }}" onChange="{{ setPriceMax }}" placeholder="To" aria-label="Price to" style="flex:1;min-width:0;border:none;background:none;font-size:15px;font-weight:700;color:#0F1B2D;padding:0">
                   </div>
