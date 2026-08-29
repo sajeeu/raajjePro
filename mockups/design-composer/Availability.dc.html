@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button,select{font-family:inherit}button:focus,select:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Availability" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Availability &amp; time slots</span>
+        <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Bookable times, generated 60 days ahead</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:9px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:14px;padding:9px 12px">
+      <span style="width:30px;height:30px;border-radius:9px;overflow:hidden;flex:none"><img src="uploads/cleaning.jpeg" alt="Home Deep Cleaning" style="width:100%;height:100%;object-fit:cover"></span>
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:13px;font-weight:700;color:#0F1B2D">Home Deep Cleaning</span><span style="font-size:11px;font-weight:600;color:#8296B3">Your only listing that takes time slots</span></span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+        <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+        <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load your hours</div>
+        <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">Your rules and booked times are safe. Check your connection and try again.</div>
+        <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+        <span style="width:52px;height:52px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
+        <span style="font-size:15.5px;font-weight:800;color:#0F1B2D">No working hours yet</span>
+        <span style="font-size:12.5px;line-height:1.55;color:#5B6B84;max-width:270px;text-wrap:pretty">Add a weekly rule — like <b>Mon–Thu, 09:00–17:00, 2 hours each</b> — and bookable times are generated 60 days ahead, rolling. Customers can only pick times you publish here.</span>
+        <button onClick="{{ addFirstRule }}" style="margin-top:4px;height:48px;border:none;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer;padding:0 22px;box-shadow:0 4px 12px rgba(37,99,235,.28)">Add your first rule</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isNormal }}" hint-placeholder-val="{{ true }}">
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="flex:1;font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Weekly hours</span>
+          <button onClick="{{ addRule }}" style="display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px;border-radius:999px;border:1.5px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;font-size:12px;font-weight:700;cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add rule</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ rules }}" as="r" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:11px 12px">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ r.days }}</span>
+                <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ r.hours }} · {{ r.dur }} each</span>
+              </span>
+              <button onClick="{{ r.edit }}" aria-label="Edit rule" style="width:34px;height:34px;border:none;border-radius:10px;background:#fff;color:#41526B;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #E3EAF3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.5-1L20 7.5 16.5 4 5 15.5zM14 6.5l3.5 3.5"></path></svg></button>
+              <button onClick="{{ r.remove }}" aria-label="Remove rule" style="width:34px;height:34px;border:none;border-radius:10px;background:#fff;color:#B42318;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #E3EAF3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FEF3DC;border:1px solid #F3E2B8;border-radius:18px;padding:13px 15px;display:flex;flex-direction:column;gap:10px;animation:fadeIn .25s ease both">
+          <div style="display:flex;align-items:flex-start;gap:9px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg>
+            <span style="font-size:12.5px;line-height:1.5;color:#8A5A08;text-wrap:pretty"><b>Preview updated — not saved yet.</b> {{ deltaLine }}</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onClick="{{ askSave }}" style="height:38px;padding:0 16px;border:none;border-radius:999px;background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Save changes</button>
+            <button onClick="{{ discard }}" style="height:38px;padding:0 14px;border:1.5px solid #E3D3A8;border-radius:999px;background:transparent;color:#8A5A08;font-size:12.5px;font-weight:700;cursor:pointer">Discard</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ previewTitle }}</span>
+          <span style="font-size:12px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Tap an open time to block it. Reserved times belong to bookings and can't be changed.</span>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#41526B"><span style="width:10px;height:10px;border-radius:4px;background:#fff;border:1.5px solid #CDDDFB;display:inline-block"></span>Open</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#41526B"><span style="width:10px;height:10px;border-radius:4px;background:#41526B;display:inline-block"></span>Reserved</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#41526B"><span style="width:10px;height:10px;border-radius:4px;background:#EDF2F9;border:1.5px dashed #A9BAD1;display:inline-block"></span>Blocked</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:12px;font-weight:800;color:#5B6B84;text-transform:uppercase;letter-spacing:.04em">{{ d.label }}</span>
+              <sc-if value="{{ d.none }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:#A9BAD1">{{ d.noneWhy }}</span></sc-if>
+              <div style="display:flex;gap:7px;flex-wrap:wrap">
+                <sc-for list="{{ d.slots }}" as="t" hint-placeholder-count="4">
+                  <button onClick="{{ t.tap }}" style="height:36px;padding:0 12px;border-radius:11px;border:{{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};font-size:12.5px;font-weight:700;cursor:{{ t.cursor }};display:inline-flex;align-items:center;gap:5px;text-decoration:{{ t.deco }}">
+                    <sc-if value="{{ t.lock }}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></sc-if>
+                    {{ t.time }}
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border-top:1px solid #EEF3FA;padding-top:11px;display:flex;align-items:flex-start;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.6v.1"></path></svg>
+          <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">First 5 days shown. Times run through <b>{{ horizonDate }}</b> — always 60 days ahead, rolling. Customers never see a time that's blocked, taken, or already past.</span>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Modified hours</span><span style="font-size:12px;color:#5B6B84">Seasonal schedules that change your times — like Ramadan. Trips and holidays live in My Calendar.</span></span>
+          <button onClick="{{ addException }}" style="flex:none;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px;border-radius:999px;border:1.5px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;font-size:12px;font-weight:700;cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ exceptions }}" as="e" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:11px 12px">
+              <span style="width:32px;height:32px;border-radius:10px;background:#EDF2F9;color:#5B6B84;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ e.d }}"></path></svg></span>
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ e.name }}</span>
+                <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ e.detail }}</span>
+              </span>
+              <button onClick="{{ e.remove }}" aria-label="Remove exception" style="width:34px;height:34px;border:1px solid #E3EAF3;border-radius:10px;background:#fff;color:#B42318;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noExceptions }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#A9BAD1;padding:2px 2px">None yet — your weekly hours apply everywhere.</span></sc-if>
+        </div>
+        <a href="My Calendar.dc.html" style="display:flex;align-items:center;gap:8px;border-top:1px solid #EEF3FA;padding-top:11px;color:#1D4ED8">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>
+          <span style="flex:1;font-size:12px;font-weight:700">Going away? Time away lives in My Calendar</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+        </a>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ editorOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeEditor }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:14px">
+      <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ editorTitle }}</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:12.5px;font-weight:700;color:#41526B">Days</span>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ dayBtns }}" as="db" hint-placeholder-count="7">
+            <button onClick="{{ db.tap }}" style="flex:1;height:40px;border-radius:11px;border:1.5px solid {{ db.bd }};background:{{ db.bg }};color:{{ db.fg }};font-size:12px;font-weight:800;cursor:pointer">{{ db.n }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <label style="flex:1;display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700;color:#41526B">From
+          <select value="{{ edFrom }}" onChange="{{ setFrom }}" style="height:46px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 12px;font-size:14px;font-weight:600;color:#0F1B2D">
+            <sc-for list="{{ hourOpts }}" as="h" hint-placeholder-count="10"><option value="{{ h }}">{{ h }}</option></sc-for>
+          </select>
+        </label>
+        <label style="flex:1;display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700;color:#41526B">To
+          <select value="{{ edTo }}" onChange="{{ setTo }}" style="height:46px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 12px;font-size:14px;font-weight:600;color:#0F1B2D">
+            <sc-for list="{{ hourOpts }}" as="h" hint-placeholder-count="10"><option value="{{ h }}">{{ h }}</option></sc-for>
+          </select>
+        </label>
+        <label style="flex:1;display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700;color:#41526B">Each visit
+          <select value="{{ edDur }}" onChange="{{ setDur }}" style="height:46px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 12px;font-size:14px;font-weight:600;color:#0F1B2D">
+            <option value="1">1 hour</option><option value="1.5">1.5 hours</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option>
+          </select>
+        </label>
+      </div>
+      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">This updates the preview first — nothing changes for customers until you save.</span>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeEditor }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>
+        <button onClick="{{ applyRule }}" style="flex:1;height:48px;border:none;border-radius:14px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Update preview</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ saveOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSave }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+      <span style="width:44px;height:44px;border-radius:50%;background:#E7F6EC;color:#0E9F5D;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Save these hours?</span>
+      <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty"><b style="color:#0F1B2D">Times someone has already booked stay exactly as they are.</b> Only future, unbooked times change — {{ deltaLine }}</span>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button onClick="{{ closeSave }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Keep editing</button>
+        <button onClick="{{ doSave }}" style="flex:1;height:48px;border:none;border-radius:14px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Save rules</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ resOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeRes }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+      <span style="width:44px;height:44px;border-radius:50%;background:#EDF2F9;color:#41526B;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Reserved · {{ resWhen }}</span>
+      <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty">{{ resDetail }}</span>
+      <span style="font-size:12px;line-height:1.5;color:#8296B3;text-wrap:pretty">A booking on any of your listings holds your time, so you can never be double-booked. To free this time, manage the booking itself.</span>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button onClick="{{ closeRes }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Close</button>
+        <a href="Booking Detail.dc.html" style="flex:1;height:48px;border-radius:14px;background:#E8F0FE;border:1.5px solid #CDDDFB;color:#1D4ED8;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center">View booking</a>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ excOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeExc }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
+      <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
+      <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Add an exception</span>
+      <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Pick a preset to see how it works — a name, a date range, and the changed hours it applies. Booked times are never touched.</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ excPresets }}" as="x" hint-placeholder-count="3">
+          <button onClick="{{ x.tap }}" style="display:flex;align-items:center;gap:11px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:12px;cursor:pointer;text-align:left" style-hover="border-color:#2563EB;background:#F7FAFE">
+            <span style="width:32px;height:32px;border-radius:10px;background:#EDF2F9;color:#5B6B84;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ x.d }}"></path></svg></span>
+            <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ x.name }}</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ x.detail }}</span></span>
+          </button>
+        </sc-for>
+        <a href="My Calendar.dc.html" style="display:flex;align-items:center;gap:11px;border:1.5px dashed #C9D7EA;border-radius:14px;background:#F7FAFE;padding:12px;color:#1D4ED8">
+          <span style="width:32px;height:32px;border-radius:10px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
+          <span style="flex:1;font-size:12px;font-weight:700;line-height:1.4">A trip or a holiday is time away — add it in My Calendar</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+        </a>
+      </div>
+      <button onClick="{{ closeExc }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  state = {
+    rules: [ { id:1, days:[1,2,3,4], from:9, to:17, dur:2 }, { id:2, days:[6], from:9, to:13, dur:2 } ],
+    draftRules: null,
+    exceptions: [
+      { id:'ram', name:'Ramadan hours', detail:'10:00–15:00 only · 18 Feb – 19 Mar', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z' }
+    ],
+    blocked: { 'd0-15:00': true },
+    editor: null, saveOpen: false, resFor: null, excOpen: false, toast: null
+  };
+  RESERVED = {
+    'd0-11:00': { who:'Aminath S.', listing:'Home Deep Cleaning', ref:'#4812' },
+    'd2-09:00': { who:'Hussain M.', listing:'AC Service & Repair', ref:'#4821', other:true }
+  };
+  // Provider-wide absences are managed in My Calendar; they remove published times here too.
+  AWAY = [ { name:'Malé trip', covers:[3,4] } ];
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 3000); }
+  componentWillUnmount() { clearTimeout(this._tt); }
+  fmtHour(h) { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); }
+  genTimes(rules) {
+    const start = new Date(2026, 7, 27); // Thu 27 Aug 2026 — illustrative "today"
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const dt = new Date(start.getTime() + i * 86400000);
+      const dow = dt.getDay();
+      const label = (i === 0 ? 'Today · ' : i === 1 ? 'Tomorrow · ' : '') + this.DAY_NAMES[dow] + ' ' + dt.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()];
+      let times = [];
+      rules.forEach(r => { if (r.days.includes(dow)) { for (let h = r.from; h + r.dur <= r.to + 0.001; h += r.dur) times.push(this.fmtHour(h)); } });
+      times = [...new Set(times)].sort();
+      days.push({ key: 'd' + i, dow, label, times });
+    }
+    return days;
+  }
+  ruleLabel(r) {
+    const idx = r.days.slice().sort((a,b)=>a-b);
+    const consec = idx.length > 2 && idx.every((v, i) => i === 0 || v === idx[i-1] + 1);
+    const days = consec ? this.DAY_NAMES[idx[0]] + '–' + this.DAY_NAMES[idx[idx.length-1]] : idx.map(i => this.DAY_NAMES[i]).join(', ');
+    return { days, hours: this.fmtHour(r.from) + '–' + this.fmtHour(r.to), dur: r.dur === 1 ? '1 hour' : r.dur + ' hours' };
+  }
+  countTimes(rules) { return this.genTimes(rules).reduce((a, d) => a + d.times.length, 0); }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const state = p.state ?? 'populated';
+    const effRules = s.draftRules ?? s.rules;
+    const dirty = !!s.draftRules;
+    const savedCount = this.countTimes(s.rules), draftCount = this.countTimes(effRules);
+    const added = Math.max(0, draftCount - savedCount), removed = Math.max(0, savedCount - draftCount);
+    const deltaLine = dirty ? ('in the next 5 days alone: ' + (added ? added + ' times added' : '') + (added && removed ? ', ' : '') + (removed ? removed + ' times removed' : '') + (!added && !removed ? 'same times, new pattern' : '') + '. Booked times stay.') : '';
+    const days = this.genTimes(effRules).map((d, i) => {
+      const exc = s.exceptions.find(e => e.covers && e.covers.includes(i)) || this.AWAY.find(a => a.covers.includes(i));
+      return {
+      label: d.label,
+      none: d.times.length === 0 || !!exc,
+      noneWhy: exc && d.times.length > 0 ? exc.name + ' · no times' : 'No rule covers ' + this.DAY_NAMES[d.dow],
+      slots: exc ? [] : d.times.map(t => {
+        const key = d.key + '-' + t;
+        const res = this.RESERVED[key];
+        const blk = !res && s.blocked[key];
+        return {
+          time: t, lock: !!res,
+          bg: res ? '#41526B' : blk ? '#EDF2F9' : '#fff',
+          fg: res ? '#fff' : blk ? '#8296B3' : '#1D4ED8',
+          bd: res ? '1.5px solid #41526B' : blk ? '1.5px dashed #A9BAD1' : '1.5px solid #CDDDFB',
+          deco: blk ? 'line-through' : 'none', cursor: 'pointer',
+          tap: res ? () => this.setState({ resFor: { key, when: d.label.replace('Today · ','').replace('Tomorrow · ','') + ' · ' + t, ...res } })
+            : () => {
+              this.setState(st => ({ blocked: { ...st.blocked, [key]: !blk } }));
+              this.toastMsg(blk ? 'Unblocked — customers can book this time again' : 'Blocked — customers won’t see this time');
+            }
+        };
+      })
+    };});
+    const openEditor = (rule) => this.setState({ editor: rule ? { ...rule } : { id: Date.now(), days: [], from: 9, to: 17, dur: 2 } });
+    const ed = s.editor;
+    return {
+      isLoading: state === 'loading', isError: state === 'error', isEmpty: state === 'empty', isNormal: state === 'populated',
+      retry: () => this.toastMsg('Retrying…'),
+      addFirstRule: () => this.toastMsg('Switch the state tweak to “populated” to explore rules'),
+      rules: effRules.map(r => ({ ...this.ruleLabel(r),
+        edit: () => openEditor(r),
+        remove: () => { this.setState({ draftRules: effRules.filter(x => x.id !== r.id) }); this.toastMsg('Rule removed in preview — save to apply'); }
+      })),
+      addRule: () => openEditor(null),
+      dirty, deltaLine,
+      previewTitle: dirty ? 'Preview — what your new rules produce' : 'Bookable times these rules produce',
+      days, horizonDate: 'Mon 26 Oct',
+      exceptions: s.exceptions.map(e => ({ ...e, remove: () => { this.setState(st => ({ exceptions: st.exceptions.filter(x => x.id !== e.id) })); this.toastMsg('Exception removed — those times reopen (booked times were never touched)'); } })),
+      noExceptions: s.exceptions.length === 0,
+      addException: () => this.setState({ excOpen: true }), closeExc: () => this.setState({ excOpen: false }),
+      excOpen: s.excOpen,
+      excPresets: [
+        { name:'Shorter hours', detail:'Keep only part of the day, for a season', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z', tap: () => { this.setState(st => ({ excOpen:false, exceptions: [...st.exceptions, { id:'s'+Date.now(), name:'Shorter hours', detail:'10:00–15:00 only · 1 – 30 Nov', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z' }] })); this.toastMsg('Exception added — mornings and evenings removed for Nov'); } }
+      ],
+      editorOpen: !!ed,
+      editorTitle: ed && s.rules.concat(s.draftRules || []).some(r => r.id === ed.id) ? 'Edit weekly rule' : 'New weekly rule',
+      closeEditor: () => this.setState({ editor: null }),
+      dayBtns: this.DAY_NAMES.map((n, i) => {
+        const on = ed ? ed.days.includes(i) : false;
+        return { n: n[0] + n[1], bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
+          tap: () => this.setState(st => ({ editor: { ...st.editor, days: on ? st.editor.days.filter(x => x !== i) : [...st.editor.days, i] } })) };
+      }),
+      hourOpts: Array.from({ length: 15 }, (_, i) => this.fmtHour(7 + i)),
+      edFrom: ed ? this.fmtHour(ed.from) : '09:00', edTo: ed ? this.fmtHour(ed.to) : '17:00', edDur: ed ? String(ed.dur) : '2',
+      setFrom: (e) => this.setState(st => ({ editor: { ...st.editor, from: parseInt(e.target.value, 10) } })),
+      setTo: (e) => this.setState(st => ({ editor: { ...st.editor, to: parseInt(e.target.value, 10) } })),
+      setDur: (e) => this.setState(st => ({ editor: { ...st.editor, dur: parseFloat(e.target.value) } })),
+      applyRule: () => {
+        if (!ed || ed.days.length === 0 || ed.to <= ed.from) { this.toastMsg('Pick at least one day, and an end after the start'); return; }
+        const cur = s.draftRules ?? s.rules;
+        const exists = cur.some(r => r.id === ed.id);
+        this.setState({ draftRules: exists ? cur.map(r => r.id === ed.id ? ed : r) : [...cur, ed], editor: null });
+      },
+      askSave: () => this.setState({ saveOpen: true }), closeSave: () => this.setState({ saveOpen: false }),
+      saveOpen: s.saveOpen,
+      doSave: () => { this.setState(st => ({ rules: st.draftRules, draftRules: null, saveOpen: false })); this.toastMsg('Saved — booked times untouched, future times updated'); },
+      discard: () => { this.setState({ draftRules: null }); this.toastMsg('Changes discarded'); },
+      resOpen: !!s.resFor,
+      resWhen: s.resFor ? s.resFor.when : '',
+      resDetail: s.resFor ? ('Booked by ' + s.resFor.who + ' · ' + s.resFor.listing + ' · booking ' + s.resFor.ref + (s.resFor.other ? ' — a booking on another of your listings.' : '.')) : '',
+      closeRes: () => this.setState({ resFor: null }),
+      toastOn: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

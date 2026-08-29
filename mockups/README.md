@@ -99,6 +99,9 @@ Seven divergences from the plan were found in Round 16 and confirmed in Round 18
 | `Provider Emergency.dc.html` | emergency offer, provider side | — |
 | `Become a Provider.dc.html` | Phase 6a onboarding | — |
 | `Create Service.dc.html` | the Create/Edit Service wizard, all seven steps in one shell | `Create_service_widget1–7.jpg` |
+| `My Services.dc.html` | the provider services dashboard | `Profile_serviceProvider.jpg` |
+| `Availability.dc.html` | weekly rules, generated times, modified hours — slot listings | — |
+| `My Calendar.dc.html` | provider-wide commitments and time away — every booking mode | — |
 
 The JPEGs stay as the provenance record of what was originally delivered. This table grows as each session in `docs/design/redesign-plan.md` lands.
 

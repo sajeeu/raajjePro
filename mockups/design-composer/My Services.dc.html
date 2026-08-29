@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="My Services" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <span style="width:36px;height:36px;border-radius:11px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+    <span style="font-size:17.5px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;flex:1">Raajje<span style="color:#2563EB">Pro</span></span>
+    <a href="Notifications.dc.html" aria-label="Notifications" style="position:relative;width:42px;height:42px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6M10.3 20a2 2 0 0 0 3.4 0"></path></svg>
+      <span style="position:absolute;top:-2px;right:-2px;min-width:17px;height:17px;border-radius:999px;background:#2563EB;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #fff">3</span>
+    </a>
+    <a href="Profile.dc.html" aria-label="Profile" style="width:42px;height:42px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none;border:1px solid #CDDDFB">IR</a>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px">
+
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+        <h1 style="margin:0;font-size:25px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">My Services</h1>
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:#41526B">Ibrahim Rasheed</span>
+          <dc-import name="VerificationBadge" tier="{{ tierVal }}" size="chip" hint-size="64px,20px"></dc-import>
+        </div>
+        <span style="font-size:11.5px;line-height:1.45;color:#8296B3;text-wrap:pretty">Your badge reflects verification checks, not payment — it stays with you even if a subscription lapses.</span>
+      </div>
+      <a href="Create Service.dc.html" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:999px;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;box-shadow:0 4px 12px rgba(37,99,235,.28)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New Service</a>
+    </div>
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+        <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+        <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load your services</div>
+        <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">Your listings are safe — we just couldn't reach them. Check your connection and try again.</div>
+        <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isNormal }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <sc-for list="{{ stats }}" as="st" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:13px 13px 12px;display:flex;flex-direction:column;gap:9px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <span style="width:32px;height:32px;border-radius:50%;background:{{ st.bg }};display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ st.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ st.d }}"></path></svg></span>
+            <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:18px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ st.n }}</span><span style="font-size:11px;font-weight:600;color:#5B6B84">{{ st.label }}</span></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ draftsNote }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #E9EFF7;border-radius:16px;padding:12px 15px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.6v.1"></path></svg>
+          <span style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">Nothing live yet — <b>you don't appear in search until you publish a service.</b> Your draft is saved and ready to finish.</span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showAvail }}" hint-placeholder-val="{{ true }}">
+        <a href="Availability.dc.html" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,27,45,.04);color:inherit">
+          <span style="width:40px;height:40px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:14px;font-weight:700;color:#0F1B2D">Availability &amp; time slots</span>
+            <span style="font-size:12px;font-weight:600;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ availSub }}</span>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+        </a>
+      </sc-if>
+
+      <a href="My Calendar.dc.html" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,27,45,.04);color:inherit">
+        <span style="width:40px;height:40px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;font-weight:700;color:#0F1B2D">My Calendar</span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Every commitment across your services</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;display:flex;gap:8px">
+          <dc-import name="Chip" label="All" kind="filter" selected="{{ selAll }}" on-tap="{{ fAll }}" hint-size="52px,38px"></dc-import>
+          <dc-import name="Chip" label="Published" kind="filter" selected="{{ selPub }}" on-tap="{{ fPub }}" hint-size="90px,38px"></dc-import>
+          <dc-import name="Chip" label="Draft" kind="filter" selected="{{ selDraft }}" on-tap="{{ fDraft }}" hint-size="64px,38px"></dc-import>
+        </div>
+        <div style="flex:none;display:flex;background:#fff;border:1px solid #E3EAF3;border-radius:12px;padding:3px;gap:2px">
+          <button onClick="{{ toList }}" aria-label="List view" style="width:34px;height:30px;border:none;border-radius:9px;background:{{ listBtnBg }};color:{{ listBtnFg }};display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+          <button onClick="{{ toGrid }}" aria-label="Grid view" style="width:34px;height:30px;border:none;border-radius:9px;background:{{ gridBtnBg }};color:{{ gridBtnFg }};display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg></button>
+        </div>
+      </div>
+
+      <sc-if value="{{ emptyFilter }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:center;padding:8px 0">
+          <dc-import name="EmptyState" icon="search" title="{{ efTitle }}" body="{{ efBody }}" action-label="{{ efAction }}" on-action="{{ efGo }}" hint-size="340px,200px"></dc-import>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;display:flex;box-shadow:0 1px 3px rgba(15,27,45,.05);opacity:{{ c.dim }}">
+              <div style="width:104px;flex:none;position:relative;background:#EEF3FA">
+                <sc-if value="{{ c.photoHas }}" hint-placeholder-val="{{ true }}"><img src="{{ c.photoUrl }}" alt="{{ c.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ c.imgFilter }}"></sc-if>
+                <sc-if value="{{ c.photoNone }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);display:flex;align-items:center;justify-content:center;padding:8px"><span style="font-family:monospace;font-size:10px;color:#5B6B84;text-align:center">{{ c.phText }}</span></span></sc-if>
+              </div>
+              <div style="flex:1;min-width:0;padding:13px 14px 12px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:flex-start;gap:8px">
+                  <span style="flex:1;min-width:0;font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;line-height:1.3">{{ c.title }}</span>
+                  <button onClick="{{ c.menu }}" aria-label="More options" style="width:30px;height:30px;margin:-4px -6px 0 0;border:none;background:none;border-radius:50%;color:#5B6B84;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:#EEF3FA"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.5" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="12" cy="18.5" r="1.7"></circle></svg></button>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+                  <span style="height:22px;border-radius:999px;background:{{ c.catBg }};color:{{ c.catFg }};display:inline-flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:800">{{ c.cat }}</span>
+                  <span style="height:22px;border-radius:999px;background:{{ c.stBg }};color:{{ c.stFg }};display:inline-flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:800">{{ c.stLabel }}</span>
+                  <sc-if value="{{ c.ratingHas }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:#0F1B2D"><svg width="12" height="12" viewBox="0 0 24 24" fill="#F5A623"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>{{ c.rating }}</span></sc-if>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="flex:1;font-size:15px;font-weight:800;color:#2563EB">{{ c.price }}<span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ c.unit }}</span></span>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>{{ c.views }}</span>
+                  <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>{{ c.bookings }}</span>
+                </div>
+                <sc-if value="{{ c.showFoot }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;align-items:center;gap:10px;border-top:1px solid #EEF3FA;padding-top:9px;margin-top:1px">
+                    <span style="flex:1;font-size:11.5px;font-weight:600;color:#8296B3">Updated {{ c.updated }}</span>
+                    <sc-if value="{{ c.showToggle }}" hint-placeholder-val="{{ true }}">
+                      <span style="display:inline-flex;align-items:center;gap:7px"><span style="font-size:11.5px;font-weight:700;color:{{ c.liveFg }}">{{ c.liveLabel }}</span><button onClick="{{ c.toggle }}" aria-label="Toggle live" style="width:44px;height:26px;border-radius:999px;border:none;background:{{ c.togBg }};position:relative;cursor:pointer;transition:background .2s"><span style="position:absolute;top:3px;left:{{ c.knobL }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:left .2s"></span></button></span>
+                    </sc-if>
+                    <sc-if value="{{ c.showFinish }}" hint-placeholder-val="{{ false }}">
+                      <a href="Create Service.dc.html" style="display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px;border-radius:999px;background:#2563EB;color:#fff;font-size:12px;font-weight:700">Finish &amp; publish<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ c.showHidden }}" hint-placeholder-val="{{ false }}">
+                  <div style="border-top:1px solid #EEF3FA;padding-top:9px;display:flex;flex-direction:column;gap:8px">
+                    <span style="font-size:11.5px;line-height:1.5;color:#41526B;text-wrap:pretty">Your free plan includes <b>1 live service</b>. This one is hidden from customers — nothing is lost, and its numbers stay.</span>
+                    <div style="display:flex;gap:8px">
+                      <button onClick="{{ c.upgrade }}" style="height:34px;padding:0 13px;border-radius:999px;border:none;background:#2563EB;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Upgrade</button>
+                      <button onClick="{{ c.swap }}" style="height:34px;padding:0 13px;border-radius:999px;border:1.5px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;font-size:12px;font-weight:700;cursor:pointer">Make this one live instead</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05);opacity:{{ c.dim }}">
+              <div style="height:92px;position:relative;background:#EEF3FA">
+                <sc-if value="{{ c.photoHas }}" hint-placeholder-val="{{ true }}"><img src="{{ c.photoUrl }}" alt="{{ c.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ c.imgFilter }}"></sc-if>
+                <sc-if value="{{ c.photoNone }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px);display:flex;align-items:center;justify-content:center"><span style="font-family:monospace;font-size:10px;color:#5B6B84">{{ c.phText }}</span></span></sc-if>
+                <button onClick="{{ c.menu }}" aria-label="More options" style="position:absolute;top:6px;right:6px;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,255,255,.92);color:#41526B;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.5" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="12" cy="18.5" r="1.9"></circle></svg></button>
+              </div>
+              <div style="padding:11px 12px 12px;display:flex;flex-direction:column;gap:7px">
+                <span style="font-size:13px;font-weight:800;color:#0F1B2D;line-height:1.3">{{ c.title }}</span>
+                <span style="font-size:13px;font-weight:800;color:#2563EB">{{ c.price }}<span style="font-size:10.5px;font-weight:600;color:#5B6B84">{{ c.unit }}</span></span>
+                <span style="align-self:flex-start;height:20px;border-radius:999px;background:{{ c.stBg }};color:{{ c.stFg }};display:inline-flex;align-items:center;padding:0 8px;font-size:10px;font-weight:800">{{ c.stLabel }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ notEmptyFilter }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1.5px dashed #C9D7EA;border-radius:20px;background:#F7FAFE;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+          <span style="width:44px;height:44px;border-radius:14px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+          <span style="font-size:14.5px;font-weight:800;color:#0F1B2D">Add another service</span>
+          <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">Publish a new listing to reach more customers.</span>
+          <a href="Create Service.dc.html" style="margin-top:2px;display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;box-shadow:0 4px 12px rgba(37,99,235,.28)">Create Service</a>
+        </div>
+      </sc-if>
+    </sc-if>
+  </div>
+
+  <div style="flex:none;padding:8px 20px 12px;background:#F2F6FB;display:flex;justify-content:center">
+    <dc-import name="BottomNav" active="Profile" on-tap="{{ navTab }}" hint-size="372px,88px"></dc-import>
+  </div>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMenu }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 16px 14px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2)">
+      <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto 14px"></div>
+      <div style="font-size:14.5px;font-weight:800;color:#0F1B2D;padding:0 6px 10px">{{ menuTitle }}</div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ menuOpts }}" as="o" hint-placeholder-count="5">
+          <button onClick="{{ o.tap }}" style="display:flex;align-items:center;gap:12px;height:50px;border:none;background:none;border-radius:14px;padding:0 10px;cursor:pointer;text-align:left" style-hover="background:#F2F6FB">
+            <span style="width:34px;height:34px;border-radius:11px;background:{{ o.iBg }};color:{{ o.iFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ o.d }}"></path></svg></span>
+            <span style="flex:1;font-size:14px;font-weight:700;color:{{ o.fg }}">{{ o.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeConfirm }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+      <span style="width:44px;height:44px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5"></path></svg></span>
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Remove {{ confirmTitle }}?</span>
+      <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty">It's removed from your services, so customers can no longer find or book it. Your booking history, reviews, and earnings from past jobs stay in your account.</span>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button onClick="{{ closeConfirm }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Keep it</button>
+        <button onClick="{{ doDelete }}" style="flex:1;height:48px;border:none;border-radius:14px;background:#DC2626;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Remove service</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Gold&quot;,&quot;Silver&quot;,&quot;Bronze&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'Gold' | 'Silver' | 'Bronze'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;plan&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;paid&quot;,&quot;free-over-limit&quot;],&quot;default&quot;:&quot;paid&quot;,&quot;tsType&quot;:&quot;'paid' | 'free-over-limit'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;drafts-only&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;listings&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;slots-only&quot;,&quot;requests-only&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both' | 'slots-only' | 'requests-only'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { filter:'All', view:'list', menuFor:null, confirm:null, toast:null, liveOv:{}, del:[], extra:[], hiddenId:'ac' };
+  BASE = [
+    { id:'clean', title:'Home Deep Cleaning', cat:'Cleaning', catBg:'#E7F6EC', catFg:'#0E9F5D', photo:'uploads/cleaning.jpeg', status:'published', live:true, rating:'4.8', price:'MVR 500', unit:'/session', views:312, bookings:23, updated:'2 days ago' },
+    { id:'ac', title:'AC Service & Repair', cat:'AC Repair', catBg:'#E0F4F7', catFg:'#0891B2', photo:null, ph:'ac unit photo', status:'published', live:true, rating:'4.9', price:'MVR 350', unit:'/visit', views:784, bookings:64, updated:'1 week ago' },
+    { id:'wiring', title:'Wiring & Fault Repair', cat:'Electrical', catBg:'#FDF2DD', catFg:'#B45309', photo:'uploads/electrical.jpeg', status:'draft', live:false, rating:null, price:'MVR 200', unit:'/hr', views:0, bookings:0, updated:'Just now' }
+  ];
+  STAT_ICONS = [
+    { bg:'#E7F6EC', fg:'#0E9F5D', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.4 12.4l2.6 2.6 4.6-5' },
+    { bg:'#E8F0FE', fg:'#1D4ED8', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { bg:'#F3E8FD', fg:'#9333EA', d:'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2z' }
+  ];
+  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  componentWillUnmount() { clearTimeout(this._tt); }
+  nav(h) { window.location.href = h; }
+  mkCard(x, pubIds) {
+    const s = this.state;
+    const isDraft = x.status === 'draft', isHidden = !!x.hidden;
+    const live = !isDraft && !isHidden && x.live;
+    return {
+      key: x.id, title: x.title, cat: x.cat, catBg: x.catBg, catFg: x.catFg,
+      photoHas: !!x.photo, photoNone: !x.photo, photoUrl: x.photo || '', phText: x.ph || 'photo',
+      imgFilter: isHidden ? 'grayscale(.7)' : 'none', dim: isHidden ? '.9' : '1',
+      stLabel: isDraft ? 'Draft' : isHidden ? 'Hidden' : 'Published',
+      stBg: isDraft ? '#FDF2DD' : isHidden ? '#EDF2F9' : '#E7F6EC',
+      stFg: isDraft ? '#B45309' : isHidden ? '#5B6B84' : '#0E9F5D',
+      ratingHas: !!x.rating, rating: x.rating || '',
+      price: x.price, unit: x.unit, views: String(x.views), bookings: String(x.bookings), updated: x.updated,
+      showFoot: !isHidden, showToggle: !isDraft && !isHidden, showFinish: isDraft, showHidden: isHidden,
+      liveLabel: live ? 'Live' : 'Off', liveFg: live ? '#1D4ED8' : '#8296B3',
+      togBg: live ? '#2563EB' : '#DCE4EF', knobL: live ? '21px' : '3px',
+      toggle: () => {
+        this.setState(st => ({ liveOv: { ...st.liveOv, [x.id]: !live } }));
+        this.toastMsg(live ? 'Paused — hidden from customers until you switch it back' : 'Live — visible to customers again');
+      },
+      menu: () => this.setState({ menuFor: x.id }),
+      upgrade: () => this.toastMsg('Plans & upgrades open outside this screen'),
+      swap: () => {
+        const other = pubIds.find(id => id !== x.id);
+        if (other) { this.setState({ hiddenId: other }); this.toastMsg(x.title + ' is now your live service'); }
+      }
+    };
+  }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const scenario = p.scenario ?? 'normal', plan = p.plan ?? 'paid', tier = p.tier ?? 'Silver';
+    const listings = p.listings ?? 'both';
+    const draftsOnly = scenario === 'drafts-only';
+    let base = draftsOnly ? this.BASE.filter(x => x.id === 'wiring') : this.BASE;
+    let list = base.concat(s.extra).filter(x => !s.del.includes(x.id))
+      .map(x => ({ ...x, live: s.liveOv[x.id] ?? x.live }));
+    const overLimit = plan === 'free-over-limit' && !draftsOnly;
+    const pubIds = list.filter(x => x.status === 'published').map(x => x.id);
+    if (overLimit) list = list.map(x => ({ ...x, hidden: x.id === s.hiddenId && x.status === 'published' }));
+    const liveCount = list.filter(x => x.status === 'published' && !x.hidden).length;
+    const bkTotal = list.reduce((a, x) => a + x.bookings, 0);
+    const vwTotal = list.reduce((a, x) => a + x.views, 0);
+    const filtered = list.filter(x => s.filter === 'All' ? true : s.filter === 'Published' ? x.status === 'published' : x.status === 'draft');
+    const cards = filtered.map(x => this.mkCard(x, pubIds));
+    const emptyFilter = filtered.length === 0;
+    const menuCard = list.find(x => x.id === s.menuFor);
+    const confirmCard = list.find(x => x.id === s.confirm);
+    let menuOpts = [];
+    if (menuCard) {
+      const mkOpt = (label, d, tap, danger) => ({ label, d, tap, fg: danger ? '#B42318' : '#0F1B2D', iBg: danger ? '#FDECEC' : '#EEF3FA', iFg: danger ? '#B42318' : '#41526B' });
+      const isDraft = menuCard.status === 'draft';
+      menuOpts = [ mkOpt(isDraft ? 'Continue editing' : 'Edit service', 'M4 20l4.5-1L20 7.5 16.5 4 5 15.5zM14 6.5l3.5 3.5', () => this.nav('Create Service.dc.html')) ];
+      if (!isDraft) {
+        menuOpts.push(mkOpt('View as customer', 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2z', () => this.nav('Service Preview.dc.html')));
+        const live = !menuCard.hidden && menuCard.live;
+        if (!menuCard.hidden) menuOpts.push(mkOpt(live ? 'Pause — hide from customers' : 'Resume — make live', live ? 'M9 6v12M15 6v12' : 'M7 5l12 7-12 7z', () => {
+          this.setState(st => ({ liveOv: { ...st.liveOv, [menuCard.id]: !live }, menuFor: null }));
+          this.toastMsg(live ? 'Paused — hidden from customers until you switch it back' : 'Live — visible to customers again');
+        }));
+      }
+      menuOpts.push(mkOpt('Duplicate as draft', 'M8 8h12v12H8zM8 8V4h12v12h-4', () => {
+        const copy = { ...menuCard, id: menuCard.id + '-copy' + Date.now(), title: menuCard.title + ' (copy)', status: 'draft', live: false, hidden: false, rating: null, views: 0, bookings: 0, updated: 'Just now' };
+        this.setState(st => ({ extra: [...st.extra, copy], menuFor: null }));
+        this.toastMsg('Copied — saved as a new draft');
+      }));
+      menuOpts.push(mkOpt('Delete service', 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13', () => this.setState({ menuFor: null, confirm: menuCard.id }), true));
+    }
+    const efPub = s.filter === 'Published';
+    return {
+      tierVal: tier,
+      isLoading: scenario === 'loading', isError: scenario === 'error', isNormal: scenario === 'normal' || draftsOnly,
+      retry: () => this.toastMsg('Retrying…'),
+      stats: [
+        { ...this.STAT_ICONS[0], n: String(liveCount), label: 'Published' },
+        { ...this.STAT_ICONS[1], n: String(bkTotal), label: 'Total Bookings' },
+        { ...this.STAT_ICONS[2], n: String(vwTotal), label: 'Total Views' }
+      ],
+      draftsNote: draftsOnly,
+      showAvail: listings !== 'requests-only',
+      availSub: draftsOnly ? 'No hours published yet — set up your first rule' : 'Home Deep Cleaning · Mon–Thu 09:00–17:00',
+      selAll: s.filter === 'All', selPub: s.filter === 'Published', selDraft: s.filter === 'Draft',
+      fAll: () => this.setState({ filter: 'All' }), fPub: () => this.setState({ filter: 'Published' }), fDraft: () => this.setState({ filter: 'Draft' }),
+      isList: s.view === 'list' && !emptyFilter, isGrid: s.view === 'grid' && !emptyFilter,
+      toList: () => this.setState({ view: 'list' }), toGrid: () => this.setState({ view: 'grid' }),
+      listBtnBg: s.view === 'list' ? '#E8F0FE' : 'transparent', listBtnFg: s.view === 'list' ? '#1D4ED8' : '#8296B3',
+      gridBtnBg: s.view === 'grid' ? '#E8F0FE' : 'transparent', gridBtnFg: s.view === 'grid' ? '#1D4ED8' : '#8296B3',
+      cards,
+      emptyFilter, notEmptyFilter: !emptyFilter,
+      efTitle: efPub ? 'Nothing published yet' : 'No drafts',
+      efBody: efPub ? 'Customers only find services that are live. Publish your draft to appear in search.' : 'Everything you’ve made is live. Start a new service any time.',
+      efAction: efPub ? 'Finish & publish' : 'New service',
+      efGo: () => this.nav('Create Service.dc.html'),
+      navTab: (t) => {
+        const M = { Home: 'Home.dc.html', Explore: 'Discovery.dc.html', Bookings: 'My Bookings.dc.html', Messages: 'Messages.dc.html', Profile: 'Profile.dc.html' };
+        if (M[t]) this.nav(M[t]);
+      },
+      menuOpen: !!menuCard, menuTitle: menuCard ? menuCard.title : '', menuOpts,
+      closeMenu: () => this.setState({ menuFor: null }),
+      confirmOpen: !!confirmCard, confirmTitle: confirmCard ? '“' + confirmCard.title + '”' : '',
+      closeConfirm: () => this.setState({ confirm: null }),
+      doDelete: () => {
+        this.setState(st => ({ del: [...st.del, st.confirm], confirm: null }));
+        this.toastMsg('Removed from your services — history and reviews stay in your account');
+      },
+      toastOn: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

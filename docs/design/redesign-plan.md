@@ -14,7 +14,7 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **Ten of the thirteen sessions are done.**
+**71 page briefs** in `designer-brief.md`. **Eleven of the thirteen sessions are done.**
 
 | Artboard | Session | Status |
 |---|---|---|
@@ -33,8 +33,9 @@ That framing is the most important line in this document, because it decides how
 | `Sign In` · `Register` · `Verify Email` · `Forgot Password` · `App States` | 8 | Reviewed across 1 round |
 | `Profile` · `Account Settings` · `Saved Preferences` · `Notifications` · `Help Support` · `Legal` | 9 | Reviewed across 1 round |
 | `Create Service.dc.html` — all seven wizard steps in one shell | 10 | Reviewed across 2 rounds |
+| `My Services` · `Availability` · `My Calendar` | 11 | Reviewed across 3 rounds |
 
-**Sessions 11–13 remain.** `verify-dc.py` passes on all forty-seven files.
+**Sessions 12–13 remain.** `verify-dc.py` passes on all fifty files.
 
 ### What auditing has caught that design review would not
 
@@ -49,6 +50,14 @@ Service Preview allowed a `range` price with `instant` booking, which advertises
 starting price as bookable. Each prop was individually correct. For every screen
 with multiple scenario props, enumerate the combinations and confirm each one is
 legal — the verifier reads markup and cannot do this.
+
+🔧 **Ask who a screen is *not* for — added after session 11.**
+`Availability` was built correctly and served three of the twelve categories: slot
+booking is Cleaning, Beauty and Fitness, while the other nine are request-based and
+publish no times at all. Nothing in the artboard was wrong; the gap was that most
+providers had no screen. Before building any provider surface, enumerate which
+categories reach it and confirm the rest have somewhere to go — `My Calendar` exists
+because that question was asked late.
 
 🔧 **A brief that says "import the components" is not enough — added after session 10.**
 The wizard hand-rolled its own tag and island chips despite `Chip.dc.html` supporting
@@ -88,7 +97,7 @@ Ordered so that each session inherits from ones already built, and so the screen
 | 8 | Identity | Sign in · register ×2 · verify email · forgot password ×3 · session expired · no connection | `Login` ✓ `Register_*` ✓ `ForgotPassword` ✓ |
 | 9 | Account | Profile · role switcher · settings · saved preferences · notifications · help · legal | `Profile_customer` ✓ |
 | 10 | The wizard | Steps 1–7 | `Create_service_widget1–7` ⚠⚠⚠⚠ |
-| 11 | Provider dashboard | My services · availability & time slots | `Profile_serviceProvider` ✓ |
+| 11 | Provider dashboard | My services · availability & time slots · **my calendar** | `Profile_serviceProvider` ✓ |
 | 12 | Provider job handling | Booking request · propose time & price · payment received · mark complete | none — **cast as Boat Charter**, decided in session 11 (originally “Boat Charter or Events”; Round 26 removed Events): it must exercise the Round 25 occasion subtitle, the 1440/4320 quote windows and the long lead times, since every existing booking artboard is cast Cleaning or Plumbing and none of the long-window behaviour is demonstrated anywhere |
 | 13 | Provider business | Performance · analytics · verification · billing · bank transfer · invoices | none |
 
