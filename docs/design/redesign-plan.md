@@ -89,7 +89,7 @@ Ordered so that each session inherits from ones already built, and so the screen
 | 9 | Account | Profile · role switcher · settings · saved preferences · notifications · help · legal | `Profile_customer` ✓ |
 | 10 | The wizard | Steps 1–7 | `Create_service_widget1–7` ⚠⚠⚠⚠ |
 | 11 | Provider dashboard | My services · availability & time slots | `Profile_serviceProvider` ✓ |
-| 12 | Provider job handling | Booking request · propose time & price · payment received · mark complete | none |
+| 12 | Provider job handling | Booking request · propose time & price · payment received · mark complete | none — **cast as Boat Charter or Events**, decided in session 11: it must exercise the Round 25 occasion subtitle, the 1440/4320 quote windows and the long lead times, since every existing booking artboard is cast Cleaning or Plumbing and none of the long-window behaviour is demonstrated anywhere |
 | 13 | Provider business | Performance · analytics · verification · billing · bank transfer · invoices | none |
 
 ⚠ = the attached image is wrong against the plan. Pair it with `round-16-redraws.html` and the defect warning.
