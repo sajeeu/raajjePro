@@ -6,7 +6,7 @@ Mobile-first, API-first local services marketplace for the Maldives. Flutter app
 
 ## The one document that matters
 
-`01_Development_Plan_v5.md`, at **revision 5.12**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+`01_Development_Plan_v5.md`, at **revision 5.13**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
 
@@ -24,7 +24,7 @@ Where a command says a screen has no mockup, propose the design and get approval
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.12. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.13. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 
@@ -53,7 +53,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
    `GET /v1/bookings/:id/contact-info` DOES NOT EXIST AND MUST NOT BE CREATED. It is a different, far broader mechanism — it exposed a phone number on every booking type with no conditions — and it was deleted outright. WhatsApp and Viber handles are not collected anywhere in this system and cannot be revealed by anything. Any response shape outside the reveal endpoint that carries a phone number is a defect.
    Booking payment confirmation ("I've Paid" / "Payment Received") is a two-sided self-attestation between customer and provider, NEVER the `PaymentSubmission`/admin-confirmation mechanism (that is exclusively for RaajjePro's own subscription fees) — do not conflate the two systems. UI copy must never imply platform-level verification ("Payment Verified," a certainty checkmark) — use language that honestly reflects what happened, e.g. "Provider confirmed receipt."
    Contact-pattern detection is SILENT and LOGGED — never a block, never a redaction, and never shown to the sender. In-app messaging carries no interference of any kind. Older documentation describing an inline nudge banner is obsolete. A hard block on phone-shaped text cannot reliably distinguish a Maldivian mobile number from an appliance serial number, and blocking that content defeats the channel's purpose. Detections surface only as a provider-level moderation aggregate, never inline.
-   IN-APP CHAT IS THE SOLE COORDINATION CHANNEL for a booking's entire life, including after completion. It opens at `quote_offered` for request-based bookings and at `accepted` for slot and emergency. It is never torn down and never replaced.
+   IN-APP CHAT IS THE SOLE COORDINATION CHANNEL for a booking's life. It opens at `quote_offered` for request-based bookings and at `accepted` for slot and emergency, and — Round 27 — stays open for 7 DAYS AFTER COMPLETION (the callback-guarantee window), THEN LOCKS READ-ONLY. History is never deleted, both parties keep it readable, a dispute reopens the thread until resolved, and it is never replaced by a contact exchange. After the lock, repeat work routes through Book Again, and a callback claim's linked zero-cost booking carries its own thread. Older statements that the thread is "never torn down" or stays open indefinitely after completion are pre-Round-27 and stale — flag them, don't extend them.
 
 1d. Never write binding legal text (Terms of Service, Privacy Policy, Provider Agreement, or any policy language) as if it were final — legal content is always inserted as clearly-marked, structurally-correct placeholder pending real legal review, never fabricated. Moderation actions must always be reversible (status/visibility flag), never a hard delete. Product/analytics event logs follow the same no-PII rule as structured logging — event metadata may reference IDs, never raw email/phone/payment-proof/ID-document content.
    Identity-verification documents live in a SEPARATE private storage location from payment proofs and general media, are served only via short-lived signed URLs, every access is logged, and they are purged automatically 90 days after a verification decision and immediately on account deletion — the decision, the evidence type and the reviewing admin persist, the images do not.

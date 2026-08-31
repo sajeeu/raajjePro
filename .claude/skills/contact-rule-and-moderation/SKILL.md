@@ -10,7 +10,7 @@ THE RULE: phone numbers are never exchanged between customer and provider, with 
 
 `GET /v1/bookings/:id/contact-info` DOES NOT EXIST. Do not create it. It was a far broader mechanism exposing a number on every booking type with no conditions, and it was deleted. WhatsApp and Viber handles are not collected anywhere and cannot be revealed by anything.
 
-CHAT IS THE SOLE COORDINATION CHANNEL for a booking's whole life, including after completion. It opens at `quote_offered` for request-based and at `accepted` for slot and emergency. Never torn down.
+CHAT IS THE SOLE COORDINATION CHANNEL for a booking's life. It opens at `quote_offered` for request-based and at `accepted` for slot and emergency. ROUND 27: it stays open for 7 days after completion (the callback-guarantee window), THEN LOCKS READ-ONLY — history never deleted, dispute reopens it, Book Again and the callback claim's linked booking carry anything later. "Never torn down" is pre-Round-27 and stale.
 
 CONTACT-PATTERN DETECTION IS SILENT AND LOGGED — never a block, never a redaction, and never shown to the sender. Round 12 removed the user-visible nudge outright: no banner, no reminder, nothing near the composer. The message always sends. Maldivian mobiles are 7 digits beginning 7 or 9; AC serials are 7–15 digit strings — not reliably distinguishable, and blocking that content defeats the enquiry channel's purpose. Photos are allowed anyway, so a business-card photo passes a text filter regardless. Detections aggregate to a PROVIDER-LEVEL signal ("tripped detection in 40 of 52 enquiries"), never per-message noise.
 

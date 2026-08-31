@@ -489,7 +489,7 @@ One booking, its whole history, and whatever needs doing next. Everything that c
 - A route into the **chat**, prominent
 - Actions appropriate to the state: cancel, dispute, reschedule, mark complete, rate, **book again**
 - **Emergency bookings additionally carry:** a `Provider has not arrived` action once the window has elapsed, and the contact-reveal action described below
-- Fact: the chat stays open **after completion** and is never taken away — a follow-up question or a warranty claim still has a thread
+- Fact: the chat stays open for **7 days after completion** — the callback window — then **locks read-only** (Round 27). History is kept, never deleted. The locked thread routes to **Book Again**; a callback claim made inside the window has its own linked booking and thread
 
 ## Propose an amendment
 
