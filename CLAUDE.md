@@ -6,7 +6,7 @@ Mobile-first, API-first local services marketplace for the Maldives. Flutter app
 
 ## The one document that matters
 
-`01_Development_Plan_v5.md`, at **revision 5.14**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+`01_Development_Plan_v5.md`, at **revision 5.15**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
 
@@ -24,7 +24,7 @@ Where a command says a screen has no mockup, propose the design and get approval
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.14. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.15. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 
@@ -55,6 +55,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
    Contact-pattern detection is SILENT and LOGGED — never a block, never a redaction, and never shown to the sender. In-app messaging carries no interference of any kind. Older documentation describing an inline nudge banner is obsolete. A hard block on phone-shaped text cannot reliably distinguish a Maldivian mobile number from an appliance serial number, and blocking that content defeats the channel's purpose. Detections surface only as a provider-level moderation aggregate, never inline.
    IN-APP CHAT IS THE SOLE COORDINATION CHANNEL for a booking's life. It opens at `quote_offered` for request-based bookings and at `accepted` for slot and emergency, and — Round 27 — stays open for 7 DAYS AFTER COMPLETION (the callback-guarantee window), THEN LOCKS READ-ONLY. History is never deleted, both parties keep it readable, a dispute reopens the thread until resolved, and it is never replaced by a contact exchange. After the lock, repeat work routes through Book Again, and a callback claim's linked zero-cost booking carries its own thread. Older statements that the thread is "never torn down" or stays open indefinitely after completion are pre-Round-27 and stale — flag them, don't extend them.
 
+1c-1. RECEIPT ANALYSIS IS ADVISORY, NEVER A VERDICT (Round 29, Phase 10a). Uploaded payment proofs are checked against the submission — reference code, amount (read from the provider's own `subscriptionPriceLaari`), destination account, date, and duplicate submission — and the findings render beside the image for the reviewing ADMIN ONLY. It never says "verified", never auto-confirms, never gates the confirm button, and carries no aggregate score or traffic light. "Couldn't read" is a first-class outcome, not an error. Where a bank-statement CSV row matches, THE CSV OUTRANKS THE RECEIPT — the statement is the bank's record, the receipt is the provider's claim. The provider never sees any of it, so nothing at submission time can read as pre-approval.
 1d. Never write binding legal text (Terms of Service, Privacy Policy, Provider Agreement, or any policy language) as if it were final — legal content is always inserted as clearly-marked, structurally-correct placeholder pending real legal review, never fabricated. Moderation actions must always be reversible (status/visibility flag), never a hard delete. Product/analytics event logs follow the same no-PII rule as structured logging — event metadata may reference IDs, never raw email/phone/payment-proof/ID-document content.
    Identity-verification documents live in a SEPARATE private storage location from payment proofs and general media, are served only via short-lived signed URLs, every access is logged, and they are purged automatically 90 days after a verification decision and immediately on account deletion — the decision, the evidence type and the reviewing admin persist, the images do not.
    ACCOUNT DELETION IS QUEUED, NEVER REFUSED. A request is accepted immediately, the account frozen, and anonymisation executes automatically once non-terminal bookings terminate, with a hard 30-day backstop. Do not implement it as an error when bookings are open.
