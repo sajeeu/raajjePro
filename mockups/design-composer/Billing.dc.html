@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Billing" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Billing &amp; subscription</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Same page on the web — nothing here needs the app</span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="flex:1;font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ stateTitle }}</span>
+        <span style="height:24px;border-radius:999px;background:{{ stBg }};color:{{ stFg }};display:inline-flex;align-items:center;gap:6px;padding:0 11px;font-size:11px;font-weight:800;flex:none"><span style="width:6px;height:6px;border-radius:50%;background:{{ stDot }}"></span>{{ stLabel }}</span>
+      </div>
+      <span style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">{{ stateBody }}</span>
+      <sc-if value="{{ showPauseBar }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="height:8px;border-radius:999px;background:#E3EAF3;overflow:hidden"><span style="display:block;height:100%;width:60%;border-radius:999px;background:#D97706"></span></div>
+          <span style="font-size:11.5px;font-weight:600;color:#8296B3">6 of 10 pause days used · resumes by itself when they run out</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showPriceBlock }}" hint-placeholder-val="{{ true }}">
+        <div style="border-top:1px solid #EEF3FA;padding-top:11px;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:baseline;gap:7px">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">MVR 75</span>
+            <span style="font-size:12px;font-weight:700;color:#5B6B84">per 30-day period</span>
+            <span style="height:20px;border-radius:999px;background:#E5F6EC;color:#166534;display:inline-flex;align-items:center;padding:0 8px;font-size:10px;font-weight:800">YOUR RATE</span>
+          </div>
+          <span style="font-size:11.5px;line-height:1.55;color:#8296B3;text-wrap:pretty">Introductory rate for the first 100 providers, held for 12 months from your billing anchor — until <b>8 Mar 2027</b>, then MVR 150 with 30 days' notice. Prices are set per provider; another provider may see a different number.</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showPayCta }}" hint-placeholder-val="{{ false }}">
+        <a href="Pay by Bank Transfer.dc.html" style="height:50px;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(37,99,235,.28)">Pay by bank transfer<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+      </sc-if>
+      <sc-if value="{{ showTrialCta }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ startTrial }}" style="height:50px;border:none;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.28)">Try Premium free for 30 days</button>
+        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-align:center;text-wrap:pretty">No payment to start. When the trial ends, nothing changes for 7 more days.</span>
+      </sc-if>
+      <sc-if value="{{ showResume }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ resume }}" style="height:50px;border:none;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Resume now — keep the 4 unused days</button>
+      </sc-if>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <span style="flex:none;margin-top:1px"><dc-import name="VerificationBadge" tier="Silver" size="chip" hint-size="64px,20px"></dc-import></span>
+      <span style="flex:1;font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Premium does not include the verification badge.</b> Your Silver badge is a safety check gated by verification alone — it stays with you even if the subscription lapses, and no plan can buy it.</span>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">What each plan includes</span>
+      <div style="display:grid;grid-template-columns:1fr 84px 84px;gap:0 8px;align-items:center">
+        <span></span>
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8296B3;text-align:center;padding-bottom:8px">FREE</span>
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#1D4ED8;text-align:center;padding-bottom:8px">PREMIUM</span>
+        <sc-for list="{{ planRows }}" as="pr" hint-placeholder-count="5">
+          <span style="font-size:12.5px;font-weight:700;color:#0F1B2D;padding:9px 0;border-top:1px solid #EEF3FA">{{ pr.t }}</span>
+          <span style="font-size:12px;font-weight:700;color:#41526B;text-align:center;padding:9px 0;border-top:1px solid #EEF3FA">{{ pr.free }}</span>
+          <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-align:center;padding:9px 0;border-top:1px solid #EEF3FA">{{ pr.prem }}</span>
+        </sc-for>
+      </div>
+      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">The verification badge is on neither list — it can't be bought on any plan.</span>
+    </div>
+
+    <sc-if value="{{ showPauseCard }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <button onClick="{{ togglePause }}" style="display:flex;align-items:center;gap:11px;border:none;background:none;padding:0;cursor:pointer;text-align:left">
+          <span style="width:38px;height:38px;border-radius:12px;background:#FEF3DC;color:#A15C00;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6v12M15 6v12"></path></svg></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:1px">
+            <span style="font-size:14px;font-weight:700;color:#0F1B2D">Pause Premium</span>
+            <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Going off-island, Ramadan, repairs — stop the clock</span>
+          </span>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:rotate({{ pauseChevron }})"><path d="M6 9l6 6 6-6"></path></svg>
+        </button>
+        <sc-if value="{{ pauseOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:9px;animation:fadeIn .2s ease both">
+            <div style="display:flex;flex-direction:column;gap:7px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:12px 14px">
+              <span style="font-size:12px;line-height:1.55;color:#41526B">· <b>10 cumulative days</b> of pause, spent in any pieces</span>
+              <span style="font-size:12px;line-height:1.55;color:#41526B">· Resume early and the unused days stay yours</span>
+              <span style="font-size:12px;line-height:1.55;color:#41526B">· At the cap it resumes by itself</span>
+              <span style="font-size:12px;line-height:1.55;color:#41526B">· Your next payment date moves by however long you paused</span>
+            </div>
+            <button onClick="{{ doPause }}" style="height:46px;border:1.5px solid #F3E2B8;border-radius:13px;background:#FEF3DC;color:#8A5A08;font-size:13.5px;font-weight:700;cursor:pointer">Pause now — 10 days available</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">If Premium lapses</span>
+        <span style="font-size:12px;font-weight:600;color:#5B6B84">Hiding, never deleting</span>
+      </div>
+      <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty">Services beyond your first are <b>hidden, not deleted</b> — numbers, reviews and history all stay, and one confirmed payment brings everything back. A listing with a live booking is protected and stays visible regardless of the cap.</span>
+      <sc-if value="{{ showLapseList }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <sc-for list="{{ lapseRows }}" as="lr" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:13px;padding:10px 12px">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                <span style="font-size:12.5px;font-weight:700;color:#0F1B2D">{{ lr.t }}</span>
+                <span style="font-size:11.5px;line-height:1.45;font-weight:600;color:{{ lr.mFg }}">{{ lr.m }}</span>
+              </span>
+              <sc-if value="{{ lr.canSwap }}" hint-placeholder-val="{{ false }}"><button onClick="{{ lr.swap }}" style="flex:none;height:32px;padding:0 12px;border:1.5px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;font-size:11.5px;font-weight:700;cursor:pointer">Keep this one instead</button></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">The kept listing is your best-performing by confirmed bookings over 90 days — you can override which one.</span>
+      </sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <a href="Invoices.dc.html" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,27,45,.04);color:inherit">
+        <span style="width:40px;height:40px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10.5 12.5h5M10.5 16h5"></path></svg></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;font-weight:700;color:#0F1B2D">Invoices</span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84">One per confirmed payment, with PDF</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-align:center;text-wrap:pretty">Payment is by manual bank transfer, confirmed by an admin within 48 hours. We'll remind you 7 days before a trial or period ends; after expiry nothing changes for 7 days.</span>
+    </div>
+  </div>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;premium&quot;,&quot;trial&quot;,&quot;free&quot;,&quot;paused&quot;,&quot;expired&quot;],&quot;default&quot;:&quot;premium&quot;,&quot;tsType&quot;:&quot;'premium' | 'trial' | 'free' | 'paused' | 'expired'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { pauseOpen:false, kept:'clean', toast:null };
+  STATES = {
+    trial:   { label:'Trial · 18 days left', color:'blue',
+      title:'Premium trial', body:'Your trial ends 19 Sep. We’ll remind you 7 days before, and after it ends nothing changes for 7 more days. To keep Premium, pay by bank transfer any time before then.', price:true, pay:true },
+    premium: { label:'Premium', color:'green',
+      title:'Premium', body:'Next payment 12 Sep. Periods run 30 days from your billing anchor — not calendar months — so pausing moves the date with you.', price:true, pay:true, pause:true },
+    free:    { label:'Free', color:'grey',
+      title:'Free plan', body:'One active service with full search visibility. You’ve never tried Premium — the trial is 30 days, with no payment to start.', price:true, trial:true },
+    paused:  { label:'Paused · 6 days of 10 used', color:'amber',
+      title:'Premium, paused', body:'Nothing is billed while paused. Your next payment has moved with the pause — currently 18 Sep — and moves further for each paused day.', pauseBar:true, resume:true },
+    expired: { label:'Expired', color:'red',
+      title:'Premium expired 30 Aug', body:'You’re in the 7-day grace period — nothing has changed yet. Without a confirmed payment by 6 Sep, services beyond your first are hidden (never deleted).', price:true, pay:true, lapseList:true } };
+  PILL = { green:['#E5F6EC','#166534','#16A34A'], blue:['#E8F0FE','#1D4ED8','#2563EB'],
+           grey:['#EEF3FA','#41526B','#8296B3'], amber:['#FEF3DC','#A15C00','#D97706'], red:['#FEF2F2','#B91C1C','#DC2626'] };
+  PLAN_ROWS = [
+    { t:'Active services', free:'1', prem:'Multiple' },
+    { t:'Search visibility', free:'Full', prem:'Full' },
+    { t:'Priority placement', free:'—', prem:'✓' },
+    { t:'Analytics', free:'—', prem:'✓' },
+    { t:'Weekly digest', free:'—', prem:'✓' } ];
+  toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  renderVals(){
+    const p=this.props, s=this.state;
+    const key=p.state ?? 'premium';
+    const st=this.STATES[key]||this.STATES.premium;
+    const [bg,fg,dot]=this.PILL[st.color];
+    const lapseRows=[
+      { t:'AC Service & Repair', m:'Stays visible — protected: it has a live booking', mFg:'#166534' },
+      s.kept==='clean'
+        ? { t:'Home Deep Cleaning', m:'Stays live — your best-performing: 23 confirmed bookings in 90 days', mFg:'#166534' }
+        : { t:'Home Deep Cleaning', m:'Hidden until a confirmed payment — nothing is deleted', mFg:'#5B6B84', canSwap:true },
+      s.kept==='charter'
+        ? { t:'Sunset Fishing Charter', m:'Stays live — your choice (overrides best-performing)', mFg:'#166534' }
+        : { t:'Sunset Fishing Charter', m:'Hidden until a confirmed payment — nothing is deleted', mFg:'#5B6B84', canSwap:true } ]
+      .map(r=>r.canSwap?{...r, swap:()=>{ this.setState({ kept:r.t==='Home Deep Cleaning'?'clean':'charter' }); this.toastMsg(r.t+' will stay live instead'); }}:r);
+    return {
+      stateTitle:st.title, stLabel:st.label, stBg:bg, stFg:fg, stDot:dot,
+      stateBody:st.body,
+      showPauseBar:!!st.pauseBar,
+      showPriceBlock:!!st.price,
+      showPayCta:!!st.pay, showTrialCta:!!st.trial, showResume:!!st.resume,
+      startTrial:()=>this.toastMsg('Trial started — 30 days, ends 1 Oct. No payment needed yet.'),
+      resume:()=>this.toastMsg('Resumed — 4 pause days kept for later'),
+      planRows:this.PLAN_ROWS,
+      showPauseCard:!!st.pause,
+      pauseOpen:s.pauseOpen, pauseChevron:s.pauseOpen?'180deg':'0deg',
+      togglePause:()=>this.setState({ pauseOpen:!s.pauseOpen }),
+      doPause:()=>{ this.toastMsg('Paused — your next payment date stops moving today'); this.setState({ pauseOpen:false }); },
+      showLapseList:!!st.lapseList, lapseRows,
+      toastOn:!!s.toast, toast:s.toast||''
+    };
+  }
+}
+</script>
+</body>
+</html>

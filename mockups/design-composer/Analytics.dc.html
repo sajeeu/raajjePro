@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Analytics" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <a href="My Performance.dc.html" aria-label="Back to My performance" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <span style="display:flex;align-items:center;gap:8px"><span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Analytics</span><span style="height:20px;border-radius:999px;background:#FEF3C7;color:#92400E;display:inline-flex;align-items:center;padding:0 8px;font-size:10px;font-weight:800">PREMIUM</span></span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Per service · rolling 90 days</span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+        <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+        <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load analytics</div>
+        <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">Your numbers are safe. Check your connection and try again.</div>
+        <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isNormal }}" hint-placeholder-val="{{ true }}">
+
+      <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1.5px solid #CDDDFB;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <span style="width:42px;height:42px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"></path></svg></span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Analytics comes with Premium</span>
+              <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Below is this screen with example numbers. With Premium it shows <b>your</b> views, bookings, conversion, rating trend and response time — for every service.</span>
+            </span>
+          </div>
+          <a href="Billing.dc.html" style="height:46px;border-radius:999px;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,.28)">See plans &amp; your price</a>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;flex-direction:column;gap:13px;opacity:{{ contentOpacity }};pointer-events:{{ contentPe }}">
+
+        <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:center"><dc-import name="Chip" label="Example data — not your numbers" kind="static" hint-size="220px,28px"></dc-import></div>
+        </sc-if>
+
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+          <sc-for list="{{ svcChips }}" as="c" hint-placeholder-count="4">
+            <span style="flex:none;white-space:nowrap"><dc-import name="Chip" label="{{ c.label }}" kind="filter" selected="{{ c.sel }}" on-tap="{{ c.tap }}" hint-size="150px,38px"></dc-import></span>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:12px 14px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <span style="width:40px;height:40px;border-radius:12px;overflow:hidden;flex:none;position:relative;background:#EEF3FA">
+            <sc-if value="{{ svcPhotoHas }}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="{{ svcTitle }}" style="position:absolute;inset:0;background-image:url('{{ svcPhoto }}');background-size:cover;background-position:center"></span></sc-if>
+            <sc-if value="{{ svcPhotoNone }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#DCE6F2,#DCE6F2 5px,#EAF1F9 5px,#EAF1F9 10px)"></span></sc-if>
+          </span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+            <span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ svcTitle }}</span>
+            <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ svcMeta }}</span>
+          </span>
+          <span style="height:22px;border-radius:999px;background:{{ svcStBg }};color:{{ svcStFg }};display:inline-flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:800;flex:none">{{ svcStLabel }}</span>
+        </div>
+
+        <sc-if value="{{ svcNoData }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:center;padding:6px 0">
+            <dc-import name="EmptyState" icon="search" title="No data yet" body="Numbers start the moment this service is published. Finish the draft and views, bookings and conversion appear here." action-label="Finish &amp; publish" on-action="{{ goPublish }}" hint-size="340px,220px"></dc-import>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ svcHasData }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ views }}</span>
+              <span style="font-size:11.5px;font-weight:700;color:#5B6B84">views · last 90 days</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:5px;height:56px">
+              <sc-for list="{{ viewBars }}" as="b" hint-placeholder-count="12">
+                <span style="flex:1;border-radius:5px 5px 2px 2px;background:{{ b.c }};height:{{ b.h }}"></span>
+              </sc-for>
+            </div>
+            <span style="font-size:11px;font-weight:600;color:#8296B3">Weekly, oldest to newest</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ statCards }}" as="st" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+                <span style="font-size:{{ st.vSize }};font-weight:800;letter-spacing:-.02em;color:{{ st.vFg }}">{{ st.v }}</span>
+                <span style="font-size:11.5px;font-weight:700;color:#5B6B84">{{ st.label }}</span>
+                <sc-if value="{{ st.noteHas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;line-height:1.45;font-weight:600;color:#8296B3">{{ st.note }}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Rating trend</span>
+              <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ ratingSub }}</span>
+            </div>
+            <sc-if value="{{ ratingHas }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:flex-end;gap:8px;height:48px">
+                <sc-for list="{{ ratingBars }}" as="rb" hint-placeholder-count="6">
+                  <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end">
+                    <span style="font-size:9.5px;font-weight:800;color:{{ rb.fg }}">{{ rb.v }}</span>
+                    <span style="width:100%;border-radius:5px 5px 2px 2px;background:{{ rb.c }};height:{{ rb.h }}"></span>
+                  </span>
+                </sc-for>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:#8296B3">Average per month, oldest to newest</span>
+            </sc-if>
+            <sc-if value="{{ ratingNone }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;font-weight:600;color:#8296B3">No data yet — no ratings in this window.</span></sc-if>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;plan&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;premium&quot;,&quot;free&quot;],&quot;default&quot;:&quot;premium&quot;,&quot;tsType&quot;:&quot;'premium' | 'free'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { svc:'clean' };
+  SVCS = [
+    { id:'clean', label:'Home Deep Cleaning', photo:'uploads/cleaning.jpeg', status:'published', meta:'Cleaning · MVR 500/session',
+      views:'312', viewBars:[30,42,38,55,48,60,52,66,58,72,64,78],
+      bookings:'23', conv:'7.4%', resp:'12 min', respNote:'Median first reply, 41 enquiries',
+      rating:{ sub:'4.8 now', bars:[4.5,4.6,4.7,4.6,4.8,4.8] } },
+    { id:'ac', label:'AC Service & Repair', photo:null, status:'published', meta:'AC Repair · MVR 350/visit',
+      views:'784', viewBars:[45,52,60,48,66,70,58,74,68,80,72,88],
+      bookings:'64', conv:'8.2%', resp:'9 min', respNote:'Median first reply, 87 enquiries',
+      rating:{ sub:'4.9 now', bars:[4.8,4.7,4.9,4.9,4.8,4.9] } },
+    { id:'charter', label:'Sunset Fishing Charter', photo:null, status:'published', meta:'Boat Charter · MVR 3,200/trip',
+      views:'426', viewBars:[60,52,44,58,40,35,48,30,42,26,38,32],
+      bookings:'9', conv:'2.1%', resp:null, respNote:'No new enquiries in this window',
+      rating:{ sub:'4.7 now', bars:[4.6,4.7,4.7,4.8,4.7,4.7] } },
+    { id:'wiring', label:'Wiring & Fault Repair', photo:'uploads/electrical.jpeg', status:'draft', meta:'Electrical · MVR 200/hr' } ];
+  EXAMPLE = { id:'ex', label:'Example service', photo:null, status:'published', meta:'Example · MVR 400/visit',
+      views:'1,240', viewBars:[28,36,44,40,52,58,50,64,60,70,66,82],
+      bookings:'38', conv:'6.8%', resp:'15 min', respNote:'Median first reply, 62 enquiries',
+      rating:{ sub:'4.6 now', bars:[4.3,4.4,4.5,4.5,4.6,4.6] } };
+  renderVals(){
+    const p=this.props, s=this.state;
+    const scenario=p.scenario ?? 'normal';
+    const isFree=(p.plan ?? 'premium')==='free';
+    const svc=isFree?this.EXAMPLE:(this.SVCS.find(x=>x.id===s.svc)||this.SVCS[0]);
+    const isDraft=svc.status==='draft';
+    const barMax=90;
+    const viewBars=(svc.viewBars||[]).map((h,i,arr)=>({ h:Math.round(h/100*barMax)+'px'||'2px', c:i===arr.length-1?'#2563EB':'#CDDDFB' }));
+    const ratingBars=svc.rating?svc.rating.bars.map((v,i,arr)=>({
+      v:v.toFixed(1), h:Math.round((v-4)/1*34+6)+'px',
+      c:i===arr.length-1?'#2563EB':'#CDDDFB', fg:i===arr.length-1?'#1D4ED8':'#8296B3' })):[];
+    const statCards=isDraft?[]:[
+      { v:svc.bookings, label:'bookings', vFg:'#0F1B2D', vSize:'22px' },
+      { v:svc.conv, label:'views → confirmed bookings', vFg:'#0F1B2D', vSize:'22px' },
+      { v:svc.resp||'No data yet', label:'usually responds in', vFg:svc.resp?'#0F1B2D':'#8296B3', vSize:svc.resp?'22px':'14px', noteHas:true, note:svc.respNote },
+      { v:svc.rating?svc.rating.bars[svc.rating.bars.length-1].toFixed(1):'No data yet', label:'rating · last 90 days', vFg:'#0F1B2D', vSize:'22px' } ];
+    return {
+      isLoading:scenario==='loading', isError:scenario==='error', isNormal:scenario==='normal',
+      retry:()=>{},
+      isFree,
+      contentOpacity:isFree?'.62':'1', contentPe:isFree?'none':'auto',
+      svcChips:(isFree?[this.EXAMPLE]:this.SVCS).map(x=>({ label:x.label, sel:isFree?true:s.svc===x.id, tap:()=>this.setState({ svc:x.id }) })),
+      svcTitle:svc.label, svcMeta:svc.meta,
+      svcPhotoHas:!!svc.photo, svcPhotoNone:!svc.photo, svcPhoto:svc.photo||'',
+      svcStLabel:isDraft?'Draft':'Published',
+      svcStBg:isDraft?'#FDF2DD':'#E7F6EC', svcStFg:isDraft?'#B45309':'#0E9F5D',
+      svcNoData:isDraft, svcHasData:!isDraft,
+      goPublish:()=>{ window.location.href='Create Service.dc.html'; },
+      views:svc.views||'', viewBars,
+      statCards,
+      ratingHas:!!svc.rating, ratingNone:!svc.rating,
+      ratingSub:svc.rating?svc.rating.sub:'', ratingBars
+    };
+  }
+}
+</script>
+</body>
+</html>

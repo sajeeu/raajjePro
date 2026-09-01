@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Pay by Bank Transfer" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <a href="Billing.dc.html" aria-label="Back to Billing" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Pay by bank transfer</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Premium · 13 Sep – 12 Oct</span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ stPending }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeIn .25s ease both">
+        <dc-import name="StatusPill" status="{{ pendingLabel }}" hint-size="210px,28px"></dc-import>
+        <span style="font-size:12.5px;line-height:1.6;color:#41526B;text-wrap:pretty">{{ pendingBody }}</span>
+        <span style="font-size:12px;line-height:1.55;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty"><b>Pending grants nothing yet.</b> Your plan, listings and price stay exactly as they are until an admin confirms the transfer. You'll get a notification either way.</span>
+        <a href="Invoices.dc.html" style="font-size:12.5px;font-weight:700;color:#1D4ED8">Once confirmed, the invoice appears in Invoices →</a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ stRejected }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#FEF2F2;border:1px solid #F5C6C6;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;animation:fadeIn .25s ease both">
+        <span style="font-size:13.5px;font-weight:800;color:#B91C1C">Transfer not confirmed — the admin wrote:</span>
+        <span style="font-size:12.5px;line-height:1.6;color:#7F1D1D;background:rgba(255,255,255,.7);border-radius:12px;padding:11px 13px;text-wrap:pretty">“The transfer received under RP-2026-0842 is MVR 57 — the period costs MVR 75. Send the remaining MVR 18 (or a new full transfer) and upload the receipt again.”</span>
+        <span style="font-size:11.5px;line-height:1.5;color:#B91C1C;text-wrap:pretty">You can resubmit straight away — there's no waiting period. If you think the admin is wrong, appeal and a second person looks at it.</span>
+        <div style="display:flex;gap:9px">
+          <button onClick="{{ resubmit }}" style="flex:1.4;height:46px;border:none;border-radius:13px;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer">Resubmit now</button>
+          <button onClick="{{ appeal }}" style="flex:1;height:46px;border:1.5px solid #F5C6C6;border-radius:13px;background:#fff;color:#B91C1C;font-size:13.5px;font-weight:700;cursor:pointer">Appeal</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ stForm }}" hint-placeholder-val="{{ true }}">
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8296B3">AMOUNT TO TRANSFER</span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:28px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;white-space:nowrap">MVR 75</span>
+          <span style="font-size:12px;font-weight:700;color:#5B6B84">Premium · 30-day period · 13 Sep – 12 Oct</span>
+        </div>
+        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">Your introductory rate. The exact amount matters — a different amount can't be confirmed.</span>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8296B3">TRANSFER TO</span>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ bankRows }}" as="b" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:13px;padding:10px 12px">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                <span style="font-size:10.5px;font-weight:700;color:#8296B3">{{ b.label }}</span>
+                <span style="font-size:13.5px;font-weight:800;color:#0F1B2D;letter-spacing:{{ b.ls }}">{{ b.v }}</span>
+              </span>
+              <sc-if value="{{ b.copyable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.copy }}" aria-label="Copy {{ b.label }}" style="width:36px;height:36px;border:1px solid #E3EAF3;border-radius:10px;background:#fff;color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h12v12H8zM8 8V4h12v12h-4"></path></svg></button></sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:#0F1B2D;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8CA3C7">YOUR REFERENCE CODE — PUT IT IN THE TRANSFER NOTE</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="flex:1;font-size:24px;font-weight:800;letter-spacing:.04em;color:#fff;font-variant-numeric:tabular-nums">RP-2026-0842</span>
+          <button onClick="{{ copyRef }}" style="height:40px;padding:0 15px;border:none;border-radius:11px;background:#2563EB;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h12v12H8zM8 8V4h12v12h-4"></path></svg>Copy</button>
+        </div>
+        <span style="font-size:11.5px;line-height:1.5;color:#8CA3C7;text-wrap:pretty">This code is how an admin matches your transfer to your account. Without it, confirmation takes longer.</span>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8296B3">PROOF OF TRANSFER</span>
+        <sc-if value="{{ noProof }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ attach }}" style="height:56px;border:1.5px dashed #C9D7EA;border-radius:14px;background:#F7FAFE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>Add a photo or screenshot of the receipt</button>
+        </sc-if>
+        <sc-if value="{{ hasProof }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:13px;padding:10px 12px">
+            <span style="width:34px;height:34px;border-radius:10px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4zM4 15l4.5-4.5L13 15M11 13l3.5-3.5L20 15"></path></svg></span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;font-weight:700;color:#0F1B2D">transfer-receipt.jpg</span><span style="font-size:11px;font-weight:600;color:#5B6B84">412 KB · added just now</span></span>
+            <button onClick="{{ removeProof }}" aria-label="Remove receipt" style="width:34px;height:34px;border:1px solid #E3EAF3;border-radius:10px;background:#fff;color:#B42318;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+          </div>
+        </sc-if>
+        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">Uploaded, never linked — the photo goes only to the admin who confirms it.</span>
+      </div>
+
+      <button onClick="{{ submit }}" style="height:54px;border:none;border-radius:16px;background:{{ submitBg }};color:{{ submitFg }};font-size:15px;font-weight:700;cursor:{{ submitCur }};box-shadow:{{ submitShadow }}">I've sent the transfer</button>
+      <span style="font-size:11.5px;line-height:1.55;color:#8296B3;text-align:center;text-wrap:pretty">Nothing activates on submission. An admin confirms the transfer — <b>up to 48 hours</b> — and everything stays as it is until then.</span>
+
+      <a href="Legal.dc.html" style="display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #E9EFF7;border-radius:16px;padding:12px 14px;color:inherit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M7 3h7l5 5v13H7zM14 3v5h5"></path></svg>
+        <span style="flex:1;font-size:12px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Paying accepts the <b style="color:#1D4ED8">Provider Agreement</b> <span style="font-family:monospace;font-size:10.5px;color:#8296B3">[placeholder — draft terms, not final policy]</span></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;form&quot;,&quot;pending&quot;,&quot;rejected&quot;],&quot;default&quot;:&quot;form&quot;,&quot;tsType&quot;:&quot;'form' | 'pending' | 'rejected'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;connection&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;online&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;online&quot;,&quot;tsType&quot;:&quot;'online' | 'offline'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { phase:null, proof:false, toast:null };
+  BANK_ROWS = [
+    { label:'BANK', v:'Bank of Maldives', copyable:false },
+    { label:'ACCOUNT NAME', v:'RaajjePro Pvt Ltd', copyable:true },
+    { label:'ACCOUNT NUMBER · MVR', v:'7730 0001 2345 678', ls:'.03em', copyable:true } ];
+  toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  copy(v,label){ try{ navigator.clipboard.writeText(v); }catch(e){} this.toastMsg(label+' copied'); }
+  renderVals(){
+    const p=this.props, s=this.state;
+    const phase=s.phase ?? (p.state ?? 'form');
+    const offline=(p.connection ?? 'online')==='offline';
+    const canSubmit=s.proof;
+    const pendingOffline=phase==='pending-offline';
+    return {
+      stForm:phase==='form', stPending:phase==='pending'||pendingOffline, stRejected:phase==='rejected',
+      pendingLabel:pendingOffline?'pending_offline':'Pending admin confirmation',
+      pendingBody:pendingOffline
+        ? 'Your receipt is saved on this phone and sends by itself when the connection returns — no need to keep the app open. Then an admin confirms the transfer, up to 48 hours.'
+        : 'Submitted 1 Sep, 14:20. An admin matches the transfer against your reference code RP-2026-0842 — this takes up to 48 hours.',
+      bankRows:this.BANK_ROWS.map(b=>({ ...b, ls:b.ls||'0', copy:()=>this.copy(b.v,b.label==='ACCOUNT NAME'?'Account name':'Account number') })),
+      copyRef:()=>this.copy('RP-2026-0842','Reference code'),
+      noProof:!s.proof, hasProof:s.proof,
+      attach:()=>this.setState({ proof:true }),
+      removeProof:()=>this.setState({ proof:false }),
+      submitBg:canSubmit?'#2563EB':'#C6D4EA', submitFg:canSubmit?'#fff':'#8296B3',
+      submitCur:canSubmit?'pointer':'default',
+      submitShadow:canSubmit?'0 4px 12px rgba(37,99,235,.28)':'none',
+      submit:()=>{ if(!canSubmit){ this.toastMsg('Add the transfer receipt first'); return; }
+        this.setState({ phase: offline?'pending-offline':'pending' }); },
+      resubmit:()=>this.setState({ phase:'form', proof:false }),
+      appeal:()=>this.toastMsg('Appeal sent — a second person will look at it'),
+      toastOn:!!s.toast, toast:s.toast||''
+    };
+  }
+}
+</script>
+</body>
+</html>

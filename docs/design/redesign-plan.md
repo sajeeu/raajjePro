@@ -14,7 +14,7 @@ That framing is the most important line in this document, because it decides how
 
 ## Where things stand
 
-**71 page briefs** in `designer-brief.md`. **Twelve of the thirteen sessions are done.**
+**71 page briefs** in `designer-brief.md`. **All thirteen sessions are done.**
 
 | Artboard | Session | Status |
 |---|---|---|
@@ -35,8 +35,14 @@ That framing is the most important line in this document, because it decides how
 | `Create Service.dc.html` — all seven wizard steps in one shell | 10 | Reviewed across 2 rounds |
 | `My Services` · `Availability` · `My Calendar` | 11 | Reviewed across 3 rounds |
 | `Booking Request` · `Propose Time and Price` · `Payment Received` · `Mark Complete` | 12 | Reviewed across 2 rounds |
+| `My Performance` · `Analytics` · `Verification` · `Billing` · `Pay by Bank Transfer` · `Invoices` | 13 | Reviewed across 1 round |
 
-**Session 13 remains.** `verify-dc.py` passes on all fifty-four files.
+**The sequence is complete.** `verify-dc.py` passes on all sixty files, and the prototypes are now the reference the build follows.
+
+Two things remain outstanding, neither of them a session:
+
+- ⚠ **The real island list.** Sessions 2, 9 and 11 render placeholder islands with a visible note. Phase 4's seed needs the real one; it is the single input only the product owner can supply.
+- The prototype-supersedes table in `mockups/README.md` still lags sessions 3–13.
 
 ### What auditing has caught that design review would not
 

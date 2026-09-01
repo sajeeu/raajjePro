@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button,textarea{font-family:inherit}button:focus,textarea:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="My Performance" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">My performance</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ headerSub }}</span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:13px">
+
+    <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+        <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+        <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load your numbers</div>
+        <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:250px;text-wrap:pretty">Nothing has changed on your profile. Check your connection and try again.</div>
+        <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBelowFloor }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:28px 22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="width:52px;height:52px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7-7 8.5-4.1-1.5-7-4.3-7-8.5V6z"></path></svg></span>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">New provider</span>
+        <span style="font-size:14px;font-weight:700;color:#41526B">4 jobs completed</span>
+        <span style="font-size:12.5px;line-height:1.55;color:#5B6B84;max-width:270px;text-wrap:pretty">Your conduct numbers appear here — and on your public profile — after <b>10 completed bookings</b>. Until then, customers see exactly this.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isNormal }}" hint-placeholder-val="{{ true }}">
+
+      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">These are the same numbers customers see on your profile. Tap one to see the bookings behind it.</span>
+
+      <sc-if value="{{ showAlert }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FEF3DC;border:1px solid #F3E2B8;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3L2.5 20h19zM12 10v4M12 17v.1"></path></svg>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:14px;font-weight:800;color:#6B4605">Your cancellation rate crossed 15%</span>
+              <span style="font-size:12.5px;line-height:1.5;color:#8A5A08">Three cancellations in the last 90 days.</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ alertRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.72);border:1px solid #EFDFB8;border-radius:13px;padding:10px 12px">
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                  <span style="font-size:12.5px;font-weight:700;color:#0F1B2D">{{ r.t }}</span>
+                  <span style="font-size:11.5px;font-weight:600;color:#8A5A08">{{ r.m }}</span>
+                </span>
+                <sc-if value="{{ r.showAppeal }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.appeal }}" style="flex:none;height:32px;padding:0 12px;border:1.5px solid #E3D3A8;border-radius:999px;background:transparent;color:#8A5A08;font-size:11.5px;font-weight:700;cursor:pointer">Appeal</button></sc-if>
+                <sc-if value="{{ r.appealed }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font-size:11px;font-weight:800;color:#166534;background:#E5F6EC;border-radius:999px;padding:5px 10px">Appeal sent</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;line-height:1.55;color:#8A5A08;text-wrap:pretty"><b>What clears it:</b> the rate drops back under 15% as older bookings leave the 90-day window — the first of these leaves on <b>21 Sep</b> — or an appeal removes a booking that shouldn't count.</span>
+        </div>
+      </sc-if>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="6">
+          <button onClick="{{ m.tap }}" style="background:#fff;border:1.5px solid {{ m.bd }};border-radius:18px;padding:14px 14px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;cursor:pointer;text-align:left;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:{{ m.fg }}">{{ m.v }}</span>
+            <span style="font-size:11.5px;font-weight:700;color:#5B6B84">{{ m.label }}</span>
+            <sc-if value="{{ m.warn }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:700;color:#B45309">over your 15% threshold</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeIn .2s ease both">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ selTitle }}</span>
+            <span style="font-size:12px;font-weight:600;color:#5B6B84">{{ selSub }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ selRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:13px;padding:10px 12px">
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                  <span style="font-size:12.5px;font-weight:700;color:#0F1B2D">{{ r.t }}</span>
+                  <span style="font-size:11.5px;font-weight:600;color:#5B6B84;line-height:1.45">{{ r.m }}</span>
+                </span>
+                <sc-if value="{{ r.showAppeal }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.appeal }}" style="flex:none;height:32px;padding:0 12px;border:1.5px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;font-size:11.5px;font-weight:700;cursor:pointer">Appeal</button></sc-if>
+                <sc-if value="{{ r.appealed }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font-size:11px;font-weight:800;color:#166534;background:#E5F6EC;border-radius:999px;padding:5px 10px">Appeal sent</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ selMore }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:600;color:#8296B3">{{ selMoreText }}</span></sc-if>
+          <sc-if value="{{ selAppealNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">Think a booking shouldn't count? Appeal it — a person reviews every appeal.</span></sc-if>
+        </div>
+      </sc-if>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;align-items:center;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="width:42px;height:42px;border-radius:13px;background:#E7F6EC;color:#0E9F5D;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.4 12.4l2.6 2.6 4.6-5"></path></svg></span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:1px">
+          <span style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">47 jobs completed</span>
+          <span style="font-size:11.5px;font-weight:600;color:#5B6B84">All time, across your four services</span>
+        </span>
+        <a href="My Bookings.dc.html" style="flex:none;font-size:12px;font-weight:700;color:#1D4ED8">View all</a>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">If a number stays over its threshold</span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84">In this order, and never skipping a step</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ ladder }}" as="l" hint-placeholder-count="4">
+            <div style="display:flex;align-items:flex-start;gap:11px">
+              <span style="width:24px;height:24px;border-radius:50%;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none">{{ l.n }}</span>
+              <span style="flex:1;display:flex;flex-direction:column;gap:1px;padding-top:2px">
+                <span style="font-size:13px;font-weight:700;color:#0F1B2D">{{ l.t }}</span>
+                <span style="font-size:11.5px;line-height:1.5;color:#5B6B84">{{ l.m }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">Nothing on this list is automatic suspension. No account action ever happens without a person reviewing your bookings first.</span>
+      </div>
+
+      <a href="Analytics.dc.html" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,27,45,.04);color:inherit">
+        <span style="width:40px;height:40px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"></path></svg></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Analytics</span><span style="height:20px;border-radius:999px;background:#FEF3C7;color:#92400E;display:inline-flex;align-items:center;padding:0 8px;font-size:10px;font-weight:800">PREMIUM</span></span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84">Views, bookings and conversion, per service</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ appealOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeAppeal }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
+      <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Appeal this booking</span>
+        <span style="font-size:12.5px;font-weight:600;color:#5B6B84">{{ appealBooking }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ appealReasons }}" as="ar" hint-placeholder-count="3">
+          <button onClick="{{ ar.tap }}" style="display:flex;align-items:center;gap:11px;border:1.5px solid {{ ar.bd }};border-radius:14px;background:{{ ar.bg }};padding:12px 13px;cursor:pointer;text-align:left">
+            <span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ ar.dotBd }};display:flex;align-items:center;justify-content:center;flex:none"><sc-if value="{{ ar.sel }}" hint-placeholder-val="{{ false }}"><span style="width:10px;height:10px;border-radius:50%;background:#2563EB"></span></sc-if></span>
+            <span style="font-size:13px;font-weight:700;color:#0F1B2D">{{ ar.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <textarea placeholder="Anything a reviewer should know (optional)" style="min-height:74px;border:1.5px solid #E3EAF3;border-radius:14px;padding:12px 13px;font-size:13px;color:#0F1B2D;resize:none;background:#fff"></textarea>
+      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">A person reviews every appeal, usually within a few days. The number stays as it is until they decide.</span>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeAppeal }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>
+        <button onClick="{{ sendAppeal }}" style="flex:1.4;height:48px;border:none;border-radius:14px;background:{{ sendBg }};color:{{ sendFg }};font-size:14px;font-weight:700;cursor:{{ sendCur }}">Send appeal</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;threshold-alert&quot;,&quot;below-floor&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { sel:'completed', appealFor:null, appealReason:null, appealed:{}, toast:null };
+  NORMAL = {
+    window:'32 bookings ended in this window',
+    metrics: [
+      { k:'completed', v:'94%', label:'completed', sub:'30 of 32 bookings ended as completed jobs',
+        rows:[
+          { id:'ok1', t:'Home Deep Cleaning · Aishath M.', m:'Completed · 28 Aug' },
+          { id:'ok2', t:'AC Service & Repair · Ahmed N.', m:'Completed · 26 Aug' },
+          { id:'ok3', t:'AC Service & Repair · Fathimath R.', m:'Completed · 24 Aug' },
+          { id:'ok4', t:'Sunset Fishing Charter · Ismail W.', m:'Completed · 22 Aug' } ],
+        more:'…and 26 more completed bookings' },
+      { k:'cancelled', v:'3%', label:'cancelled', sub:'1 of 32 — cancelled by you after confirmation', appealNote:true,
+        rows:[ { id:'c1', t:'Sunset Fishing Charter · Hassan L.', m:'Cancelled by you · 3 Aug · reason given: sea too rough to go out', canAppeal:true } ] },
+      { k:'noshow', v:'2%', label:'no-show', sub:'1 of 32 — marked by the customer, not disputed', appealNote:true,
+        rows:[ { id:'n1', t:'AC Service & Repair · Mariyam S.', m:'Marked no-show · 19 Jul · booking window 14:00–16:00', canAppeal:true } ] },
+      { k:'ontime', v:'91%', label:'on time', sub:'27 of 30 completed jobs started inside the agreed window', appealNote:true,
+        rows:[
+          { id:'t1', t:'Home Deep Cleaning · Ibrahim F.', m:'Started 25 min after the window · 21 Aug', canAppeal:true },
+          { id:'t2', t:'AC Service & Repair · Aminath H.', m:'Started 40 min after the window · 9 Aug', canAppeal:true },
+          { id:'t3', t:'Home Deep Cleaning · Yoosuf K.', m:'Started 15 min after the window · 12 Jul', canAppeal:true } ] },
+      { k:'price', v:'97%', label:'price honoured', sub:'29 of 30 final prices matched what was agreed in the app', appealNote:true,
+        rows:[ { id:'p1', t:'Home Deep Cleaning · Niuma A.', m:'Agreed MVR 500, marked complete at MVR 650 · 12 Jul · no amendment was confirmed', canAppeal:true } ] },
+      { k:'response', v:'12 min', label:'usually responds in', sub:'Median first reply across 41 new enquiries',
+        rows:[
+          { id:'r1', t:'New enquiry · Home Deep Cleaning', m:'First reply in 4 min · 29 Aug' },
+          { id:'r2', t:'New enquiry · Sunset Fishing Charter', m:'First reply in 22 min · 27 Aug' },
+          { id:'r3', t:'New enquiry · AC Service & Repair', m:'First reply in 51 min · 25 Aug' } ],
+        more:'…and 38 more first replies in the window' } ]
+  };
+  THRESHOLD = {
+    window:'19 bookings ended in this window',
+    metrics: [
+      { k:'completed', v:'84%', label:'completed', sub:'16 of 19 bookings ended as completed jobs',
+        rows:[
+          { id:'ok1', t:'Home Deep Cleaning · Aishath M.', m:'Completed · 28 Aug' },
+          { id:'ok2', t:'AC Service & Repair · Ahmed N.', m:'Completed · 26 Aug' } ],
+        more:'…and 14 more completed bookings' },
+      { k:'cancelled', v:'16%', label:'cancelled', sub:'3 of 19 — cancelled by you after confirmation', warn:true, appealNote:true,
+        rows:[
+          { id:'c1', t:'Sunset Fishing Charter · Hassan L.', m:'Cancelled by you · 27 Aug · reason given: sea too rough to go out', canAppeal:true },
+          { id:'c2', t:'Home Deep Cleaning · Zulaikha I.', m:'Cancelled by you · 14 Aug · no reason given', canAppeal:true },
+          { id:'c3', t:'AC Service & Repair · Waheed M.', m:'Cancelled by you · 23 Jun · reason given: part not available', canAppeal:true } ] },
+      { k:'noshow', v:'0%', label:'no-show', sub:'No bookings were marked no-show in this window', rows:[] },
+      { k:'ontime', v:'88%', label:'on time', sub:'14 of 16 completed jobs started inside the agreed window', appealNote:true,
+        rows:[
+          { id:'t1', t:'Home Deep Cleaning · Ibrahim F.', m:'Started 25 min after the window · 21 Aug', canAppeal:true },
+          { id:'t2', t:'AC Service & Repair · Aminath H.', m:'Started 40 min after the window · 9 Aug', canAppeal:true } ] },
+      { k:'price', v:'100%', label:'price honoured', sub:'Every final price matched what was agreed in the app', rows:[] },
+      { k:'response', v:'14 min', label:'usually responds in', sub:'Median first reply across 26 new enquiries',
+        rows:[ { id:'r1', t:'New enquiry · Home Deep Cleaning', m:'First reply in 6 min · 29 Aug' } ],
+        more:'…and 25 more first replies in the window' } ]
+  };
+  LADDER = [
+    { n:'1', t:'An alert, here first', m:'You see the number and the bookings behind it before any customer notices anything.' },
+    { n:'2', t:'Lower search placement', m:'Your listings rank lower while the number stays over its threshold. They stay fully visible and bookable.' },
+    { n:'3', t:'Emergency work paused', m:'Emergency requests stop being offered to you until the number recovers. Normal bookings are unaffected.' },
+    { n:'4', t:'A human review', m:'Only if nothing recovers. A person looks at the bookings and talks to you — this is the only step that can go further.' } ];
+  APPEAL_REASONS = [ 'The customer cancelled, not me', 'We rescheduled by agreement in chat', 'This booking was made by mistake' ];
+  toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  mkRow(r){
+    const s=this.state, done=!!s.appealed[r.id];
+    return { t:r.t, m:r.m, showAppeal:!!r.canAppeal && !done, appealed:done,
+      appeal:()=>this.setState({ appealFor:r, appealReason:null }) };
+  }
+  renderVals(){
+    const p=this.props, s=this.state;
+    const scenario=p.scenario ?? 'normal';
+    const isThreshold=scenario==='threshold-alert';
+    const data=isThreshold?this.THRESHOLD:this.NORMAL;
+    const metrics=data.metrics.map(m=>({
+      v:m.v, label:m.label, warn:!!m.warn,
+      fg:m.warn?'#B45309':'#0F1B2D',
+      bd:s.sel===m.k?'#2563EB':'#E9EFF7',
+      tap:()=>this.setState({ sel: s.sel===m.k?null:m.k })
+    }));
+    const sel=data.metrics.find(m=>m.k===s.sel);
+    const selRows=sel?sel.rows.map(r=>this.mkRow(r)):[];
+    const cancelledRows=isThreshold?data.metrics.find(m=>m.k==='cancelled').rows:[];
+    const reasons=this.APPEAL_REASONS.map(label=>({
+      label, sel:s.appealReason===label,
+      bd:s.appealReason===label?'#2563EB':'#E3EAF3',
+      bg:s.appealReason===label?'#E8F0FE':'#fff',
+      dotBd:s.appealReason===label?'#2563EB':'#C6D4EA',
+      tap:()=>this.setState({ appealReason:label })
+    }));
+    const canSend=!!s.appealReason;
+    return {
+      headerSub:'Rolling 90 days · 3 Jun – 1 Sep',
+      isLoading:scenario==='loading', isError:scenario==='error',
+      isBelowFloor:scenario==='below-floor',
+      isNormal:scenario==='normal'||isThreshold,
+      retry:()=>this.toastMsg('Retrying…'),
+      showAlert:isThreshold,
+      alertRows:cancelledRows.map(r=>this.mkRow(r)),
+      metrics,
+      hasSel:!!sel && sel.rows.length>0,
+      selTitle:sel?('Behind “'+sel.v+' '+sel.label+'”'):'',
+      selSub:sel?(sel.sub+' · '+data.window):'',
+      selRows,
+      selMore:!!(sel&&sel.more), selMoreText:sel&&sel.more?sel.more:'',
+      selAppealNote:!!(sel&&sel.appealNote),
+      ladder:this.LADDER,
+      appealOpen:!!s.appealFor,
+      appealBooking:s.appealFor?s.appealFor.t:'',
+      appealReasons:reasons,
+      sendBg:canSend?'#2563EB':'#C6D4EA', sendFg:canSend?'#fff':'#8296B3', sendCur:canSend?'pointer':'default',
+      sendAppeal:()=>{ if(!canSend)return; const id=s.appealFor.id;
+        this.setState(st=>({ appealed:{...st.appealed,[id]:true}, appealFor:null }));
+        this.toastMsg('Appeal sent — a person will review it'); },
+      closeAppeal:()=>this.setState({ appealFor:null }),
+      toastOn:!!s.toast, toast:s.toast||''
+    };
+  }
+}
+</script>
+</body>
+</html>

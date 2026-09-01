@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button,input{font-family:inherit}button:focus,input:focus{outline:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Verification" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
+    <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+      <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Verification</span>
+      <span style="font-size:11.5px;font-weight:600;color:#5B6B84">The badge customers see next to your name</span>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 28px;display:flex;flex-direction:column;gap:13px">
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <sc-if value="{{ hasTier }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="VerificationBadge" tier="{{ tierVal }}" size="full" hint-size="100%,54px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ noTier }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">No tier yet</span>
+          <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">You're fully visible and bookable without one. Verification adds a badge customers see next to your name.</span>
+        </div>
+      </sc-if>
+      <span style="font-size:11.5px;line-height:1.55;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">Your badge is a safety check, not a subscription. It doesn't depend on Premium, never lapses if a subscription does, never expires, and there's no annual recheck.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;padding:0 2px">The three tiers</span>
+      <sc-for list="{{ rungs }}" as="rg" hint-placeholder-count="3">
+        <div style="background:#fff;border:1.5px solid {{ rg.bd }};border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="flex:1"><dc-import name="VerificationBadge" tier="{{ rg.tier }}" size="chip" hint-size="70px,20px"></dc-import></span>
+            <span style="height:22px;border-radius:999px;background:{{ rg.stBg }};color:{{ rg.stFg }};display:inline-flex;align-items:center;gap:5px;padding:0 10px;font-size:10.5px;font-weight:800;flex:none">{{ rg.stLabel }}</span>
+          </div>
+          <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Requires:</b> {{ rg.req }}</span>
+          <sc-if value="{{ rg.autoNote }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:11.5px;line-height:1.5;color:#166534;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:12px;padding:9px 12px;text-wrap:pretty">The 5-bookings route is <b>automatic</b> — no submission, no review, no waiting. Silver simply appears when the fifth booking completes with no unresolved dispute.</span>
+          </sc-if>
+          <div style="border-top:1px solid #EEF3FA;padding-top:9px"><dc-import name="VerificationBadge" tier="{{ rg.tier }}" size="full" hint-size="100%,54px"></dc-import></div>
+          <span style="font-size:10.5px;font-weight:600;color:#8296B3">What customers see, word for word</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ showSubmit }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ submitTitle }}</span>
+          <span style="font-size:12px;line-height:1.5;font-weight:600;color:#5B6B84;text-wrap:pretty">{{ submitSub }}</span>
+        </div>
+
+        <sc-if value="{{ stIdle }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ docOptions }}" as="d" hint-placeholder-count="2">
+              <button onClick="{{ d.tap }}" style="display:flex;align-items:center;gap:11px;border:1.5px solid {{ d.bd }};border-radius:14px;background:{{ d.bg }};padding:12px 13px;cursor:pointer;text-align:left">
+                <span style="width:20px;height:20px;border-radius:50%;border:2px solid {{ d.dotBd }};display:flex;align-items:center;justify-content:center;flex:none"><sc-if value="{{ d.sel }}" hint-placeholder-val="{{ false }}"><span style="width:10px;height:10px;border-radius:50%;background:#2563EB"></span></sc-if></span>
+                <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;font-weight:700;color:#0F1B2D">{{ d.label }}</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ d.sub }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+          <button onClick="{{ startUpload }}" style="height:50px;border:1.5px dashed #C9D7EA;border-radius:14px;background:#F7FAFE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>Upload a photo of the document</button>
+          <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">Documents are seen only by the admin who reviews them and are <b>deleted 90 days after the decision</b>.</span>
+        </sc-if>
+
+        <sc-if value="{{ stUploading }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:9px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:13px 14px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="flex:1;font-size:13px;font-weight:700;color:#0F1B2D">{{ upDocName }}</span>
+              <span style="font-size:12px;font-weight:800;color:#1D4ED8">64%</span>
+            </div>
+            <div style="height:6px;border-radius:999px;background:#E3EAF3;overflow:hidden"><span style="display:block;height:100%;width:64%;border-radius:999px;background:#2563EB"></span></div>
+            <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Safe to leave — the upload finishes on its own, even if your connection drops and comes back.</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ stPending }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:9px;background:#FEF3DC;border:1px solid #F3E2B8;border-radius:14px;padding:13px 14px">
+            <div style="display:flex;align-items:center;gap:9px">
+              <dc-import name="StatusPill" status="Review pending" hint-size="130px,28px"></dc-import>
+              <span style="font-size:11.5px;font-weight:600;color:#8A5A08">Submitted 31 Aug</span>
+            </div>
+            <span style="font-size:12px;line-height:1.55;color:#8A5A08;text-wrap:pretty">An admin checks the document against your account name. Your listings stay exactly as they are while you wait — nothing is paused.</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ stRejected }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:10px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:14px;padding:13px 14px">
+            <span style="font-size:12.5px;font-weight:800;color:#B91C1C">Not accepted — the reviewer wrote:</span>
+            <span style="font-size:12.5px;line-height:1.55;color:#7F1D1D;background:rgba(255,255,255,.7);border-radius:10px;padding:10px 12px;text-wrap:pretty">“{{ rejectReason }}”</span>
+            <span style="font-size:11.5px;line-height:1.5;color:#B91C1C;text-wrap:pretty">Your current tier is unchanged. You can resubmit straight away — there's no waiting period.</span>
+            <button onClick="{{ resubmit }}" style="height:44px;border:none;border-radius:12px;background:#2563EB;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Resubmit with a new photo</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ atTop }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+        <span style="width:42px;height:42px;border-radius:50%;background:#FEF3C7;color:#B45309;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7-7 8.5-4.1-1.5-7-4.3-7-8.5V6z"></path><path d="M9 11.8l2.1 2.1 3.9-4"></path></svg></span>
+        <span style="flex:1;font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty">You're at the top tier. It never expires and there's nothing to renew.</span>
+      </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Good to know</span>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ facts }}" as="f" hint-placeholder-count="4">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+            <span style="flex:1;font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty">{{ f.t }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Bronze&quot;,&quot;Silver&quot;,&quot;Gold&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'none' | 'Bronze' | 'Silver' | 'Gold'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;docState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;uploading&quot;,&quot;pending&quot;,&quot;rejected&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { phase:null, doc:null, toast:null };
+  ORDER = ['Bronze','Silver','Gold'];
+  REQS = {
+    Bronze:'a national ID or passport matching the account name.',
+    Silver:'Bronze, plus photos of completed work, plus either a customer reference RaajjePro contacts or 5 completed bookings with no unresolved dispute.',
+    Gold:'Silver, plus a business registration or a recognised trade certificate.' };
+  SUBMIT = {
+    Bronze:{ title:'Get Bronze', sub:'Upload a national ID or passport. The name must match your account name.',
+      docs:[ {k:'nid', label:'National ID', sub:'Both sides, readable'}, {k:'passport', label:'Passport', sub:'Photo page'} ],
+      reject:'The name on the ID reads Ibrahim Rasheedh — your account says Ibrahim Rasheed. Fix the account name in settings or upload a document that matches, then resubmit.' },
+    Silver:{ title:'Get Silver', sub:'Upload photos of completed work, then pick a route: a customer reference we contact, or it happens by itself at 5 completed bookings with no unresolved dispute.',
+      docs:[ {k:'photos', label:'Photos of completed work', sub:'2–5 photos of finished jobs'}, {k:'reference', label:'Customer reference', sub:'We contact them — name and a way to reach them'} ],
+      reject:'The work photos show only materials, not finished jobs. Add photos of the completed work itself and resubmit.' },
+    Gold:{ title:'Get Gold', sub:'Upload a business registration or a recognised trade certificate.',
+      docs:[ {k:'bizreg', label:'Business registration', sub:'Ministry of Economic Development'}, {k:'cert', label:'Trade certificate', sub:'From a recognised issuing body'} ],
+      reject:'The trade certificate photo is cropped — the issuing body’s name isn’t readable. Take a photo of the whole page and resubmit.' } };
+  FACTS = [
+    { t:'A tier is not needed to be listed or booked. A provider with no tier is fully visible and fully bookable.' },
+    { t:'Emergency work needs a tier: Gold on Electrical and Plumbing, Silver on AC Repair and Moving.' },
+    { t:'As part of the ID check, an admin confirms your phone number by calling it — that is the only check the number ever gets.' },
+    { t:'Tiers never expire. There is no annual recheck, and the badge never lapses with a subscription.' } ];
+  toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
+  componentWillUnmount(){ clearTimeout(this._tt); }
+  renderVals(){
+    const p=this.props, s=this.state;
+    const tierProp=p.tier ?? 'Silver';
+    const tier=tierProp==='none'?null:tierProp;
+    const idx=tier?this.ORDER.indexOf(tier):-1;
+    const next=idx<2?this.ORDER[idx+1]:null;
+    const phase=s.phase ?? (p.docState ?? 'idle');
+    const sub=next?this.SUBMIT[next]:null;
+    const rungs=this.ORDER.map((t,i)=>{
+      const done=i<=idx, current=i===idx, isNext=i===idx+1;
+      return { tier:t, req:this.REQS[t],
+        bd:current?'#2563EB':'#E9EFF7',
+        stLabel:done?(current?'Your tier':'Achieved'):(isNext?'Next for you':'Later'),
+        stBg:done?'#E5F6EC':(isNext?'#E8F0FE':'#EEF3FA'),
+        stFg:done?'#166534':(isNext?'#1D4ED8':'#8296B3'),
+        autoNote:t==='Silver' && !done };
+    });
+    const docs=sub?sub.docs.map(d=>({ label:d.label, sub:d.sub, sel:s.doc===d.k,
+      bd:s.doc===d.k?'#2563EB':'#E3EAF3', bg:s.doc===d.k?'#E8F0FE':'#fff',
+      dotBd:s.doc===d.k?'#2563EB':'#C6D4EA',
+      tap:()=>this.setState({ doc:d.k }) })):[];
+    return {
+      hasTier:!!tier, noTier:!tier, tierVal:tier||'none',
+      rungs,
+      showSubmit:!!sub, atTop:!sub,
+      submitTitle:sub?sub.title:'', submitSub:sub?sub.sub:'',
+      stIdle:phase==='idle', stUploading:phase==='uploading', stPending:phase==='pending', stRejected:phase==='rejected',
+      docOptions:docs,
+      startUpload:()=>{
+        if(!s.doc){ this.toastMsg('Pick which document you’re uploading first'); return; }
+        this.setState({ phase:'uploading' });
+        clearTimeout(this._up); this._up=setTimeout(()=>this.setState({ phase:'pending' }),1800);
+      },
+      upDocName:sub&&s.doc?(sub.docs.find(d=>d.k===s.doc)||sub.docs[0]).label+'.jpg':'document.jpg',
+      rejectReason:sub?sub.reject:'',
+      resubmit:()=>this.setState({ phase:'idle', doc:null }),
+      toastOn:!!s.toast, toast:s.toast||''
+    };
+  }
+  componentWillUnmount(){ clearTimeout(this._tt); clearTimeout(this._up); }
+}
+</script>
+</body>
+</html>
