@@ -30,7 +30,7 @@ An unambiguous name stands alone: `Kulhudhuffushi`, not `HDh. Kulhudhuffushi`. P
 
 ### Search behaviour
 
-192 entries is not a scrollable list, so search is the control rather than a filter over one. From the first character typed it matches **anywhere** in the name (`dhoo` → Kudahuvadhoo, Fonadhoo, Rasmaadhoo…), ranks prefix matches first, also matches the atoll code (`dh mee`, `dhmee` → `Dh. Meedhoo`; `gdh` alone lists that atoll), ignores case and apostrophes on both sides, and **returns every match with no cap and no "show more"** — truncating results hides the island the user came for. A native `<select>` is not an acceptable island control anywhere.
+192 entries is not a scrollable list, so search is the control rather than a filter over one. From the first character typed it matches **anywhere** in the name (`dhoo` → Kudahuvadhoo, Fonadhoo, Rasmaadhoo…), ranks prefix matches first, also matches the atoll code (`dh mee`, `dhmee` → `Dh. Meedhoo`; `gdh` alone lists that atoll), ignores case, **accents** (`male` must find `Malé`) and apostrophes on both sides, and **returns every match with no cap and no "show more"** — truncating results hides the island the user came for. A native `<select>` is not an acceptable island control anywhere.
 
 ## Other data notes
 
@@ -40,6 +40,31 @@ An unambiguous name stands alone: `Kulhudhuffushi`, not `HDh. Kulhudhuffushi`. P
 - **No total is quoted anywhere.** This register counts 192; the Discovery prototype had said "of 187 inhabited islands", a figure predating this extraction. Rather than pick between them, the denominator was dropped — a customer looking for their island does not need the total, and it is one more number that goes stale silently. Do not reintroduce a count in UI copy.
 - **Malé City.** `Male'`, `Hulhumale'` and `Vilingili` are listed under Kaafu here. Administratively they are Malé City; if that distinction matters for search or addressing, it is a product decision, not a data one.
 - `Vilingili` (Kaafu) and `Vilin'gili` (Gaafu Alifu) are different islands whose names differ by one apostrophe — see the normalisation note above.
+
+## Verification (2026-09-01)
+
+The list was re-derived a second time by a different method — parsing the register's own `/atolls/<atoll>/<island-(CAT)>/<id>` link structure rather than the page text — and produced **the identical 192 across the identical 20 atolls**. Two independent parses agreeing rules out an extraction error.
+
+Three things that turned up in the process:
+
+- **25 records carry no category code at all** (mostly Gaafu Dhaalu reefs — `Hakandhoo`, `Kaafarataa`, `Dhimmanaa`…). None is an inhabited island, so none affects this list.
+- **41 IDs are absent from the register's own sequence** (max ID 1163, 1122 records present). These are gaps on the source side, not dropped rows.
+- **`Male'` is recorded as `Male'(I)[H]`** — square brackets instead of parentheses. It parsed correctly, but it is the sort of one-off that a stricter parser would silently drop.
+
+**Per-atoll counts were cross-checked against a second source** for five atolls. Four match exactly: Haa Dhaalu 14, Shaviyani 14, Meemu 8, Gaafu Dhaalu 9 (Faresmaathodaa present in both).
+
+**One unresolved discrepancy: Raa.** The register lists 15 inhabited islands; the second source lists 16, the extra being **R. Maamin'gili**, which the register classifies as `(R)` — a resort. One of the two is wrong and it has not been settled. Everything else agrees.
+
+### Islands that are correctly absent
+
+Several islands that were inhabited within living memory are not on this list, and that is right rather than a gap:
+
+- **HDh. Faridhoo, HDh. Maavaidhoo, Sh. Maakan'doodhoo, Sh. Firunbaidhoo** — depopulated under the population-consolidation programme. Maakan'doodhoo and Firunbaidhoo were merged into **Sh. Milandhoo**, which is on the list.
+- **R. Kadholhudhoo** — destroyed in the 2004 tsunami; the population moved to **R. Dhuvaafaru**, which is on the list.
+- **L. Gaadhoo** — depopulated.
+- **M. Madifushi** is a resort. The inhabited Madifushi is **Th. Madifushi**, which is on the list.
+
+Anyone auditing this list against memory will reach for these first. They were each checked.
 
 ## Re-extracting
 
