@@ -41,7 +41,7 @@ That framing is the most important line in this document, because it decides how
 
 Two things remain outstanding, neither of them a session:
 
-- ⚠ **The real island list.** Sessions 2, 9 and 11 render placeholder islands with a visible note. Phase 4's seed needs the real one; it is the single input only the product owner can supply.
+- ⚠ **The island pickers show a name with no atoll.** The real list now exists — `docs/data/inhabited-islands.json`, 192 inhabited islands — and it establishes that **island names are not unique**: fifteen repeat across atolls and `Meedhoo` exists in three. Every picker in Sessions 2, 9 and 11 renders a bare name, which is ambiguous against real data. Needs a correction round before the seed lands.
 - The prototype-supersedes table in `mockups/README.md` still lags sessions 3–13.
 
 ### What auditing has caught that design review would not
@@ -154,7 +154,7 @@ Emergency needed four correction rounds. It was the worst case — no mockup, no
 
 **The 17 JPEGs stay in the repo.** They are the provenance record for what was originally delivered, and `mockups/README.md` maps each one. But once a screen has a reviewed prototype, the prototype wins, and that should be stated in `README.md` as each session lands.
 
-**The real island list is still outstanding.** Sessions 2, 9 and 11 all render an island picker. Until the seed list exists they will show six placeholder islands and a note. That is fine for design, but it is the one input from your side that three sessions depend on.
+**The real island list arrived after session 13.** Sessions 2, 9 and 11 all render an island picker, and until 2026-09-01 they showed six placeholder islands and a note. The list is now in `docs/data/inhabited-islands.json`, and it carries a constraint the placeholders hid: names repeat across atolls, so a picker must render `Meedhoo · Seenu`, never `Meedhoo`. Resolved as an input; open as a design correction.
 
 ## Two rules the sessions keep re-learning
 
