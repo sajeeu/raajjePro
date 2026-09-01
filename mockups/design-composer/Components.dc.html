@@ -74,11 +74,14 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
     <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84;max-width:640px;text-wrap:pretty">Booking mode is on every card, always — <b style="color:#0F1B2D">Book instantly</b> (customer picks a published time) or <b style="color:#0F1B2D">Request a time</b> (provider comes back with a time and a price). Each mode carries its evidence: instant shows <b style="color:#0F1B2D">the next open slot</b>, request shows <b style="color:#0F1B2D">measured reply time</b> — or <b style="color:#0F1B2D">New provider</b> below ten completed bookings. The green badge is RaajjePro's <b style="color:#0F1B2D">callback guarantee</b> (free return visit within 7 days), never a provider claim.</div>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
       <div style="display:flex;flex-direction:column;gap:8px">
-        <dc-import name="ServiceCard" variant="horizontal" title="Emergency Plumbing &amp; Pipe Repair" provider="Ibrahim Rasheed" tier="Gold" rating="4.6" count="31" price="From MVR 350" island="Th. Guraidhoo" category="Plumbing" mode="request" reply-time="12 min" bookings="{{ 44 }}" callback="{{ true }}" hint-size="250px,330px"></dc-import>
-        <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Horizontal — 250px, in section runs</span>
+        <div style="display:flex;gap:12px">
+          <dc-import name="ServiceCard" variant="horizontal" title="Emergency Plumbing &amp; Pipe Repair" provider="Ibrahim Rasheed" tier="Gold" rating="4.6" count="31" price="From MVR 350" island="Th. Guraidhoo" category="Plumbing" mode="request" reply-time="12 min" bookings="{{ 44 }}" callback="{{ true }}" hint-size="250px,330px"></dc-import>
+          <dc-import name="ServiceCard" variant="horizontal" title="Wall painting" provider="Ali Waheed" rating="4.2" count="5" price="MVR 200" island="Malé" category="Home Repairs" mode="request" bookings="{{ 5 }}" hint-size="250px,330px"></dc-import>
+        </div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Horizontal — 250px · Same frame, any amount of data</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:340px">
-        <dc-import name="ServiceCard" variant="full" title="Home Deep Cleaning" provider="Mariyam Shifa" tier="Silver" rating="4.8" count="24" price="MVR 450" unit="/session" island="Malé" category="Cleaning" mode="instant" next-slot="tomorrow 09:00" hint-size="100%,124px"></dc-import>
+        <dc-import name="ServiceCard" variant="full" title="Home Deep Cleaning" provider="Mariyam Shifa" tier="Silver" rating="4.8" count="24" price="MVR 450" unit="/session" island="Malé" category="Cleaning" mode="instant" next-slot="tomorrow 09:00" hint-size="100%,188px"></dc-import>
         <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Full-width — search results, lists</span>
       </div>
     </div>

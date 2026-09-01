@@ -169,7 +169,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </sc-if>
         <sc-if value="{{ resOk }}" hint-placeholder-val="{{ false }}">
           <sc-for list="{{ resList }}" as="r" hint-placeholder-count="4">
-            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" sponsored="{{ r.sp }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,150px"></dc-import>
+            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" sponsored="{{ r.sp }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import>
           </sc-for>
           <sc-if value="{{ showMore }}">
             <button onClick="{{ showMoreTap }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFD">Show 12 more</button>
@@ -211,7 +211,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         <sc-if value="{{ hasSavedSvc }}" hint-placeholder-val="{{ true }}">
           <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D;padding-top:4px">Saved services</span>
           <sc-for list="{{ savedSvcs }}" as="r" hint-placeholder-count="2">
-            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,150px"></dc-import>
+            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import>
           </sc-for>
         </sc-if>
         <sc-if value="{{ hasSavedProv }}" hint-placeholder-val="{{ false }}">

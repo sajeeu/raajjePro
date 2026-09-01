@@ -44,6 +44,18 @@ Two things remain outstanding, neither of them a session:
 - ⚠ **The island pickers show a name with no atoll.** The real list now exists — `docs/data/inhabited-islands.json`, 192 inhabited islands — and it establishes that **island names are not unique**: fifteen repeat across atolls and `Meedhoo` exists in three. Every picker in Sessions 2, 9 and 11 renders a bare name, which is ambiguous against real data. Needs a correction round before the seed lands.
 - The prototype-supersedes table in `mockups/README.md` still lags sessions 3–13.
 
+### 🔧 An editor hint is a claim, and the component has to honour it
+
+Added after Round 36. Three separate defects have now come from a declared value drifting from the real one, and none of them looked wrong on screen:
+
+- `hint-size="100%,150px"` on the card while the card had **no height at all** and actually rendered ~188px. The hint was decoration; nothing checked it. When Round 35 finally made the height real it used the stale hint's number and clipped the content by 30px.
+- The same variant declared at **two** different heights in different files — `124px` in `Components`, `150px` in `Discovery` and `Provider Profile` — so the component sheet documented the card as shorter than every screen using it.
+- `hint-placeholder-count="4"` on `Verification`'s facts loop, which made the editor look populated while `renderVals` returned no `facts` at all and the section rendered empty.
+
+The rule: **a hint is an assertion about runtime, so it belongs in the audit.** When a component gains a fixed dimension, every mount's `hint-size` is part of the change, and the number has to come from measuring the built card — never from the hint that was already there, which is the value most likely to be wrong.
+
+Both variants now carry an explicit height, `overflow:hidden` so a future mistake clips inside the card instead of spilling past its border, and about 6–7px of slack. `SkeletonCard` is knowingly still on the old numbers (`100%,124px`) and is the next thing to look at.
+
 ### 🔧 A screen that keeps its own copy of a card is where deleted decisions survive
 
 Added after Round 33. `Home` renders service cards from its own inline markup instead of mounting `ServiceCard`, and that one fact produced three separate defects, none visible on screen as wrong:
