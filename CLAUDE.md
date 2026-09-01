@@ -6,7 +6,7 @@ Mobile-first, API-first local services marketplace for the Maldives. Flutter app
 
 ## The one document that matters
 
-`01_Development_Plan_v5.md`, at **revision 5.15**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+`01_Development_Plan_v5.md`, at **revision 5.16**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
 
@@ -24,7 +24,7 @@ Where a command says a screen has no mockup, propose the design and get approval
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.15. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.16. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 
@@ -86,6 +86,8 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 13. QUOTE WINDOWS ARE PER-CATEGORY (Round 15), read from `quoteExpiryMinutes` / `quoteApprovalMinutes` — 120/240 for Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs; 1440/4320 for Photography, Moving and Boat Charter (Rounds 25–26 membership). Never hardcode 24h/72h.
 
 14. LOCAL PREFERENCE IS "MALDIVIAN-OWNED BUSINESS", VERIFIED AT GOLD (§1g, Round 15) — an attribute of the business evidenced by its registration document. NEVER store nationality on an individual provider and never let customers filter people by it.
+
+15. ISLAND NAMES ARE NOT UNIQUE, AND AN ISLAND IS NEVER KEYED BY NAME (Round 30). The real seed list is `docs/data/inhabited-islands.json` — 192 inhabited islands, 20 atolls. Fifteen names repeat across atolls and `Meedhoo` exists in three, so `Island` carries a UUID like everything else and no service area, booking location or filter may store or match on the name. Render an ambiguous name in the Maldivian form `Dh. Meedhoo`; render an unambiguous one bare as `Kulhudhuffushi`. COMPUTE the ambiguous set at seed time from the case-folded, apostrophe-stripped name — hardcoding the fifteen misses `K. Vilingili` vs `GA. Vilin'gili`, which collide only after normalising. ISLAND SEARCH IS THE CONTROL, NOT A FILTER OVER A SCROLLABLE LIST — 192 entries is not browsable. From the first character it matches anywhere in the name, ranks prefix matches first, matches the atoll code too, ignores case and the Dhivehi apostrophe on both sides, and RETURNS EVERY MATCH WITH NO CAP. It never auto-selects, even on a single match. A native `<select>` is never an acceptable island control. Never print an island total in UI copy.
 
 Development priorities, in order: readability > cleverness, explicit > implicit, predictable > convenient, small focused changes > large sweeping ones.
 
