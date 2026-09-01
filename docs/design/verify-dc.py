@@ -26,6 +26,8 @@ FORBIDDEN = [
      "Round 26: Home Repairs replaced Events."),
     ("pre-Round-27 chat claim", r"never torn down|stays open after completion",
      "Round 27: the booking thread locks read-only 7 days after completion."),
+    ("callback on an ineligible category", r"cat:\s*'(Cleaning|Beauty|Fitness|Photography|Moving|Boat Charter)'[^}]*\b(cb|callback):\s*true|\b(cb|callback):\s*true[^}]*cat:\s*'(Cleaning|Beauty|Fitness|Photography|Moving|Boat Charter)'",
+     "Round 28: callback is Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs only."),
     ("encryption claim", r"[Ee]ncrypt",
      "Chat is admin-readable in a dispute. Say 'your contact details are never shared'."),
     ("editorial provider label", r"Prone to|Unreliable|Top rated|Best value|Most reliable|Recommended provider",

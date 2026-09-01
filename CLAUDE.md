@@ -6,7 +6,7 @@ Mobile-first, API-first local services marketplace for the Maldives. Flutter app
 
 ## The one document that matters
 
-`01_Development_Plan_v5.md`, at **revision 5.13**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+`01_Development_Plan_v5.md`, at **revision 5.14**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
 
@@ -24,7 +24,7 @@ Where a command says a screen has no mockup, propose the design and get approval
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.13. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.14. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 
@@ -81,6 +81,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 
 12. "PAYMENT HOLD" MEANS A LOCKED AGREEMENT, NOT ESCROW (§1h, Round 15). RaajjePro still never moves money for a booking. At `accepted` the agreed price, date, time and scope lock; changing any of them needs an explicit amendment the other party accepts; every attempt is recorded and feeds price adherence. DO NOT build escrow, funds holding, or a payment gateway for bookings.
 
+12a. THE CALLBACK GUARANTEE IS PER-CATEGORY (Round 28), read from `callbackEligible` — true ONLY for Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs. It promises a free return visit if the same problem comes back, which is meaningless where nothing was fixed: a charter, a shoot, a move, a clean or a haircut cannot recur. On an ineligible category the wizard opt-in does not render at all (absent, not disabled) and no badge appears on any card. Never hardcode the list, and never treat it as simply "opt-in per listing" — that is pre-Round-28.
 13. QUOTE WINDOWS ARE PER-CATEGORY (Round 15), read from `quoteExpiryMinutes` / `quoteApprovalMinutes` — 120/240 for Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs; 1440/4320 for Photography, Moving and Boat Charter (Rounds 25–26 membership). Never hardcode 24h/72h.
 
 14. LOCAL PREFERENCE IS "MALDIVIAN-OWNED BUSINESS", VERIFIED AT GOLD (§1g, Round 15) — an attribute of the business evidenced by its registration document. NEVER store nationality on an individual provider and never let customers filter people by it.
