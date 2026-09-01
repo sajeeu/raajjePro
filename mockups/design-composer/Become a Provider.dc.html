@@ -286,10 +286,7 @@ input:focus,textarea:focus,button:focus{outline:none}
             </div>
           </sc-for>
           <sc-if value="{{ noResults }}">
-            <div style="padding:28px 8px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center">
-              <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No islands found</div>
-              <div style="font-size:13px;color:#5B6B84">Try a different spelling, or another atoll.</div>
-            </div>
+            <div style="padding:26px 8px;text-align:center;font-size:13.5px;font-weight:600;color:#5B6B84">{{ islandNoMatch }}</div>
           </sc-if>
         </div>
       </div>
@@ -335,20 +332,39 @@ input:focus,textarea:focus,button:focus{outline:none}
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intro&quot;,&quot;basics&quot;,&quot;service-area&quot;],&quot;default&quot;:&quot;intro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;emailVerified&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;accountEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;aishath.h@gmail.com&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;requirePhone&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Form behavior&quot;},&quot;loadingMs&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:900,&quot;min&quot;:0,&quot;max&quot;:3000,&quot;step&quot;:100,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Form behavior&quot;}}">
 class Component extends DCLogic {
   state = { screen: 1, name: '', type: null, dial: '+960', phone: '777 1234', editingPhone: false, verifiedNow: false, verifying: false, holder: '', acct: '', bank: '', accepting: true, intro: '', photoUrl: null, errors: {}, loading: false, atoll: 'All', query: '', selected: [], done: false, toast: null };
-  BANKS = ['Bank of Maldives (BML)', 'Maldives Islamic Bank (MIB)', 'State Bank of India — Male’', 'Habib Bank Limited', 'Mauritius Commercial Bank (MCB)', 'Commercial Bank of Maldives (CBM)', 'Bank of Ceylon'];
+  BANKS = ['Bank of Maldives (BML)', 'Maldives Islamic Bank (MIB)', 'State Bank of India — Malé', 'Habib Bank Limited', 'Mauritius Commercial Bank (MCB)', 'Commercial Bank of Maldives (CBM)', 'Bank of Ceylon'];
   fileRef = React.createRef();
-  ATOLLS = [
-    { a: 'Malé Region', is: ['Malé', 'Hulhumalé', 'Villimalé'] },
-    { a: 'Kaafu', is: ['Maafushi', 'Thulusdhoo', 'Himmafushi', 'Guraidhoo', 'Gulhi', 'Dhiffushi', 'Huraa'] },
-    { a: 'Addu', is: ['Addu City', 'Hithadhoo', 'Feydhoo', 'Maradhoo', 'Meedhoo'] },
-    { a: 'Alif Alif', is: ['Rasdhoo', 'Thoddoo', 'Ukulhas', 'Mathiveri'] },
-    { a: 'Alif Dhaal', is: ['Maamigili', 'Dhangethi', 'Dhigurah', 'Mahibadhoo'] },
-    { a: 'Baa', is: ['Eydhafushi', 'Dharavandhoo', 'Thulhaadhoo'] },
-    { a: 'Lhaviyani', is: ['Naifaru', 'Hinnavaru', 'Kurendhoo'] },
-    { a: 'Haa Alif', is: ['Dhidhdhoo', 'Hoarafushi', 'Ihavandhoo'] },
-    { a: 'Laamu', is: ['Fonadhoo', 'Gan', 'Isdhoo'] },
-    { a: 'Gnaviyani', is: ['Fuvahmulah'] }
-  ];
+  ISLANDS = [
+    { l: 'Malé', c: '', a: 'Malé Region' },
+    { l: 'Hulhumalé', c: '', a: 'Malé Region' },
+    { l: 'Villimalé', c: '', a: 'Malé Region' },
+    { l: 'Maafushi', c: 'K', a: 'Kaafu' },
+    { l: 'Thulusdhoo', c: 'K', a: 'Kaafu' },
+    { l: 'K. Guraidhoo', c: 'K', a: 'Kaafu' },
+    { l: 'Th. Guraidhoo', c: 'Th', a: 'Thaa' },
+    { l: 'Dh. Meedhoo', c: 'Dh', a: 'Dhaalu' },
+    { l: 'R. Meedhoo', c: 'R', a: 'Raa' },
+    { l: 'S. Meedhoo', c: 'S', a: 'Addu' },
+    { l: 'L. Hithadhoo', c: 'L', a: 'Laamu' },
+    { l: 'S. Hithadhoo', c: 'S', a: 'Addu' },
+    { l: 'K. Vilingili', c: 'K', a: 'Kaafu' },
+    { l: 'GA. Vilin\'gili', c: 'GA', a: 'Gaafu Alifu' },
+    { l: 'An\'golhitheemu', c: 'R', a: 'Raa' },
+    { l: 'Kulhudhuffushi', c: 'HDh', a: 'Haa Dhaalu' },
+    { l: 'Fuvahmulah', c: 'Gn', a: 'Gnaviyani' },
+    { l: 'Kudahuvadhoo', c: 'Dh', a: 'Dhaalu' },
+    { l: 'GDh. Faresmaathodaa', c: 'GDh', a: 'Gaafu Dhaalu' },
+    { l: 'GDh. Thinadhoo', c: 'GDh', a: 'Gaafu Dhaalu' }];
+  searchIslands(q, list) {
+    const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['\u2019.\s]/g, '');
+    const query = norm(q || '');
+    const all = list || this.ISLANDS;
+    if (!query) return all.slice();
+    const bare = i => norm(i.l.replace(/^[A-Za-z]+\.\s*/, ''));
+    const starts = i => (norm(i.l).startsWith(query) || bare(i).startsWith(query) || norm(i.c + bare(i)).startsWith(query)) ? 0 : 1;
+    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
+      .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
+  }
   componentDidMount() {
     const m = { intro: 1, basics: 2, 'service-area': 3 };
     const s = m[this.props.startScreen];
@@ -387,10 +403,8 @@ class Component extends DCLogic {
     const blue = '#2563EB', line = '#E3EAF3', errC = '#DC2626';
     const grad = 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)';
     const requirePhone = P.requirePhone ?? true;
-    const flat = [];
-    this.ATOLLS.forEach(g => g.is.forEach(n => flat.push({ name: n, atoll: g.a })));
-    const q = S.query.trim().toLowerCase();
-    const filtered = flat.filter(i => (S.atoll === 'All' || i.atoll === S.atoll) && (!q || i.name.toLowerCase().includes(q)));
+    const pool = S.atoll === 'All' ? this.ISLANDS : this.ISLANDS.filter(i => i.a === S.atoll);
+    const filtered = this.searchIslands(S.query, pool);
     const sel = S.selected;
     const toggle = n => this.setState({ selected: sel.includes(n) ? sel.filter(x => x !== n) : [...sel, n] });
     const fmt = v => { const d = v.replace(/\D/g, '').slice(0, 15); return d.length === 7 ? d.slice(0, 3) + ' ' + d.slice(3) : d; };
@@ -467,16 +481,17 @@ class Component extends DCLogic {
         this.setState({ loading: true, errors: {} });
         setTimeout(() => this.setState({ loading: false, screen: 3 }), P.loadingMs ?? 900);
       },
-      atollChips: ['All', ...this.ATOLLS.map(g => g.a)].map(a => {
+      atollChips: ['All', ...[...new Set(this.ISLANDS.map(i => i.a))]].map(a => {
         const on = S.atoll === a;
         return { name: a, bg: on ? blue : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? blue : line, pick: () => this.setState({ atoll: a }) };
       }),
       query: S.query, setQuery: e => this.setState({ query: e.target.value }),
       islandRows: filtered.map(i => {
-        const on = sel.includes(i.name);
-        return { name: i.name, atoll: i.atoll, on, cBg: on ? blue : '#fff', cBd: on ? blue : '#C7D5E8', go: () => toggle(i.name) };
+        const on = sel.includes(i.l);
+        return { name: i.l, atoll: i.a, on, cBg: on ? blue : '#fff', cBd: on ? blue : '#C7D5E8', go: () => toggle(i.l) };
       }),
       noResults: filtered.length === 0,
+      islandNoMatch: 'No island matches "' + S.query.trim() + '"',
       chips: sel.map(n => ({ name: n, rm: () => toggle(n) })),
       hasSel: sel.length > 0, noSel: sel.length === 0,
       selLabel: sel.length + (sel.length === 1 ? ' island selected' : ' islands selected'),

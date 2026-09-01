@@ -342,6 +342,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:6px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
         <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:8px" aria-hidden="true"></div>
         <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;margin-bottom:6px">Choose your island</div>
+        <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px;margin-bottom:6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <input value="{{ islandQ }}" onChange="{{ setIslandQ }}" placeholder="Search islands" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
         <sc-for list="{{ islands }}" as="i" hint-placeholder-count="6">
           <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
@@ -349,6 +354,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
           </button>
         </sc-for>
+        </div>
+        <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
       </div>
     </div>
   </sc-if>
@@ -362,7 +369,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Launch mode&quot;,&quot;Loading&quot;,&quot;Error&quot;,&quot;No location&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
-  state = { q: '', island: 'Malé', picked: false, sheet: false, saved: {}, chips: {}, secFailed: true, retrying: false, locOn: false, toast: null };
+  state = { q: '', island: 'Malé', islandQ: '', picked: false, sheet: false, saved: {}, chips: {}, secFailed: true, retrying: false, locOn: false, toast: null };
   CATS = [
     { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
     { n: 'Plumbing', bg: '#ECFDF5', fg: '#059669', d: 'M12 3.5s5.5 6.2 5.5 10a5.5 5.5 0 0 1-11 0c0-3.8 5.5-10 5.5-10z' },
@@ -401,7 +408,37 @@ class Component extends DCLogic {
     { n: 'Bookings', d: 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
     { n: 'Messages', d: 'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' },
     { n: 'Profile', d: 'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5' }];
-  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Addu City', 'Fuvahmulah', 'Kulhudhuffushi'];
+  ISLANDS = [
+    { l: 'Malé', c: '' },
+    { l: 'Hulhumalé', c: '' },
+    { l: 'Villimalé', c: '' },
+    { l: 'Maafushi', c: 'K' },
+    { l: 'Thulusdhoo', c: 'K' },
+    { l: 'K. Guraidhoo', c: 'K' },
+    { l: 'Th. Guraidhoo', c: 'Th' },
+    { l: 'Dh. Meedhoo', c: 'Dh' },
+    { l: 'R. Meedhoo', c: 'R' },
+    { l: 'S. Meedhoo', c: 'S' },
+    { l: 'L. Hithadhoo', c: 'L' },
+    { l: 'S. Hithadhoo', c: 'S' },
+    { l: 'K. Vilingili', c: 'K' },
+    { l: 'GA. Vilin\'gili', c: 'GA' },
+    { l: 'An\'golhitheemu', c: 'R' },
+    { l: 'Kulhudhuffushi', c: 'HDh' },
+    { l: 'Fuvahmulah', c: 'Gn' },
+    { l: 'Kudahuvadhoo', c: 'Dh' },
+    { l: 'GDh. Faresmaathodaa', c: 'GDh' },
+    { l: 'GDh. Thinadhoo', c: 'GDh' }];
+  searchIslands(q, list) {
+    const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['\u2019.\s]/g, '');
+    const query = norm(q || '');
+    const all = list || this.ISLANDS;
+    if (!query) return all.slice();
+    const bare = i => norm(i.l.replace(/^[A-Za-z]+\.\s*/, ''));
+    const starts = i => (norm(i.l).startsWith(query) || bare(i).startsWith(query) || norm(i.c + bare(i)).startsWith(query)) ? 0 : 1;
+    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
+      .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
+  }
   QUICK = ['Near me', 'Available today', 'Book instantly', 'Emergency'];
   scn() { return this.props.scenario ?? 'Populated'; }
   componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._rt); }
@@ -465,11 +502,14 @@ class Component extends DCLogic {
         pBg: i === 0 ? '#E8F0FE' : 'transparent', fg: i === 0 ? '#1D4ED8' : '#8296B3',
         tap: () => { if (i > 0) this.toastMsg('Opens ' + t.n); } })),
       hasSheet: S.sheet, openIsland: () => this.setState({ sheet: true }),
-      closeSheet: () => this.setState({ sheet: false }),
+      closeSheet: () => this.setState({ sheet: false, islandQ: '' }),
       stopProp: e => e.stopPropagation(),
-      islands: this.ISLANDS.map(n => { const on = !noLocMode && n === S.island; return { n, on,
+      islandQ: S.islandQ, setIslandQ: e => this.setState({ islandQ: e.target.value }),
+      islandNone: this.searchIslands(S.islandQ).length === 0,
+      islandNoMatch: 'No island matches "' + S.islandQ.trim() + '"',
+      islands: this.searchIslands(S.islandQ).map(i => { const n = i.l, on = !noLocMode && n === S.island; return { n, on,
         bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
-        pick: () => { this.setState({ island: n, picked: true, sheet: false }); this.toastMsg('Browsing ' + n); } }; }),
+        pick: () => { this.setState({ island: n, picked: true, sheet: false, islandQ: '' }); this.toastMsg('Browsing ' + n); } }; }),
       toast: S.toast, hasToast: !!S.toast
     };
   }

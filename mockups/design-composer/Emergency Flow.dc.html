@@ -136,12 +136,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .2s ease both">
                   <input id="eaddr" type="text" value="{{ addr }}" onChange="{{ setAddr }}" placeholder="Street address, building, floor" style="width:100%;height:52px;border-radius:14px;border:1.5px solid {{ addrBd }};background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
                   <sc-if value="{{ hasAddrErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ addrErr }}</div></sc-if>
-                  <div style="position:relative">
-                    <select aria-label="Island" value="{{ island }}" onChange="{{ setIsland }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:#0F1B2D;appearance:none;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
-                      <sc-for list="{{ islands }}" as="i" hint-placeholder-count="3"><option value="{{ i.v }}">{{ i.v }}</option></sc-for>
-                    </select>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
-                  </div>
+                  <button onClick="{{ openIslandSheet }}" aria-label="Island" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px;font-size:15px;font-weight:600;color:#0F1B2D;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;transition:border-color .15s" style-hover="border-color:#CDDDFB">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+                    <span style="flex:1">{{ island }}</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+                  </button>
                 </div>
               </sc-if>
             </div>
@@ -420,6 +419,26 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
         <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
 
+        <sc-if value="{{ sheetIsland }}">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Choose an island</div>
+            <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+              <input value="{{ islandQ }}" onChange="{{ setIslandQ }}" autoFocus="{{ true }}" placeholder="Search islands" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:44vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
+              <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
+                <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;flex:none;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+                  <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
+                  <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
+          </div>
+        </sc-if>
+
         <sc-if value="{{ sheetCancel }}">
           <div style="display:flex;flex-direction:column;gap:12px">
             <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Cancel this request?</div>
@@ -450,7 +469,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Offers arrive&quot;,&quot;Nobody answers&quot;,&quot;Over the limit&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Offers arrive&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
-  state = { booted: false, screen: 'form', cat: 'Plumbing', desc: '', addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false, island: 'Malé',
+  state = { booted: false, screen: 'form', cat: 'Plumbing', desc: '', addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false, island: 'Malé', islandQ: '',
     errors: {}, submitting: false, submitFailed: false, retried: false,
     sim: 0, rate: 1, collectStart: null, revealed: false, revealSim: null, revealing: false,
     cleared: null, accepted: null, sel: null, confirming: false, sheet: null, blip: false, toast: null };
@@ -465,7 +484,37 @@ class Component extends DCLogic {
     { name: 'Ahmed Shakir', biz: null, tier: 'Silver', rating: '4.4', dist: '0.8 km', eta: 15, fee: 500, at: 390, init: 'AS' }];
   TIERCOPY = { Gold: 'ID checked, registered trade', Silver: 'ID checked, work verified', Bronze: 'ID checked by RaajjePro' };
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' } };
-  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Maafushi'];
+  ISLANDS = [
+    { l: 'Malé', c: '' },
+    { l: 'Hulhumalé', c: '' },
+    { l: 'Villimalé', c: '' },
+    { l: 'Maafushi', c: 'K' },
+    { l: 'Thulusdhoo', c: 'K' },
+    { l: 'K. Guraidhoo', c: 'K' },
+    { l: 'Th. Guraidhoo', c: 'Th' },
+    { l: 'Dh. Meedhoo', c: 'Dh' },
+    { l: 'R. Meedhoo', c: 'R' },
+    { l: 'S. Meedhoo', c: 'S' },
+    { l: 'L. Hithadhoo', c: 'L' },
+    { l: 'S. Hithadhoo', c: 'S' },
+    { l: 'K. Vilingili', c: 'K' },
+    { l: 'GA. Vilin\'gili', c: 'GA' },
+    { l: 'An\'golhitheemu', c: 'R' },
+    { l: 'Kulhudhuffushi', c: 'HDh' },
+    { l: 'Fuvahmulah', c: 'Gn' },
+    { l: 'Kudahuvadhoo', c: 'Dh' },
+    { l: 'GDh. Faresmaathodaa', c: 'GDh' },
+    { l: 'GDh. Thinadhoo', c: 'GDh' }];
+  searchIslands(q, list) {
+    const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['\u2019.\s]/g, '');
+    const query = norm(q || '');
+    const all = list || this.ISLANDS;
+    if (!query) return all.slice();
+    const bare = i => norm(i.l.replace(/^[A-Za-z]+\.\s*/, ''));
+    const starts = i => (norm(i.l).startsWith(query) || bare(i).startsWith(query) || norm(i.c + bare(i)).startsWith(query)) ? 0 : 1;
+    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
+      .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
+  }
   scn() { return ({ 'Offers arrive': 'offers', 'Nobody answers': 'nobody', 'Over the limit': 'limit', 'Connection error': 'conn' })[this.props.scenario ?? 'Offers arrive'] || 'offers'; }
   catObj() { return this.CATS.find(c => c.name === this.state.cat) || this.CATS[0]; }
   fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
@@ -548,8 +597,14 @@ class Component extends DCLogic {
       addrLocked: !S.addrEditing, addrEditing: S.addrEditing,
       editAddr: () => this.setState({ addrEditing: true }),
       addrBd: S.errors.addr ? '#DC2626' : '#E3EAF3', addrErr: S.errors.addr || '', hasAddrErr: !!S.errors.addr,
-      setIsland: e => this.setState({ island: e.target.value }),
-      islands: this.ISLANDS.map(v => ({ v })),
+      setIslandQ: e => this.setState({ islandQ: e.target.value }),
+      openIslandSheet: () => this.setState({ sheet: { type: 'island' }, islandQ: '' }),
+      islandQ: S.islandQ,
+      islandRows: this.searchIslands(S.islandQ).map(i => { const n = i.l, on = n === S.island; return { n, on,
+        bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
+        pick: () => this.setState({ island: n, sheet: null, islandQ: '' }) }; }),
+      islandNone: this.searchIslands(S.islandQ).length === 0,
+      islandNoMatch: 'No island matches "' + S.islandQ.trim() + '"',
       submitting: S.submitting, notSubmitting: !S.submitting, submitFailed: S.submitFailed, notFailed: !S.submitFailed,
       sendReq: () => {
         if (S.submitting) return;
@@ -613,9 +668,10 @@ class Component extends DCLogic {
       openChat: () => this.toastMsg('Chat opens here.'),
       doneReset: () => this.setState({ screen: 'form', desc: '', addr: 'M. Fehivina, 2nd floor, Majeedhee Magu', addrEditing: false, island: 'Malé', accepted: null, sim: 0, collectStart: null, revealed: false, revealSim: null, cleared: null, sel: null, confirming: false, retried: false, submitFailed: false }),
       hasSheet: !!S.sheet,
+      sheetIsland: !!S.sheet && S.sheet.type === 'island',
       sheetCancel: !!S.sheet && S.sheet.type === 'cancel',
       sheetReject: !!S.sheet && S.sheet.type === 'reject',
-      closeSheet: () => this.setState({ sheet: null }),
+      closeSheet: () => this.setState({ sheet: null, islandQ: '' }),
       stopProp: e => e.stopPropagation(),
       confirmCancel: () => { this.setState({ sheet: null, screen: 'form', sim: 0, collectStart: null, revealed: false, revealSim: null, cleared: null }); this.toastMsg('Request cancelled — nothing charged.'); },
       confirmReject: () => this.setState({ sheet: null, cleared: 'rejected', screen: 'waiting', collectStart: null, revealSim: null, sel: null }),

@@ -123,10 +123,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <label for="sp-island" style="font-size:13px;font-weight:700;color:#0F1B2D">Island</label>
-      <select id="sp-island" value="{{ fIsland }}" onChange="{{ pickIsland }}" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;padding:0 12px;font-size:15px;font-weight:600;color:#0F1B2D;background:#F7FAFD;appearance:auto" style-focus="border-color:#2563EB;background:#fff">
-        <sc-for list="{{ islands }}" as="i" hint-placeholder-count="4"><option value="{{ i }}">{{ i }}</option></sc-for>
-      </select>
-      <div style="display:flex;align-items:flex-start;gap:8px;background:#FFF7E8;border:1px solid #F3DFB4;border-radius:12px;padding:9px 12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.5v.1"></path></svg><span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#92600A">Placeholder islands — the real island list is pending.</span></div>
+      <button id="sp-island" onClick="{{ openIslandSheet }}" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;padding:0 15px;font-size:15px;font-weight:600;color:#0F1B2D;background:#F7FAFD;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left" style-hover="border-color:#CDDDFB">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+        <span style="flex:1">{{ fIsland }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 9.5l6 6 6-6"></path></svg>
+      </button>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <label for="sp-line" style="font-size:13px;font-weight:700;color:#0F1B2D">Address</label>
@@ -134,6 +135,28 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </div>
     <button onClick="{{ saveSheet }}" disabled="{{ sheetDisabled }}" style="height:52px;border:none;border-radius:16px;background:{{ sheetBtnBg }};color:#fff;font-size:15px;font-weight:800;cursor:{{ sheetBtnCursor }}">{{ sheetBtn }}</button>
     <button onClick="{{ closeSheet }}" style="height:46px;border:none;border-radius:14px;background:#EEF3FA;color:#41526B;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:#E3EAF3">Cancel</button>
+  </div>
+</sc-if>
+
+<sc-if value="{{ islandSheetOn }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeIslandSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:fadeIn .25s ease both;z-index:24"></div>
+  <div role="dialog" aria-label="Choose an island" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:10px;z-index:25;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -12px 40px rgba(15,27,45,.18)">
+    <div style="width:44px;height:5px;border-radius:999px;background:#E3EAF3;align-self:center;flex:none"></div>
+    <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Choose an island</div>
+    <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input value="{{ islandQ }}" onChange="{{ setIslandQ }}" autoFocus="{{ true }}" placeholder="Search islands" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:44vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
+        <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;flex:none;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
+          <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
+          <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
   </div>
 </sc-if>
 
@@ -146,7 +169,37 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
-  ISLANDS = ['Malé', 'Hulhumalé', 'Villimalé', 'Addu City'];
+  ISLANDS = [
+    { l: 'Malé', c: '' },
+    { l: 'Hulhumalé', c: '' },
+    { l: 'Villimalé', c: '' },
+    { l: 'Maafushi', c: 'K' },
+    { l: 'Thulusdhoo', c: 'K' },
+    { l: 'K. Guraidhoo', c: 'K' },
+    { l: 'Th. Guraidhoo', c: 'Th' },
+    { l: 'Dh. Meedhoo', c: 'Dh' },
+    { l: 'R. Meedhoo', c: 'R' },
+    { l: 'S. Meedhoo', c: 'S' },
+    { l: 'L. Hithadhoo', c: 'L' },
+    { l: 'S. Hithadhoo', c: 'S' },
+    { l: 'K. Vilingili', c: 'K' },
+    { l: 'GA. Vilin\'gili', c: 'GA' },
+    { l: 'An\'golhitheemu', c: 'R' },
+    { l: 'Kulhudhuffushi', c: 'HDh' },
+    { l: 'Fuvahmulah', c: 'Gn' },
+    { l: 'Kudahuvadhoo', c: 'Dh' },
+    { l: 'GDh. Faresmaathodaa', c: 'GDh' },
+    { l: 'GDh. Thinadhoo', c: 'GDh' }];
+  searchIslands(q, list) {
+    const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['\u2019.\s]/g, '');
+    const query = norm(q || '');
+    const all = list || this.ISLANDS;
+    if (!query) return all.slice();
+    const bare = i => norm(i.l.replace(/^[A-Za-z]+\.\s*/, ''));
+    const starts = i => (norm(i.l).startsWith(query) || bare(i).startsWith(query) || norm(i.c + bare(i)).startsWith(query)) ? 0 : 1;
+    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
+      .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
+  }
   state = { view:null,
     addresses: [
       { id:1, label:'Home', island:'Malé', line:'M. Fehivina, 3rd floor, Kalaafaanu Hingun', d:'M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-6h4v6' },
@@ -154,7 +207,7 @@ class Component extends DCLogic {
     windows: [ { id:1, label:'Weekdays · 9:00–12:00' }, { id:2, label:'Saturday · 14:00–18:00' } ],
     notes: 'Gate code 4471. Please call from the lobby.',
     editingNotes:false, notesDraft:'',
-    sheet:null, fLabel:'', fIsland:'Malé', fLine:'', toast:'' };
+    sheet:null, fLabel:'', fIsland:'Malé', fLine:'', islandSheet:false, islandQ:'', toast:'' };
   toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2400); }
   componentWillUnmount(){ clearTimeout(this._tt); }
   renderVals(){
@@ -179,10 +232,17 @@ class Component extends DCLogic {
       cancelNotes: () => this.setState({ editingNotes:false }),
       sheetOn: !!sheet, sheetTitle: editing ? 'Edit address' : 'Add an address', sheetBtn: editing ? 'Save changes' : 'Save address',
       sheetDisabled: !canSave, sheetBtnBg: canSave ? '#2563EB' : '#B9CBEA', sheetBtnCursor: canSave ? 'pointer' : 'not-allowed',
-      islands: this.ISLANDS,
+      islandSheetOn: this.state.islandSheet,
+      openIslandSheet: () => this.setState({ islandSheet:true, islandQ:'' }),
+      closeIslandSheet: () => this.setState({ islandSheet:false, islandQ:'' }),
+      islandQ: this.state.islandQ, setIslandQ: (e) => this.setState({ islandQ: e.target.value }),
+      islandRows: this.searchIslands(this.state.islandQ).map(i => { const n = i.l, on = n === this.state.fIsland; return { n, on,
+        bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
+        pick: () => this.setState({ fIsland:n, islandSheet:false, islandQ:'' }) }; }),
+      islandNone: this.searchIslands(this.state.islandQ).length === 0,
+      islandNoMatch: 'No island matches "' + this.state.islandQ.trim() + '"',
       fLabel: this.state.fLabel, fIsland: this.state.fIsland, fLine: this.state.fLine,
       typeLabel: (e) => this.setState({ fLabel: e.target.value }),
-      pickIsland: (e) => this.setState({ fIsland: e.target.value }),
       typeLine: (e) => this.setState({ fLine: e.target.value }),
       openAdd: () => this.setState({ sheet:{ mode:'add' }, fLabel:'', fIsland:'Malé', fLine:'' }),
       emptyAdd: () => this.setState({ view:'populated', addresses:[], windows:[], sheet:{ mode:'add' }, fLabel:'', fIsland:'Malé', fLine:'' }),
