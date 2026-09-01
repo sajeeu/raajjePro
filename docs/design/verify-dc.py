@@ -123,8 +123,9 @@ def check(path):
             warns.append((label, why))
 
     for detail in mode_mismatches(s):
-        warns.append(("booking mode contradicts the category", detail
-                      + " — §1c. Warn until Round 34 corrects Home and Discovery, then make it a fail."))
+        fails.append(("booking mode contradicts the category", detail + " — §1c. "
+                      "Only Cleaning, Beauty and Fitness publish bookable slots; "
+                      "every other category quotes first, so it is request-mode."))
 
     return fails, warns
 

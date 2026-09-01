@@ -82,8 +82,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
             <div style="width:150px;height:16px;border-radius:8px;background:#E8EEF6"></div>
             <div style="display:flex;gap:12px;overflow:hidden">
-              <div style="flex:none;width:250px;height:264px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-              <div style="flex:none;width:250px;height:264px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+              <dc-import name="SkeletonCard" variant="horizontal" style="flex:none" hint-size="250px,240px"></dc-import>
+              <dc-import name="SkeletonCard" variant="horizontal" style="flex:none" hint-size="250px,240px"></dc-import>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:12px;padding:0 20px">
@@ -157,36 +157,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <sc-if value="{{ popNearOk }}" hint-placeholder-val="{{ true }}">
                 <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 20px 6px">
                   <sc-for list="{{ popNear }}" as="s" hint-placeholder-count="3">
-                    <div style="flex:none;width:250px;scroll-snap-align:start;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);display:flex;flex-direction:column;animation:fadeUp .3s ease both">
-                      <div style="position:relative;height:126px;background:{{ s.cBg }};display:flex;align-items:center;justify-content:center">
-                        <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background-image:{{ s.photoCss }};background-size:cover;background-position:center"></span></sc-if>
-                        <sc-if value="{{ s.noPhoto }}"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ s.cFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ s.cD }}"></path></svg></sc-if>
-                        
-                        <button onClick="{{ s.save }}" aria-label="Save" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(15,27,45,.12)" style-active="transform:scale(.9)"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ s.hFill }}" stroke="{{ s.hStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
-                        <span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:{{ s.cFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ s.cat }}</span>
-                      </div>
-                      <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px;flex:1">
-                        <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3;min-height:39px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ s.title }}</div>
-                        <div style="display:flex;align-items:center;gap:7px">
-                          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">{{ s.pInit }}</span>
-                          <span style="font-size:12.5px;font-weight:600;color:#41526B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.prov }}</span>
-                          <sc-if value="{{ s.hasBadge }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ s.tBg }};color:{{ s.tFg }};border:1px solid {{ s.tBd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;flex:none">◆ {{ s.tier }}</span></sc-if>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
-                          <span style="font-variant-numeric:tabular-nums">{{ s.rating }}</span>
-                          <span style="flex:1"></span>
-                          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ s.island }}</span>
-                        </div>
-                        <div style="border-top:1px solid #EEF3FA;padding-top:10px;display:flex;align-items:baseline;gap:3px;margin-top:auto">
-                          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ s.price }}</span>
-                          <sc-if value="{{ s.hasUnit }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ s.unit }}</span></sc-if>
-                        </div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap">
-                          <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
-                          <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
-                        </div>
-                      </div>
+                    <div style="flex:none;scroll-snap-align:start;animation:fadeUp .3s ease both">
+                      <dc-import name="ServiceCard" variant="horizontal" title="{{ s.title }}" provider="{{ s.prov }}" tier="{{ s.tier }}" rating="{{ s.rating }}" count="{{ s.count }}" price="{{ s.price }}" unit="{{ s.unit }}" island="{{ s.island }}" category="{{ s.cat }}" mode="{{ s.mode }}" next-slot="{{ s.nextSlot }}" reply-time="{{ s.replyTime }}" bookings="{{ s.bookings }}" callback="{{ s.callback }}" photo="{{ s.photo }}" saved="{{ s.saved }}" on-save="{{ s.onSave }}" hint-size="250px,330px"></dc-import>
                     </div>
                   </sc-for>
                 </div>
@@ -240,36 +212,9 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 </div>
                 <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 20px 6px">
                   <sc-for list="{{ popWeek }}" as="s" hint-placeholder-count="3">
-                    <div style="flex:none;width:250px;scroll-snap-align:start;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05);display:flex;flex-direction:column">
-                      <div style="position:relative;height:126px;background:{{ s.cBg }};display:flex;align-items:center;justify-content:center">
-                        <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:0;background-image:{{ s.photoCss }};background-size:cover;background-position:center"></span></sc-if>
-                        <sc-if value="{{ s.noPhoto }}"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{{ s.cFg }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.85"><path d="{{ s.cD }}"></path></svg></sc-if>
-                        <button onClick="{{ s.save }}" aria-label="Save" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,.94);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(15,27,45,.12)" style-active="transform:scale(.9)"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ s.hFill }}" stroke="{{ s.hStroke }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z"></path></svg></button>
-                        <span style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.95);color:{{ s.cFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ s.cat }}</span>
+                      <div style="flex:none;scroll-snap-align:start">
+                        <dc-import name="ServiceCard" variant="horizontal" title="{{ s.title }}" provider="{{ s.prov }}" tier="{{ s.tier }}" rating="{{ s.rating }}" count="{{ s.count }}" price="{{ s.price }}" unit="{{ s.unit }}" island="{{ s.island }}" category="{{ s.cat }}" mode="{{ s.mode }}" next-slot="{{ s.nextSlot }}" reply-time="{{ s.replyTime }}" bookings="{{ s.bookings }}" callback="{{ s.callback }}" photo="{{ s.photo }}" saved="{{ s.saved }}" on-save="{{ s.onSave }}" hint-size="250px,330px"></dc-import>
                       </div>
-                      <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px;flex:1">
-                        <div style="font-size:15px;font-weight:700;color:#0F1B2D;line-height:1.3;min-height:39px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ s.title }}</div>
-                        <div style="display:flex;align-items:center;gap:7px">
-                          <span style="width:22px;height:22px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;flex:none">{{ s.pInit }}</span>
-                          <span style="font-size:12.5px;font-weight:600;color:#41526B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.prov }}</span>
-                          <sc-if value="{{ s.hasBadge }}"><span style="display:inline-flex;align-items:center;gap:3px;background:{{ s.tBg }};color:{{ s.tFg }};border:1px solid {{ s.tBd }};border-radius:999px;padding:2px 7px;font-size:9.5px;font-weight:800;flex:none">◆ {{ s.tier }}</span></sc-if>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#41526B">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>
-                          <span style="font-variant-numeric:tabular-nums">{{ s.rating }}</span>
-                          <span style="flex:1"></span>
-                          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#5B6B84"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>{{ s.island }}</span>
-                        </div>
-                        <div style="border-top:1px solid #EEF3FA;padding-top:10px;display:flex;align-items:baseline;gap:3px;margin-top:auto">
-                          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ s.price }}</span>
-                          <sc-if value="{{ s.hasUnit }}"><span style="font-size:11.5px;font-weight:600;color:#5B6B84">{{ s.unit }}</span></sc-if>
-                        </div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap">
-                          <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
-                          <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
-                        </div>
-                      </div>
-                    </div>
                   </sc-for>
                 </div>
               </div>
@@ -384,14 +329,14 @@ class Component extends DCLogic {
     { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' }, Bronze: { bg: '#FBEDE3', fg: '#9A5B2D', bd: '#E8C4A0' } };
   SVCS = [
-    { id: 1, title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', rating: '4.8 (24)', price: 'MVR 450', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant' },
-    { id: 2, title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', rating: '4.6 (31)', price: 'From MVR 350', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' },
-    { id: 3, title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', rating: '4.4 (12)', price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', tier: 'Silver', mode: 'request' },
-    { id: 4, title: 'Event & Wedding Photography', prov: 'Hussain Nizar', cat: 'Photography', rating: '4.9 (58)', price: 'From MVR 2500', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' },
-    { id: 5, title: 'Bridal Makeup & Styling', prov: 'Aishath Leela', cat: 'Beauty', rating: '4.9 (86)', price: 'MVR 800', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant' },
-    { id: 6, title: 'Home Pest Treatment', prov: 'Adam Naseer', cat: 'Pest Control', rating: '4.5 (9)', price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', tier: null, mode: 'instant' },
-    { id: 7, title: 'House & Office Moving', prov: 'Moosa Rilwan', cat: 'Moving', rating: '4.3 (21)', price: 'From MVR 1500', unit: '', island: 'Malé', tier: 'Bronze', mode: 'request' },
-    { id: 8, title: 'Appliance & Computer Repair', prov: 'Island Tech Solutions', cat: 'Appliance Repair', rating: '4.7 (186)', price: 'From MVR 200', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' }];
+    { id: 1, title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', rating: '4.8', count: 24, price: 'MVR 450', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', nextSlot: 'tomorrow 09:00' },
+    { id: 2, title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', rating: '4.6', count: 31, price: 'From MVR 350', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', replyTime: '12 min', bookings: 44, callback: true },
+    { id: 3, title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', rating: '4.4', count: 12, price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', tier: 'Silver', mode: 'request', replyTime: '25 min', bookings: 20, callback: true },
+    { id: 4, title: 'Event & Wedding Photography', prov: 'Hussain Nizar', cat: 'Photography', rating: '4.9', count: 58, price: 'From MVR 2500', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', replyTime: '2 hr', bookings: 58 },
+    { id: 5, title: 'Bridal Makeup & Styling', prov: 'Aishath Leela', cat: 'Beauty', rating: '4.9', count: 86, price: 'MVR 800', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', nextSlot: 'today 16:00' },
+    { id: 6, title: 'Home Pest Treatment', prov: 'Adam Naseer', cat: 'Pest Control', rating: '4.5', count: 9, price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', tier: null, mode: 'request', replyTime: '', bookings: 7, callback: true },
+    { id: 7, title: 'House & Office Moving', prov: 'Moosa Rilwan', cat: 'Moving', rating: '4.3', count: 21, price: 'From MVR 1500', unit: '', island: 'Malé', tier: 'Bronze', mode: 'request', replyTime: '3 hr', bookings: 21 },
+    { id: 8, title: 'Appliance & Computer Repair', prov: 'Island Tech Solutions', cat: 'Appliance Repair', rating: '4.7', count: 186, price: 'From MVR 200', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', replyTime: '40 min', bookings: 186, callback: true }];
   FEATURED = [
     { name: 'Island Tech Solutions', cat: 'Appliance Repair', tier: 'Gold', rating: '4.7', reviews: '186', desc: 'Appliance, computer & network repair for homes and offices.', area: 'Malé & Hulhumalé', jobs: '420+' },
     { name: 'Mariyam Beauty Studio', cat: 'Beauty', tier: 'Silver', rating: '4.9', reviews: '312', desc: 'Bridal, makeup & hair styling for all occasions.', area: 'Malé', jobs: '680+' },
@@ -444,17 +389,9 @@ class Component extends DCLogic {
   toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2200); }
   PHOTOS = { Cleaning: 'uploads/cleaning.jpeg', Electrical: 'uploads/electrical.jpeg', Plumbing: 'uploads/plumbing.jpeg', Beauty: 'uploads/beauty.jpeg', Photography: 'uploads/photography.jpeg' };
   mkCard(s) {
-    const c = this.CATS.find(x => x.n === s.cat) || this.CATS[0];
-    const b = s.tier ? this.BADGE[s.tier] : null;
     const saved = !!this.state.saved[s.id];
-    return { title: s.title, prov: s.prov, pInit: s.prov.split(' ').map(w => w[0]).slice(0, 2).join(''),
-      cat: s.cat, cBg: c.bg, cFg: c.fg, cD: c.d, rating: s.rating, island: s.island,
-      photoCss: this.PHOTOS[s.cat] ? 'url("' + this.PHOTOS[s.cat] + '")' : 'none', hasPhoto: !!this.PHOTOS[s.cat], noPhoto: !this.PHOTOS[s.cat],
-      price: s.price, unit: s.unit, hasUnit: !!s.unit,
-      instant: s.mode === 'instant', request: s.mode === 'request',
-      hasBadge: !!b, tier: s.tier || '', tBg: b ? b.bg : '', tFg: b ? b.fg : '', tBd: b ? b.bd : '',
-      hFill: saved ? '#DC2626' : 'none', hStroke: saved ? '#DC2626' : '#41526B',
-      save: () => { const sv = { ...this.state.saved }; sv[s.id] = !sv[s.id]; this.setState({ saved: sv }); } };
+    return { ...s, photo: this.PHOTOS[s.cat] ?? '', saved,
+      onSave: () => { const sv = { ...this.state.saved }; sv[s.id] = !sv[s.id]; this.setState({ saved: sv }); } };
   }
   renderVals() {
     const S = this.state, sc = this.scn();
