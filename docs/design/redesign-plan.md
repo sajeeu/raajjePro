@@ -35,7 +35,7 @@ That framing is the most important line in this document, because it decides how
 | `Create Service.dc.html` — all seven wizard steps in one shell | 10 | Reviewed across 2 rounds |
 | `My Services` · `Availability` · `My Calendar` | 11 | Reviewed across 3 rounds |
 | `Booking Request` · `Propose Time and Price` · `Payment Received` · `Mark Complete` | 12 | Reviewed across 2 rounds |
-| `My Performance` · `Analytics` · `Verification` · `Billing` · `Pay by Bank Transfer` · `Invoices` | 13 | Reviewed across 1 round |
+| `My Performance` · `Analytics` · `Verification` · `Billing` · `Pay by Bank Transfer` · `Invoices` | 13 | Reviewed across 2 rounds |
 
 **The sequence is complete.** `verify-dc.py` passes on all sixty files, and the prototypes are now the reference the build follows.
 
@@ -57,6 +57,14 @@ Service Preview allowed a `range` price with `instant` booking, which advertises
 starting price as bookable. Each prop was individually correct. For every screen
 with multiple scenario props, enumerate the combinations and confirm each one is
 legal — the verifier reads markup and cannot do this.
+
+🔧 **A binding that renders nothing looks populated in the editor — added after session 13.**
+`Verification` listed four load-bearing facts in a `sc-for` over `{{ facts }}`, and
+`renderVals` never returned it. `hint-placeholder-count="4"` filled the editor with
+four convincing rows, so the section looked finished while rendering empty at runtime.
+Grep each artboard for every `{{ name }}` used in a `sc-for` or `sc-if` and confirm
+the logic actually returns it — the placeholder hints exist to make an unbuilt state
+look real, which is exactly what hides a missing binding.
 
 🔧 **Ask who a screen is *not* for — added after session 11.**
 `Availability` was built correctly and served three of the twelve categories: slot

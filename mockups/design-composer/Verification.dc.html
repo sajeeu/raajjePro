@@ -97,7 +97,7 @@ button,input{font-family:inherit}button:focus,input:focus{outline:none}
         <sc-if value="{{ stPending }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:9px;background:#FEF3DC;border:1px solid #F3E2B8;border-radius:14px;padding:13px 14px">
             <div style="display:flex;align-items:center;gap:9px">
-              <dc-import name="StatusPill" status="Review pending" hint-size="130px,28px"></dc-import>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#8A5A08;border:1px solid #F3E2B8;border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:#D97706"></span>Review pending</span>
               <span style="font-size:11.5px;font-weight:600;color:#8A5A08">Submitted 31 Aug</span>
             </div>
             <span style="font-size:12px;line-height:1.55;color:#8A5A08;text-wrap:pretty">An admin checks the document against your account name. Your listings stay exactly as they are while you wait — nothing is paused.</span>
@@ -166,7 +166,6 @@ class Component extends DCLogic {
     { t:'As part of the ID check, an admin confirms your phone number by calling it — that is the only check the number ever gets.' },
     { t:'Tiers never expire. There is no annual recheck, and the badge never lapses with a subscription.' } ];
   toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
-  componentWillUnmount(){ clearTimeout(this._tt); }
   renderVals(){
     const p=this.props, s=this.state;
     const tierProp=p.tier ?? 'Silver';
@@ -190,7 +189,7 @@ class Component extends DCLogic {
       tap:()=>this.setState({ doc:d.k }) })):[];
     return {
       hasTier:!!tier, noTier:!tier, tierVal:tier||'none',
-      rungs,
+      rungs, facts:this.FACTS,
       showSubmit:!!sub, atTop:!sub,
       submitTitle:sub?sub.title:'', submitSub:sub?sub.sub:'',
       stIdle:phase==='idle', stUploading:phase==='uploading', stPending:phase==='pending', stRejected:phase==='rejected',

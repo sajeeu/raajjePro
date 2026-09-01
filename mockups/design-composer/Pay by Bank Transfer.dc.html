@@ -34,7 +34,7 @@ button{font-family:inherit}button:focus{outline:none}
 
     <sc-if value="{{ stPending }}" hint-placeholder-val="{{ false }}">
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeIn .25s ease both">
-        <dc-import name="StatusPill" status="{{ pendingLabel }}" hint-size="210px,28px"></dc-import>
+        <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:{{ pendPillBg }};color:{{ pendPillFg }};border:1px solid {{ pendPillBd }};border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:800"><span style="width:6px;height:6px;border-radius:50%;background:{{ pendPillDot }}"></span>{{ pendingLabel }}</span>
         <span style="font-size:12.5px;line-height:1.6;color:#41526B;text-wrap:pretty">{{ pendingBody }}</span>
         <span style="font-size:12px;line-height:1.55;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty"><b>Pending grants nothing yet.</b> Your plan, listings and price stay exactly as they are until an admin confirms the transfer. You'll get a notification either way.</span>
         <a href="Invoices.dc.html" style="font-size:12.5px;font-weight:700;color:#1D4ED8">Once confirmed, the invoice appears in Invoices →</a>
@@ -139,7 +139,9 @@ class Component extends DCLogic {
     const pendingOffline=phase==='pending-offline';
     return {
       stForm:phase==='form', stPending:phase==='pending'||pendingOffline, stRejected:phase==='rejected',
-      pendingLabel:pendingOffline?'pending_offline':'Pending admin confirmation',
+      pendingLabel:pendingOffline?'Saved on this phone — sends on reconnect':'Pending admin confirmation',
+      pendPillBg:pendingOffline?'#EEF3FA':'#FEF3DC', pendPillFg:pendingOffline?'#41526B':'#A15C00',
+      pendPillBd:pendingOffline?'#E1EAF5':'#F3C77B', pendPillDot:pendingOffline?'#8296B3':'#D97706',
       pendingBody:pendingOffline
         ? 'Your receipt is saved on this phone and sends by itself when the connection returns — no need to keep the app open. Then an admin confirms the transfer, up to 48 hours.'
         : 'Submitted 1 Sep, 14:20. An admin matches the transfer against your reference code RP-2026-0842 — this takes up to 48 hours.',
