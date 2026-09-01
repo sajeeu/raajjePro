@@ -51,6 +51,33 @@ SUSPECT = [
      "A provider warranty is attributed, never guaranteed."),
 ]
 
+# §1c booking modes. `slot` (shown as "instant") is these three categories and no others;
+# every other category quotes, so it is `request`. A Plumbing card reading "Book instantly"
+# promises a published-time booking the category does not have.
+SLOT_CATEGORIES = {"Cleaning", "Beauty", "Fitness"}
+REQUEST_CATEGORIES = {
+    "Plumbing", "Electrical", "AC Repair", "Photography", "Pest Control",
+    "Appliance Repair", "Moving", "Home Repairs", "Boat Charter",
+}
+
+def mode_mismatches(s):
+    """Object literals carrying both a category and a booking mode that contradict §1c."""
+    out = []
+    for m in re.finditer(r"\{[^{}]*\}", s):
+        o = m.group(0)
+        c = re.search(r"cat(?:egory)?:\s*'([^']+)'", o)
+        d = re.search(r"mode:\s*'(instant|slot|request)'", o)
+        if not (c and d):
+            continue
+        cat, mode = c.group(1), d.group(1)
+        norm = "slot" if mode in ("instant", "slot") else "request"
+        if cat in SLOT_CATEGORIES and norm != "slot":
+            out.append("%s is slot-mode, found %s" % (cat, mode))
+        elif cat in REQUEST_CATEGORIES and norm != "request":
+            out.append("%s quotes, so it is request-mode, found %s" % (cat, mode))
+    return out
+
+
 def check(path):
     p = pathlib.Path(path)
     s = p.read_text(encoding="utf-8")
@@ -94,6 +121,10 @@ def check(path):
     for label, pat, why in SUSPECT:
         if re.search(pat, s):
             warns.append((label, why))
+
+    for detail in mode_mismatches(s):
+        warns.append(("booking mode contradicts the category", detail
+                      + " — §1c. Warn until Round 34 corrects Home and Discovery, then make it a fail."))
 
     return fails, warns
 
