@@ -42,6 +42,9 @@ FORBIDDEN = [
 
 # (label, pattern, why) — a hit is a warning worth a human look.
 SUSPECT = [
+    ("Round-23 emergency marker on a card", r"Emergency available",
+     "Round 23 deleted this: dispatch never targets a provider, so a card cannot advertise it. "
+     "Warn, not fail, only until Home is corrected — then move this into LOCKED."),
     ("possible phone number rendered", r">\s*[79]\d{6}\s*<",
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",
