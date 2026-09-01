@@ -66,6 +66,12 @@ Several islands that were inhabited within living memory are not on this list, a
 
 Anyone auditing this list against memory will reach for these first. They were each checked.
 
+## Names the register does not carry
+
+`islands-prototype-array.js` is generated from the JSON and holds the same 192 in the display form the prototypes use — 33 prefixed, 159 bare. Regenerate it if the seed changes; never edit it by hand.
+
+**One known alias gap.** The register calls Kaafu's island `Vilingili`; locally it is **Villimalé** (Villingili). Search on the register name alone means someone typing "Villimalé" finds nothing. The same will be true of any island with a common alternate name. Aliases are not modelled here and are worth a decision before the seed lands — the register name is authoritative for identity, but it is not always what a customer types.
+
 ## Re-extracting
 
 The register is a server-rendered page: the full list is in the DOM of the search page, not behind an API. Parse lines of the form `Name (CAT) - [ Traditional Atoll (Code Atoll)]`, taking the first parenthesised group that matches a known category code — some entries carry an alternate name in parentheses first (`Beenaafushi (Bibeerah) (U)`) and others carry airport/harbour codes after (`Fuvahmulah (I) (ADF,H)`).
