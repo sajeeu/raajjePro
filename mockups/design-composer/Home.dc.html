@@ -185,7 +185,6 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                         <div style="display:flex;gap:6px;flex-wrap:wrap">
                           <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
                           <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
-                          <sc-if value="{{ s.emg }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
                         </div>
                       </div>
                     </div>
@@ -268,7 +267,6 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                         <div style="display:flex;gap:6px;flex-wrap:wrap">
                           <sc-if value="{{ s.instant }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#E8F0FE;color:#1D4ED8;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>Book instantly</span></sc-if>
                           <sc-if value="{{ s.request }}"><span style="display:inline-flex;align-items:center;gap:5px;background:#EEF3FA;color:#41526B;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg>Request a time</span></sc-if>
-                          <sc-if value="{{ s.emg }}"><span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3DC;color:#A15C00;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800">Emergency available</span></sc-if>
                         </div>
                       </div>
                     </div>
@@ -386,14 +384,14 @@ class Component extends DCLogic {
     { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' }, Bronze: { bg: '#FBEDE3', fg: '#9A5B2D', bd: '#E8C4A0' } };
   SVCS = [
-    { id: 1, title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', rating: '4.8 (24)', price: 'MVR 450', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', emg: false },
-    { id: 2, title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', rating: '4.6 (31)', price: 'From MVR 350', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: true },
-    { id: 3, title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', rating: '4.4 (12)', price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', tier: 'Silver', mode: 'request', emg: true },
-    { id: 4, title: 'Event & Wedding Photography', prov: 'Hussain Nizar', cat: 'Photography', rating: '4.9 (58)', price: 'From MVR 2500', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: false },
-    { id: 5, title: 'Bridal Makeup & Styling', prov: 'Aishath Leela', cat: 'Beauty', rating: '4.9 (86)', price: 'MVR 800', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant', emg: false },
-    { id: 6, title: 'Home Pest Treatment', prov: 'Adam Naseer', cat: 'Pest Control', rating: '4.5 (9)', price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', tier: null, mode: 'instant', emg: false },
-    { id: 7, title: 'House & Office Moving', prov: 'Moosa Rilwan', cat: 'Moving', rating: '4.3 (21)', price: 'From MVR 1500', unit: '', island: 'Malé', tier: 'Bronze', mode: 'request', emg: false },
-    { id: 8, title: 'Appliance & Computer Repair', prov: 'Island Tech Solutions', cat: 'Appliance Repair', rating: '4.7 (186)', price: 'From MVR 200', unit: '', island: 'Malé', tier: 'Gold', mode: 'request', emg: false }];
+    { id: 1, title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', rating: '4.8 (24)', price: 'MVR 450', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant' },
+    { id: 2, title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', rating: '4.6 (31)', price: 'From MVR 350', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' },
+    { id: 3, title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', rating: '4.4 (12)', price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', tier: 'Silver', mode: 'request' },
+    { id: 4, title: 'Event & Wedding Photography', prov: 'Hussain Nizar', cat: 'Photography', rating: '4.9 (58)', price: 'From MVR 2500', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' },
+    { id: 5, title: 'Bridal Makeup & Styling', prov: 'Aishath Leela', cat: 'Beauty', rating: '4.9 (86)', price: 'MVR 800', unit: '/session', island: 'Malé', tier: 'Silver', mode: 'instant' },
+    { id: 6, title: 'Home Pest Treatment', prov: 'Adam Naseer', cat: 'Pest Control', rating: '4.5 (9)', price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', tier: null, mode: 'instant' },
+    { id: 7, title: 'House & Office Moving', prov: 'Moosa Rilwan', cat: 'Moving', rating: '4.3 (21)', price: 'From MVR 1500', unit: '', island: 'Malé', tier: 'Bronze', mode: 'request' },
+    { id: 8, title: 'Appliance & Computer Repair', prov: 'Island Tech Solutions', cat: 'Appliance Repair', rating: '4.7 (186)', price: 'From MVR 200', unit: '', island: 'Malé', tier: 'Gold', mode: 'request' }];
   FEATURED = [
     { name: 'Island Tech Solutions', cat: 'Appliance Repair', tier: 'Gold', rating: '4.7', reviews: '186', desc: 'Appliance, computer & network repair for homes and offices.', area: 'Malé & Hulhumalé', jobs: '420+' },
     { name: 'Mariyam Beauty Studio', cat: 'Beauty', tier: 'Silver', rating: '4.9', reviews: '312', desc: 'Bridal, makeup & hair styling for all occasions.', area: 'Malé', jobs: '680+' },
@@ -453,7 +451,7 @@ class Component extends DCLogic {
       cat: s.cat, cBg: c.bg, cFg: c.fg, cD: c.d, rating: s.rating, island: s.island,
       photoCss: this.PHOTOS[s.cat] ? 'url("' + this.PHOTOS[s.cat] + '")' : 'none', hasPhoto: !!this.PHOTOS[s.cat], noPhoto: !this.PHOTOS[s.cat],
       price: s.price, unit: s.unit, hasUnit: !!s.unit,
-      instant: s.mode === 'instant', request: s.mode === 'request', emg: s.emg,
+      instant: s.mode === 'instant', request: s.mode === 'request',
       hasBadge: !!b, tier: s.tier || '', tBg: b ? b.bg : '', tFg: b ? b.fg : '', tBd: b ? b.bd : '',
       hFill: saved ? '#DC2626' : 'none', hStroke: saved ? '#DC2626' : '#41526B',
       save: () => { const sv = { ...this.state.saved }; sv[s.id] = !sv[s.id]; this.setState({ saved: sv }); } };

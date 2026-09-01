@@ -38,13 +38,13 @@ FORBIDDEN = [
      "Round 22: all four emergency categories respond in 30 minutes. 120 described arrival."),
     ("contact-info endpoint", r"contact-info",
      "GET /v1/bookings/:id/contact-info was deleted and must not reappear."),
+    ("Round-23 emergency marker on a card", r"Emergency available|emergency filter",
+     "Dispatch broadcasts to every eligible provider, so a card can never advertise it. "
+     "Removed from ServiceCard in Round 23 and from Home's own card markup in Round 33."),
 ]
 
 # (label, pattern, why) — a hit is a warning worth a human look.
 SUSPECT = [
-    ("Round-23 emergency marker on a card", r"Emergency available",
-     "Round 23 deleted this: dispatch never targets a provider, so a card cannot advertise it. "
-     "Warn, not fail, only until Home is corrected — then move this into LOCKED."),
     ("possible phone number rendered", r">\s*[79]\d{6}\s*<",
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",

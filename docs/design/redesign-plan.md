@@ -44,6 +44,16 @@ Two things remain outstanding, neither of them a session:
 - ⚠ **The island pickers show a name with no atoll.** The real list now exists — `docs/data/inhabited-islands.json`, 192 inhabited islands — and it establishes that **island names are not unique**: fifteen repeat across atolls and `Meedhoo` exists in three. Every picker in Sessions 2, 9 and 11 renders a bare name, which is ambiguous against real data. Needs a correction round before the seed lands.
 - The prototype-supersedes table in `mockups/README.md` still lags sessions 3–13.
 
+### 🔧 A screen that keeps its own copy of a card is where deleted decisions survive
+
+Added after Round 33. `Home` renders service cards from its own inline markup instead of mounting `ServiceCard`, and that one fact produced three separate defects, none visible on screen as wrong:
+
+- Round 23 removed the `Emergency available` badge from `ServiceCard`. `Home`'s copy kept it, and it rendered live for ten rounds.
+- Round 23's **replacement** — next open time for `instant`, measured reply time or `New provider` for `request` — was added to `ServiceCard` and never to `Home`. `Home`'s cards still show only the mode chip.
+- `Components` separately promised `Emergency available` in prose and was missing four props its own `ServiceCard` mounts should pass.
+
+The lesson is not "check Home". It is that **a decision applied to a component does not reach a screen that reimplements it**, and nothing in the tooling says so — the screen renders, the verifier passes, the design review sees a plausible card. `CLAUDE.md` already calls duplicating `VerificationBadge` or `StatusPill` copy a defect. The same is true of a card, and the check is: does this screen mount the component, or does it have its own copy?
+
 ### What auditing has caught that design review would not
 
 Every prototype so far has had at least one defect that looked completely fine on
