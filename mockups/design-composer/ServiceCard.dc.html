@@ -87,6 +87,7 @@ class Component extends DCLogic {
     Fitness:        { bg:'#F5F3FF', fg:'#7C3AED', d:'M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11' },
     'Home Repairs': { bg:'#FEFCE8', fg:'#CA8A04', d:'M3.5 4.5h13v5h-13zM16.5 7H20v4h-8v3M12 14v6' },
     'Boat Charter': { bg:'#ECFEFF', fg:'#0891B2', d:'M4 17h16l-1.5 3.5h-13zM12 4v13M12 4c4.5 1.5 6.5 5 6.5 9.5H12z' } };
+  CALLBACK = { 'Plumbing': true, 'Electrical': true, 'AC Repair': true, 'Appliance Repair': true, 'Pest Control': true, 'Home Repairs': true };
   DEFAULT_CAT = { bg:'#EEF3FA', fg:'#41526B', d:'M14.7 6.3a4.5 4.5 0 0 0-6 5.9L3 18l3 3 5.8-5.7a4.5 4.5 0 0 0 5.9-6l-3 3-2.8-.7-.7-2.8z' };
   renderVals() {
     const p = this.props;
@@ -97,6 +98,7 @@ class Component extends DCLogic {
     const provider = p.provider ?? '';
     const hasPhoto = !!p.photo;
     const hasRating = p.rating != null && p.rating !== '';
+    const cb = !!p.callback && !!this.CALLBACK[p.category];
     let signalText = '', hasSignal = false;
     if (instant) { if (p.nextSlot) { signalText = 'Next: ' + p.nextSlot; hasSignal = true; } }
     else { signalText = ((p.bookings ?? 0) >= 10 && p.replyTime) ? 'Usually replies in ' + p.replyTime : 'New provider'; hasSignal = true; }
@@ -115,7 +117,7 @@ class Component extends DCLogic {
       modeLabel: instant ? 'Book instantly' : 'Request a time',
       modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
       modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
-      callback: !!p.callback, hasSignal, signalText, hasFoot: hasSignal || !!p.callback, sponsored: !!p.sponsored,
+      callback: cb, hasSignal, signalText, hasFoot: hasSignal || cb, sponsored: !!p.sponsored,
       heartFill: saved ? '#DC2626' : 'none', heartStroke: saved ? '#DC2626' : '#41526B',
       onHeart: (e) => { e && e.stopPropagation && e.stopPropagation(); (p.onSave ?? (() => {}))(!saved); }
     };

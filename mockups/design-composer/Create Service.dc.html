@@ -106,7 +106,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
         <div style="display:flex;flex-direction:column;gap:8px">
           <label for="ldesc" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Detailed description<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></label>
-          <textarea id="ldesc" maxLength="800" rows="4" value="{{ longDesc }}" onChange="{{ setLongDesc }}" placeholder="What's included, your process, why customers should choose you…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <textarea id="ldesc" maxLength="800" rows="4" value="{{ longDesc }}" onChange="{{ setLongDesc }}" placeholder="What's included, your process, why customers should choose you…" style="width:100%;display:block;overflow:hidden;field-sizing:content;min-height:112px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
           <div style="display:flex;justify-content:flex-end;font-size:12.5px;color:#5B6B84">{{ longCount }}</div>
         </div>
 
@@ -489,6 +489,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <span style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">RaajjePro doesn't check warranty or insurance details. Customers see them exactly as you write them, marked <b>"Provider states: …"</b></span>
           </div>
         </div>
+        <sc-if value="{{ cbEligible }}" hint-placeholder-val="{{ true }}">
         <div style="background:#fff;border:1.5px solid #B7E2C6;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="display:flex;align-items:center;gap:13px">
             <div style="flex:1;display:flex;flex-direction:column;gap:4px">
@@ -498,6 +499,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           </div>
           <div style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">A free return visit within <b>7 days</b> if the same problem comes back. Unlike the warranty and insurance above, <b>this one RaajjePro holds you to</b> — customers can report an unhonoured callback.</div>
         </div>
+        </sc-if>
       </div>
     </sc-if>
 
@@ -652,6 +654,7 @@ class Component extends DCLogic {
   DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   HOURS = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
   EMG = { 'Plumbing': { tier: 'Gold', window: 30 }, 'Electrical': { tier: 'Gold', window: 30 }, 'AC Repair': { tier: 'Silver', window: 30 }, 'Moving': { tier: 'Silver', window: 30 } };
+  CALLBACK = { 'Plumbing': true, 'Electrical': true, 'AC Repair': true, 'Appliance Repair': true, 'Pest Control': true, 'Home Repairs': true };
   TIER_RANK = { 'Bronze': 1, 'Silver': 2, 'Gold': 3 };
 
   seed() {
@@ -885,6 +888,7 @@ class Component extends DCLogic {
       insSwBd: S.insuranceOn ? blue : '#D5DFEC', insSwBg: S.insuranceOn ? blue : '#E7EEF7', insSwJustify: S.insuranceOn ? 'flex-end' : 'flex-start',
       insuranceText: S.insuranceText, setInsuranceText: set('insuranceText'),
       callback: S.callback, toggleCallback: () => this.setState({ callback: !S.callback }),
+      cbEligible: !!this.CALLBACK[S.category],
       cbSwBd: S.callback ? '#16A34A' : '#D5DFEC', cbSwBg: S.callback ? '#16A34A' : '#E7EEF7', cbSwJustify: S.callback ? 'flex-end' : 'flex-start',
       hasMissing: n > 0, noneMissing: n === 0,
       missTitle: n + ' required field' + (n === 1 ? '' : 's') + ' missing',
