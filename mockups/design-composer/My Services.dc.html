@@ -240,10 +240,11 @@ button{font-family:inherit}button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Gold&quot;,&quot;Silver&quot;,&quot;Bronze&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'Gold' | 'Silver' | 'Bronze'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;plan&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;paid&quot;,&quot;free-over-limit&quot;],&quot;default&quot;:&quot;paid&quot;,&quot;tsType&quot;:&quot;'paid' | 'free-over-limit'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;drafts-only&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;listings&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;slots-only&quot;,&quot;requests-only&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both' | 'slots-only' | 'requests-only'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
-  state = { filter:'All', view:'list', menuFor:null, confirm:null, toast:null, liveOv:{}, del:[], extra:[], hiddenId:'ac' };
+  state = { filter:'All', view:'list', menuFor:null, confirm:null, toast:null, liveOv:{}, del:[], extra:[], liveId:'clean' };
   BASE = [
     { id:'clean', title:'Home Deep Cleaning', cat:'Cleaning', catBg:'#E7F6EC', catFg:'#0E9F5D', photo:'uploads/cleaning.jpeg', status:'published', live:true, rating:'4.8', price:'MVR 500', unit:'/session', views:312, bookings:23, updated:'2 days ago' },
     { id:'ac', title:'AC Service & Repair', cat:'AC Repair', catBg:'#E0F4F7', catFg:'#0891B2', photo:null, ph:'ac unit photo', status:'published', live:true, rating:'4.9', price:'MVR 350', unit:'/visit', views:784, bookings:64, updated:'1 week ago' },
+    { id:'charter', title:'Sunset Fishing Charter', cat:'Boat Charter', catBg:'#DFF6FA', catFg:'#0E7490', photo:null, ph:'boat photo', status:'published', live:true, rating:'4.7', price:'MVR 3,200', unit:'/trip', views:426, bookings:9, updated:'3 days ago' },
     { id:'wiring', title:'Wiring & Fault Repair', cat:'Electrical', catBg:'#FDF2DD', catFg:'#B45309', photo:'uploads/electrical.jpeg', status:'draft', live:false, rating:null, price:'MVR 200', unit:'/hr', views:0, bookings:0, updated:'Just now' }
   ];
   STAT_ICONS = [
@@ -277,8 +278,8 @@ class Component extends DCLogic {
       menu: () => this.setState({ menuFor: x.id }),
       upgrade: () => this.toastMsg('Plans & upgrades open outside this screen'),
       swap: () => {
-        const other = pubIds.find(id => id !== x.id);
-        if (other) { this.setState({ hiddenId: other }); this.toastMsg(x.title + ' is now your live service'); }
+        this.setState({ liveId: x.id });
+        this.toastMsg(x.title + ' is now your live service');
       }
     };
   }
@@ -292,7 +293,7 @@ class Component extends DCLogic {
       .map(x => ({ ...x, live: s.liveOv[x.id] ?? x.live }));
     const overLimit = plan === 'free-over-limit' && !draftsOnly;
     const pubIds = list.filter(x => x.status === 'published').map(x => x.id);
-    if (overLimit) list = list.map(x => ({ ...x, hidden: x.id === s.hiddenId && x.status === 'published' }));
+    if (overLimit) list = list.map(x => ({ ...x, hidden: x.status === 'published' && x.id !== s.liveId }));
     const liveCount = list.filter(x => x.status === 'published' && !x.hidden).length;
     const bkTotal = list.reduce((a, x) => a + x.bookings, 0);
     const vwTotal = list.reduce((a, x) => a + x.views, 0);

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Payment received?" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:14px 20px 12px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
+    <a href="My Calendar.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="font-size:15px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">Payment received?</div>
+      <div style="font-size:11.5px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">Booking #4833</div>
+    </div>
+    <div style="width:44px;flex:none"></div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ fLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:12px">
+        <div aria-hidden="true" style="height:130px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <div aria-hidden="true" style="height:170px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fError }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp .25s ease both">
+        <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+          <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+          <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load the booking</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Nothing was answered on your behalf. Check your connection and try again.</div>
+          <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fMain }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:22px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <dc-import name="StatusPill" status="{{ pillStatus }}" hint-size="180px,28px"></dc-import>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;font-variant-numeric:tabular-nums;margin-top:4px">MVR 3,200</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ leadCopy }}</div>
+        </div>
+
+        <sc-if value="{{ withdrawnOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1.5px solid #E1EAF5;border-radius:20px;padding:16px 18px;display:flex;align-items:flex-start;gap:12px;animation:fadeUp .25s ease both">
+            <span style="width:36px;height:36px;border-radius:11px;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"></path></svg></span>
+            <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Mariyam corrected the record</b> — she'd marked &ldquo;I've paid&rdquo; before the transfer went through, and took it back. Usually a mis-tap on the way to the banking app. The booking is back to awaiting payment; you'll be asked again when she resends it. She can do this once, and only before you answer.</span>
+          </div>
+        </sc-if>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:38px;height:38px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none">MS</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Mariyam Shifa</span><dc-import name="VerificationBadge" tier="Bronze" size="chip" hint-size="64px,18px"></dc-import></span>
+              <span style="font-size:11.5px;font-weight:600;color:#8296B3">Customer on this booking</span>
+            </span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Booking</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Sunset Fishing Charter</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Occasion</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Fishing trip — Wed 2 Sep, 06:30</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Paid to</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Your BML account · direct transfer</span></div>
+          </div>
+        </div>
+
+        <sc-if value="{{ awaitingOn }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+            <span style="width:36px;height:36px;border-radius:11px;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18"></path></svg></span>
+            <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Your answer is your own statement, not a check RaajjePro performed.</b> The platform can't see your bank account — only you can know whether the transfer arrived. Transfers between banks can take a working day.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.6v.1"></path></svg>
+            <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">No answer within 7 days sends this to RaajjePro to look at. That's a review, not a confirmation — nothing is unlocked by it.</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ confirmedOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#E5F6EC;border:1.5px solid #A7DDBB;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:6px;animation:fadeUp .25s ease both">
+            <div style="font-size:15px;font-weight:800;color:#166534">You confirmed the money arrived</div>
+            <div style="font-size:12.5px;line-height:1.55;color:#2F6B45;text-wrap:pretty">Mariyam sees &ldquo;Provider confirmed receipt&rdquo; — your statement, in your words. The booking moves on to the job itself; coordinate the departure in chat.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ notReceivedOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FEF3DC;border:1.5px solid #F3C77B;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:6px;animation:fadeUp .25s ease both">
+            <div style="font-size:15px;font-weight:800;color:#92400E">You've said it hasn't arrived</div>
+            <div style="font-size:12.5px;line-height:1.55;color:#A15C00;text-wrap:pretty">Mariyam has been told, and the booking is back to awaiting payment. Transfers between banks can take a working day — check again before the trip, and use the chat if the numbers don't match.</div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ actionsOn }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:none;padding:12px 20px 20px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:8px">
+      <button onClick="{{ tapReceived }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#34C77B,#16A34A);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(22,163,74,.3)" style-hover="filter:brightness(1.05)" style-active="transform:scale(.98)">Payment received</button>
+      <button onClick="{{ tapNotReceived }}" style="width:100%;height:50px;border:1.5px solid #F3C77B;border-radius:15px;background:#FEF3DC;color:#92400E;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="filter:brightness(.98)" style-active="transform:scale(.98)">Payment not received</button>
+      <button onClick="{{ tapDecline }}" style="width:100%;height:42px;border:none;background:none;color:#B91C1C;font-size:14px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="background:rgba(220,38,38,.06)">Decline booking</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ doneFooterOn }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+      <a href="Booking Thread.dc.html" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Chat with Mariyam</a>
+      <a href="My Calendar.dc.html" style="width:100%;height:44px;color:#41526B;font-size:14.5px;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center">Back to your calendar</a>
+    </div>
+  </sc-if>
+  <sc-if value="{{ withdrawnFooterOn }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05)">
+      <div style="text-align:center;font-size:12px;font-weight:600;color:#8296B3;padding:8px 0">Nothing to answer right now — you'll be asked again when Mariyam marks it paid</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasSheet }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+        <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
+        <sc-if value="{{ sheetReceived }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Confirm MVR 3,200 arrived?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">This is your statement that the money is in your account — check your bank first, not this screen. Mariyam will see &ldquo;Provider confirmed receipt&rdquo;.</div>
+            <button onClick="{{ confirmReceived }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#34C77B,#16A34A);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(22,163,74,.3)" style-hover="filter:brightness(1.05)" style-active="transform:scale(.98)">Yes — it arrived</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Let me check my bank</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sheetNotReceived }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Tell Mariyam it hasn't arrived?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">She's notified and the booking stays awaiting payment — nothing is cancelled. Transfers between banks can take a working day, so this often resolves itself.</div>
+            <button onClick="{{ confirmNotReceived }}" style="width:100%;height:54px;border:1.5px solid #F3C77B;border-radius:16px;background:#FEF3DC;color:#92400E;font-size:15.5px;font-weight:700;cursor:pointer" style-active="transform:scale(.98)">Not received yet</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Go back</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sheetDecline }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Decline this booking?</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">This cancels the job itself, not just the payment question. If Mariyam has already transferred MVR 3,200, you must return it — settle that in chat before declining.</div>
+            <button onClick="{{ confirmDecline }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#DC2626;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.28)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Decline booking</button>
+            <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep the booking</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Awaiting your answer&quot;,&quot;Claim withdrawn&quot;,&quot;Answered — confirmed&quot;,&quot;Loading&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Awaiting your answer&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { sheet: null, answered: null };
+  renderVals() {
+    const S = this.state;
+    const scn = this.props.scenario ?? 'Awaiting your answer';
+    const loading = scn === 'Loading', error = scn === 'Error';
+    const withdrawn = scn === 'Claim withdrawn' && !S.answered;
+    let answered = S.answered;
+    if (scn === 'Answered — confirmed' && !answered) answered = 'received';
+    const awaiting = !loading && !error && !withdrawn && !answered;
+    const pillStatus = withdrawn ? 'awaiting_payment' : answered === 'received' ? 'receipt_confirmed' : answered === 'declined' ? 'cancelled' : answered === 'not_received' ? 'awaiting_payment' : 'payment_sent';
+    const leadCopy = withdrawn
+      ? 'The “I’ve paid” mark was taken back before you answered. Nothing is owed to this screen right now.'
+      : answered === 'received' ? 'Answered — you stated the transfer arrived in your account.'
+      : answered === 'not_received' ? 'Answered — you stated the transfer hasn’t arrived. Mariyam has been told.'
+      : answered === 'declined' ? 'You declined this booking. Mariyam has been told.'
+      : 'Mariyam says she’s transferred this to your account. Check your bank — only you can see whether it arrived.';
+    return {
+      fLoading: loading, fError: error, fMain: !loading && !error,
+      retry: () => {},
+      pillStatus, leadCopy,
+      withdrawnOn: withdrawn,
+      awaitingOn: awaiting,
+      confirmedOn: answered === 'received',
+      notReceivedOn: answered === 'not_received',
+      actionsOn: awaiting,
+      doneFooterOn: !loading && !error && !!answered,
+      withdrawnFooterOn: withdrawn,
+      tapReceived: () => this.setState({ sheet: 'received' }),
+      tapNotReceived: () => this.setState({ sheet: 'not_received' }),
+      tapDecline: () => this.setState({ sheet: 'decline' }),
+      confirmReceived: () => this.setState({ sheet: null, answered: 'received' }),
+      confirmNotReceived: () => this.setState({ sheet: null, answered: 'not_received' }),
+      confirmDecline: () => this.setState({ sheet: null, answered: 'declined' }),
+      hasSheet: !!S.sheet,
+      sheetReceived: S.sheet === 'received', sheetNotReceived: S.sheet === 'not_received', sheetDecline: S.sheet === 'decline',
+      closeSheet: () => this.setState({ sheet: null }),
+      stopProp: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+input,button{font-family:inherit}
+input:focus,button:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Mark complete" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:14px 20px 12px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
+    <a href="My Calendar.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="font-size:15px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">{{ hTitle }}</div>
+      <div style="font-size:11.5px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">{{ hSub }}</div>
+    </div>
+    <div style="width:44px;flex:none"></div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ fLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:12px">
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <div aria-hidden="true" style="height:100px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        <div aria-hidden="true" style="height:72px;border-radius:16px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fError }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp .25s ease both">
+        <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+          <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+          <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load the booking</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">The job wasn't marked complete. Check your connection and try again.</div>
+          <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fDone }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+          <dc-import name="StatusPill" status="completed" hint-size="120px,28px"></dc-import>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Job marked complete</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ doneCopy }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">Reviews are open</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">Mariyam can rate the job now, and you can rate her back. Completion opened them — nothing else gates a review.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">The chat stays open for 7 days</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">Long enough to settle anything about this job, including the free callback if the same problem comes back. After that it locks — you can still read everything, and Book Again starts the next job properly.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fMain }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+          <div style="display:flex;align-items:flex-start;gap:11px">
+            <span style="width:40px;height:40px;border-radius:12px;background:{{ jobIcoBg }};color:{{ jobIcoFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ jobIcoD }}"></path></svg></span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ jobTitle }}</span>
+              <span style="font-size:12.5px;font-weight:700;color:{{ jobIcoFg }}">{{ jobSub }}</span>
+            </span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Customer</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Mariyam Shifa</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Booking</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ bookRef }}</span></div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">{{ amtLabel }}</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ amtTxt }}</span></div>
+          </div>
+        </div>
+
+        <sc-if value="{{ emergencyOn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label for="famt" style="font-size:14px;font-weight:700;color:#0F1B2D">Final amount — required</label>
+            <div style="display:flex;align-items:center;background:#fff;border:1.5px solid {{ famtBd }};border-radius:16px;overflow:hidden;transition:border-color .15s">
+              <span style="flex:none;padding:0 4px 0 18px;font-size:18px;font-weight:800;color:#5B6B84">MVR</span>
+              <input id="famt" type="text" inputMode="numeric" value="{{ famt }}" onChange="{{ setFamt }}" placeholder="0" style="flex:1;height:56px;border:none;background:none;padding:0 18px 0 8px;font-size:22px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em;font-variant-numeric:tabular-nums;min-width:0">
+            </div>
+            <sc-if value="{{ hasFamtErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ famtErr }}</div></sc-if>
+            <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">What the job actually came to — the {{ calloutTxt }} callout plus parts and labour agreed on site. If the price is ever disputed, this is the number that settles it, which is why the job can't be closed without it.</div>
+          </div>
+        </sc-if>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+          <span style="width:36px;height:36px;border-radius:11px;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
+          <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Not marking it complete doesn't bury it.</b> After 7 days Mariyam is asked whether the job happened; if she doesn't answer either, a 3-day grace closes it on its own. Reviews open either way — silence doesn't block them.</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>
+          <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">The chat stays open for 7 days after completion — the callback window — then locks read-only.</span>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ fMain }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:none;padding:12px 20px 20px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:8px">
+      <button onClick="{{ complete }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#34C77B,#16A34A);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(22,163,74,.3)" style-hover="filter:brightness(1.05)" style-active="transform:scale(.98)">{{ ctaTxt }}</button>
+      <a href="Booking Thread.dc.html" style="width:100%;height:44px;color:#41526B;font-size:14.5px;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Not finished — chat with Mariyam</a>
+    </div>
+  </sc-if>
+  <sc-if value="{{ fDone }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+      <a href="Booking Thread.dc.html" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Chat with Mariyam</a>
+      <a href="My Calendar.dc.html" style="width:100%;height:44px;color:#41526B;font-size:14.5px;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center">Back to your calendar</a>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Normal booking&quot;,&quot;Emergency job&quot;,&quot;Completed&quot;,&quot;Loading&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Normal booking&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { famt: '', famtErr: null, done: false };
+  renderVals() {
+    const S = this.state;
+    const scn = this.props.scenario ?? 'Normal booking';
+    const emergency = scn === 'Emergency job';
+    const loading = scn === 'Loading', error = scn === 'Error';
+    const done = S.done || scn === 'Completed';
+    const famtNum = parseInt(S.famt, 10) || 0;
+    const finalTxt = famtNum ? 'MVR ' + famtNum.toLocaleString('en-US') : '';
+    return {
+      hTitle: done ? 'Job complete' : 'Mark the job complete',
+      hSub: emergency ? 'Emergency #4912' : 'Booking #4833',
+      fLoading: loading, fError: error,
+      fDone: !loading && !error && done,
+      fMain: !loading && !error && !done,
+      retry: () => {},
+      jobTitle: emergency ? 'AC Repair emergency' : 'Sunset Fishing Charter',
+      jobSub: emergency ? 'AC Service & Repair · Callout · Tue 1 Sep, 22:40' : 'Fishing trip — Wed 2 Sep, 06:30',
+      jobIcoBg: emergency ? '#ECFDF5' : '#DFF6FA', jobIcoFg: emergency ? '#059669' : '#0E7490',
+      jobIcoD: emergency ? 'M9.6 4.6A2 2 0 1 1 11 8H3M12.6 19.4A2 2 0 1 0 14 16H3M17.7 7.7A2.5 2.5 0 1 1 19.5 12H3' : 'M3 17h18l-2 3H5zM5 14l-1-4h16l-1 4M12 10V4M12 4l5 4M12 4L7 8',
+      bookRef: emergency ? '#4912' : '#4833',
+      amtLabel: emergency ? 'Callout fee' : 'Agreed price',
+      amtTxt: emergency ? 'MVR 350' : 'MVR 3,200',
+      calloutTxt: 'MVR 350',
+      emergencyOn: emergency,
+      famt: S.famt,
+      setFamt: e => this.setState({ famt: e.target.value.replace(/[^0-9]/g, '').slice(0, 6), famtErr: null }),
+      famtBd: S.famtErr ? '#DC2626' : '#E3EAF3',
+      hasFamtErr: !!S.famtErr, famtErr: S.famtErr || '',
+      ctaTxt: emergency ? (famtNum ? 'Mark complete — final ' + finalTxt : 'Mark complete') : 'Mark job complete',
+      complete: () => {
+        if (emergency && !famtNum) {
+          this.setState({ famtErr: 'Enter the final amount first — the job can’t be marked complete without it.' });
+          return;
+        }
+        this._final = finalTxt;
+        this.setState({ done: true, famtErr: null });
+      },
+      doneCopy: emergency
+        ? 'Recorded with a final amount of ' + (this._final || finalTxt || 'MVR 350') + '. Mariyam sees the same number — if the price is ever questioned, this is the figure both sides point to.'
+        : 'Mariyam has been told the trip is done. That’s the whole action — no amounts change hands through RaajjePro.'
+    };
+  }
+}
+</script>
+</body>
+</html>

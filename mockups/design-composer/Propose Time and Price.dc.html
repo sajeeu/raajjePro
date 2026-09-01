@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
+input,textarea,button,select{font-family:inherit}
+input:focus,textarea:focus,button:focus{outline:none}
+::placeholder{color:#9AA9C0}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Propose time & price" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:none;padding:14px 20px 12px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
+    <a href="Booking Request.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="font-size:15px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">{{ hTitle }}</div>
+      <div style="font-size:11.5px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">Booking #4833 · {{ catName }}</div>
+    </div>
+    <div style="width:44px;flex:none"></div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+    <sc-if value="{{ fLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:12px">
+        <div aria-hidden="true" style="height:84px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import>
+        <div aria-hidden="true" style="height:160px;border-radius:20px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fError }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp .25s ease both">
+        <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+          <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+          <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load the request</div>
+          <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Nothing was sent and no time is held. Check your connection and try again.</div>
+          <button onClick="{{ retry }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Try again</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fExpired }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp .25s ease both">
+        <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your quote expired</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Mariyam's {{ winTxt }} to accept ran out. The held time — {{ heldTxt }} — is released and open to other bookings again, and this booking is closed.</div>
+        </div>
+        <a href="My Calendar.dc.html" style="font-size:13.5px;font-weight:700;color:#2563EB">Back to your calendar</a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fSent }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+          <div style="position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:4px" aria-hidden="true">
+            <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.12);animation:pulseRing 2.4s ease-out infinite"></span>
+            <span style="width:58px;height:58px;border-radius:50%;background:#E8F0FE;border:1.5px solid #CDDDFB;display:flex;align-items:center;justify-content:center;position:relative"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14M21 3l-7 18-3-7-7-3z"></path></svg></span>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em">Quote sent — {{ heldTxt }} is held</div>
+          <div style="font-size:13px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Mariyam has <b style="color:#0F1B2D">{{ winTxt }}</b> to accept. Until then that time is held for her — nobody else can book it, on any of your listings. If the quote lapses, the time is released and this booking closes.</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Your offer</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ sentPriceTxt }}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Time held</span><span style="font-size:15px;font-weight:800;color:#0F1B2D">{{ heldTxt }}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0"><span style="font-size:14px;font-weight:600;color:#41526B">Her clock</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums" aria-live="polite">{{ sentRemainTxt }}</span></div>
+        </div>
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:#0F1B2D">The chat is open</div>
+          <div style="font-size:12.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">This is where &ldquo;could we do a later start instead?&rdquo; happens. The quote stands as sent until Mariyam accepts it or it lapses.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ fCompose }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+
+        <div style="background:#E8F0FE;border:1.5px solid #CDDDFB;border-radius:20px;padding:14px 18px;display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2B4A8C">Mariyam asked for</span>
+          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#1D4ED8">Wed 2 Sep · 06:30 departure</span>
+          <span style="font-size:12.5px;line-height:1.5;color:#2B4A8C;text-wrap:pretty">{{ catName }} · trip for 6 · listed at {{ listPriceTxt }}. You're answering her request — change what needs changing, keep the rest.</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:14px;font-weight:700;color:#0F1B2D">Date</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ dateOpts }}" as="d" hint-placeholder-count="3">
+              <dc-import name="Chip" label="{{ d.label }}" kind="filter" selected="{{ d.sel }}" on-tap="{{ d.pick }}" hint-size="96px,38px"></dc-import>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:14px;font-weight:700;color:#0F1B2D">Departure time</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ timeOpts }}" as="t" hint-placeholder-count="4">
+              <dc-import name="Chip" label="{{ t.label }}" kind="filter" selected="{{ t.sel }}" on-tap="{{ t.pick }}" hint-size="72px,38px"></dc-import>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="qprice" style="font-size:14px;font-weight:700;color:#0F1B2D">Your price</label>
+          <div style="display:flex;align-items:center;background:#fff;border:1.5px solid {{ priceBd }};border-radius:16px;overflow:hidden;transition:border-color .15s">
+            <span style="flex:none;padding:0 4px 0 18px;font-size:18px;font-weight:800;color:#5B6B84">MVR</span>
+            <input id="qprice" type="text" inputMode="numeric" value="{{ price }}" onChange="{{ setPrice }}" placeholder="0" style="flex:1;height:56px;border:none;background:none;padding:0 18px 0 8px;font-size:22px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em;font-variant-numeric:tabular-nums;min-width:0">
+          </div>
+          <sc-if value="{{ hasPriceErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ priceErr }}</div></sc-if>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label for="qnote" style="font-size:14px;font-weight:700;color:#0F1B2D">Note <span style="font-weight:600;color:#8296B3">— optional</span></label>
+          <textarea id="qnote" value="{{ note }}" onChange="{{ setNote }}" rows="3" placeholder="e.g. 06:30 works if the tide holds — otherwise 07:00 is safer for the reef spots" style="width:100%;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:13px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none"></textarea>
+        </div>
+
+        <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
+          <span style="width:36px;height:36px;border-radius:11px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"></path></svg></span>
+          <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Sending holds {{ pickedTxt }} for Mariyam.</b> She gets <b>{{ winTxt }}</b> to accept — a {{ catName }} quote clock. Until she answers or it lapses, nobody else can book that time on any of your listings.</span>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ fCompose }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:none;padding:12px 20px 20px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:8px">
+      <button onClick="{{ send }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+        <sc-if value="{{ sending }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Sending quote…</span></sc-if>
+        <sc-if value="{{ notSending }}" hint-placeholder-val="{{ true }}"><span>{{ ctaTxt }}</span></sc-if>
+      </button>
+      <div style="text-align:center;font-size:11.5px;font-weight:600;color:#8296B3">Sending opens the chat with Mariyam right away</div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ fSent }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
+      <a href="Booking Thread.dc.html" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Chat with Mariyam</a>
+      <a href="My Calendar.dc.html" style="width:100%;height:44px;color:#41526B;font-size:14.5px;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center">Back to your calendar</a>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Composing&quot;,&quot;Sent — holding&quot;,&quot;Expired&quot;,&quot;Loading&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Composing&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;category&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Boat Charter&quot;,&quot;Plumbing&quot;,&quot;Electrical&quot;,&quot;AC Repair&quot;,&quot;Photography&quot;],&quot;default&quot;:&quot;Boat Charter&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
+class Component extends DCLogic {
+  state = { date: 'Wed 2 Sep', time: '06:30', price: '3200', priceErr: null, note: '', sending: false, phase: 'compose', sentRemain: null };
+  WINDOWS = { 'Boat Charter': 72, 'Photography': 72, 'Moving': 72, 'Plumbing': 4, 'Electrical': 4, 'AC Repair': 4, 'Appliance Repair': 4, 'Pest Control': 4, 'Home Repairs': 4 };
+  winFor(cat) { return this.WINDOWS[cat]; }
+  componentDidMount() { this._iv = setInterval(() => this.tick(), 1000); }
+  componentWillUnmount() { clearInterval(this._iv); }
+  tick() {
+    if (this.state.phase !== 'sent' || this.state.sentRemain == null) return;
+    this.setState({ sentRemain: Math.max(0, this.state.sentRemain - 1) });
+  }
+  fmtH(s) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return h + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0') + ' left';
+  }
+  renderVals() {
+    const S = this.state;
+    const cat = this.props.category ?? 'Boat Charter';
+    const scn = this.props.scenario ?? 'Composing';
+    const win = this.winFor(cat);
+    const winTxt = win + ' hours';
+    const loading = scn === 'Loading', error = scn === 'Error';
+    let phase = S.phase;
+    if (scn === 'Sent — holding' && phase === 'compose') phase = 'sent';
+    if (scn === 'Expired') phase = 'expired';
+    const priceNum = parseInt(S.price, 10) || 0;
+    const heldTxt = S.date + ' · ' + S.time;
+    const remain = S.sentRemain == null ? win * 3600 - 137 : S.sentRemain;
+    const mkDate = v => ({ label: v, sel: S.date === v, pick: () => this.setState({ date: v }) });
+    const mkTime = v => ({ label: v, sel: S.time === v, pick: () => this.setState({ time: v }) });
+    return {
+      hTitle: phase === 'sent' ? 'Quote sent' : phase === 'expired' ? 'Quote expired' : 'Propose a time & price',
+      catName: cat,
+      fLoading: loading, fError: error,
+      fCompose: !loading && !error && phase === 'compose',
+      fSent: !loading && !error && phase === 'sent',
+      fExpired: !loading && !error && phase === 'expired',
+      retry: () => {},
+      winTxt, heldTxt, pickedTxt: heldTxt,
+      listPriceTxt: 'MVR 3,200/trip',
+      dateOpts: ['Wed 2 Sep', 'Thu 3 Sep', 'Fri 4 Sep'].map(mkDate),
+      timeOpts: ['06:00', '06:30', '07:00', '16:30'].map(mkTime),
+      price: S.price,
+      setPrice: e => this.setState({ price: e.target.value.replace(/[^0-9]/g, '').slice(0, 6), priceErr: null }),
+      priceBd: S.priceErr ? '#DC2626' : '#E3EAF3',
+      hasPriceErr: !!S.priceErr, priceErr: S.priceErr || '',
+      note: S.note, setNote: e => this.setState({ note: e.target.value }),
+      sending: S.sending, notSending: !S.sending,
+      ctaTxt: priceNum ? 'Send quote — MVR ' + priceNum.toLocaleString('en-US') + ', ' + S.time : 'Send quote',
+      sentPriceTxt: 'MVR ' + priceNum.toLocaleString('en-US'),
+      sentRemainTxt: this.fmtH(remain),
+      send: () => {
+        if (S.sending) return;
+        if (!priceNum) { this.setState({ priceErr: 'Enter the price you’re offering — Mariyam accepts this exact number.' }); return; }
+        this.setState({ sending: true, priceErr: null });
+        setTimeout(() => this.setState({ sending: false, phase: 'sent', sentRemain: win * 3600 }), 1000);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
