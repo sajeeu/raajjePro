@@ -17,16 +17,10 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
-@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.2}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -45,7 +39,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
     <sc-if value="{{ fRequest }}" hint-placeholder-val="{{ true }}">
-      <div data-screen-label="P1 · New request" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P1 · New request" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
 
         <sc-if value="{{ skel }}">
           <div style="display:flex;flex-direction:column;gap:16px" aria-hidden="true">
@@ -85,11 +79,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
             <div style="display:flex;flex-direction:column;gap:8px">
               <label for="pfee" style="font-size:14px;font-weight:700;color:#0F1B2D">Your callout fee</label>
-              <div style="display:flex;align-items:center;gap:0;background:#fff;border:1.5px solid {{ feeBd }};border-radius:16px;overflow:hidden;transition:border-color .15s">
+              <div style="display:flex;align-items:center;gap:0;background:#fff;border:1.5px solid {{ feeBd }};border-radius:16px;overflow:hidden;transition:border-color var(--m-fast)">
                 <span style="flex:none;padding:0 4px 0 18px;font-size:20px;font-weight:800;color:#5B6B84;letter-spacing:-.01em">MVR</span>
                 <input id="pfee" type="text" inputMode="numeric" value="{{ fee }}" onChange="{{ setFee }}" placeholder="0" style="flex:1;height:64px;border:none;background:none;padding:0 18px 0 8px;font-size:26px;font-weight:800;color:#0F1B2D;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:0">
               </div>
-              <sc-if value="{{ hasFeeErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ feeErr }}</div></sc-if>
+              <sc-if value="{{ hasFeeErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp var(--m-page) var(--e-out) both">{{ feeErr }}</div></sc-if>
               <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">What you charge to attend. Parts and labour are agreed and settled directly with {{ custFirst }} afterwards.</div>
             </div>
 
@@ -97,17 +91,17 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <label for="peta" style="font-size:14px;font-weight:700;color:#0F1B2D">When can you get there?</label>
               <div style="display:flex;gap:8px">
                 <sc-for list="{{ etaOpts }}" as="e" hint-placeholder-count="4">
-                  <button onClick="{{ e.pick }}" style="flex:1;height:48px;border:1.5px solid {{ e.bd }};border-radius:14px;background:{{ e.bg }};color:{{ e.fg }};font-size:14px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0;transition:border-color .15s,background .15s" style-active="transform:scale(.97)">{{ e.label }}</button>
+                  <button onClick="{{ e.pick }}" style="flex:1;height:48px;border:1.5px solid {{ e.bd }};border-radius:14px;background:{{ e.bg }};color:{{ e.fg }};font-size:14px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;padding:0;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.97)">{{ e.label }}</button>
                 </sc-for>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="flex:none;font-size:12.5px;font-weight:600;color:#5B6B84">Or your own:</span>
-                <div style="flex:1;display:flex;align-items:center;background:#fff;border:1.5px solid {{ etaCBd }};border-radius:12px;overflow:hidden;transition:border-color .15s">
+                <div style="flex:1;display:flex;align-items:center;background:#fff;border:1.5px solid {{ etaCBd }};border-radius:12px;overflow:hidden;transition:border-color var(--m-fast)">
                   <input id="peta" type="text" inputMode="numeric" value="{{ etaCustom }}" onChange="{{ setEtaCustom }}" placeholder="0" style="flex:1;height:44px;border:none;background:none;padding:0 6px 0 14px;font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;min-width:0">
                   <span style="flex:none;padding:0 14px;font-size:13px;font-weight:700;color:#5B6B84">min</span>
                 </div>
               </div>
-              <sc-if value="{{ hasEtaErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ etaErr }}</div></sc-if>
+              <sc-if value="{{ hasEtaErr }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp var(--m-page) var(--e-out) both">{{ etaErr }}</div></sc-if>
               <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Your own estimate — {{ custFirst }} sees it next to every other offer. Arriving later than you said counts against your on-time record.</div>
             </div>
 
@@ -121,7 +115,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             </div>
 
             <sc-if value="{{ submitFailed }}">
-              <div style="display:flex;align-items:flex-start;gap:12px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:14px 16px;animation:fadeUp .2s ease both">
+              <div style="display:flex;align-items:flex-start;gap:12px;background:#FEF2F2;border:1px solid #F5C6C6;border-radius:16px;padding:14px 16px;animation:fadeUp var(--m-page) var(--e-out) both">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
                 <div style="display:flex;flex-direction:column;gap:6px;flex:1">
                   <div style="font-size:14px;font-weight:700;color:#B91C1C">Your offer didn't send</div>
@@ -135,7 +129,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fSubmitted }}">
-      <div data-screen-label="P2 · Offer in" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P2 · Offer in" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="position:relative;width:110px;height:110px;display:flex;align-items:center;justify-content:center;margin-bottom:4px" aria-hidden="true">
             <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.12);animation:pulseRing 2.4s ease-out infinite"></span>
@@ -169,7 +163,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fChosen }}">
-      <div data-screen-label="P3 · Chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P3 · Chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ custFirst }} picked you</div>
@@ -190,7 +184,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fNotChosen }}">
-      <div data-screen-label="P4 · Not chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P4 · Not chosen" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ custFirst }} chose another offer</div>
@@ -204,7 +198,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fExpired }}">
-      <div data-screen-label="P5 · Expired" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P5 · Expired" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">This request closed</div>
@@ -214,7 +208,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fDeclined }}">
-      <div data-screen-label="P6 · Declined" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="P6 · Declined" style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You passed on this one</div>
@@ -251,8 +245,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </div>
 
   <sc-if value="{{ hasSheet }}">
-    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
-      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:{{ sheetAnim }}">
         <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
         <sc-if value="{{ sheetDecline }}">
           <div style="display:flex;flex-direction:column;gap:12px">
@@ -267,7 +261,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ hasToast }}">
-    <div style="position:absolute;left:50%;bottom:110px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:110px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:{{ toastAnim }};pointer-events:none">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -275,6 +269,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Customer picks you&quot;,&quot;Customer picks another&quot;,&quot;No decision&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Customer picks you&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { booted: false, screen: 'request', fee: '350', feeErr: null, eta: null, etaCustom: '', etaErr: null,
     submitting: false, submitFailed: false, retried: false,
     sim: 240, rate: 1, submitAt: null, sheet: null, toast: null };
@@ -296,8 +291,8 @@ class Component extends DCLogic {
     this._bt = setTimeout(() => this.setState({ booted: true }), 750);
     this._iv = setInterval(() => this.tick(), 250);
   }
-  componentWillUnmount() { clearTimeout(this._bt); clearInterval(this._iv); clearTimeout(this._tt); }
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2400); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._bt); clearInterval(this._iv); clearTimeout(this._tt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2400) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2400); }
   tick() {
     const S = this.state;
     if (S.screen !== 'request' && S.screen !== 'submitted') return;
@@ -330,6 +325,9 @@ class Component extends DCLogic {
     const hTitles = { request: 'New request near you', submitted: 'Offer sent', chosen: 'Job confirmed', notChosen: 'Request closed', expired: 'Request closed', declined: 'Request declined' };
     const showDemo = (this.props.compressTime ?? true) && (this.props.demoBadge ?? true) && S.rate > 1 && S.screen === 'submitted';
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       hTitle: hTitles[S.screen],
       demoOn: showDemo, demoTxt: '×' + Math.round(S.rate),
       fRequest: S.screen === 'request', fSubmitted: S.screen === 'submitted',
@@ -368,16 +366,16 @@ class Component extends DCLogic {
         }, 1100);
       },
       declineAsk: () => this.setState({ sheet: 'decline' }),
-      confirmDecline: () => this.setState({ sheet: null, screen: 'declined' }),
+      confirmDecline: () => this._close({ sheet: null, screen: 'declined' }),
       chooseTxt: this.fmt(chooseRemain),
       expiredCopy: this._expiredWhy === 'submitted'
         ? 'The customer didn’t decide within their window, so the request lapsed. Nothing more is needed from you.'
         : 'The response window ended before an offer went in. It disappears from your list — the next emergency near you still reaches you.',
-      openChat: () => this.toastMsg('Chat opens here.'),
-      backToJobs: () => this.toastMsg('Back to your jobs list.'),
+      openChat: () => { window.location.href = 'Booking%20Thread.dc.html'; },
+      backToJobs: () => { window.location.href = 'My%20Calendar.dc.html'; },
       replay: () => { this._expiredWhy = null; this.setState({ screen: 'request', sim: 240, submitAt: null, submitting: false, submitFailed: false, retried: false, feeErr: null, eta: null, etaCustom: '', etaErr: null }); },
       hasSheet: !!S.sheet, sheetDecline: S.sheet === 'decline',
-      closeSheet: () => this.setState({ sheet: null }),
+      closeSheet: () => this._close({ sheet: null }),
       stopProp: e => e.stopPropagation(),
       toast: S.toast, hasToast: !!S.toast
     };
