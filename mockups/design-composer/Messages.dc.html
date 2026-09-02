@@ -16,8 +16,9 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 button:focus{outline:none}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -27,7 +28,7 @@ button:focus{outline:none}
 </div>
 
 <sc-if value="{{ isLoading }}">
-<div data-screen-label="Messages — loading" aria-hidden="true" style="flex:1;padding:2px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+<div data-screen-label="Messages — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;padding:2px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
   <sc-for list="{{ skels }}" as="k" hint-placeholder-count="4">
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 14px;display:flex;gap:12px;align-items:center">
       <div style="width:46px;height:46px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
@@ -42,21 +43,21 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}">
-<div data-screen-label="Messages — error" style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+<div data-screen-label="Messages — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
   <dc-import name="EmptyState" icon="message" title="Couldn't load your messages" body="Your connection may have dropped. Nothing is lost — every conversation is safe. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
 </div>
 <div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 <sc-if value="{{ isEmpty }}">
-<div data-screen-label="Messages — empty" style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
+<div data-screen-label="Messages — empty" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
   <dc-import name="EmptyState" icon="message" title="No messages yet" body="Message a service from its page, or book one — every booking opens its own chat, and it all lives here." action-label="Explore services" on-action="{{ goExplore }}" hint-size="340px,230px"></dc-import>
 </div>
 <div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Messages" style="flex:1;padding:2px 16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+<div data-screen-label="Messages" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;padding:2px 16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch">
   <sc-for list="{{ threads }}" as="t" hint-placeholder-count="2">
     <a href="{{ t.href }}" style="display:flex;gap:12px;padding:13px 14px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05);align-items:center" style-hover="border-color:#CDDDFB">
       <span style="width:46px;height:46px;border-radius:50%;background:{{ t.avBg }};color:{{ t.avFg }};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:none">{{ t.initials }}</span>
@@ -96,7 +97,7 @@ class Component extends DCLogic {
         concern: 'Emergency Plumbing & Pipe Repair', last: "I'll be there in 20 minutes", age: '4m',
         unread: true, href: 'Enquiry%20Thread.dc.html' },
       { name: 'Mariyam Shifa', initials: 'MS', avBg: '#E8F0FE', avFg: '#1D4ED8', kind: 'booking',
-        concern: 'Home Deep Cleaning · Tue 25 Aug', last: 'See you Tuesday', age: '2d',
+        concern: 'Home Deep Cleaning \u00b7 Tue 25 Aug', last: 'See you Tuesday', age: '2d',
         unread: false, href: 'Booking%20Thread.dc.html' } ];
     return {
       isLoading, isError, isEmpty, isList: !isLoading && !isError && !isEmpty,

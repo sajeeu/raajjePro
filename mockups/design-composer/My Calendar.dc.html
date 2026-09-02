@@ -15,13 +15,12 @@
 body{margin:0;background:#DEE7F3}
 a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 button{font-family:inherit}button:focus{outline:none}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="My Calendar" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="My Calendar" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
     <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
@@ -67,7 +66,7 @@ button{font-family:inherit}button:focus{outline:none}
               <span style="font-size:12px;font-weight:800;color:#5B6B84;text-transform:uppercase;letter-spacing:.04em">{{ g.label }}</span>
               <div style="display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ g.items }}" as="b" hint-placeholder-count="1">
-                  <a href="Booking Detail.dc.html" style="display:flex;align-items:center;gap:11px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:11px 12px;color:inherit" style-hover="border-color:#CDDDFB">
+                  <a href="{{ b.href }}" style="display:flex;align-items:center;gap:11px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:11px 12px;color:inherit" style-hover="border-color:#CDDDFB">
                     <span style="flex:none;min-width:46px;font-size:13.5px;font-weight:800;color:#1D4ED8">{{ b.time }}</span>
                     <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
                       <span style="display:flex;align-items:baseline;gap:6px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">{{ b.who }}</span><span style="font-size:11.5px;font-weight:700;color:#8296B3">{{ b.ref }}</span></span>
@@ -114,9 +113,13 @@ button{font-family:inherit}button:focus{outline:none}
     </sc-if>
   </div>
 
+  <div style="flex:none;display:flex;justify-content:center;padding:8px 20px 12px;background:#F2F6FB">
+    <dc-import name="BottomNav" role="provider" active="Calendar" hint-size="372px,88px"></dc-import>
+  </div>
+
   <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
+    <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
       <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
       <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Add time away</span>
       <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">A name and a date range, all day. Published time slots on those dates are removed — booked times are never touched.</span>
@@ -133,7 +136,7 @@ button{font-family:inherit}button:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:{{ toastAnim }};box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -141,22 +144,23 @@ button{font-family:inherit}button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = {
     away: [
-      { id:'trip', name:'Malé trip', detail:'All day · 30 – 31 Aug', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5' },
-      { id:'hol', name:'Public holiday', detail:'All day · 24 Sep', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' }
+      { id:'trip', name:'Mal\u00E9 trip', detail:'All day \u00B7 30 \u2013 31 Aug', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5' },
+      { id:'hol', name:'Public holiday', detail:'All day \u00B7 24 Sep', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' }
     ],
     awayNew: [], sheetOpen: false, toast: null
   };
-  // Illustrative "today" matches Availability: Thu 27 Aug 2026. Emergency jobs never appear here —
+  // Illustrative "today" matches Availability: Thu 27 Aug 2026. Emergency jobs never appear here \u2014
   // an emergency interrupts the calendar rather than reserving it.
   DAYS = [
-    { label:'Today · Thu 27 Aug', items:[ { time:'11:00', who:'Aminath', listing:'Home Deep Cleaning', ref:'#4812', mode:'Slot booking' } ] },
-    { label:'Sat 29 Aug', items:[ { time:'09:00', who:'Hussain', listing:'AC Service & Repair', ref:'#4821', mode:'Request booking' } ] },
-    { label:'Wed 2 Sep', items:[ { time:'06:30', who:'Mariyam', listing:'Sunset Fishing Charter', ref:'#4833', mode:'Request booking' } ] }
+    { label:'Today \u00B7 Thu 27 Aug', items:[ { time:'11:00', who:'Aminath', listing:'Home Deep Cleaning', ref:'#4812', mode:'Slot booking', href:'Mark%20Complete.dc.html' } ] },
+    { label:'Sat 29 Aug', items:[ { time:'09:00', who:'Hussain', listing:'AC Service & Repair', ref:'#4821', mode:'Request booking', href:'Booking%20Detail.dc.html' } ] },
+    { label:'Wed 2 Sep', items:[ { time:'06:30', who:'Aishath', listing:'Sunset Fishing Charter', ref:'#4833', mode:'Request booking', href:'Booking%20Request.dc.html' } ] }
   ];
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 3200); }
-  componentWillUnmount() { clearTimeout(this._tt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (3200) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 3200); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
   renderVals() {
     const s = this.state, state = this.props.state ?? 'populated';
     const isEmpty = state === 'empty';
@@ -164,23 +168,26 @@ class Component extends DCLogic {
     const list = s[key];
     const addAway = (entry, when) => {
       this.setState(st => ({ sheetOpen: false, [key]: [...st[key], { ...entry, id: entry.id + Date.now() }] }));
-      this.toastMsg('Added — published times on ' + when + ' are removed. Requests can still arrive for those dates.');
+      this.toastMsg('Added \u2014 published times on ' + when + ' are removed. Requests can still arrive for those dates.');
     };
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       isLoading: state === 'loading', isError: state === 'error', isEmpty, isNormal: state === 'populated',
       showAway: state === 'populated' || isEmpty,
-      retry: () => this.toastMsg('Retrying…'),
+      retry: () => this.toastMsg('Retrying\u2026'),
       days: this.DAYS,
       away: list.map(e => ({ ...e, remove: () => {
         this.setState(st => ({ [key]: st[key].filter(x => x.id !== e.id) }));
-        this.toastMsg('Removed — published times on those dates reopen. Booked times were never touched.');
+        this.toastMsg('Removed \u2014 published times on those dates reopen. Booked times were never touched.');
       } })),
       noAway: list.length === 0,
-      openSheet: () => this.setState({ sheetOpen: true }), closeSheet: () => this.setState({ sheetOpen: false }),
+      openSheet: () => this.setState({ sheetOpen: true }), closeSheet: () => this._close({ sheetOpen: false }),
       sheetOpen: s.sheetOpen,
       presets: [
-        { name:'Travel', detail:'All day · 12 – 14 Oct', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5', tap: () => addAway({ id:'t', name:'Travel', detail:'All day · 12 – 14 Oct', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5' }, '12 – 14 Oct') },
-        { name:'Public holiday', detail:'All day · 16 Nov', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5', tap: () => addAway({ id:'h', name:'Public holiday', detail:'All day · 16 Nov', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' }, '16 Nov') }
+        { name:'Travel', detail:'All day \u00B7 12 \u2013 14 Oct', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5', tap: () => addAway({ id:'t', name:'Travel', detail:'All day \u00B7 12 \u2013 14 Oct', d:'M2 20h20M6 20V9l6-4 6 4v11M10 20v-5h4v5' }, '12 \u2013 14 Oct') },
+        { name:'Public holiday', detail:'All day \u00B7 16 Nov', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5', tap: () => addAway({ id:'h', name:'Public holiday', detail:'All day \u00B7 16 Nov', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' }, '16 Nov') }
       ],
       toastOn: !!s.toast, toast: s.toast || ''
     };
