@@ -82,6 +82,24 @@ def emergency_filter_chips(s):
                 out.append(c.group(1))
     return out
 
+# Verification is a PROVIDER attribute. `verificationTier` lives on the provider profile and
+# means "ID and trade checked by RaajjePro" - a customer has no tier, so a badge beside a
+# customer's name asserts a trust signal the system never produces. VerificationBadge cannot
+# defend itself here: it renders whatever tier it is handed. So the check is by screen - these
+# are the provider-side screens where the person shown is the CUSTOMER.
+CUSTOMER_SUBJECT_SCREENS = {
+    "Booking Request", "Payment Received", "Mark Complete",
+    "Provider Emergency", "Propose Time and Price",
+}
+
+def badge_on_a_customer(path, s):
+    """A VerificationBadge mounted on a screen whose subject is the customer."""
+    stem = pathlib.Path(path).name.replace(".dc.html", "")
+    if stem not in CUSTOMER_SUBJECT_SCREENS:
+        return []
+    n = len(re.findall(r'dc-import\s+name="VerificationBadge"', s))
+    return ["%d badge(s) on %s" % (n, stem)] if n else []
+
 def mode_mismatches(s):
     """Object literals carrying both a category and a booking mode that contradict §1c."""
     out = []
@@ -143,6 +161,11 @@ def check(path):
     for label, pat, why in SUSPECT:
         if re.search(pat, s):
             warns.append((label, why))
+
+    for detail in badge_on_a_customer(path, s):
+        warns.append(("verification badge shown for a customer (%s)" % detail,
+                      "verificationTier is a provider attribute - a customer has no tier, so the "
+                      "badge claims a check that never happened. Warn-only until Round 41 removes it."))
 
     for chip in emergency_filter_chips(s):
         warns.append(("emergency offered as a browse filter (%s)" % chip,
