@@ -9,8 +9,9 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+<link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
 </helmet>
 <div style="width:372px;background:#fff;border:1px solid #EEF3FA;border-radius:18px;display:flex;padding:8px 10px 12px;box-shadow:0 1px 3px rgba(15,27,45,.05);font-family:'Inter',system-ui,-apple-system,sans-serif">
@@ -22,20 +23,31 @@
   </sc-for>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:110},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Home&quot;,&quot;Explore&quot;,&quot;Bookings&quot;,&quot;Messages&quot;,&quot;Profile&quot;],&quot;default&quot;:&quot;Home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onTap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(tab: string) =&gt; void&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:110},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customer&quot;,&quot;provider&quot;],&quot;default&quot;:&quot;customer&quot;,&quot;tsType&quot;:&quot;'customer' | 'provider'&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Home&quot;,&quot;Explore&quot;,&quot;Bookings&quot;,&quot;Messages&quot;,&quot;Profile&quot;,&quot;Calendar&quot;,&quot;Services&quot;,&quot;Billing&quot;],&quot;default&quot;:&quot;Home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onTap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(tab: string) =&gt; void&quot;}}">
 class Component extends DCLogic {
-  TABS = [
-    { n:'Home', d:'M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z' },
-    { n:'Explore', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z' },
-    { n:'Bookings', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
-    { n:'Messages', d:'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z' },
-    { n:'Profile', d:'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5' } ];
+  // The tab -> screen mapping lives HERE, not in each screen (Round 38 §4b).
+  SETS = {
+    customer: [
+      { n:'Home', d:'M4 11l8-7 8 7v9h-5.5v-6h-5v6H4z', h:'Home.dc.html' },
+      { n:'Explore', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z', h:'Discovery.dc.html' },
+      { n:'Bookings', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5', h:'My%20Bookings.dc.html' },
+      { n:'Messages', d:'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z', h:'Messages.dc.html' },
+      { n:'Profile', d:'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5', h:'Profile.dc.html' } ],
+    provider: [
+      { n:'Calendar', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5', h:'My%20Calendar.dc.html' },
+      { n:'Services', d:'M3.5 8h17v12h-17zM8.5 8V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2V8M3.5 13h17', h:'My%20Services.dc.html' },
+      { n:'Messages', d:'M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z', h:'Messages.dc.html' },
+      { n:'Billing', d:'M3 6.5h18v11H3zM3 10.5h18M6.5 14.5h4', h:'Billing.dc.html' },
+      { n:'Profile', d:'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM5 21c.8-3.5 3.6-5.5 7-5.5s6.2 2 7 5.5', h:'Profile.dc.html' } ] };
   renderVals() {
-    const active = this.props.active ?? 'Home', onTap = this.props.onTap ?? (() => {});
-    return { navTabs: this.TABS.map(t => ({ n:t.n, d:t.d,
+    const role = this.props.role ?? (window.RPSession ? window.RPSession.role() : 'customer');
+    const tabs = this.SETS[role] ?? this.SETS.customer;
+    const active = this.props.active ?? tabs[0].n;
+    const onTap = this.props.onTap;
+    return { navTabs: tabs.map(t => ({ n:t.n, d:t.d,
       pBg: t.n === active ? '#E8F0FE' : 'transparent',
       fg: t.n === active ? '#1D4ED8' : '#8296B3',
-      tap: () => onTap(t.n) })) };
+      tap: () => { if (onTap) onTap(t.n); if (t.n !== active) window.location.href = t.h; } })) };
   }
 }
 </script>

@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}</style>
+<link rel="stylesheet" href="./motion.css">
 </helmet>
 <sc-if value="{{ isFilter }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tap }}" style="height:38px;border:1.5px solid {{ fBd }};border-radius:999px;background:{{ fBg }};color:{{ fFg }};display:inline-flex;align-items:center;padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',system-ui,-apple-system,sans-serif">{{ label }}</button></sc-if>
 <sc-if value="{{ isInput }}" hint-placeholder-val="{{ false }}"><span style="height:38px;border:1.5px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:7px;padding:0 10px 0 14px;font-size:12.5px;font-weight:700;font-family:'Inter',system-ui,-apple-system,sans-serif">{{ label }}<button onClick="{{ remove }}" aria-label="Remove" style="border:none;background:none;color:inherit;padding:0;cursor:pointer;display:inline-flex;align-items:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span></sc-if>
