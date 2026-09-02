@@ -16,15 +16,15 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 button:focus{outline:none}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
 <sc-if value="{{ isLoading }}">
-<div data-screen-label="My bookings — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div data-screen-label="My bookings — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;overflow:hidden">
   <div style="flex:none;padding:18px 20px 12px"><div style="height:24px;width:170px;border-radius:9px;background:#E8EEF6"></div></div>
   <div style="flex:none;padding:0 20px 14px;display:flex;gap:8px">
     <div style="height:38px;width:64px;border-radius:999px;background:#E8EEF6"></div>
@@ -41,7 +41,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}">
-<div data-screen-label="My bookings — error" style="flex:1;display:flex;flex-direction:column">
+<div data-screen-label="My bookings — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column">
   <div style="flex:none;padding:18px 20px 12px"><span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your bookings</span></div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
     <dc-import name="EmptyState" icon="calendar" title="Couldn't load your bookings" body="Your connection may have dropped. Nothing is lost — every booking is safe on the record. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
@@ -51,7 +51,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isEmpty }}">
-<div data-screen-label="My bookings — empty" style="flex:1;display:flex;flex-direction:column">
+<div data-screen-label="My bookings — empty" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column">
   <div style="flex:none;padding:18px 20px 12px"><span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your bookings</span></div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
     <dc-import name="EmptyState" icon="calendar" title="No bookings yet" body="When you book a service it appears here, with its status, its record and its chat." action-label="Explore services" on-action="{{ goExplore }}" hint-size="340px,240px"></dc-import>
@@ -61,7 +61,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="My bookings" style="flex:1;display:flex;flex-direction:column;min-height:0">
+<div data-screen-label="My bookings" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <div style="flex:none;padding:18px 20px 12px;display:flex;align-items:baseline;gap:10px">
     <span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your bookings</span>
     <span style="font-size:12px;font-weight:600;color:#9AA9C0">{{ countLabel }}</span>
@@ -84,8 +84,17 @@ button:focus{outline:none}
     </a>
     </sc-if>
 
+    <a href="Did%20This%20Happen.dc.html" style="background:#fff;border:1px solid #E9EFF7;border-radius:16px;padding:13px 14px;display:flex;gap:11px;align-items:flex-start;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.04)">
+      <span style="width:34px;height:34px;border-radius:11px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9M12 17.5v.1"></path></svg></span>
+      <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font-size:13px;font-weight:800;color:#0F1B2D">Did this happen?</span>
+        <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">Home Deep Cleaning · Tue 18 Aug — the booked time has passed. One tap settles it.</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:9px"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+
     <sc-for list="{{ rows }}" as="b" hint-placeholder-count="3">
-      <a href="Booking%20Detail.dc.html" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-active="transform:scale(.99)">
+      <a href="Booking%20Detail.dc.html" style="animation:{{ listAnim }};animation-delay:calc(min({{ $index }},6)*30ms);background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;text-decoration:none;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-active="transform:scale(.99)">
         <span style="display:flex;align-items:flex-start;gap:10px">
           <span style="flex:1;font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;line-height:1.35;text-wrap:pretty">{{ b.service }}</span>
           <dc-import name="StatusPill" status="{{ b.status }}" hint-size="120px,28px"></dc-import>
@@ -106,8 +115,8 @@ button:focus{outline:none}
     </sc-for>
 
     <sc-if value="{{ filterEmpty }}" hint-placeholder-val="{{ false }}">
-    <div style="display:flex;justify-content:center;padding-top:18px">
-      <dc-import name="EmptyState" icon="calendar" title="{{ feTitle }}" body="{{ feBody }}" hint-size="340px,180px"></dc-import>
+    <div style="display:flex;justify-content:center;padding-top:18px;animation:fadeSwap var(--m-base) var(--e-out) both">
+      <dc-import name="EmptyState" icon="calendar" title="{{ feTitle }}" body="{{ feBody }}" action-label="" hint-size="340px,180px"></dc-import>
     </div>
     </sc-if>
   </div>
@@ -125,12 +134,12 @@ class Component extends DCLogic {
     { service:'Emergency plumbing call-out', provider:'Ibrahim Rasheed', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
       when:'Today', amount:'MVR 350', label:'Callout fee', status:'confirmed', group:'Active', emergency:true },
     { service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
-      when:'Tue 25 Aug · 14:00', amount:'MVR 650', label:'Quoted price', status:'awaiting_payment', group:'Active', emergency:false },
+      when:'Tue 25 Aug \u00b7 14:00', amount:'MVR 650', label:'Quoted price', status:'awaiting_payment', group:'Active', emergency:false },
     { service:'Home Deep Cleaning', provider:'Mariyam Shifa', tier:'Silver', initials:'MS', avBg:'#E8F0FE', avFg:'#1D4ED8',
-      when:'Tue 25 Aug · 14:00', amount:'MVR 450', label:'Agreed price', status:'confirmed', group:'Upcoming', emergency:false } ];
+      when:'Tue 25 Aug \u00b7 14:00', amount:'MVR 450', label:'Agreed price', status:'confirmed', group:'Upcoming', emergency:false } ];
   FE = { Upcoming: ['Nothing coming up','Confirmed future bookings sit here until their day arrives.'],
          Active:   ['Nothing needs you right now','Bookings that are underway or waiting on someone appear here.'],
-         Completed:['Nothing completed yet','Finished bookings stay here for good — with their full record and their chat.'] };
+         Completed:['Nothing completed yet','Finished bookings stay here for good \u2014 with their full record and their chat.'] };
   renderVals() {
     const p = this.props, sc = p.scenario ?? 'populated', f = this.state.filter;
     const isLoading = sc==='loading', isError = sc==='error', isEmpty = sc==='empty';
@@ -140,12 +149,12 @@ class Component extends DCLogic {
     return {
       isLoading, isError, isEmpty, isList,
       countLabel: this.ROWS.length + ' bookings',
-      filters: ['All','Upcoming','Active','Completed'].map(n => ({ label:n, sel:n===f, tap:() => this.setState({ filter:n }) })),
-      rows,
+      filters: ['All','Upcoming','Active','Completed'].map(n => ({ label:n, sel:n===f, tap:() => this.setState(s => ({ filter:n, listGen:(s.listGen||0)+1 })) })),
+      rows, listAnim: (((this.state.listGen||0)%2) ? 'fadeSwapB' : 'fadeSwap') + ' var(--m-base) var(--e-out) both',
       filterEmpty: rows.length===0, feTitle: fe[0], feBody: fe[1],
       feeOwed: (p.feeOwed ?? true) && f!=='Completed',
       goExplore: () => { window.location = 'Discovery.dc.html'; },
-      navTap: (t) => { const m = { Home:'Home.dc.html', Explore:'Discovery.dc.html' }; if (m[t]) window.location = m[t]; },
+      navTap: (t) => { const m = { Home:'Home.dc.html', Explore:'Discovery.dc.html', Messages:'Messages.dc.html' }; if (m[t]) window.location = m[t]; },
       noop: () => {}
     };
   }

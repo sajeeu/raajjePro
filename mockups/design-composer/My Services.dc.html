@@ -15,13 +15,12 @@
 body{margin:0;background:#DEE7F3}
 a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 button{font-family:inherit}button:focus{outline:none}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="My Services" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="My Services" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
     <span style="width:36px;height:36px;border-radius:11px;background:#2563EB;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
@@ -101,6 +100,15 @@ button{font-family:inherit}button:focus{outline:none}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
 
+      <a href="Verification.dc.html" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,27,45,.04);color:inherit">
+        <span style="width:40px;height:40px;border-radius:13px;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6zM9 12l2 2 4-4"></path></svg></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;font-weight:700;color:#0F1B2D">Verification</span>
+          <span style="font-size:12px;font-weight:600;color:#5B6B84;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Your badge and the checks behind it</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </a>
+
       <div style="display:flex;align-items:center;gap:8px">
         <div style="flex:1;display:flex;gap:8px">
           <dc-import name="Chip" label="All" kind="filter" selected="{{ selAll }}" on-tap="{{ fAll }}" hint-size="52px,38px"></dc-import>
@@ -146,7 +154,7 @@ button{font-family:inherit}button:focus{outline:none}
                   <div style="display:flex;align-items:center;gap:10px;border-top:1px solid #EEF3FA;padding-top:9px;margin-top:1px">
                     <span style="flex:1;font-size:11.5px;font-weight:600;color:#8296B3">Updated {{ c.updated }}</span>
                     <sc-if value="{{ c.showToggle }}" hint-placeholder-val="{{ true }}">
-                      <span style="display:inline-flex;align-items:center;gap:7px"><span style="font-size:11.5px;font-weight:700;color:{{ c.liveFg }}">{{ c.liveLabel }}</span><button onClick="{{ c.toggle }}" aria-label="Toggle live" style="width:44px;height:26px;border-radius:999px;border:none;background:{{ c.togBg }};position:relative;cursor:pointer;transition:background .2s"><span style="position:absolute;top:3px;left:{{ c.knobL }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:left .2s"></span></button></span>
+                      <span style="display:inline-flex;align-items:center;gap:7px"><span style="font-size:11.5px;font-weight:700;color:{{ c.liveFg }}">{{ c.liveLabel }}</span><button onClick="{{ c.toggle }}" aria-label="Toggle live" style="width:44px;height:26px;border-radius:999px;border:none;background:{{ c.togBg }};position:relative;cursor:pointer;transition:background var(--m-fast)"><span style="position:absolute;top:3px;left:{{ c.knobL }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:left var(--m-base)"></span></button></span>
                     </sc-if>
                     <sc-if value="{{ c.showFinish }}" hint-placeholder-val="{{ false }}">
                       <a href="Create Service.dc.html" style="display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px;border-radius:999px;background:#2563EB;color:#fff;font-size:12px;font-weight:700">Finish &amp; publish<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
@@ -199,12 +207,12 @@ button{font-family:inherit}button:focus{outline:none}
   </div>
 
   <div style="flex:none;padding:8px 20px 12px;background:#F2F6FB;display:flex;justify-content:center">
-    <dc-import name="BottomNav" active="Profile" on-tap="{{ navTab }}" hint-size="372px,88px"></dc-import>
+    <dc-import name="BottomNav" role="provider" active="Services" hint-size="372px,88px"></dc-import>
   </div>
 
   <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeMenu }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 16px 14px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2)">
+    <div onClick="{{ closeMenu }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 16px 14px;z-index:21;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2)">
       <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto 14px"></div>
       <div style="font-size:14.5px;font-weight:800;color:#0F1B2D;padding:0 6px 10px">{{ menuTitle }}</div>
       <div style="display:flex;flex-direction:column">
@@ -219,8 +227,8 @@ button{font-family:inherit}button:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeConfirm }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+    <div onClick="{{ closeConfirm }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
       <span style="width:44px;height:44px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v5M14 11v5"></path></svg></span>
       <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Remove {{ confirmTitle }}?</span>
       <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty">It's removed from your services, so customers can no longer find or book it. Your booking history, reviews, and earnings from past jobs stay in your account.</span>
@@ -232,7 +240,7 @@ button{font-family:inherit}button:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:{{ toastAnim }};box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -240,6 +248,7 @@ button{font-family:inherit}button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;tier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Gold&quot;,&quot;Silver&quot;,&quot;Bronze&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'Gold' | 'Silver' | 'Bronze'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;plan&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;paid&quot;,&quot;free-over-limit&quot;],&quot;default&quot;:&quot;paid&quot;,&quot;tsType&quot;:&quot;'paid' | 'free-over-limit'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;drafts-only&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;listings&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;both&quot;,&quot;slots-only&quot;,&quot;requests-only&quot;],&quot;default&quot;:&quot;both&quot;,&quot;tsType&quot;:&quot;'both' | 'slots-only' | 'requests-only'&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { filter:'All', view:'list', menuFor:null, confirm:null, toast:null, liveOv:{}, del:[], extra:[], liveId:'clean' };
   BASE = [
     { id:'clean', title:'Home Deep Cleaning', cat:'Cleaning', catBg:'#E7F6EC', catFg:'#0E9F5D', photo:'uploads/cleaning.jpeg', status:'published', live:true, rating:'4.8', price:'MVR 500', unit:'/session', views:312, bookings:23, updated:'2 days ago' },
@@ -252,8 +261,8 @@ class Component extends DCLogic {
     { bg:'#E8F0FE', fg:'#1D4ED8', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
     { bg:'#F3E8FD', fg:'#9333EA', d:'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2z' }
   ];
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
-  componentWillUnmount() { clearTimeout(this._tt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2600); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
   nav(h) { window.location.href = h; }
   mkCard(x, pubIds) {
     const s = this.state;
@@ -276,7 +285,7 @@ class Component extends DCLogic {
         this.toastMsg(live ? 'Paused — hidden from customers until you switch it back' : 'Live — visible to customers again');
       },
       menu: () => this.setState({ menuFor: x.id }),
-      upgrade: () => this.toastMsg('Plans & upgrades open outside this screen'),
+      upgrade: () => { window.location.href = 'Billing.dc.html'; },
       swap: () => {
         this.setState({ liveId: x.id });
         this.toastMsg(x.title + ' is now your live service');
@@ -317,13 +326,16 @@ class Component extends DCLogic {
       }
       menuOpts.push(mkOpt('Duplicate as draft', 'M8 8h12v12H8zM8 8V4h12v12h-4', () => {
         const copy = { ...menuCard, id: menuCard.id + '-copy' + Date.now(), title: menuCard.title + ' (copy)', status: 'draft', live: false, hidden: false, rating: null, views: 0, bookings: 0, updated: 'Just now' };
-        this.setState(st => ({ extra: [...st.extra, copy], menuFor: null }));
+        this._close(st => ({ extra: [...st.extra, copy], menuFor: null }));
         this.toastMsg('Copied — saved as a new draft');
       }));
-      menuOpts.push(mkOpt('Delete service', 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13', () => this.setState({ menuFor: null, confirm: menuCard.id }), true));
+      menuOpts.push(mkOpt('Delete service', 'M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13', () => this._close({ menuFor: null, confirm: menuCard.id }), true));
     }
     const efPub = s.filter === 'Published';
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       tierVal: tier,
       isLoading: scenario === 'loading', isError: scenario === 'error', isNormal: scenario === 'normal' || draftsOnly,
       retry: () => this.toastMsg('Retrying…'),
@@ -334,7 +346,7 @@ class Component extends DCLogic {
       ],
       draftsNote: draftsOnly,
       showAvail: listings !== 'requests-only',
-      availSub: draftsOnly ? 'No hours published yet — set up your first rule' : 'Home Deep Cleaning · Mon–Thu 09:00–17:00',
+      availSub: draftsOnly ? 'No hours published yet — set up your first rule' : 'Home Deep Cleaning · Mon\u2013Thu 09:00\u201317:00',
       selAll: s.filter === 'All', selPub: s.filter === 'Published', selDraft: s.filter === 'Draft',
       fAll: () => this.setState({ filter: 'All' }), fPub: () => this.setState({ filter: 'Published' }), fDraft: () => this.setState({ filter: 'Draft' }),
       isList: s.view === 'list' && !emptyFilter, isGrid: s.view === 'grid' && !emptyFilter,
@@ -344,7 +356,7 @@ class Component extends DCLogic {
       cards,
       emptyFilter, notEmptyFilter: !emptyFilter,
       efTitle: efPub ? 'Nothing published yet' : 'No drafts',
-      efBody: efPub ? 'Customers only find services that are live. Publish your draft to appear in search.' : 'Everything you’ve made is live. Start a new service any time.',
+      efBody: efPub ? 'Customers only find services that are live. Publish your draft to appear in search.' : 'Everything you\u2019ve made is live. Start a new service any time.',
       efAction: efPub ? 'Finish & publish' : 'New service',
       efGo: () => this.nav('Create Service.dc.html'),
       navTab: (t) => {
@@ -352,11 +364,11 @@ class Component extends DCLogic {
         if (M[t]) this.nav(M[t]);
       },
       menuOpen: !!menuCard, menuTitle: menuCard ? menuCard.title : '', menuOpts,
-      closeMenu: () => this.setState({ menuFor: null }),
-      confirmOpen: !!confirmCard, confirmTitle: confirmCard ? '“' + confirmCard.title + '”' : '',
-      closeConfirm: () => this.setState({ confirm: null }),
+      closeMenu: () => this._close({ menuFor: null }),
+      confirmOpen: !!confirmCard, confirmTitle: confirmCard ? '\u201C' + confirmCard.title + '\u201D' : '',
+      closeConfirm: () => this._close({ confirm: null }),
       doDelete: () => {
-        this.setState(st => ({ del: [...st.del, st.confirm], confirm: null }));
+        this._close(st => ({ del: [...st.del, st.confirm], confirm: null }));
         this.toastMsg('Removed from your services — history and reviews stay in your account');
       },
       toastOn: !!s.toast, toast: s.toast || ''
