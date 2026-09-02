@@ -135,6 +135,21 @@ def badge_on_a_customer(path, s):
     n = len(re.findall(r'dc-import\s+name="VerificationBadge"', s))
     return ["%d badge(s) on %s" % (n, stem)] if n else []
 
+# A handler bound to a control but defined as an empty arrow does nothing when tapped.
+# `noop` is the agreed name for a deliberate placeholder, so anything else with an empty
+# body is a dead end - and these cluster on secondary actions nobody walks in a demo:
+# Service Preview's two report controls, Provider Profile's Message and Report.
+def dead_handlers(s):
+    """Named renderVals handlers with an empty body. `noop` is exempt by convention."""
+    out = []
+    for m in re.finditer(r"(\w+)\s*:\s*\(\s*\w*\s*\)\s*=>\s*\{\s*\}", s):
+        name = m.group(1)
+        if name == "noop":
+            continue
+        if re.search(r'\{\{\s*' + re.escape(name) + r'\s*\}\}', s):
+            out.append(name)
+    return sorted(set(out))
+
 def mode_mismatches(s):
     """Object literals carrying both a category and a booking mode that contradict §1c."""
     out = []
@@ -212,6 +227,11 @@ def check(path):
                       "Round 23 removed the emergency search filter - dispatch never targets a "
                       "provider, so the filter advertised a cut that does not exist. Emergency has "
                       "its own entry on Home and Explore. Warn-only until Round 41 removes the chip."))
+
+    for name in dead_handlers(s):
+        warns.append(("control wired to an empty handler (%s)" % name,
+                      "Tapping it does nothing. Name a deliberate placeholder `noop`; otherwise "
+                      "point it at the screen it belongs to."))
 
     for detail in mode_mismatches(s):
         fails.append(("booking mode contradicts the category", detail + " — §1c. "
