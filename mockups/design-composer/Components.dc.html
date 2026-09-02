@@ -133,10 +133,24 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 
   <div style="display:flex;flex-direction:column;gap:14px">
     <div style="display:flex;align-items:baseline;gap:10px"><div style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">Skeleton</div><div style="font-size:11px;font-weight:700;color:#8296B3">SkeletonCard.dc.html</div></div>
-    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84">Every loading state shimmers in the shape of the real layout — never a centred spinner. One variant per card variant.</div>
-    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start" aria-hidden="true">
-      <dc-import name="SkeletonCard" variant="horizontal" hint-size="250px,240px"></dc-import>
-      <div style="flex:1;min-width:340px"><dc-import name="SkeletonCard" variant="full" hint-size="100%,124px"></dc-import></div>
+    <div style="font-size:13px;font-weight:500;line-height:1.5;color:#5B6B84;max-width:640px;text-wrap:pretty">Every loading state shimmers in the shape of the real layout — never a centred spinner. <b style="color:#0F1B2D">Skeleton matches the card it stands in for</b>: same fixed frame, bars where the real rows sit, so nothing moves when the data arrives. If the card's height ever changes and the skeleton does not follow, this pairing shows it immediately.</div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:12px">
+          <dc-import name="ServiceCard" variant="horizontal" title="Emergency Plumbing &amp; Pipe Repair" provider="Ibrahim Rasheed" tier="Gold" rating="4.6" count="31" price="From MVR 350" island="Th. Guraidhoo" category="Plumbing" mode="request" reply-time="12 min" bookings="{{ 44 }}" callback="{{ true }}" hint-size="250px,330px"></dc-import>
+          <dc-import name="SkeletonCard" variant="horizontal" hint-size="250px,330px"></dc-import>
+        </div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Horizontal — skeleton matches the card it stands in for · 250 × 330</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:340px">
+        <dc-import name="ServiceCard" variant="full" title="Home Deep Cleaning" provider="Mariyam Shifa" tier="Silver" rating="4.8" count="24" price="MVR 450" unit="/session" island="Malé" category="Cleaning" mode="instant" next-slot="tomorrow 09:00" hint-size="100%,188px"></dc-import>
+        <dc-import name="SkeletonCard" variant="full" hint-size="100%,188px"></dc-import>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Full — skeleton matches the card it stands in for · 188px</span>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:8px" aria-hidden="true">
+      <dc-import name="SkeletonCard" variant="row" hint-size="100%,124px"></dc-import>
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8296B3">Row — generic list row (bookings, invoices, metrics) · deliberately unsized</span>
     </div>
   </div>
 

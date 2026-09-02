@@ -13,18 +13,71 @@
 <style>*{box-sizing:border-box}body{margin:0;background:#F2F6FB}a{color:#2563EB}a:hover{color:#1D4ED8}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>
 </helmet>
+<!-- horizontal: mirrors ServiceCard variant="horizontal" — fixed 250x330, bars sit where the card's rows sit -->
 <sc-if value="{{ isHorizontal }}" hint-placeholder-val="{{ true }}">
-<div aria-hidden="true" style="width:250px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-  <div style="height:126px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-  <div style="padding:13px 14px 14px;display:flex;flex-direction:column;gap:10px">
-    <div style="height:15px;width:80%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-    <div style="height:12px;width:60%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-    <div style="height:12px;width:70%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
-    <div style="height:26px;width:120px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+<div aria-hidden="true" style="width:250px;height:330px;display:flex;flex-direction:column;background:#fff;border:1px solid #E9EFF7;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+  <div style="flex:none;height:126px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  <div style="flex:1;min-height:0;padding:13px 14px 14px;display:flex;flex-direction:column;gap:9px">
+    <div style="height:39px;display:flex;flex-direction:column;justify-content:space-between">
+      <div style="height:15px;width:100%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="height:15px;width:68%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px">
+      <div style="width:22px;height:22px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="height:12px;width:45%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <div style="height:12px;width:54px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="flex:1"></div>
+      <div style="height:12px;width:70px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="border-top:1px solid #EEF3FA;padding-top:10px;margin-top:auto">
+      <div style="height:19px;width:96px;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <div style="height:25px;width:112px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="height:25px;width:92px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
   </div>
 </div>
 </sc-if>
+<!-- full: mirrors ServiceCard variant="full" — fixed 188px, top-aligned with pinned footer like the card -->
 <sc-if value="{{ isFull }}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="height:188px;overflow:hidden;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+  <div style="width:96px;flex:none;align-self:stretch;min-height:112px;border-radius:14px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:7px;min-width:0">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+        <div style="height:39px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="height:15px;width:100%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+          <div style="height:15px;width:68%;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+        </div>
+        <div style="height:12px;width:40%;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      </div>
+      <div style="flex:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap">
+      <div style="height:12px;width:54px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="height:12px;width:78px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="height:12px;width:62px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="border-top:1px solid #EEF3FA;margin-top:auto;padding-top:9px;display:flex;align-items:center">
+      <div style="height:18px;width:84px;border-radius:8px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="flex:1"></div>
+      <div style="height:23px;width:104px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+    <div style="display:flex;align-items:center;min-height:25px">
+      <div style="height:12px;width:120px;border-radius:6px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+      <div style="flex:1"></div>
+      <div style="height:21px;width:96px;border-radius:9px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
+    </div>
+  </div>
+</div>
+</sc-if>
+<!-- row: generic card-shaped list row (booking rows, invoice rows, metric tiles, availability rows).
+     Deliberately UNSIZED — it stands in for a dozen different real rows, so a fixed height would be
+     wrong for most of them. Do not add a height here. -->
+<sc-if value="{{ isRow }}" hint-placeholder-val="{{ false }}">
 <div aria-hidden="true" style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
   <div style="width:96px;height:96px;border-radius:14px;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
   <div style="flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center">
@@ -35,11 +88,11 @@
 </div>
 </sc-if>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:290,&quot;height&quot;:280},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;horizontal&quot;,&quot;full&quot;],&quot;default&quot;:&quot;horizontal&quot;,&quot;tsType&quot;:&quot;'horizontal' | 'full'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:290,&quot;height&quot;:380},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;horizontal&quot;,&quot;full&quot;,&quot;row&quot;],&quot;default&quot;:&quot;horizontal&quot;,&quot;tsType&quot;:&quot;'horizontal' | 'full' | 'row'&quot;,&quot;description&quot;:&quot;horizontal and full mirror the matching ServiceCard variant (fixed 250x330 and 100%x188); row is the generic unsized list-row shimmer&quot;}}">
 class Component extends DCLogic {
   renderVals() {
     const v = this.props.variant ?? 'horizontal';
-    return { isHorizontal: v === 'horizontal', isFull: v === 'full' };
+    return { isHorizontal: v === 'horizontal', isFull: v === 'full', isRow: v === 'row' };
   }
 }
 </script>
