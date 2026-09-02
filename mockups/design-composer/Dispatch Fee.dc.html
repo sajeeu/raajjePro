@@ -16,10 +16,9 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 button:focus{outline:none}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -142,7 +141,7 @@ button:focus{outline:none}
     <span style="flex:1"></span>
     <a href="Booking%20Detail.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp var(--m-page) var(--e-out)">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
       <span style="width:64px;height:64px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
       <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">New bookings are unblocked</span>
@@ -176,7 +175,7 @@ button:focus{outline:none}
     </div>
   </div>
   <div style="position:absolute;inset:0;background:rgba(15,27,45,.42);display:flex;align-items:flex-end">
-    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 22px 24px;display:flex;flex-direction:column;gap:13px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1)">
+    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 22px 24px;display:flex;flex-direction:column;gap:13px;animation:sheetUp var(--m-sheet) var(--e-out)">
       <span style="width:40px;height:4px;border-radius:99px;background:#E3EAF3;align-self:center"></span>
       <span style="display:flex;flex-direction:column;gap:5px">
         <span style="font-size:18px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">New bookings are on hold</span>

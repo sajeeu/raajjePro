@@ -16,9 +16,9 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -34,7 +34,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
 <sc-if value="{{ isIndex }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Legal" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Legal" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <sc-for list="{{ docs }}" as="d" hint-placeholder-count="4">
     <button onClick="{{ d.open }}" style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;cursor:pointer;text-align:left;width:100%;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#CDDDFB">
       <span style="width:46px;height:46px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10.5 12.5h5M10.5 16h5"></path></svg></span>
@@ -46,7 +46,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Legal — document" style="padding:16px 20px 40px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .3s ease both">
+<div data-screen-label="Legal — document" style="padding:16px 20px 40px;display:flex;flex-direction:column;gap:16px;animation:fadeUp var(--m-page) var(--e-out) both">
   <div style="display:flex;align-items:flex-start;gap:10px;background:#FFF7E8;border:1px solid #F3DFB4;border-radius:16px;padding:12px 14px">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3L2.5 20h19zM12 10v4M12 17v.1"></path></svg>
     <span style="font-size:12.5px;font-weight:700;line-height:1.5;color:#92600A">Placeholder — legal text pending review. Headings show the structure; the body is not final policy.</span>
@@ -71,7 +71,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Legal — loading" aria-hidden="true" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
+<div data-screen-label="Legal — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
   <sc-for list="{{ skels }}" as="k" hint-placeholder-count="4">
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;display:flex;gap:13px;align-items:center">
       <div style="width:46px;height:46px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
@@ -85,7 +85,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Legal — error" style="padding:60px 20px;display:flex;justify-content:center">
+<div data-screen-label="Legal — error" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:60px 20px;display:flex;justify-content:center">
   <dc-import name="EmptyState" icon="pin" title="Couldn't load documents" body="Your connection may have dropped. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
 </div>
 </sc-if>
