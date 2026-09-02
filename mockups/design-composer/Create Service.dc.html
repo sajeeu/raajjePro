@@ -17,14 +17,10 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes barGrow{from{width:12%}to{width:64%}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -47,12 +43,12 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </div>
     <div style="display:flex;gap:5px" aria-hidden="true">
       <sc-for list="{{ segs }}" as="g" hint-placeholder-count="7">
-        <div style="flex:1;height:4px;border-radius:999px;background:{{ g.bg }};transition:background .3s ease"></div>
+        <div style="flex:1;height:4px;border-radius:999px;background:{{ g.bg }};transition:background var(--m-fast) ease"></div>
       </sc-for>
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin:-2px -2px 0;scrollbar-width:none">
       <sc-for list="{{ pills }}" as="p" hint-placeholder-count="7">
-        <button onClick="{{ p.go }}" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};border:1.5px solid {{ p.bd }};font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s" style-active="transform:scale(.96)">
+        <button onClick="{{ p.go }}" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};border:1.5px solid {{ p.bd }};font-size:12.5px;font-weight:700;cursor:pointer;transition:background var(--m-fast),color var(--m-fast),border-color var(--m-fast)" style-active="transform:scale(.96)">
           <span>{{ p.label }}</span>
           <sc-if value="{{ p.dot }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.dotBg }};display:inline-block"></span></sc-if>
         </button>
@@ -61,7 +57,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </div>
 
   <sc-if value="{{ isOffline }}">
-    <div style="flex:none;display:flex;align-items:center;gap:9px;background:#FEF3DC;border-top:1px solid #F3E2B8;border-bottom:1px solid #F3E2B8;padding:9px 20px;font-size:12.5px;font-weight:600;color:#8A5A08;animation:fadeIn .25s ease both">
+    <div style="flex:none;display:flex;align-items:center;gap:9px;background:#FEF3DC;border-top:1px solid #F3E2B8;border-bottom:1px solid #F3E2B8;padding:9px 20px;font-size:12.5px;font-weight:600;color:#8A5A08;animation:fadeIn var(--m-page) var(--e-out) both">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 15a4 4 0 0 1 3-6.9A5.5 5.5 0 0 1 17.5 9M3 3l18 18"></path></svg>
       <span>You're offline — changes are queued and will sync automatically.</span>
     </div>
@@ -70,7 +66,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
     <sc-if value="{{ st1 }}" hint-placeholder-val="{{ true }}">
-      <div data-screen-label="1 · Details" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:20px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="1 · Details" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:20px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Service details</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">A clear name and description help customers find and choose you.</p>
@@ -82,7 +78,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
         <div style="display:flex;flex-direction:column;gap:8px">
           <label for="svcname" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Service name<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></label>
-          <input id="svcname" type="text" maxLength="80" value="{{ name }}" onChange="{{ setName }}" placeholder="e.g. Wiring &amp; Fault Repair" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <input id="svcname" type="text" maxLength="80" value="{{ name }}" onChange="{{ setName }}" placeholder="e.g. Wiring &amp; Fault Repair" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px;font-size:15px;color:#0F1B2D;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
           <div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#5B6B84"><span>What customers see first in results.</span><span style="flex:none">{{ nameCount }}</span></div>
         </div>
 
@@ -90,7 +86,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Category<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
             <sc-for list="{{ catTiles }}" as="c" hint-placeholder-count="12">
-              <button onClick="{{ c.tap }}" style="background:{{ c.tileBg }};border:1.5px solid {{ c.tileBd }};border-radius:16px;padding:13px 6px 11px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.96)">
+              <button onClick="{{ c.tap }}" style="background:{{ c.tileBg }};border:1.5px solid {{ c.tileBd }};border-radius:16px;padding:13px 6px 11px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.96)">
                 <span style="width:40px;height:40px;border-radius:12px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ c.fg }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.d }}"></path></svg></span>
                 <span style="font-size:11.5px;font-weight:700;color:#0F1B2D;text-align:center;line-height:1.25">{{ c.n }}</span>
               </button>
@@ -100,13 +96,13 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
         <div style="display:flex;flex-direction:column;gap:8px">
           <label for="sdesc" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Short description<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></label>
-          <textarea id="sdesc" maxLength="120" rows="2" value="{{ shortDesc }}" onChange="{{ setShortDesc }}" placeholder="One sentence about your service…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <textarea id="sdesc" maxLength="120" rows="2" value="{{ shortDesc }}" onChange="{{ setShortDesc }}" placeholder="One sentence about your service…" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
           <div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#5B6B84"><span>Shown in search results. Be concise and specific.</span><span style="flex:none">{{ shortCount }}</span></div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px">
           <label for="ldesc" style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Detailed description<span style="font-size:11px;font-weight:700;color:#5B6B84;background:#EDF2F9;border-radius:999px;padding:3px 8px">Optional</span></label>
-          <textarea id="ldesc" maxLength="800" rows="4" value="{{ longDesc }}" onChange="{{ setLongDesc }}" placeholder="What's included, your process, why customers should choose you…" style="width:100%;display:block;overflow:hidden;field-sizing:content;min-height:112px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+          <textarea id="ldesc" maxLength="800" rows="4" value="{{ longDesc }}" onChange="{{ setLongDesc }}" placeholder="What's included, your process, why customers should choose you…" style="width:100%;display:block;overflow:hidden;field-sizing:content;min-height:112px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:13px 16px;font-size:15px;line-height:1.5;color:#0F1B2D;resize:none;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
           <div style="display:flex;justify-content:flex-end;font-size:12.5px;color:#5B6B84">{{ longCount }}</div>
         </div>
 
@@ -122,7 +118,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             </div>
           </sc-if>
           <sc-if value="{{ hasCat }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex;flex-direction:column;gap:12px;animation:fadeUp .2s ease both">
+            <div style="display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
               <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">{{ tagSugHead }}</div>
               <div style="display:flex;flex-wrap:wrap;gap:8px">
                 <sc-for list="{{ tagChips }}" as="t" hint-placeholder-count="6">
@@ -130,13 +126,13 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 </sc-for>
               </div>
               <div style="display:flex;gap:10px">
-                <input aria-label="Add your own tag" type="text" value="{{ tagInput }}" onChange="{{ setTagInput }}" placeholder="Anything not covered? Add your own…" style="flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 14px;font-size:13.5px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                <input aria-label="Add your own tag" type="text" value="{{ tagInput }}" onChange="{{ setTagInput }}" placeholder="Anything not covered? Add your own…" style="flex:1;min-width:0;height:44px;border-radius:12px;border:1.5px solid #E3EAF3;background:#fff;padding:0 14px;font-size:13.5px;color:#0F1B2D;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
                 <button onClick="{{ addTag }}" style="flex:none;height:44px;padding:0 18px;border-radius:12px;border:none;background:{{ addTagBg }};color:{{ addTagFg }};font-size:13.5px;font-weight:700;cursor:{{ addTagCur }}" style-active="transform:scale(.96)">Add</button>
               </div>
               <sc-if value="{{ hasCustomTags }}">
                 <div style="display:flex;flex-wrap:wrap;gap:8px">
                   <sc-for list="{{ customChips }}" as="c" hint-placeholder-count="2">
-                    <span style="display:inline-flex;align-items:center;gap:6px;background:#E8F0FE;color:#1D4ED8;border:1px solid #CDDDFB;border-radius:999px;padding:7px 8px 7px 13px;font-size:12.5px;font-weight:700;animation:fadeUp .2s ease both">{{ c.label }}
+                    <span style="display:inline-flex;align-items:center;gap:6px;background:#E8F0FE;color:#1D4ED8;border:1px solid #CDDDFB;border-radius:999px;padding:7px 8px 7px 13px;font-size:12.5px;font-weight:700;animation:fadeUp var(--m-page) var(--e-out) both">{{ c.label }}
                       <button onClick="{{ c.rm }}" aria-label="Remove {{ c.label }}" style="width:20px;height:20px;border-radius:50%;border:none;background:rgba(37,99,235,.14);color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(37,99,235,.28)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
                     </span>
                   </sc-for>
@@ -149,7 +145,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st2 }}">
-      <div data-screen-label="2 · Location" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="2 · Location" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Location &amp; service area</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers only see services available on their island. At least one island is needed to publish.</p>
@@ -160,7 +156,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </div>
         <div style="position:relative">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2" stroke-linecap="round" style="position:absolute;left:16px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.3-4.3"></path></svg>
-          <input type="text" value="{{ islandQ }}" onChange="{{ setIslandQ }}" autoFocus="{{ true }}" placeholder="Search islands…" aria-label="Search islands" style="width:100%;height:52px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px 0 46px;font-size:15px;color:#0F1B2D;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+          <input type="text" value="{{ islandQ }}" onChange="{{ setIslandQ }}" autoFocus="{{ true }}" placeholder="Search islands…" aria-label="Search islands" style="width:100%;height:52px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;padding:0 16px 0 46px;font-size:15px;color:#0F1B2D;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
         </div>
         <sc-if value="{{ hasIslands }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -180,7 +176,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
             <div onClick="{{ i.go }}" role="checkbox" aria-checked="{{ i.on }}" tabIndex="0" style="display:flex;align-items:center;gap:14px;padding:14px 2px;border-bottom:1px solid #F0F4FA;cursor:pointer;min-height:56px" style-hover="background:#FAFCFF">
               <div style="display:flex;flex-direction:column;gap:1px;flex:1"><div style="font-size:15px;font-weight:700;color:#0F1B2D">{{ i.name }}</div><div style="font-size:12.5px;color:#5B6B84">{{ i.atoll }}</div></div>
-              <div style="width:26px;height:26px;border-radius:50%;background:{{ i.cBg }};border:2px solid {{ i.cBd }};display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s,border-color .15s">
+              <div style="width:26px;height:26px;border-radius:50%;background:{{ i.cBg }};border:2px solid {{ i.cBd }};display:flex;align-items:center;justify-content:center;flex:none;transition:background var(--m-fast),border-color var(--m-fast)">
                 <sc-if value="{{ i.on }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
               </div>
             </div>
@@ -194,7 +190,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st3 }}">
-      <div data-screen-label="3 · Pricing" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="3 · Pricing" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Pricing</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Clear, transparent prices build trust and get more bookings. Always in MVR.</p>
@@ -203,8 +199,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">How the price works<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
           <div style="display:flex;flex-direction:column;gap:9px" role="radiogroup" aria-label="Pricing model">
             <sc-for list="{{ modelCards }}" as="m" hint-placeholder-count="5">
-              <button onClick="{{ m.tap }}" role="radio" aria-checked="{{ m.on }}" style="display:flex;align-items:center;gap:13px;background:{{ m.bg }};border:1.5px solid {{ m.bd }};border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.985)">
-                <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ m.dotBd }};background:{{ m.dotBg }};display:flex;align-items:center;justify-content:center;flex:none;transition:border-color .15s,background .15s">
+              <button onClick="{{ m.tap }}" role="radio" aria-checked="{{ m.on }}" style="display:flex;align-items:center;gap:13px;background:{{ m.bg }};border:1.5px solid {{ m.bd }};border-radius:16px;padding:13px 16px;cursor:pointer;text-align:left;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.985)">
+                <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ m.dotBd }};background:{{ m.dotBg }};display:flex;align-items:center;justify-content:center;flex:none;transition:border-color var(--m-fast),background var(--m-fast)">
                   <sc-if value="{{ m.on }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
                 </span>
                 <span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">{{ m.label }}</span><span style="font-size:12.5px;line-height:1.4;color:#5B6B84">{{ m.sub }}</span></span>
@@ -212,12 +208,12 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             </sc-for>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:11px;background:{{ reqNoteBg }};border:1px solid {{ reqNoteBd }};border-radius:14px;padding:12px 15px;transition:background .2s,border-color .2s">
+        <div style="display:flex;align-items:flex-start;gap:11px;background:{{ reqNoteBg }};border:1px solid {{ reqNoteBd }};border-radius:14px;padding:12px 15px;transition:background var(--m-fast),border-color var(--m-fast)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ reqNoteFg }}" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
           <span style="font-size:12.5px;line-height:1.5;font-weight:600;color:{{ reqNoteFg }};text-wrap:pretty">Price range and Price on request can't be booked as a fixed time slot — customers request a time instead, since no one can book a set time at an unknown price.</span>
         </div>
         <sc-if value="{{ isQuote }}">
-          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeUp .2s ease both">
+          <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeUp var(--m-page) var(--e-out) both">
             <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">No price shown</div>
             <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers see "Price on request" and send you the job details. You reply with a quote in chat.</div>
           </div>
@@ -234,7 +230,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               </div>
             </sc-if>
             <sc-if value="{{ isRange }}">
-              <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .2s ease both">
+              <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp var(--m-page) var(--e-out) both">
                 <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#0F1B2D">Price range<span style="font-size:11px;font-weight:700;color:#2563EB;background:#E8F0FE;border-radius:999px;padding:3px 8px">Required to publish</span></div>
                 <div style="display:flex;align-items:center;gap:10px">
                   <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:0 8px;height:52px">
@@ -252,7 +248,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="display:flex;flex-direction:column;gap:8px">
               <label for="unitSel" style="font-size:14px;font-weight:700;color:#0F1B2D">Shown to customers as</label>
               <div style="position:relative">
-                <select id="unitSel" value="{{ unit }}" onChange="{{ setUnit }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:#0F1B2D;appearance:none;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
+                <select id="unitSel" value="{{ unit }}" onChange="{{ setUnit }}" style="width:100%;height:52px;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:0 44px 0 16px;font-size:15px;font-weight:600;color:#0F1B2D;appearance:none;cursor:pointer;transition:border-color var(--m-fast),box-shadow var(--m-fast)" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)">
                   <sc-for list="{{ unitOpts }}" as="u" hint-placeholder-count="5"><option value="{{ u.v }}">{{ u.v }}</option></sc-for>
                 </select>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9.5l6 6 6-6"></path></svg>
@@ -269,7 +265,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st4 }}">
-      <div data-screen-label="4 · Media" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="4 · Media" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Photos &amp; media</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Good photos dramatically increase bookings. Show your work at its best.</p>
@@ -287,7 +283,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             </button>
           </sc-if>
           <sc-if value="{{ coverDone }}" hint-placeholder-val="{{ true }}">
-            <div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .2s ease both">
+            <div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp var(--m-page) var(--e-out) both">
               <div role="img" aria-label="Cover image" style="width:100%;aspect-ratio:16/9;border-radius:16px;background-image:{{ coverCss }};background-size:cover;background-position:center;border:1px solid #E3EAF3"></div>
               <div style="display:flex;gap:10px">
                 <button onClick="{{ uploadCover }}" style="flex:1;height:40px;border-radius:11px;border:1.5px solid #CDDDFB;background:#E8F0FE;color:#1D4ED8;font-size:13px;font-weight:700;cursor:pointer" style-active="transform:scale(.97)">Replace</button>
@@ -342,14 +338,14 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st5 }}">
-      <div data-screen-label="5 · Availability" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="5 · Availability" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Availability</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">How customers book this service, and when you work.</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="font-size:14px;font-weight:700;color:#0F1B2D">How this service is booked</div>
-          <button onClick="{{ pickSlots }}" role="radio" aria-checked="{{ modeSlots }}" aria-disabled="{{ slotsDisabled }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ slotsBg }};border:1.5px solid {{ slotsBd }};border-radius:16px;padding:14px 16px;cursor:{{ slotsCur }};text-align:left;transition:border-color .15s,background .15s">
+          <button onClick="{{ pickSlots }}" role="radio" aria-checked="{{ modeSlots }}" aria-disabled="{{ slotsDisabled }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ slotsBg }};border:1.5px solid {{ slotsBd }};border-radius:16px;padding:14px 16px;cursor:{{ slotsCur }};text-align:left;transition:border-color var(--m-fast),background var(--m-fast)">
             <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ slotsDotBd }};background:{{ slotsDotBg }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
               <sc-if value="{{ modeSlots }}" hint-placeholder-val="{{ true }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
             </span>
@@ -361,7 +357,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <sc-if value="{{ slotsDisabled }}"><span style="font-size:12.5px;line-height:1.45;font-weight:700;color:#8A5A08;margin-top:3px">{{ slotsReason }}</span></sc-if>
             </span>
           </button>
-          <button onClick="{{ pickRequest }}" role="radio" aria-checked="{{ modeRequest }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ reqBg }};border:1.5px solid {{ reqBd }};border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s" style-active="transform:scale(.985)">
+          <button onClick="{{ pickRequest }}" role="radio" aria-checked="{{ modeRequest }}" style="display:flex;align-items:flex-start;gap:13px;background:{{ reqBg }};border:1.5px solid {{ reqBd }};border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.985)">
             <span style="width:22px;height:22px;border-radius:50%;border:2px solid {{ reqDotBd }};background:{{ reqDotBg }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
               <sc-if value="{{ modeRequest }}"><span style="width:8px;height:8px;border-radius:50%;background:#fff;display:block"></span></sc-if>
             </span>
@@ -372,7 +368,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Working days</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
             <sc-for list="{{ dayChips }}" as="d" hint-placeholder-count="7">
-              <button onClick="{{ d.tap }}" aria-pressed="{{ d.on }}" style="height:40px;min-width:52px;padding:0 13px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};border:1.5px solid {{ d.bd }};font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s" style-active="transform:scale(.95)">{{ d.label }}</button>
+              <button onClick="{{ d.tap }}" aria-pressed="{{ d.on }}" style="height:40px;min-width:52px;padding:0 13px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};border:1.5px solid {{ d.bd }};font-size:13px;font-weight:700;cursor:pointer;transition:background var(--m-fast),color var(--m-fast),border-color var(--m-fast)" style-active="transform:scale(.95)">{{ d.label }}</button>
             </sc-for>
           </div>
           <div style="display:flex;gap:12px">
@@ -403,8 +399,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="flex:1;display:flex;align-items:center;gap:7px;font-size:15px;font-weight:700;color:{{ emgTitleFg }}">Emergency callouts
               <sc-if value="{{ emgLocked }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></sc-if>
             </div>
-            <button onClick="{{ toggleEmg }}" role="switch" aria-checked="{{ emergency }}" aria-disabled="{{ emgLocked }}" aria-label="Emergency callouts" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ emgSwBd }};background:{{ emgSwBg }};padding:2px;flex:none;cursor:{{ emgSwCur }};display:flex;align-items:center;justify-content:{{ emgSwJustify }};transition:background .2s,border-color .2s">
-              <span style="width:24px;height:24px;border-radius:50%;background:{{ emgSwKnob }};display:block;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:background .2s"></span>
+            <button onClick="{{ toggleEmg }}" role="switch" aria-checked="{{ emergency }}" aria-disabled="{{ emgLocked }}" aria-label="Emergency callouts" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ emgSwBd }};background:{{ emgSwBg }};padding:2px;flex:none;cursor:{{ emgSwCur }};display:flex;align-items:center;justify-content:{{ emgSwJustify }};transition:background var(--m-fast),border-color var(--m-fast)">
+              <span style="width:24px;height:24px;border-radius:50%;background:{{ emgSwKnob }};display:block;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:background var(--m-fast)"></span>
             </button>
           </div>
           <sc-if value="{{ emgLocked }}">
@@ -417,7 +413,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="display:flex;flex-direction:column;gap:8px">
               <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Customers can reach you outside your working hours for urgent {{ emgCatWord }} jobs. <b>Customers expect a response within {{ emgWindow }} minutes.</b></div>
               <sc-if value="{{ emergency }}">
-                <div style="display:flex;align-items:flex-start;gap:9px;background:#FFFBEB;border:1px solid #F3E2B8;border-radius:12px;padding:11px 13px;animation:fadeUp .2s ease both">
+                <div style="display:flex;align-items:flex-start;gap:9px;background:#FFFBEB;border:1px solid #F3E2B8;border-radius:12px;padding:11px 13px;animation:fadeUp var(--m-page) var(--e-out) both">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>
                   <span style="font-size:12.5px;line-height:1.5;font-weight:600;color:#8A5A08;text-wrap:pretty">Answering fast and arriving fast are different commitments — you state your own arrival estimate each time you answer. If you need two hours to load the van, say so when you reply.</span>
                 </div>
@@ -429,7 +425,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st6 }}">
-      <div data-screen-label="6 · Extras" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="6 · Extras" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:18px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Extra information</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Everything on this step is optional — none of it blocks publishing. It builds trust with customers who are comparing.</p>
@@ -465,18 +461,18 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Warranty &amp; insurance</div>
           <div style="display:flex;align-items:center;gap:13px">
             <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">I offer a warranty</span><span style="font-size:12.5px;color:#5B6B84">Your own terms, in your own words.</span></div>
-            <button onClick="{{ toggleWarranty }}" role="switch" aria-checked="{{ warrantyOn }}" aria-label="Offer a warranty" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ warSwBd }};background:{{ warSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ warSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+            <button onClick="{{ toggleWarranty }}" role="switch" aria-checked="{{ warrantyOn }}" aria-label="Offer a warranty" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ warSwBd }};background:{{ warSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ warSwJustify }};transition:background var(--m-fast),border-color var(--m-fast)"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
           </div>
           <sc-if value="{{ warrantyOn }}" hint-placeholder-val="{{ true }}">
-            <textarea aria-label="Warranty terms" rows="2" value="{{ warrantyText }}" onChange="{{ setWarrantyText }}" placeholder="e.g. 90-day warranty on workmanship" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp .2s ease both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+            <textarea aria-label="Warranty terms" rows="2" value="{{ warrantyText }}" onChange="{{ setWarrantyText }}" placeholder="e.g. 90-day warranty on workmanship" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp var(--m-page) var(--e-out) both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
           </sc-if>
           <div style="height:1px;background:#EEF3FA"></div>
           <div style="display:flex;align-items:center;gap:13px">
             <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">I hold public liability insurance</span><span style="font-size:12.5px;color:#5B6B84">Insurer and what it covers.</span></div>
-            <button onClick="{{ toggleInsurance }}" role="switch" aria-checked="{{ insuranceOn }}" aria-label="Hold public liability insurance" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ insSwBd }};background:{{ insSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ insSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+            <button onClick="{{ toggleInsurance }}" role="switch" aria-checked="{{ insuranceOn }}" aria-label="Hold public liability insurance" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ insSwBd }};background:{{ insSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ insSwJustify }};transition:background var(--m-fast),border-color var(--m-fast)"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
           </div>
           <sc-if value="{{ insuranceOn }}">
-            <textarea aria-label="Insurance details" rows="2" value="{{ insuranceText }}" onChange="{{ setInsuranceText }}" placeholder="e.g. Allied — public liability up to MVR 100,000" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp .2s ease both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
+            <textarea aria-label="Insurance details" rows="2" value="{{ insuranceText }}" onChange="{{ setInsuranceText }}" placeholder="e.g. Allied — public liability up to MVR 100,000" style="width:100%;border-radius:14px;border:1.5px solid #E3EAF3;background:#fff;padding:12px 15px;font-size:14px;line-height:1.5;color:#0F1B2D;resize:none;animation:fadeUp var(--m-page) var(--e-out) both" style-focus="border-color:#2563EB;box-shadow:0 0 0 4px rgba(37,99,235,.12)"></textarea>
           </sc-if>
           <div style="display:flex;align-items:flex-start;gap:9px;background:#F4F8FD;border-radius:12px;padding:11px 13px">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2.2" stroke-linecap="round" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
@@ -489,7 +485,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="flex:1;display:flex;flex-direction:column;gap:4px">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:14.5px;font-weight:700;color:#0F1B2D">Callback guarantee</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#15803D;background:#E5F6EC;border-radius:999px;padding:3px 9px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.8v5.4c0 4.3-3 7.6-7 9.3-4-1.7-7-5-7-9.3V5.8z"></path></svg>Enforced by RaajjePro</span></div>
             </div>
-            <button onClick="{{ toggleCallback }}" role="switch" aria-checked="{{ callback }}" aria-label="Callback guarantee" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ cbSwBd }};background:{{ cbSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ cbSwJustify }};transition:background .2s,border-color .2s"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
+            <button onClick="{{ toggleCallback }}" role="switch" aria-checked="{{ callback }}" aria-label="Callback guarantee" style="width:56px;height:32px;border-radius:999px;border:2px solid {{ cbSwBd }};background:{{ cbSwBg }};padding:2px;flex:none;cursor:pointer;display:flex;align-items:center;justify-content:{{ cbSwJustify }};transition:background var(--m-fast),border-color var(--m-fast)"><span style="width:24px;height:24px;border-radius:50%;background:#fff;display:block;box-shadow:0 1px 3px rgba(15,27,45,.25)"></span></button>
           </div>
           <div style="font-size:12.5px;line-height:1.5;color:#41526B;text-wrap:pretty">A free return visit within <b>7 days</b> if the same problem comes back. Unlike the warranty and insurance above, <b>this one RaajjePro holds you to</b> — customers can report an unhonoured callback.</div>
         </div>
@@ -498,13 +494,13 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ st7 }}">
-      <div data-screen-label="7 · Review" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div data-screen-label="7 · Review" style="padding:14px 20px 28px;display:flex;flex-direction:column;gap:16px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h1 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Review &amp; publish</h1>
           <p style="margin:0;font-size:14.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Check everything looks right. Tap any section to edit it.</p>
         </div>
         <sc-if value="{{ hasMissing }}" hint-placeholder-val="{{ true }}">
-          <div style="background:#FEF3DC;border:1.5px solid {{ missBd }};border-radius:18px;padding:15px 17px;display:flex;flex-direction:column;gap:11px;transition:border-color .2s">
+          <div style="background:#FEF3DC;border:1.5px solid {{ missBd }};border-radius:18px;padding:15px 17px;display:flex;flex-direction:column;gap:11px;transition:border-color var(--m-fast)">
             <div style="display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;color:#8A5A08">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4.5M12 16h.01"></path></svg>
               {{ missTitle }}
@@ -550,7 +546,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <div style="text-align:center;font-size:11.5px;font-weight:700;color:#8296B3">{{ nextHint }}</div>
       <div style="display:flex;gap:12px">
         <sc-if value="{{ canBack }}"><button onClick="{{ goPrev }}" style="flex:none;height:54px;padding:0 24px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;color:#0F1B2D;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFE" style-active="transform:scale(.97)">Back</button></sc-if>
-        <button onClick="{{ goNext }}" style="flex:1;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .1s" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+        <button onClick="{{ goNext }}" style="flex:1;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px;transition:transform var(--m-fast)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
           <sc-if value="{{ navWait }}"><span style="width:17px;height:17px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Saving this step…</span></sc-if>
           <sc-if value="{{ notNavWait }}" hint-placeholder-val="{{ true }}"><span>Continue</span></sc-if>
         </button>
@@ -559,14 +555,14 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     <sc-if value="{{ isLast }}">
       <div style="display:flex;gap:12px">
         <button onClick="{{ saveDraft }}" style="flex:none;height:54px;padding:0 20px;border-radius:16px;border:1.5px solid #E3EAF3;background:#fff;color:#0F1B2D;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFE" style-active="transform:scale(.97)">Save draft</button>
-        <button onClick="{{ publish }}" style="flex:1;height:54px;border:none;border-radius:16px;background:{{ pubBg }};color:{{ pubFg }};font-size:16px;font-weight:700;cursor:pointer;box-shadow:{{ pubSh }};transition:transform .1s" style-active="transform:scale(.98)">Publish service</button>
+        <button onClick="{{ publish }}" style="flex:1;height:54px;border:none;border-radius:16px;background:{{ pubBg }};color:{{ pubFg }};font-size:16px;font-weight:700;cursor:pointer;box-shadow:{{ pubSh }};transition:transform var(--m-fast)" style-active="transform:scale(.98)">Publish service</button>
       </div>
     </sc-if>
   </div>
 
   <sc-if value="{{ sheetSuccess }}">
-    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
-      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:{{ sheetAnim }}">
         <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.35);margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
         <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your service is live</div>
         <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">{{ successBody }}</div>
@@ -577,8 +573,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ sheetLimit }}">
-    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
-      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:{{ sheetAnim }}">
         <div style="width:76px;height:76px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center;margin-bottom:6px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5zM4 12l8 4.5 8-4.5M4 16.5L12 21l8-4.5"></path></svg></div>
         <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-wrap:balance">Your plan publishes one service at a time</div>
         <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:320px;text-wrap:pretty">Emergency Plumbing &amp; Pipe Repair is already live. This draft is saved and isn't going anywhere — upgrading lets you publish several services side by side, or you can swap which one is live.</div>
@@ -590,7 +586,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ hasToast }}">
-    <div style="position:absolute;left:50%;bottom:104px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:104px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:{{ toastAnim }};pointer-events:none">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -598,6 +594,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;step&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:7,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;filled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;providerTier&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Silver&quot;,&quot;Gold&quot;],&quot;default&quot;:&quot;Silver&quot;,&quot;tsType&quot;:&quot;'Silver' | 'Gold'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;saveState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;saved&quot;,&quot;saving&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;saved&quot;,&quot;tsType&quot;:&quot;'saved' | 'saving' | 'offline'&quot;,&quot;section&quot;:&quot;Shell state&quot;},&quot;publishScenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;over-limit&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;'normal' | 'over-limit'&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;mediaState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;uploading&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;'normal' | 'uploading' | 'failed'&quot;,&quot;section&quot;:&quot;Shell state&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
+  componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); }
   state = {
     step: 1, navWait: false, toast: null, sheet: null, publishTried: false,
     name: '', category: null, shortDesc: '', longDesc: '', tags: [], tagInput: '',
@@ -728,7 +726,7 @@ class Component extends DCLogic {
       if (this.emgInfo(this.state.category, p.providerTier ?? 'Silver').locked) this.setState({ emergency: false });
     }
   }
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2600); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2600); }
   go(step) {
     if (step === this.state.step) return;
     if ((this.props.saveState ?? 'saved') === 'saving' && !this.state.navWait) {
@@ -810,6 +808,9 @@ class Component extends DCLogic {
         { k: 'FAQs', v: S.faqs.length ? String(S.faqs.length) : dash, fg: '#0F1B2D' }] }
     ].map(c => ({ ...c, edit: () => this.go(c.step) }));
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       st1: S.step === 1, st2: S.step === 2, st3: S.step === 3, st4: S.step === 4, st5: S.step === 5, st6: S.step === 6, st7: S.step === 7,
       reqHeadline: n === 0 ? 'Ready to publish' : n + ' required field' + (n === 1 ? '' : 's') + ' left to publish',
       headlineFg: n === 0 ? '#15803D' : '#0F1B2D',
@@ -933,9 +934,9 @@ class Component extends DCLogic {
       },
       sheetSuccess: S.sheet === 'success', sheetLimit: S.sheet === 'limit',
       successBody: '\u201C' + (S.name || 'Your service') + '\u201D now appears in ' + (S.category ?? '') + ' search results on ' + islandsTxt + ', and on your provider profile.',
-      viewListing: () => this.toastMsg('Opens the live listing'),
-      seePlans: () => this.toastMsg('Opens plans — the draft stays saved'),
-      closeSheet: () => this.setState({ sheet: null }),
+      viewListing: () => { window.location.href = 'Service%20Preview.dc.html'; },
+      seePlans: () => { window.location.href = 'Billing.dc.html'; },
+      closeSheet: () => this._close({ sheet: null }),
       stopProp: e => e.stopPropagation(),
       hasToast: !!S.toast, toast: S.toast ?? ''
     };
