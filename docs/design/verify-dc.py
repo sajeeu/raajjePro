@@ -92,6 +92,34 @@ CUSTOMER_SUBJECT_SCREENS = {
     "Provider Emergency", "Propose Time and Price",
 }
 
+# On a customer-subject screen the only two people on show are the signed-in provider
+# and the customer. So any OTHER provider persona appearing there is standing in the
+# customer's slot - which is how Mariyam Shifa, the cleaner, ended up being billed as
+# the customer on three separate screens. Names come from the seed rather than a list
+# here, so this tracks session.js instead of drifting from it.
+SESSION_PROVIDER = "Ibrahim Rasheed"  # the seed's signed-in provider; legitimately on show
+
+def _seed_providers(path):
+    seed = pathlib.Path(path).parent / "session.js"
+    if not seed.exists():
+        return set()
+    try:
+        txt = seed.read_text(encoding="utf-8")
+    except OSError:
+        return set()
+    names = set(re.findall(r"provider:\s*'([^']+)'", txt))
+    return {n for n in names if n != SESSION_PROVIDER}
+
+def provider_as_customer(path, s):
+    """A provider persona other than the signed-in one, on a screen whose subject is the customer."""
+    stem = pathlib.Path(path).name.replace(".dc.html", "")
+    if stem not in CUSTOMER_SUBJECT_SCREENS:
+        return []
+    # Full name only. Matching on the first name collides with the customer persona -
+    # "Aishath Leela" is a Beauty provider and "Aishath" is the customer, so a first-name
+    # match flags every screen she legitimately appears on.
+    return sorted(n for n in _seed_providers(path) if n in s)
+
 def badge_on_a_customer(path, s):
     """A VerificationBadge mounted on a screen whose subject is the customer."""
     stem = pathlib.Path(path).name.replace(".dc.html", "")
@@ -161,6 +189,11 @@ def check(path):
     for label, pat, why in SUSPECT:
         if re.search(pat, s):
             warns.append((label, why))
+
+    for who in provider_as_customer(path, s):
+        warns.append(("provider persona shown as the customer (%s)" % who,
+                      "This screen's subject is the customer, so a provider persona here is in the "
+                      "wrong role. Check it against session.js rather than renaming ad hoc."))
 
     for detail in badge_on_a_customer(path, s):
         warns.append(("verification badge shown for a customer (%s)" % detail,
