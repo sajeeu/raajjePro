@@ -15,12 +15,12 @@
 body{margin:0;background:#DEE7F3}
 a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 button{font-family:inherit}button:focus{outline:none}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="Billing" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Billing" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;align-items:center;gap:10px">
     <a href="My Services.dc.html" aria-label="Back to My Services" style="width:44px;height:44px;border-radius:50%;background:#F2F6FB;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
@@ -97,7 +97,7 @@ button{font-family:inherit}button:focus{outline:none}
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:rotate({{ pauseChevron }})"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
         <sc-if value="{{ pauseOpen }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;gap:9px;animation:fadeIn .2s ease both">
+          <div style="display:flex;flex-direction:column;gap:9px;animation:fadeIn var(--m-page) var(--e-out) both">
             <div style="display:flex;flex-direction:column;gap:7px;background:#F7FAFE;border:1px solid #E9EFF7;border-radius:14px;padding:12px 14px">
               <span style="font-size:12px;line-height:1.55;color:#41526B">· <b>10 cumulative days</b> of pause, spent in any pieces</span>
               <span style="font-size:12px;line-height:1.55;color:#41526B">· Resume early and the unused days stay yours</span>
@@ -146,7 +146,7 @@ button{font-family:inherit}button:focus{outline:none}
   </div>
 
   <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:{{ toastAnim }};box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -174,8 +174,8 @@ class Component extends DCLogic {
     { t:'Priority placement', free:'—', prem:'✓' },
     { t:'Analytics', free:'—', prem:'✓' },
     { t:'Weekly digest', free:'—', prem:'✓' } ];
-  toastMsg(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt=setTimeout(()=>this.setState({toast:null}),2600); }
-  componentWillUnmount(){ clearTimeout(this._tt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast:t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({toast:null, toastOut:false }), 2600); }
+  componentWillUnmount(){ clearTimeout(this._to); clearTimeout(this._tt); }
   renderVals(){
     const p=this.props, s=this.state;
     const key=p.state ?? 'premium';
@@ -191,6 +191,7 @@ class Component extends DCLogic {
         : { t:'Sunset Fishing Charter', m:'Hidden until a confirmed payment — nothing is deleted', mFg:'#5B6B84', canSwap:true } ]
       .map(r=>r.canSwap?{...r, swap:()=>{ this.setState({ kept:r.t==='Home Deep Cleaning'?'clean':'charter' }); this.toastMsg(r.t+' will stay live instead'); }}:r);
     return {
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       stateTitle:st.title, stLabel:st.label, stBg:bg, stFg:fg, stDot:dot,
       stateBody:st.body,
       showPauseBar:!!st.pauseBar,
