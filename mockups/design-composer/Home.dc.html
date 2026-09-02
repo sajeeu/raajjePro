@@ -56,7 +56,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <button onClick="{{ searchTap }}" aria-label="Search" style="width:38px;height:38px;border:none;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 6px 14px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.95)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
         </div>
         <div class="hscroll" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
-          <sc-for list="{{ quickChips }}" as="ch" hint-placeholder-count="4">
+          <sc-for list="{{ quickChips }}" as="ch" hint-placeholder-count="3">
             <button onClick="{{ ch.tap }}" style="flex:none;height:38px;border:1.5px solid {{ ch.bd }};border-radius:999px;background:{{ ch.bg }};color:{{ ch.fg }};padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background var(--m-fast),border-color var(--m-fast)" style-active="transform:scale(.97)">{{ ch.label }}</button>
           </sc-for>
         </div>
@@ -287,7 +287,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </sc-for>
         </div>
         <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
-        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has all 192 inhabited islands</div>
+        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
       </div>
     </div>
   </sc-if>
@@ -366,7 +366,7 @@ class Component extends DCLogic {
     return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
       .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
   }
-  QUICK = ['Near me', 'Available today', 'Book instantly', 'Emergency'];
+  QUICK = ['Near me', 'Available today', 'Book instantly'];
   scn() { return this.props.scenario ?? 'Populated'; }
   componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); clearTimeout(this._rt); }
   toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2200) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2200); }

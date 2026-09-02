@@ -49,11 +49,11 @@ SUSPECT = [
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",
      "A provider warranty is attributed, never guaranteed."),
-    # Invariant 15: "Never print an island total in UI copy." The register is revised and any
-    # printed count is wrong the moment it changes; the picker is a search, so the size is
-    # never the user's problem. Warn-only until Round 41 clears the five screens carrying it.
-    ("island total printed in UI copy", r"all\s+\d+\s+inhabited islands|\d+\s+inhabited islands",
-     "Invariant 15 forbids an island total in UI copy - say 'Sample list' with no number."),
+    # Invariant 15: "Never print an island total in UI copy." The register is revised, so any
+    # printed count is wrong the moment it changes; and the picker is a search rather than a
+    # browsable list, so its size was never the reader's problem. Cleared by Round 41 - LOCKED.
+    ("island total printed in UI copy", r"\d+\s+inhabited islands",
+     "Invariant 15 forbids an island total in UI copy - say 'every inhabited island'."),
 ]
 
 # §1c booking modes. `slot` (shown as "instant") is these three categories and no others;
@@ -201,7 +201,7 @@ def check(path):
                       "badge claims a check that never happened. Warn-only until Round 41 removes it."))
 
     for chip in emergency_filter_chips(s):
-        warns.append(("emergency offered as a browse filter (%s)" % chip,
+        fails.append(("emergency offered as a browse filter (%s)" % chip,
                       "Round 23 removed the emergency search filter - dispatch never targets a "
                       "provider, so the filter advertised a cut that does not exist. Emergency has "
                       "its own entry on Home and Explore. Warn-only until Round 41 removes the chip."))
