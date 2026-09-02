@@ -2,7 +2,11 @@
 
 **Purpose: end-to-end verification before development starts.** Someone should be able to open one link, press **Continue as customer** or **Continue as provider**, and walk a real journey — browse, book, chat, pay, complete, review — without hitting a dead end or a toast that says "Opens X".
 
-This is larger than previous rounds. If it needs two passes, do §1–§4 first and say so; that alone makes the app walkable.
+This is larger than previous rounds — it adds two files, touches navigation on about twenty-five screens, and replaces the local data arrays in eleven.
+
+**If it does not all fit in one pass, do §1–§4 first.** That alone makes the app walkable, with each screen still showing its own existing data.
+
+**Either way, end your reply with a checklist** — each section §1 to §5, marked done, partial or not started, and for anything partial, which screens landed and which did not. A half-finished round I can read is worth more than a whole one I have to reverse-engineer; without it I cannot tell a deliberate omission from a miss.
 
 ## What already works, so we build on it rather than over it
 
