@@ -49,6 +49,13 @@ SUSPECT = [
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",
      "A provider warranty is attributed, never guaranteed."),
+    # Round 27 amended the never-torn-down rule: the booking thread stays open for the life of
+    # the booking and 7 days after completion - the callback window - then locks read-only.
+    # Copy promising an unlimited thread is pre-Round-27, and it misleads at the worst moment,
+    # since it appears where a customer is being told what recourse they still have.
+    ("pre-Round-27 claim that the chat never ends",
+     r"chat never (expires|ends|closes)|never torn down|thread never (expires|ends|closes)",
+     "Round 27: the thread locks read-only 7 days after completion. Say the window, not 'never'."),
     # Invariant 15: "Never print an island total in UI copy." The register is revised, so any
     # printed count is wrong the moment it changes; and the picker is a search rather than a
     # browsable list, so its size was never the reader's problem. Cleared by Round 41 - LOCKED.
