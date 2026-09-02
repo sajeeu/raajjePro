@@ -1,0 +1,30 @@
+/* RaajjePro motion — Round 40. One scale, two curves; referenced from every screen's helmet. */
+:root{
+  --m-fast:120ms;  /* hover, press, colour, border */
+  --m-base:200ms;  /* in-place change, content swap, sheet OUT */
+  --m-sheet:300ms; /* sheets, overlays, dialogs IN */
+  --m-page:350ms;  /* page + view transitions */
+  --e-out:cubic-bezier(.2,.8,.3,1); /* entering, settling */
+  --e-in:cubic-bezier(.4,0,1,1);    /* leaving */
+}
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:var(--m-page)}
+@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes fadeSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeSwapB{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
+@keyframes sheetDown{from{opacity:1;transform:none}to{opacity:0;transform:translateY(64px)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes menuIn{from{opacity:0;transform:scale(.96) translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes menuOut{from{opacity:1}to{opacity:0;transform:scale(.98) translateY(-2px)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  /* shimmer skeletons stay visible as static blocks — animation freezes, elements remain */
+  @view-transition{navigation:none}
+}

@@ -46,6 +46,8 @@
       { id: 'clean-1', title: 'Home Deep Cleaning', provider: 'Mariyam Shifa', cat: 'Cleaning', tier: 'Silver', rating: '4.8', count: 24, price: 'MVR 450', unit: '/session', island: 'Malé', mode: 'slot', nextSlot: 'tomorrow 09:00' },
       { id: 'plumb-1', title: 'Emergency Plumbing & Pipe Repair', provider: 'Ibrahim Rasheed', cat: 'Plumbing', tier: 'Gold', rating: '4.6', count: 31, price: 'From MVR 350', unit: '', island: 'Malé', mode: 'request', callback: true, replyTime: '12 min', bookings: 44 },
       { id: 'plumb-2', title: 'Bathroom & Kitchen Plumbing Installation', provider: 'Ibrahim Rasheed', cat: 'Plumbing', tier: 'Gold', rating: '4.6', count: 31, price: 'MVR 900', unit: '/day', island: 'Malé', mode: 'request', callback: false },
+      { id: 'plumb-3', title: 'Drain Cleaning & Unblocking', provider: 'Naseem Ali', cat: 'Plumbing', tier: 'Gold', rating: '4.3', count: 22, price: 'MVR 350', unit: '/visit', island: 'Malé', mode: 'request', callback: false, replyTime: '45 min', bookings: 22 },
+      { id: 'plumb-4', title: 'Water Pump Install & Repair', provider: 'AquaFix Maldives', cat: 'Plumbing', tier: 'Gold', rating: '4.5', count: 14, price: 'From MVR 450', unit: '', island: 'Malé', mode: 'request', callback: true, replyTime: '1 hr', bookings: 16 },
       { id: 'ac-1', title: 'AC Servicing & Gas Refill', provider: 'Ahmed Shakir', cat: 'AC Repair', tier: 'Silver', rating: '4.4', count: 12, price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', mode: 'request', callback: true, replyTime: '25 min', bookings: 20 },
       { id: 'photo-1', title: 'Event & Wedding Photography', provider: 'Hussain Nizar', cat: 'Photography', tier: 'Gold', rating: '4.9', count: 58, price: 'From MVR 2500', unit: '', island: 'Malé', mode: 'request', replyTime: '2 hr', bookings: 58 },
       { id: 'beauty-1', title: 'Bridal Makeup & Styling', provider: 'Aishath Leela', cat: 'Beauty', tier: 'Silver', rating: '4.9', count: 86, price: 'MVR 800', unit: '/session', island: 'Malé', mode: 'slot', nextSlot: 'today 16:00' },
@@ -59,16 +61,18 @@
     ],
     // One booking per StatusPill state. Data mirrors what the artboards already show.
     bookings: [
-      { id: '4833', status: 'waiting_for_provider', listing: 'boat-1', service: 'Sunset Fishing Charter', when: 'Wed 2 Sep · 06:30 departure', amount: 'MVR 3200', amountLabel: 'Listed price' },
+      { id: '4833', status: 'waiting_provider', listing: 'boat-1', service: 'Sunset Fishing Charter', when: 'Wed 2 Sep · 06:30 departure', amount: 'MVR 3200', amountLabel: 'Listed price' },
       { id: '4790', status: 'quote_received', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Tue 25 Aug · 14:00', amount: 'MVR 650', amountLabel: 'Quoted price' },
       { id: '4791', status: 'awaiting_payment', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Tue 25 Aug · 14:00', amount: 'MVR 650', amountLabel: 'Quoted price' },
       { id: '4792', status: 'payment_sent', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Tue 25 Aug · 14:00', amount: 'MVR 650', amountLabel: 'Quoted price' },
+      { id: '4793', status: 'receipt_confirmed', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Tue 25 Aug · 14:00', amount: 'MVR 650', amountLabel: 'Quoted price' },
       { id: '4812', status: 'confirmed', listing: 'clean-1', service: 'Home Deep Cleaning', when: 'Thu 27 Aug · 11:00', amount: 'MVR 450', amountLabel: 'Agreed price' },
       { id: '4700', status: 'completed', listing: 'clean-1', service: 'Home Deep Cleaning', when: 'Tue 18 Aug · 14:00', amount: 'MVR 600', amountLabel: 'Agreed price' },
       { id: '4655', status: 'declined', listing: 'plumb-2', service: 'Bathroom & Kitchen Plumbing Installation', when: '—', amount: 'MVR 900', amountLabel: 'Listed price' },
       { id: '4610', status: 'cancelled', listing: 'clean-1', service: 'Home Deep Cleaning', when: 'Sat 8 Aug · 14:00', amount: 'MVR 450', amountLabel: 'Agreed price' },
       { id: '4590', status: 'disputed', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Tue 25 Aug · 14:00', amount: 'MVR 650', amountLabel: 'Quoted price' },
-      { id: '4501', status: 'unresolved', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Mon 13 Jul · 10:00', amount: 'MVR 480', amountLabel: 'Quoted price' }
+      { id: '4501', status: 'unresolved', listing: 'plumb-1', service: 'Emergency Plumbing & Pipe Repair', when: 'Mon 13 Jul · 10:00', amount: 'MVR 480', amountLabel: 'Quoted price' },
+      { id: '4839', status: 'pending_offline', listing: 'clean-1', service: 'Home Deep Cleaning', when: 'Fri 4 Sep · 09:00', amount: 'MVR 450', amountLabel: 'Listed price' }
     ],
     emergencyBooking: {
       id: 'RP-4471-EMG', category: 'Plumbing', service: 'Emergency plumbing call-out',
@@ -77,8 +81,8 @@
       // Each offer carries the provider's own callout fee and own ETA — an estimate, never a guarantee.
       offers: [
         { provider: 'Ibrahim Rasheed', tier: 'Gold', fee: 350, etaMin: 25 },
-        { provider: 'Ali Waheed', tier: 'Silver', fee: 300, etaMin: 40 },
-        { provider: 'Hassan Zahir', tier: 'Silver', fee: 420, etaMin: 20 }
+        { provider: 'Naseem Ali', tier: 'Gold', fee: 300, etaMin: 40 },
+        { provider: 'AquaFix Maldives', tier: 'Gold', fee: 420, etaMin: 20 }
       ]
     },
     threads: [
