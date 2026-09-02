@@ -15,13 +15,12 @@
 body{margin:0;background:#DEE7F3}
 a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 button,select{font-family:inherit}button:focus,select:focus{outline:none}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="Availability" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Availability" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;background:#fff;border-bottom:1px solid #E9EFF7;padding:14px 20px 12px;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;align-items:center;gap:10px">
@@ -86,7 +85,7 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
       </div>
 
       <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#FEF3DC;border:1px solid #F3E2B8;border-radius:18px;padding:13px 15px;display:flex;flex-direction:column;gap:10px;animation:fadeIn .25s ease both">
+        <div style="background:#FEF3DC;border:1px solid #F3E2B8;border-radius:18px;padding:13px 15px;display:flex;flex-direction:column;gap:10px;animation:fadeIn var(--m-page) var(--e-out) both">
           <div style="display:flex;align-items:flex-start;gap:9px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg>
             <span style="font-size:12.5px;line-height:1.5;color:#8A5A08;text-wrap:pretty"><b>Preview updated — not saved yet.</b> {{ deltaLine }}</span>
@@ -158,8 +157,8 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
   </div>
 
   <sc-if value="{{ editorOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeEditor }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:20"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:14px">
+    <div onClick="{{ closeEditor }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:20"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:21;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:14px">
       <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
       <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ editorTitle }}</span>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -196,8 +195,8 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ saveOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeSave }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+    <div onClick="{{ closeSave }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
       <span style="width:44px;height:44px;border-radius:50%;background:#E7F6EC;color:#0E9F5D;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
       <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Save these hours?</span>
       <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty"><b style="color:#0F1B2D">Times someone has already booked stay exactly as they are.</b> Only future, unbooked times change — {{ deltaLine }}</span>
@@ -209,8 +208,8 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ resOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeRes }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
+    <div onClick="{{ closeRes }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:22px 20px 16px;z-index:23;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:10px">
       <span style="width:44px;height:44px;border-radius:50%;background:#EDF2F9;color:#41526B;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12v9H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
       <span style="font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Reserved · {{ resWhen }}</span>
       <span style="font-size:13px;line-height:1.55;color:#5B6B84;text-wrap:pretty">{{ resDetail }}</span>
@@ -223,8 +222,8 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ excOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeExc }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:fadeIn .2s ease both;z-index:22"></div>
-    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:23;animation:sheetUp .3s cubic-bezier(.2,.8,.3,1) both;box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
+    <div onClick="{{ closeExc }}" style="position:absolute;inset:0;background:rgba(15,27,45,.42);animation:{{ dimAnim }};z-index:22"></div>
+    <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:18px 18px 16px;z-index:23;animation:{{ sheetAnim }};box-shadow:0 -8px 40px rgba(15,27,45,.2);display:flex;flex-direction:column;gap:12px">
       <div style="width:40px;height:4px;border-radius:999px;background:#DCE4EF;margin:0 auto"></div>
       <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Add an exception</span>
       <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Pick a preset to see how it works — a name, a date range, and the changed hours it applies. Booked times are never touched.</span>
@@ -246,7 +245,7 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:toastIn .25s ease both;box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);background:#0F1B2D;color:#fff;border-radius:999px;padding:11px 18px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;z-index:30;animation:{{ toastAnim }};box-shadow:0 8px 24px rgba(15,27,45,.3)">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -254,6 +253,7 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   state = {
     rules: [ { id:1, days:[1,2,3,4], from:9, to:17, dur:2 }, { id:2, days:[6], from:9, to:13, dur:2 } ],
@@ -270,8 +270,8 @@ class Component extends DCLogic {
   };
   // Provider-wide absences are managed in My Calendar; they remove published times here too.
   AWAY = [ { name:'Malé trip', covers:[3,4] } ];
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 3000); }
-  componentWillUnmount() { clearTimeout(this._tt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (3000) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 3000); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
   fmtHour(h) { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0'); }
   genTimes(rules) {
     const start = new Date(2026, 7, 27); // Thu 27 Aug 2026 — illustrative "today"
@@ -329,6 +329,9 @@ class Component extends DCLogic {
     const openEditor = (rule) => this.setState({ editor: rule ? { ...rule } : { id: Date.now(), days: [], from: 9, to: 17, dur: 2 } });
     const ed = s.editor;
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       isLoading: state === 'loading', isError: state === 'error', isEmpty: state === 'empty', isNormal: state === 'populated',
       retry: () => this.toastMsg('Retrying…'),
       addFirstRule: () => this.toastMsg('Switch the state tweak to “populated” to explore rules'),
@@ -342,14 +345,14 @@ class Component extends DCLogic {
       days, horizonDate: 'Mon 26 Oct',
       exceptions: s.exceptions.map(e => ({ ...e, remove: () => { this.setState(st => ({ exceptions: st.exceptions.filter(x => x.id !== e.id) })); this.toastMsg('Exception removed — those times reopen (booked times were never touched)'); } })),
       noExceptions: s.exceptions.length === 0,
-      addException: () => this.setState({ excOpen: true }), closeExc: () => this.setState({ excOpen: false }),
+      addException: () => this.setState({ excOpen: true }), closeExc: () => this._close({ excOpen: false }),
       excOpen: s.excOpen,
       excPresets: [
         { name:'Shorter hours', detail:'Keep only part of the day, for a season', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z', tap: () => { this.setState(st => ({ excOpen:false, exceptions: [...st.exceptions, { id:'s'+Date.now(), name:'Shorter hours', detail:'10:00–15:00 only · 1 – 30 Nov', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z' }] })); this.toastMsg('Exception added — mornings and evenings removed for Nov'); } }
       ],
       editorOpen: !!ed,
       editorTitle: ed && s.rules.concat(s.draftRules || []).some(r => r.id === ed.id) ? 'Edit weekly rule' : 'New weekly rule',
-      closeEditor: () => this.setState({ editor: null }),
+      closeEditor: () => this._close({ editor: null }),
       dayBtns: this.DAY_NAMES.map((n, i) => {
         const on = ed ? ed.days.includes(i) : false;
         return { n: n[0] + n[1], bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
@@ -366,14 +369,14 @@ class Component extends DCLogic {
         const exists = cur.some(r => r.id === ed.id);
         this.setState({ draftRules: exists ? cur.map(r => r.id === ed.id ? ed : r) : [...cur, ed], editor: null });
       },
-      askSave: () => this.setState({ saveOpen: true }), closeSave: () => this.setState({ saveOpen: false }),
+      askSave: () => this.setState({ saveOpen: true }), closeSave: () => this._close({ saveOpen: false }),
       saveOpen: s.saveOpen,
-      doSave: () => { this.setState(st => ({ rules: st.draftRules, draftRules: null, saveOpen: false })); this.toastMsg('Saved — booked times untouched, future times updated'); },
+      doSave: () => { this._close(st => ({ rules: st.draftRules, draftRules: null, saveOpen: false })); this.toastMsg('Saved — booked times untouched, future times updated'); },
       discard: () => { this.setState({ draftRules: null }); this.toastMsg('Changes discarded'); },
       resOpen: !!s.resFor,
       resWhen: s.resFor ? s.resFor.when : '',
       resDetail: s.resFor ? ('Booked by ' + s.resFor.who + ' · ' + s.resFor.listing + ' · booking ' + s.resFor.ref + (s.resFor.other ? ' — a booking on another of your listings.' : '.')) : '',
-      closeRes: () => this.setState({ resFor: null }),
+      closeRes: () => this._close({ resFor: null }),
       toastOn: !!s.toast, toast: s.toast || ''
     };
   }
