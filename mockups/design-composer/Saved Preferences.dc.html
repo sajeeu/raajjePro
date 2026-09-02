@@ -17,11 +17,9 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -37,10 +35,10 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
 <sc-if value="{{ isPopulated }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Saved preferences" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:18px;animation:fadeUp .3s ease both">
+<div data-screen-label="Saved preferences" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:18px;animation:fadeUp var(--m-page) var(--e-out) both">
 
   <div style="display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;font-weight:800;color:#0F1B2D;flex:1">Saved addresses</span><button onClick="{{ openAdd }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:800;cursor:pointer;padding:6px 2px;display:flex;align-items:center;gap:5px" style-hover="color:#1D4ED8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button></div>
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#5B6B84;flex:1">Saved addresses</span><button onClick="{{ openAdd }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:800;cursor:pointer;padding:6px 2px;display:flex;align-items:center;gap:5px" style-hover="color:#1D4ED8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button></div>
     <sc-for list="{{ addresses }}" as="a" hint-placeholder-count="2">
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 15px;display:flex;align-items:flex-start;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
         <span style="width:44px;height:44px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ a.d }}"></path></svg></span>
@@ -54,19 +52,21 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </span>
       </div>
     </sc-for>
+    <sc-if value="{{ noAddresses }}"><div style="border:1.5px dashed #C9D7EA;border-radius:16px;background:#F7FAFE;padding:18px 16px;text-align:center;font-size:12.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">No saved addresses yet — add one and every booking starts pre-filled.</div></sc-if>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;font-weight:800;color:#0F1B2D;flex:1">Preferred time windows</span><button onClick="{{ addWindow }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:800;cursor:pointer;padding:6px 2px;display:flex;align-items:center;gap:5px" style-hover="color:#1D4ED8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button></div>
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#5B6B84;flex:1">Preferred time windows</span><button onClick="{{ addWindow }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:800;cursor:pointer;padding:6px 2px;display:flex;align-items:center;gap:5px" style-hover="color:#1D4ED8"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       <sc-for list="{{ windows }}" as="w" hint-placeholder-count="2">
         <span style="display:inline-flex;align-items:center;gap:8px;height:38px;border-radius:999px;background:#fff;border:1px solid #E9EFF7;padding:0 8px 0 14px;font-size:13px;font-weight:700;color:#0F1B2D;box-shadow:0 1px 2px rgba(15,27,45,.04)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3.5 2"></path></svg>{{ w.label }}<button onClick="{{ w.remove }}" aria-label="Remove time window" style="width:24px;height:24px;border:none;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#FEF2F2;color:#B91C1C"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></span>
       </sc-for>
     </div>
+    <sc-if value="{{ noWindows }}"><div style="border:1.5px dashed #C9D7EA;border-radius:16px;background:#F7FAFE;padding:18px 16px;text-align:center;font-size:12.5px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">No time windows yet — add one so bookings suggest times you're usually free.</div></sc-if>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:10px">
-    <span style="font-size:13px;font-weight:800;color:#0F1B2D">Standing instructions</span>
+    <span style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#5B6B84">Standing instructions</span>
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <sc-if value="{{ notEditingNotes }}" hint-placeholder-val="{{ true }}">
         <div style="font-size:14px;font-weight:600;line-height:1.6;color:#0F1B2D;text-wrap:pretty">{{ notes }}</div>
@@ -80,18 +80,17 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </div>
   </div>
 
-  <div style="font-size:11.5px;font-weight:500;color:#8296B3;text-align:center;text-wrap:pretty">These pre-fill every booking and stay editable there — it's why a repeat booking is one screen.</div>
 </div>
 </sc-if>
 
 <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Saved preferences — empty" style="padding:60px 20px;display:flex;justify-content:center">
+<div data-screen-label="Saved preferences — empty" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:60px 20px;display:flex;justify-content:center">
   <dc-import name="EmptyState" icon="pin" title="Nothing saved yet" body="Save an address, a time window or standing instructions and every booking starts pre-filled." action-label="Add an address" on-action="{{ emptyAdd }}" hint-size="340px,220px"></dc-import>
 </div>
 </sc-if>
 
 <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Saved preferences — loading" aria-hidden="true" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
+<div data-screen-label="Saved preferences — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
   <sc-for list="{{ skels }}" as="k" hint-placeholder-count="4">
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:13px 15px;display:flex;gap:13px;align-items:center">
       <div style="width:44px;height:44px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
@@ -105,7 +104,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Saved preferences — error" style="padding:60px 20px;display:flex;justify-content:center">
+<div data-screen-label="Saved preferences — error" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:60px 20px;display:flex;justify-content:center">
   <dc-import name="EmptyState" icon="pin" title="Couldn't load preferences" body="Your connection may have dropped. Nothing is lost — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
 </div>
 </sc-if>
@@ -113,8 +112,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </div>
 
 <sc-if value="{{ sheetOn }}" hint-placeholder-val="{{ false }}">
-  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:fadeIn .25s ease both;z-index:20"></div>
-  <div role="dialog" aria-label="{{ sheetTitle }}" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:14px;z-index:21;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -12px 40px rgba(15,27,45,.18)">
+  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:{{ dimAnim }};z-index:20"></div>
+  <div role="dialog" aria-label="{{ sheetTitle }}" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:14px;z-index:21;animation:{{ sheetAnim }};box-shadow:0 -12px 40px rgba(15,27,45,.18)">
     <div style="width:44px;height:5px;border-radius:999px;background:#E3EAF3;align-self:center;flex:none"></div>
     <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ sheetTitle }}</div>
     <div style="display:flex;flex-direction:column;gap:8px">
@@ -139,8 +138,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ islandSheetOn }}" hint-placeholder-val="{{ false }}">
-  <div onClick="{{ closeIslandSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:fadeIn .25s ease both;z-index:24"></div>
-  <div role="dialog" aria-label="Choose an island" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:10px;z-index:25;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -12px 40px rgba(15,27,45,.18)">
+  <div onClick="{{ closeIslandSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:{{ islDimAnim }};z-index:24"></div>
+  <div role="dialog" aria-label="Choose an island" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:10px;z-index:25;animation:{{ islSheetAnim }};box-shadow:0 -12px 40px rgba(15,27,45,.18)">
     <div style="width:44px;height:5px;border-radius:999px;background:#E3EAF3;align-self:center;flex:none"></div>
     <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Choose an island</div>
     <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px">
@@ -149,7 +148,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;max-height:44vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <sc-for list="{{ islandRows }}" as="i" hint-placeholder-count="6">
-        <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;flex:none;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+        <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;flex:none;cursor:pointer;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.99)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
           <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
           <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
@@ -157,12 +156,12 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       </sc-for>
     </div>
     <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
-    <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has all 192 inhabited islands</div>
+        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has all 192 inhabited islands</div>
   </div>
 </sc-if>
 
 <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:fadeIn .25s ease both;pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3)">{{ toast }}</span></div>
+  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:{{ toastAnim }};pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3);display:inline-flex;align-items:center;gap:12px;pointer-events:auto">{{ toast }}<sc-if value="{{ toastUndoOn }}"><button onClick="{{ toastUndo }}" style="border:none;background:none;color:#8FB4FF;font-size:12.5px;font-weight:800;cursor:pointer;padding:0">Undo</button></sc-if></span></div>
 </sc-if>
 
 </div>
@@ -170,6 +169,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
+  _closeIsl(p){ if(this._ct){return;} this.setState({ closing:'isl' }); this._ct = setTimeout(() => { this._ct = null; this.setState({ ...p, closing:false }); }, 200); }
   ISLANDS = [
     { l: 'Malé', c: '' },
     { l: 'Hulhumalé', c: '' },
@@ -208,23 +209,30 @@ class Component extends DCLogic {
     windows: [ { id:1, label:'Weekdays · 9:00–12:00' }, { id:2, label:'Saturday · 14:00–18:00' } ],
     notes: 'Gate code 4471. Please call from the lobby.',
     editingNotes:false, notesDraft:'',
-    sheet:null, fLabel:'', fIsland:'Malé', fLine:'', islandSheet:false, islandQ:'', toast:'' };
-  toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2400); }
-  componentWillUnmount(){ clearTimeout(this._tt); }
+    sheet:null, fLabel:'', fIsland:'Malé', fLine:'', islandSheet:false, islandQ:'', toast:'', toastUndo:null };
+  toastMsg(m, undo){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast:m, toastUndo: undo || null , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (undo ? 5000 : 2400) - 200); this._tt = setTimeout(() => this.setState({ toast:'', toastUndo:null , toastOut:false }), undo ? 5000 : 2400); }
+  componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
   renderVals(){
     const view = this.state.view ?? this.props.state ?? 'populated';
     const sheet = this.state.sheet;
     const editing = sheet && sheet.mode === 'edit';
     const canSave = this.state.fLabel.trim() && this.state.fLine.trim();
     return {
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-sheet) var(--e-out) both',
+      dimAnim: this.state.closing === true ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing === true ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      islDimAnim: this.state.closing === 'isl' ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      islSheetAnim: this.state.closing === 'isl' ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
       isPopulated: view === 'populated', isEmpty: view === 'empty', isLoading: view === 'loading', isError: view === 'error',
       skels:[1,2,3,4],
       addresses: this.state.addresses.map(a => ({ ...a,
         edit: () => this.setState({ sheet:{ mode:'edit', id:a.id }, fLabel:a.label, fIsland:a.island, fLine:a.line }),
-        remove: () => { this.setState(s => ({ addresses: s.addresses.filter(x => x.id !== a.id) })); this.toastMsg(a.label + ' removed'); } })),
+        remove: () => { const prev = this.state.addresses; this.setState(s => ({ addresses: s.addresses.filter(x => x.id !== a.id) })); this.toastMsg(a.label + ' removed', () => { clearTimeout(this._tt); this.setState({ addresses: prev, toast:'', toastUndo:null }); }); } })),
+      noAddresses: this.state.addresses.length === 0,
       windows: this.state.windows.map(w => ({ ...w,
-        remove: () => this.setState(s => ({ windows: s.windows.filter(x => x.id !== w.id) })) })),
-      addWindow: () => { const opts = [ 'Sunday · 9:00–12:00', 'Weekdays · 16:00–19:00', 'Friday · 14:00–17:00' ]; this.setState(s => { const used = s.windows.map(w => w.label); const next = opts.find(o => !used.includes(o)); return next ? { windows: [...s.windows, { id: Date.now(), label: next }] } : {}; }); },
+        remove: () => { const prev = this.state.windows; this.setState(s => ({ windows: s.windows.filter(x => x.id !== w.id) })); this.toastMsg('Time window removed', () => { clearTimeout(this._tt); this.setState({ windows: prev, toast:'', toastUndo:null }); }); } })),
+      noWindows: this.state.windows.length === 0,
+      addWindow: () => { const opts = [ 'Sunday · 9:00–12:00', 'Weekdays · 16:00–19:00', 'Friday · 14:00–17:00' ]; const used = this.state.windows.map(w => w.label); const next = opts.find(o => !used.includes(o)); if (!next) { this.toastMsg('All sample windows added — remove one to swap'); return; } this.setState(s => ({ windows: [...s.windows, { id: Date.now(), label: next }] })); },
       notes: this.state.notes, notesDraft: this.state.notesDraft,
       notEditingNotes: !this.state.editingNotes, editingNotes: this.state.editingNotes,
       editNotes: () => this.setState({ editingNotes:true, notesDraft: this.state.notes }),
@@ -235,11 +243,11 @@ class Component extends DCLogic {
       sheetDisabled: !canSave, sheetBtnBg: canSave ? '#2563EB' : '#B9CBEA', sheetBtnCursor: canSave ? 'pointer' : 'not-allowed',
       islandSheetOn: this.state.islandSheet,
       openIslandSheet: () => this.setState({ islandSheet:true, islandQ:'' }),
-      closeIslandSheet: () => this.setState({ islandSheet:false, islandQ:'' }),
+      closeIslandSheet: () => this._closeIsl({ islandSheet:false, islandQ:'' }),
       islandQ: this.state.islandQ, setIslandQ: (e) => this.setState({ islandQ: e.target.value }),
       islandRows: this.searchIslands(this.state.islandQ).map(i => { const n = i.l, on = n === this.state.fIsland; return { n, on,
         bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
-        pick: () => this.setState({ fIsland:n, islandSheet:false, islandQ:'' }) }; }),
+        pick: () => this._closeIsl({ fIsland:n, islandSheet:false, islandQ:'' }) }; }),
       islandNone: this.searchIslands(this.state.islandQ).length === 0,
       islandNoMatch: 'No island matches "' + this.state.islandQ.trim() + '"',
       fLabel: this.state.fLabel, fIsland: this.state.fIsland, fLine: this.state.fLine,
@@ -247,12 +255,13 @@ class Component extends DCLogic {
       typeLine: (e) => this.setState({ fLine: e.target.value }),
       openAdd: () => this.setState({ sheet:{ mode:'add' }, fLabel:'', fIsland:'Malé', fLine:'' }),
       emptyAdd: () => this.setState({ view:'populated', addresses:[], windows:[], sheet:{ mode:'add' }, fLabel:'', fIsland:'Malé', fLine:'' }),
-      closeSheet: () => this.setState({ sheet:null }),
+      closeSheet: () => this._close({ sheet:null }),
       saveSheet: () => { if (!canSave) return; const { fLabel, fIsland, fLine } = this.state;
-        if (editing) { this.setState(s => ({ addresses: s.addresses.map(x => x.id === sheet.id ? { ...x, label:fLabel.trim(), island:fIsland, line:fLine.trim() } : x), sheet:null })); this.toastMsg('Address updated'); }
-        else { this.setState(s => ({ addresses: [...s.addresses, { id: Date.now(), label:fLabel.trim(), island:fIsland, line:fLine.trim(), d:'M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11zM12 12.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8z' }], sheet:null })); this.toastMsg('Address saved'); } },
+        if (editing) { this._close(s => ({ addresses: s.addresses.map(x => x.id === sheet.id ? { ...x, label:fLabel.trim(), island:fIsland, line:fLine.trim() } : x), sheet:null })); this.toastMsg('Address updated'); }
+        else { this._close(s => ({ addresses: [...s.addresses, { id: Date.now(), label:fLabel.trim(), island:fIsland, line:fLine.trim(), d:'M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11zM12 12.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8z' }], sheet:null })); this.toastMsg('Address saved'); } },
       retry: () => this.setState({ view:'populated' }),
       toastOn: !!this.state.toast, toast: this.state.toast,
+      toastUndoOn: !!this.state.toastUndo, toastUndo: () => { const u = this.state.toastUndo; if (u) u(); },
     };
   }
 }
