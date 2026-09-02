@@ -17,10 +17,9 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -36,7 +35,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Account settings" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Account settings" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
     <button onClick="{{ r.tap }}" style="display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;cursor:pointer;text-align:left;width:100%;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#CDDDFB">
       <span style="width:46px;height:46px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.d }}"></path></svg></span>
@@ -49,11 +48,11 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     <div style="font-size:13px;font-weight:800;color:#0F1B2D">Email notifications</div>
     <div style="display:flex;align-items:center;gap:12px">
       <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Marketing</span><span style="font-size:12px;font-weight:600;color:#5B6B84">Offers and announcements</span></span>
-      <button onClick="{{ toggleMarketing }}" role="switch" aria-checked="{{ marketingAria }}" aria-label="Marketing emails" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ marketingBg }};position:relative;cursor:pointer;flex:none;transition:background .2s"><span style="position:absolute;top:3px;left:{{ marketingLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left .2s"></span></button>
+      <button onClick="{{ toggleMarketing }}" role="switch" aria-checked="{{ marketingAria }}" aria-label="Marketing emails" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ marketingBg }};position:relative;cursor:pointer;flex:none;transition:background var(--m-fast)"><span style="position:absolute;top:3px;left:{{ marketingLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left var(--m-base)"></span></button>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Weekly digest</span><span style="font-size:12px;font-weight:600;color:#5B6B84">A summary of activity, once a week</span></span>
-      <button onClick="{{ toggleDigest }}" role="switch" aria-checked="{{ digestAria }}" aria-label="Weekly digest" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ digestBg }};position:relative;cursor:pointer;flex:none;transition:background .2s"><span style="position:absolute;top:3px;left:{{ digestLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left .2s"></span></button>
+      <button onClick="{{ toggleDigest }}" role="switch" aria-checked="{{ digestAria }}" aria-label="Weekly digest" style="width:50px;height:30px;border-radius:999px;border:none;background:{{ digestBg }};position:relative;cursor:pointer;flex:none;transition:background var(--m-fast)"><span style="position:absolute;top:3px;left:{{ digestLeft }};width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(15,27,45,.2);transition:left var(--m-base)"></span></button>
     </div>
     <div style="font-size:11.5px;font-weight:600;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:11px;text-wrap:pretty">Booking updates are always sent — they keep your bookings running and have no switch.</div>
   </div>
@@ -67,7 +66,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isSessions }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Active sessions" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Active sessions" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <div style="font-size:12.5px;font-weight:600;color:#5B6B84;line-height:1.55;text-wrap:pretty">Everywhere you're signed in. Revoking a device signs out only that device.</div>
   <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="2">
     <div style="background:#fff;border:1.5px solid {{ s.bd }};border-radius:20px;padding:14px 15px;display:flex;align-items:center;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
@@ -84,7 +83,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isDownload }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Download my data" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Download my data" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
     <span style="width:54px;height:54px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M7.5 9.5l4.5 4.5 4.5-4.5M4 17v3h16v-3"></path></svg></span>
     <div style="display:flex;flex-direction:column;gap:6px">
@@ -103,7 +102,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isDeleteConfirm }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Delete account — confirm" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Delete account — confirm" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:20px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
     <span style="width:54px;height:54px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"></path></svg></span>
     <div style="display:flex;flex-direction:column;gap:6px">
@@ -119,14 +118,14 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <label for="del-confirm" style="font-size:13px;font-weight:700;color:#0F1B2D">Type <span style="font-family:ui-monospace,monospace;background:#FEF2F2;color:#B91C1C;padding:2px 6px;border-radius:6px">DELETE</span> to confirm</label>
       <input id="del-confirm" type="text" value="{{ deleteTyped }}" onChange="{{ typeDelete }}" autocomplete="off" placeholder="DELETE" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;padding:0 15px;font-size:15px;font-weight:700;color:#0F1B2D;background:#F7FAFD;letter-spacing:.08em" style-focus="border-color:#DC2626;background:#fff">
     </div>
-    <button onClick="{{ confirmDelete }}" disabled="{{ deleteDisabled }}" style="height:52px;border:none;border-radius:16px;background:{{ deleteBtnBg }};color:#fff;font-size:15px;font-weight:800;cursor:{{ deleteBtnCursor }};transition:background .2s">Delete my account</button>
+    <button onClick="{{ confirmDelete }}" disabled="{{ deleteDisabled }}" style="height:52px;border:none;border-radius:16px;background:{{ deleteBtnBg }};color:#fff;font-size:15px;font-weight:800;cursor:{{ deleteBtnCursor }};transition:background var(--m-fast)">Delete my account</button>
     <button onClick="{{ back }}" style="height:48px;border:none;border-radius:14px;background:#EEF3FA;color:#41526B;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:#E3EAF3">Keep my account</button>
   </div>
 </div>
 </sc-if>
 
 <sc-if value="{{ isDeleteFrozen }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Delete account — frozen" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Delete account — frozen" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
   <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:22px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
     <span style="width:60px;height:60px;border-radius:50%;background:#E8F0FE;display:flex;align-items:center;justify-content:center;align-self:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 11h13v9.5h-13zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11"></path></svg></span>
     <div style="display:flex;flex-direction:column;gap:6px;text-align:center">
@@ -144,7 +143,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Account settings — loading" aria-hidden="true" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
+<div data-screen-label="Account settings — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
   <sc-for list="{{ skels }}" as="k" hint-placeholder-count="6">
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:12px 15px;display:flex;gap:13px;align-items:center">
       <div style="width:46px;height:46px;border-radius:50%;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
@@ -158,7 +157,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Account settings — error" style="padding:60px 20px;display:flex;justify-content:center">
+<div data-screen-label="Account settings — error" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:60px 20px;display:flex;justify-content:center">
   <dc-import name="EmptyState" icon="pin" title="Couldn't load settings" body="Your connection may have dropped. Nothing is lost — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
 </div>
 </sc-if>
@@ -166,7 +165,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </div>
 
 <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:fadeIn .25s ease both;pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3);text-align:center">{{ toast }}</span></div>
+  <div style="position:absolute;left:20px;right:20px;bottom:28px;display:flex;justify-content:center;z-index:30;animation:{{ toastAnim }};pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3);text-align:center">{{ toast }}</span></div>
 </sc-if>
 
 </div>
@@ -185,8 +184,8 @@ class Component extends DCLogic {
     'Deletion completes when your open bookings finish, and within 30 days regardless.',
     'Reviews you wrote stay, with your name removed.',
     'Identity documents are deleted outright.' ];
-  toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2600); }
-  componentWillUnmount(){ clearTimeout(this._tt); }
+  toastMsg(m){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast:m , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({ toast:'' , toastOut:false }), 2600); }
+  componentWillUnmount(){ clearTimeout(this._to); clearTimeout(this._tt); }
   go(v){ this.setState({ view:v }); }
   renderVals(){
     const view = this.state.view ?? this.props.scenario ?? 'list';
@@ -202,6 +201,7 @@ class Component extends DCLogic {
       { name:'iPhone 14', meta:'Malé · active now', current:true, revocable:false, tint:'#E8F0FE', fg:'#2563EB', bd:'#CDDDFB' },
       this.state.revoked.pixel ? null : { name:'Pixel 7', meta:'Last used 3 days ago', current:false, revocable:true, tint:'#EEF3FA', fg:'#5B6B84', bd:'#E9EFF7', revoke:() => { this.setState(s => ({ revoked:{ ...s.revoked, pixel:true } })); this.toastMsg('Pixel 7 signed out — only that device'); } } ].filter(Boolean);
     return {
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-sheet) var(--e-out) both',
       title: this.TITLES[view] || 'Account settings',
       isList: view === 'list', isSessions: view === 'sessions', isDownload: view === 'download',
       isDeleteConfirm: view === 'delete_confirm', isDeleteFrozen: view === 'delete_frozen',
