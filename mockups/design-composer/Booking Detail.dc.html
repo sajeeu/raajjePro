@@ -20,6 +20,7 @@ button:focus{outline:none}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -328,9 +329,10 @@ class Component extends DCLogic {
       foots = [{ ...outline, label:'Propose a change', tap:() => { window.location='Propose%20Amendment.dc.html'; } }, { ...primary, label:chat.label, tap:chat.tap }];
     else
       foots = [{ ...primary, label:chat.label, tap:chat.tap }];
+    const ACTION_HREF = { 'Cancel this booking':'Cancel%20Booking.dc.html', 'Report a problem':'Raise%20Dispute.dc.html', 'Make this recurring':'Recurring%20Booking.dc.html' };
     const textActions = ({ awaiting_payment:[['Cancel this booking','#B91C1C']], payment_sent:[['Report a problem','#5B6B84']],
-      confirmed:[['Cancel this booking','#B91C1C'],['Report a problem','#5B6B84']], emergency_active:[['Report a problem','#5B6B84']],
-      completed:[['Report a problem','#5B6B84']], disputed:[] }[sc] ?? []).map(a => ({ label:a[0], color:a[1], tap:() => {} }));
+      confirmed:[['Make this recurring','#2563EB'],['Cancel this booking','#B91C1C'],['Report a problem','#5B6B84']], emergency_active:[['Report a problem','#5B6B84']],
+      completed:[['Report a problem','#5B6B84']], disputed:[] }[sc] ?? []).map(a => ({ label:a[0], color:a[1], tap:() => { if (ACTION_HREF[a[0]]) window.location.href = ACTION_HREF[a[0]]; } }));
     const rated = s.rating > 0;
     return {
       isLoading, isError, isBooking, D, statusKey, timeline, foots, textActions,

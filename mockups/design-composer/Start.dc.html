@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#DEE7F3}
+a{color:#2563EB}a:hover{color:#1D4ED8}
+button{font-family:inherit}button:focus{outline:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+<script src="./session.js"></script>
+</helmet>
+<div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
+<div data-screen-label="Start — prototype launcher" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;justify-content:center;gap:22px;padding:28px 24px;animation:fadeUp .3s ease both">
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+      <span style="width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+      <span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Raajje<span style="color:#2563EB">Pro</span></span>
+      <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid #E3EAF3;background:#fff;color:#5B6B84;border-radius:999px;padding:5px 12px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase">Prototype</span>
+      <span style="font-size:15px;font-weight:700;color:#41526B">Prototype — pick who you are</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button onClick="{{ asCustomer }}" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #E3EAF3;border-radius:20px;padding:18px 16px;cursor:pointer;text-align:left;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#2563EB;background:#F7FAFE" style-active="transform:scale(.99)">
+        <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:none">AN</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Continue as customer</span>
+          <span style="font-size:12.5px;font-weight:600;color:#5B6B84">Aishath Naeema · Malé</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+      <button onClick="{{ asProvider }}" style="display:flex;align-items:center;gap:14px;background:#fff;border:1.5px solid #E3EAF3;border-radius:20px;padding:18px 16px;cursor:pointer;text-align:left;box-shadow:0 1px 3px rgba(15,27,45,.05)" style-hover="border-color:#2563EB;background:#F7FAFE" style-active="transform:scale(.99)">
+        <span style="width:48px;height:48px;border-radius:50%;background:#E5F6EC;color:#166534;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:none">IR</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Continue as provider</span>
+          <span style="font-size:12.5px;font-weight:600;color:#5B6B84">Ibrahim Rasheed · Rasheed Plumbing Services · Gold</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+
+    <div style="display:flex;justify-content:center">
+      <a href="Sign%20In.dc.html" style="font-size:13px;font-weight:700;color:#5B6B84;text-decoration:underline;text-underline-offset:3px;padding:6px">See the real sign-in screen</a>
+    </div>
+  </div>
+
+  <div style="flex:none;padding:0 24px 22px;text-align:center">
+    <span style="font-size:11.5px;font-weight:600;color:#9AA9C0">Seeded demo data. Nothing here is a real account.</span>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  go(role, href) {
+    if (window.RPSession) window.RPSession.setRole(role);
+    window.location.href = href;
+  }
+  renderVals() {
+    return {
+      asCustomer: () => this.go('customer', 'Home.dc.html'),
+      asProvider: () => this.go('provider', 'My%20Calendar.dc.html')
+    };
+  }
+}
+</script>
+</body>
+</html>

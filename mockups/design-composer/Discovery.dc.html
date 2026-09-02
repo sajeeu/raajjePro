@@ -25,6 +25,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -169,7 +170,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </sc-if>
         <sc-if value="{{ resOk }}" hint-placeholder-val="{{ false }}">
           <sc-for list="{{ resList }}" as="r" hint-placeholder-count="4">
-            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" sponsored="{{ r.sp }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import>
+            <div onClick="{{ r.open }}" style="cursor:pointer"><dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" sponsored="{{ r.sp }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import></div>
           </sc-for>
           <sc-if value="{{ showMore }}">
             <button onClick="{{ showMoreTap }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFD">Show 12 more</button>
@@ -211,7 +212,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         <sc-if value="{{ hasSavedSvc }}" hint-placeholder-val="{{ true }}">
           <span style="font-size:17px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D;padding-top:4px">Saved services</span>
           <sc-for list="{{ savedSvcs }}" as="r" hint-placeholder-count="2">
-            <dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import>
+            <div onClick="{{ r.open }}" style="cursor:pointer"><dc-import name="ServiceCard" variant="full" photo="{{ r.photo }}" title="{{ r.title }}" provider="{{ r.prov }}" tier="{{ r.tier }}" rating="{{ r.rating }}" count="{{ r.count }}" price="{{ r.price }}" unit="{{ r.unit }}" island="{{ r.island }}" category="{{ r.cat }}" mode="{{ r.mode }}" callback="{{ r.cb }}" next-slot="{{ r.nextSlot }}" reply-time="{{ r.replyTime }}" bookings="{{ r.bookings }}" saved="{{ r.saved }}" on-save="{{ r.onSave }}" hint-size="100%,188px"></dc-import></div>
           </sc-for>
         </sc-if>
         <sc-if value="{{ hasSavedProv }}" hint-placeholder-val="{{ false }}">
@@ -275,7 +276,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Explore&quot;,&quot;Search results&quot;,&quot;Category results&quot;,&quot;Saved&quot;],&quot;default&quot;:&quot;Explore&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Loading&quot;,&quot;Empty&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
   state = { nav: ['Explore', 'Search results', 'Category results', 'Saved'].includes(new URLSearchParams(window.location.search).get('screen')) ? new URLSearchParams(window.location.search).get('screen') : null, q: '', island: 'Malé', islandQ: 'mee', sheet: false, toast: null, sort: 'Distance',
-    fMv: false, cat: 'Plumbing', savedSvc: { p1: true, c1: true }, savedProv: { ibrahim: true, hussain: true },
+    fMv: false, cat: (['Cleaning','Beauty','Fitness','Plumbing','Electrical','AC Repair','Appliance Repair','Pest Control','Photography','Moving','Home Repairs','Boat Charter'].includes(new URLSearchParams(window.location.search).get('cat')) ? new URLSearchParams(window.location.search).get('cat') : 'Plumbing'), savedSvc: { p1: true, c1: true }, savedProv: { ibrahim: true, hussain: true },
     override: {}, retrying: false };
   CATS = [
     { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
@@ -521,6 +522,7 @@ class Component extends DCLogic {
     const saved = !!this.state.savedSvc[s.id];
     return { title: s.title, prov: s.prov, tier: s.tier, rating: s.rating, count: s.count, price: s.price, unit: s.unit,
       photo: s.ph ?? '', island: s.island, cat: s.cat, mode: s.mode, cb: !!s.cb, nextSlot: s.nextSlot ?? '', replyTime: s.replyTime ?? '', bookings: s.bookings ?? 0, sp: !!s.sp, saved,
+      open: (e) => { if (e && e.target && e.target.closest('button')) return; window.location.href = 'Service%20Preview.dc.html'; },
       onSave: (next) => this.setSvcSaved(s.id, next) };
   }
   renderVals() {
@@ -563,8 +565,8 @@ class Component extends DCLogic {
       islandLbl: S.island, catName: S.cat,
       q: S.q, setQ: e => this.setState({ q: e.target.value }),
       goSearch: () => this.go('Search results'), goExplore: () => this.go('Explore'), goSaved: () => this.go('Saved'),
-      bellTap: () => this.toastMsg('Opens notifications'),
-      urgentTap: () => this.toastMsg('Opens the ASAP request'),
+      bellTap: () => { window.location.href = 'Notifications.dc.html'; },
+      urgentTap: () => { window.location.href = 'Emergency%20Flow.dc.html'; },
       editSearch: () => this.toastMsg('Edits the search'),
       cats: this.CATS.map(c => ({ ...c, tap: () => { this.setState({ cat: c.n, nav: 'Category results' }); } })),
       skel12: [1,2,3,4,5,6,7,8,9,10,11,12], skel4: [1,2,3,4],

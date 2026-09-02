@@ -23,6 +23,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
 <script src="./image-slot.js"></script>
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
@@ -158,7 +159,7 @@ class Component extends DCLogic {
     const populated = view === 'populated' || view === 'role_switcher';
     return {
       isPopulated: populated, isLoading: view === 'loading', isError: view === 'error',
-      rows: this.ROWS, skels: [1,2,3,4,5],
+      rows: ((window.RPSession && window.RPSession.role() === 'provider') ? [...this.ROWS.slice(0, 3), { t:'Verification', s:'Your badge and the checks behind it', href:'./Verification.dc.html', d:'M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6zM9 12l2 2 4-4' }, ...this.ROWS.slice(3)] : this.ROWS), skels: [1,2,3,4,5],
       sheetOn: populated && (this.state.sheet ?? (view === 'role_switcher')),
       openSheet: () => this.setState({ sheet:true }),
       closeSheet: () => this.setState({ sheet:false }),
