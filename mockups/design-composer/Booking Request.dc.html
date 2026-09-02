@@ -15,15 +15,12 @@
 body{margin:0;background:#DEE7F3}
 a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 button{font-family:inherit}button:focus{outline:none}
-@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="Booking request" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Booking request" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;padding:14px 20px 12px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
     <a href="My Calendar.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
@@ -46,7 +43,7 @@ button{font-family:inherit}button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fError }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp .25s ease both">
+      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp var(--m-page) var(--e-out) both">
         <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
           <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
           <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load this request</div>
@@ -57,22 +54,22 @@ button{font-family:inherit}button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fTimedOut }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp .25s ease both">
+      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp var(--m-page) var(--e-out) both">
         <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">This request is gone</div>
-          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">The 24 hours passed without an answer, so it declined on its own and Mariyam was told to look elsewhere. There's nothing left to act on here.</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">The 24 hours passed without an answer, so it declined on its own and Aishath was told to look elsewhere. There's nothing left to act on here.</div>
         </div>
         <a href="My Calendar.dc.html" style="font-size:13.5px;font-weight:700;color:#2563EB">Back to your calendar</a>
       </div>
     </sc-if>
 
     <sc-if value="{{ fAccepted }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:30px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#34C77B,#16A34A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(22,163,74,.3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">The job is yours</div>
-          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Accepted at <b style="color:#0F1B2D">MVR 3,200</b> for <b style="color:#0F1B2D">Wed 2 Sep, 06:30</b>. Price, date, time and scope are now locked — changing any of them needs Mariyam to accept an amendment.</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Accepted at <b style="color:#0F1B2D">MVR 3,200</b> for <b style="color:#0F1B2D">Wed 2 Sep, 06:30</b>. Price, date, time and scope are now locked — changing any of them needs Aishath to accept an amendment.</div>
         </div>
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
           <div style="font-size:14px;font-weight:700;color:#0F1B2D">The chat is now open</div>
@@ -82,30 +79,30 @@ button{font-family:inherit}button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fDeclined }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp .25s ease both">
+      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp var(--m-page) var(--e-out) both">
         <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">You passed on this one</div>
-          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Mariyam was told right away, so she can book someone else instead of waiting out the clock.</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">Aishath was told right away, so she can book someone else instead of waiting out the clock.</div>
         </div>
         <a href="My Calendar.dc.html" style="font-size:13.5px;font-weight:700;color:#2563EB">Back to your calendar</a>
       </div>
     </sc-if>
 
     <sc-if value="{{ fOpen }}" hint-placeholder-val="{{ true }}">
-      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn var(--m-page) var(--e-out) both">
 
-        <div style="background:{{ cdBg }};border:1.5px solid {{ cdBd }};border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;transition:background .3s,border-color .3s">
+        <div style="background:{{ cdBg }};border:1.5px solid {{ cdBd }};border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px;transition:background var(--m-fast),border-color var(--m-fast)">
           <span style="width:44px;height:44px;border-radius:50%;background:{{ cdIcoBg }};color:{{ cdIcoFg }};display:flex;align-items:center;justify-content:center;flex:none"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
           <span style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0">
             <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:{{ cdLabelFg }}">{{ cdLabel }}</span>
             <span style="font-size:26px;font-weight:800;letter-spacing:-.02em;color:{{ cdTimeFg }};font-variant-numeric:tabular-nums" aria-live="polite">{{ cdTime }}</span>
-            <span style="font-size:11.5px;line-height:1.45;font-weight:600;color:{{ cdSubFg }};text-wrap:pretty">If it runs out, the request declines on its own and Mariyam is told to look elsewhere.</span>
+            <span style="font-size:11.5px;line-height:1.45;font-weight:600;color:{{ cdSubFg }};text-wrap:pretty">If it runs out, the request declines on its own and Aishath is told to look elsewhere.</span>
           </span>
         </div>
 
         <sc-if value="{{ pendingOn }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#fff;border:1.5px solid #E1EAF5;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .25s ease both">
+          <div style="background:#fff;border:1.5px solid #E1EAF5;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;animation:fadeUp var(--m-page) var(--e-out) both">
             <dc-import name="StatusPill" status="pending_offline" hint-size="200px,28px"></dc-import>
             <div style="font-size:13px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>Your {{ pendingWhat }} is recorded.</b> There's no connection right now, so it's saved on this phone and sends the moment you're back online — you don't need to tap again, and closing the app won't lose it.</div>
           </div>
@@ -122,7 +119,7 @@ button{font-family:inherit}button:focus{outline:none}
           <div style="display:flex;align-items:center;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:14px;padding:11px 13px">
             <span style="width:36px;height:36px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:none">M</span>
             <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
-              <span style="display:inline-flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:700;color:#0F1B2D">Mariyam</span><dc-import name="VerificationBadge" tier="Bronze" size="chip" hint-size="64px,18px"></dc-import></span>
+              <span style="font-size:14px;font-weight:700;color:#0F1B2D">Aishath</span>
               <span style="font-size:11px;font-weight:600;color:#8296B3">Full name appears once you accept</span>
             </span>
           </div>
@@ -162,7 +159,7 @@ button{font-family:inherit}button:focus{outline:none}
 
   <sc-if value="{{ footerOn }}" hint-placeholder-val="{{ true }}">
     <div style="flex:none;padding:12px 20px 20px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:8px">
-      <div style="text-align:center;font-size:11.5px;line-height:1.5;font-weight:600;color:#5B6B84;text-wrap:pretty;padding:0 6px">Accepting locks the price, date, time and scope — changing them afterwards needs Mariyam to accept an amendment.</div>
+      <div style="text-align:center;font-size:11.5px;line-height:1.5;font-weight:600;color:#5B6B84;text-wrap:pretty;padding:0 6px">Accepting locks the price, date, time and scope — changing them afterwards needs Aishath to accept an amendment.</div>
       <button onClick="{{ acceptAsk }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Accept — MVR 3,200, Wed 2 Sep</button>
       <sc-if value="{{ proposeOn }}" hint-placeholder-val="{{ true }}">
         <a href="Propose Time and Price.dc.html" style="width:100%;height:50px;border:1.5px solid #CDDDFB;border-radius:15px;background:#E8F0FE;color:#1D4ED8;font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.5-1L20 7.5 16.5 4 5 15.5zM14 6.5l3.5 3.5"></path></svg>Propose a time and price</a>
@@ -177,14 +174,14 @@ button{font-family:inherit}button:focus{outline:none}
   </sc-if>
   <sc-if value="{{ acceptedFooterOn }}" hint-placeholder-val="{{ false }}">
     <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
-      <a href="Booking Thread.dc.html" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Chat with Mariyam</a>
+      <a href="Booking Thread.dc.html" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>Chat with Aishath</a>
       <a href="My Calendar.dc.html" style="width:100%;height:44px;color:#41526B;font-size:14.5px;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center">Back to your calendar</a>
     </div>
   </sc-if>
 
   <sc-if value="{{ hasSheet }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
-      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:12px;animation:{{ sheetAnim }}">
         <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:4px" aria-hidden="true"></div>
         <sc-if value="{{ sheetAccept }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;flex-direction:column;gap:12px">
@@ -194,7 +191,7 @@ button{font-family:inherit}button:focus{outline:none}
               <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:13px;font-weight:600;color:#5B6B84">Date &amp; time</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Wed 2 Sep · 06:30</span></div>
               <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0"><span style="font-size:13px;font-weight:600;color:#5B6B84">Scope</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Trip for 6 · back ~10:00</span></div>
             </div>
-            <div style="font-size:13px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">These lock the moment you accept. Changing any of them afterwards needs Mariyam to agree to an amendment. The chat opens immediately.</div>
+            <div style="font-size:13px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">These lock the moment you accept. Changing any of them afterwards needs Aishath to agree to an amendment. The chat opens immediately.</div>
             <button onClick="{{ confirmAccept }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Accept &amp; open chat</button>
             <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Not yet</button>
           </div>
@@ -202,7 +199,7 @@ button{font-family:inherit}button:focus{outline:none}
         <sc-if value="{{ sheetDecline }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:12px">
             <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;text-align:center">Decline this request?</div>
-            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">Mariyam is told right away so she can book someone else. Declining counts in your acceptance rate — letting the clock run out is worse for her and doesn't help yours.</div>
+            <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;text-align:center;text-wrap:pretty">Aishath is told right away so she can book someone else. Declining counts in your acceptance rate — letting the clock run out is worse for her and doesn't help yours.</div>
             <button onClick="{{ confirmDecline }}" style="width:100%;height:54px;border:none;border-radius:16px;background:#DC2626;color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,.28)" style-hover="filter:brightness(1.08)" style-active="transform:scale(.98)">Decline</button>
             <button onClick="{{ closeSheet }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Keep it open</button>
           </div>
@@ -216,9 +213,10 @@ button{font-family:inherit}button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Live countdown&quot;,&quot;Near expiry&quot;,&quot;Offline — accept pending&quot;,&quot;Timed out&quot;,&quot;Loading&quot;,&quot;Error&quot;],&quot;default&quot;:&quot;Live countdown&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Request-based&quot;,&quot;Slot booking&quot;],&quot;default&quot;:&quot;Request-based&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { sheet: null, phase: 'open', pending: null, remain: null };
   componentDidMount() { this._iv = setInterval(() => this.tick(), 1000); }
-  componentWillUnmount() { clearInterval(this._iv); clearTimeout(this._tt); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearInterval(this._iv); clearTimeout(this._tt); }
   startFor(scn) { return scn === 'Near expiry' ? 84 * 60 + 12 : 23 * 3600 + 41 * 60 + 7; }
   tick() {
     const scn = this.props.scenario ?? 'Live countdown';
@@ -245,6 +243,8 @@ class Component extends DCLogic {
     const pending = offline && S.pending != null;
     const hTitles = { open: 'New booking request', accepted: 'Booking accepted', declined: 'Request declined', timedout: 'Request closed' };
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
       hTitle: loading ? 'Booking request' : error ? 'Booking request' : hTitles[phase] ?? 'Booking request',
       fLoading: loading, fError: error,
       fTimedOut: !loading && !error && phase === 'timedout',
@@ -266,15 +266,15 @@ class Component extends DCLogic {
       acceptAsk: () => this.setState({ sheet: 'accept' }),
       declineAsk: () => this.setState({ sheet: 'decline' }),
       confirmAccept: () => {
-        if (offline) this.setState({ sheet: null, pending: 'accept' });
-        else this.setState({ sheet: null, phase: 'accepted' });
+        if (offline) this._close({ sheet: null, pending: 'accept' });
+        else this._close({ sheet: null, phase: 'accepted' });
       },
       confirmDecline: () => {
-        if (offline) this.setState({ sheet: null, pending: 'decline' });
-        else this.setState({ sheet: null, phase: 'declined' });
+        if (offline) this._close({ sheet: null, pending: 'decline' });
+        else this._close({ sheet: null, phase: 'declined' });
       },
       hasSheet: !!S.sheet, sheetAccept: S.sheet === 'accept', sheetDecline: S.sheet === 'decline',
-      closeSheet: () => this.setState({ sheet: null }),
+      closeSheet: () => this._close({ sheet: null }),
       stopProp: e => e.stopPropagation()
     };
   }
