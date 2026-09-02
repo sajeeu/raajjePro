@@ -65,6 +65,23 @@ REQUEST_CATEGORIES = {
     "Appliance Repair", "Moving", "Home Repairs", "Boat Charter",
 }
 
+# Round 23: there is no emergency search filter. Dispatch broadcasts to every eligible
+# provider, so filtering a browse list by "Emergency" offers a cut that does not exist -
+# and emergency is reached from its own distinct entry on Home and Explore instead.
+# A chip named "Emergency" sitting in a filter row is that forbidden filter, which the
+# text rule above misses because the word appears alone rather than as "emergency filter".
+FILTER_LIST = re.compile(r"(?:QUICK|CHIPS?|FILTERS?|TOGGLES?)\w*\s*=\s*\[(.*?)\]", re.S | re.I)
+
+def emergency_filter_chips(s):
+    """A browse/filter chip list offering Emergency as one of its options."""
+    out = []
+    for m in FILTER_LIST.finditer(s):
+        body = m.group(1)
+        for c in re.finditer(r"['\"]([^'\"]{2,40})['\"]", body):
+            if re.fullmatch(r"\s*emergency\s*", c.group(1), re.I):
+                out.append(c.group(1))
+    return out
+
 def mode_mismatches(s):
     """Object literals carrying both a category and a booking mode that contradict §1c."""
     out = []
@@ -126,6 +143,12 @@ def check(path):
     for label, pat, why in SUSPECT:
         if re.search(pat, s):
             warns.append((label, why))
+
+    for chip in emergency_filter_chips(s):
+        warns.append(("emergency offered as a browse filter (%s)" % chip,
+                      "Round 23 removed the emergency search filter - dispatch never targets a "
+                      "provider, so the filter advertised a cut that does not exist. Emergency has "
+                      "its own entry on Home and Explore. Warn-only until Round 41 removes the chip."))
 
     for detail in mode_mismatches(s):
         fails.append(("booking mode contradicts the category", detail + " — §1c. "

@@ -17,11 +17,8 @@ a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
 <script src="./image-slot.js"></script>
 <script src="./session.js"></script>
 </helmet>
@@ -39,7 +36,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
 <sc-if value="{{ isPopulated }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Profile" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease both">
+<div data-screen-label="Profile" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px;animation:fadeUp var(--m-page) var(--e-out) both">
 
   <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:15px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
     <div style="display:flex;gap:15px;align-items:center">
@@ -82,7 +79,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Profile — loading" aria-hidden="true" style="padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
+<div data-screen-label="Profile — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:16px 20px 26px;display:flex;flex-direction:column;gap:12px">
   <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px;display:flex;gap:15px;align-items:center;box-shadow:0 1px 3px rgba(15,27,45,.05)">
     <div style="width:84px;height:84px;border-radius:24px;flex:none;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
     <div style="flex:1;display:flex;flex-direction:column;gap:9px">
@@ -104,7 +101,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="Profile — error" style="padding:60px 20px;display:flex;justify-content:center">
+<div data-screen-label="Profile — error" style="animation:fadeUp var(--m-page) var(--e-out) both;padding:60px 20px;display:flex;justify-content:center">
   <dc-import name="EmptyState" icon="pin" title="Couldn't load your profile" body="Your connection may have dropped. Your account is safe — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
 </div>
 </sc-if>
@@ -114,8 +111,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Profile" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
 
 <sc-if value="{{ sheetOn }}" hint-placeholder-val="{{ false }}">
-  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:fadeIn .25s ease both;z-index:20"></div>
-  <div role="dialog" aria-label="How you're using RaajjePro" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:14px;z-index:21;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both;box-shadow:0 -12px 40px rgba(15,27,45,.18)">
+  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(15,27,45,.45);animation:{{ dimAnim }};z-index:20"></div>
+  <div role="dialog" aria-label="How you're using RaajjePro" style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:14px;z-index:21;animation:{{ sheetAnim }};box-shadow:0 -12px 40px rgba(15,27,45,.18)">
     <div style="width:44px;height:5px;border-radius:999px;background:#E3EAF3;align-self:center;flex:none"></div>
     <div style="font-size:19px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">How you're using RaajjePro</div>
     <div style="border:2px solid #2563EB;border-radius:20px;background:#F5F9FF;padding:14px 16px;display:flex;align-items:center;gap:13px">
@@ -136,7 +133,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
-  <div style="position:absolute;left:20px;right:20px;bottom:104px;display:flex;justify-content:center;z-index:30;animation:fadeIn .25s ease both;pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3)">{{ toast }}</span></div>
+  <div style="position:absolute;left:20px;right:20px;bottom:104px;display:flex;justify-content:center;z-index:30;animation:{{ toastAnim }};pointer-events:none"><span style="background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;border-radius:999px;padding:10px 16px;box-shadow:0 8px 20px rgba(15,27,45,.3)">{{ toast }}</span></div>
 </sc-if>
 
 </div>
@@ -144,6 +141,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;role_switcher&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { view:null, sheet:null, toast:'' };
   ROWS = [
     { t:'My bookings', s:'12 bookings', href:'./My%20Bookings.dc.html', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
@@ -152,17 +150,20 @@ class Component extends DCLogic {
     { t:'Account settings', s:'Password, email, sessions, your data', href:'./Account%20Settings.dc.html', d:'M5.5 11h13v9.5h-13zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11' },
     { t:'Help & support', s:'FAQ, contact and feedback', href:'./Help%20Support.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9M12 17.5v.1' },
     { t:'Legal', s:'Terms, privacy and agreements', href:'./Legal.dc.html', d:'M7 3h7l5 5v13H7zM14 3v5h5M10.5 12.5h5M10.5 16h5' } ];
-  toastMsg(m){ clearTimeout(this._tt); this.setState({ toast:m }); this._tt = setTimeout(() => this.setState({ toast:'' }), 2600); }
-  componentWillUnmount(){ clearTimeout(this._tt); }
+  toastMsg(m){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast:m , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({ toast:'' , toastOut:false }), 2600); }
+  componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
   renderVals(){
     const view = this.state.view ?? this.props.state ?? 'populated';
     const populated = view === 'populated' || view === 'role_switcher';
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-sheet) var(--e-out) both',
       isPopulated: populated, isLoading: view === 'loading', isError: view === 'error',
       rows: ((window.RPSession && window.RPSession.role() === 'provider') ? [...this.ROWS.slice(0, 3), { t:'Verification', s:'Your badge and the checks behind it', href:'./Verification.dc.html', d:'M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6zM9 12l2 2 4-4' }, ...this.ROWS.slice(3)] : this.ROWS), skels: [1,2,3,4,5],
       sheetOn: populated && (this.state.sheet ?? (view === 'role_switcher')),
       openSheet: () => this.setState({ sheet:true }),
-      closeSheet: () => this.setState({ sheet:false }),
+      closeSheet: () => this._close({ sheet:false }),
       retry: () => this.setState({ view:'populated' }),
       navTap: (t) => { const m = { Home:'Home.dc.html', Explore:'Discovery.dc.html', Bookings:'My%20Bookings.dc.html', Messages:'Messages.dc.html' }; if (m[t]) window.location = m[t]; },
       toastOn: !!this.state.toast, toast: this.state.toast,

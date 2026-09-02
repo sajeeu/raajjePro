@@ -18,14 +18,8 @@ input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
 ::placeholder{color:#9AA9C0}
 .hscroll::-webkit-scrollbar{display:none}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes sheetUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
-@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
+<link rel="stylesheet" href="./motion.css">
 <script src="./image-slot.js"></script>
 <script src="./session.js"></script>
 </helmet>
@@ -63,7 +57,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </div>
         <div class="hscroll" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
           <sc-for list="{{ quickChips }}" as="ch" hint-placeholder-count="4">
-            <button onClick="{{ ch.tap }}" style="flex:none;height:38px;border:1.5px solid {{ ch.bd }};border-radius:999px;background:{{ ch.bg }};color:{{ ch.fg }};padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s" style-active="transform:scale(.97)">{{ ch.label }}</button>
+            <button onClick="{{ ch.tap }}" style="flex:none;height:38px;border:1.5px solid {{ ch.bd }};border-radius:999px;background:{{ ch.bg }};color:{{ ch.fg }};padding:0 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background var(--m-fast),border-color var(--m-fast)" style-active="transform:scale(.97)">{{ ch.label }}</button>
           </sc-for>
         </div>
         <button onClick="{{ urgentTap }}" style="display:flex;align-items:center;gap:9px;background:none;border:none;padding:2px 2px;cursor:pointer;text-align:left" style-hover="opacity:.85" style-active="transform:scale(.99)">
@@ -158,7 +152,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <sc-if value="{{ popNearOk }}" hint-placeholder-val="{{ true }}">
                 <div class="hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 20px 6px">
                   <sc-for list="{{ popNear }}" as="s" hint-placeholder-count="3">
-                    <div onClick="{{ s.open }}" style="flex:none;scroll-snap-align:start;animation:fadeUp .3s ease both;cursor:pointer">
+                    <div onClick="{{ s.open }}" style="flex:none;scroll-snap-align:start;animation:fadeUp var(--m-page) var(--e-out) both;cursor:pointer">
                       <dc-import name="ServiceCard" variant="horizontal" title="{{ s.title }}" provider="{{ s.prov }}" tier="{{ s.tier }}" rating="{{ s.rating }}" count="{{ s.count }}" price="{{ s.price }}" unit="{{ s.unit }}" island="{{ s.island }}" category="{{ s.cat }}" mode="{{ s.mode }}" next-slot="{{ s.nextSlot }}" reply-time="{{ s.replyTime }}" bookings="{{ s.bookings }}" callback="{{ s.callback }}" photo="{{ s.photo }}" saved="{{ s.saved }}" on-save="{{ s.onSave }}" hint-size="250px,330px"></dc-import>
                     </div>
                   </sc-for>
@@ -174,7 +168,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 <button onClick="{{ seeAll }}" style="border:none;background:none;color:#2563EB;font-size:13px;font-weight:700;cursor:pointer;padding:6px 0" style-hover="color:#1D4ED8">See all</button>
               </div>
               <sc-for list="{{ featured }}" as="f" hint-placeholder-count="3">
-                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp .3s ease both">
+                <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05);animation:fadeUp var(--m-page) var(--e-out) both">
                   <span style="width:52px;height:52px;flex:none;display:block"><image-slot id="{{ f.logoId }}" shape="rounded" radius="16" style="width:52px;height:52px" placeholder="Logo"></image-slot></span>
                   <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
                     <div style="display:flex;align-items:center;gap:7px">
@@ -275,8 +269,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   <div style="flex:none;background:#fff;border-top:1px solid #EEF3FA;display:flex;justify-content:center;padding:8px 10px 14px"><dc-import name="BottomNav" active="Home" hint-size="372px,90px"></dc-import></div>
 
   <sc-if value="{{ hasSheet }}">
-    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:fadeIn .25s ease both;display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
-      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:6px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1) both">
+    <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeSheet }}">
+      <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;gap:6px;animation:{{ sheetAnim }}">
         <div style="width:40px;height:4px;border-radius:999px;background:#D6E1F0;align-self:center;margin-bottom:8px" aria-hidden="true"></div>
         <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;margin-bottom:6px">Choose your island</div>
         <div style="display:flex;align-items:center;gap:8px;background:#F2F6FB;border:1px solid #E3EAF3;border-radius:12px;height:44px;padding:0 12px;margin-bottom:6px">
@@ -285,7 +279,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch">
         <sc-for list="{{ islands }}" as="i" hint-placeholder-count="6">
-          <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;cursor:pointer;transition:border-color .15s,background .15s" style-active="transform:scale(.99)">
+          <button onClick="{{ i.pick }}" style="display:flex;align-items:center;gap:12px;border:1.5px solid {{ i.bd }};border-radius:14px;background:{{ i.bg }};padding:0 16px;height:52px;cursor:pointer;transition:border-color var(--m-fast),background var(--m-fast)" style-active="transform:scale(.99)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ i.fg }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg>
             <span style="flex:1;text-align:left;font-size:14.5px;font-weight:700;color:{{ i.fg }}">{{ i.n }}</span>
             <sc-if value="{{ i.on }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></sc-if>
@@ -299,7 +293,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ hasToast }}">
-    <div style="position:absolute;left:50%;bottom:92px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:toastIn .25s ease both;pointer-events:none">{{ toast }}</div>
+    <div style="position:absolute;left:50%;bottom:92px;transform:translate(-50%,0);z-index:60;background:#101B2D;color:#fff;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 26px rgba(15,27,45,.35);animation:{{ toastAnim }};pointer-events:none">{{ toast }}</div>
   </sc-if>
 
 </div>
@@ -307,6 +301,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Populated&quot;,&quot;Launch mode&quot;,&quot;Loading&quot;,&quot;Error&quot;,&quot;No location&quot;],&quot;default&quot;:&quot;Populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { q: '', island: 'Malé', islandQ: '', picked: false, sheet: false, saved: {}, chips: {}, secFailed: true, retrying: false, locOn: false, toast: null };
   CATS = [
     { n: 'Cleaning', bg: '#EEF2FF', fg: '#4F46E5', d: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z' },
@@ -373,8 +368,8 @@ class Component extends DCLogic {
   }
   QUICK = ['Near me', 'Available today', 'Book instantly', 'Emergency'];
   scn() { return this.props.scenario ?? 'Populated'; }
-  componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._rt); }
-  toastMsg(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 2200); }
+  componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); clearTimeout(this._rt); }
+  toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2200) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2200); }
   PHOTOS = { Cleaning: 'uploads/cleaning.jpeg', Electrical: 'uploads/electrical.jpeg', Plumbing: 'uploads/plumbing.jpeg', Beauty: 'uploads/beauty.jpeg', Photography: 'uploads/photography.jpeg' };
   mkCard(s) {
     const saved = !!this.state.saved[s.id];
@@ -391,6 +386,9 @@ class Component extends DCLogic {
     const full = !loading && !launch && !noLocMode;
     const byId = ids => ids.map(i => this.mkCard(this.SVCS.find(s => s.id === i)));
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
+      toastAnim: this.state.toastOut ? 'fadeOut var(--m-base) var(--e-in) both' : 'toastIn var(--m-sheet) var(--e-out) both',
       islandLbl: noLocMode ? 'Set island' : S.island,
       q: S.q, setQ: e => this.setState({ q: e.target.value }),
       searchTap: () => { window.location.href = 'Discovery.dc.html?screen=Search%20results'; },
@@ -424,14 +422,14 @@ class Component extends DCLogic {
       becomeProv: () => { window.location.href = 'Become%20a%20Provider.dc.html'; },
       learnMore: () => { window.location.href = 'Become%20a%20Provider.dc.html'; },
       hasSheet: S.sheet, openIsland: () => this.setState({ sheet: true }),
-      closeSheet: () => this.setState({ sheet: false, islandQ: '' }),
+      closeSheet: () => this._close({ sheet: false, islandQ: '' }),
       stopProp: e => e.stopPropagation(),
       islandQ: S.islandQ, setIslandQ: e => this.setState({ islandQ: e.target.value }),
       islandNone: this.searchIslands(S.islandQ).length === 0,
       islandNoMatch: 'No island matches "' + S.islandQ.trim() + '"',
       islands: this.searchIslands(S.islandQ).map(i => { const n = i.l, on = !noLocMode && n === S.island; return { n, on,
         bd: on ? '#2563EB' : '#E3EAF3', bg: on ? '#E8F0FE' : '#fff', fg: on ? '#1D4ED8' : '#0F1B2D',
-        pick: () => { this.setState({ island: n, picked: true, sheet: false, islandQ: '' }); this.toastMsg('Browsing ' + n); } }; }),
+        pick: () => { this._close({ island: n, picked: true, sheet: false, islandQ: '' }); this.toastMsg('Browsing ' + n); } }; }),
       toast: S.toast, hasToast: !!S.toast
     };
   }

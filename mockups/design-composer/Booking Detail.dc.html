@@ -16,17 +16,15 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 button:focus{outline:none}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
 <sc-if value="{{ isLoading }}">
-<div data-screen-label="Booking detail — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div data-screen-label="Booking detail — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;overflow:hidden">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
     <div style="height:18px;width:180px;border-radius:8px;background:#E8EEF6"></div>
@@ -44,7 +42,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}">
-<div data-screen-label="Booking detail — error" style="flex:1;display:flex;flex-direction:column">
+<div data-screen-label="Booking detail — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <a href="My%20Bookings.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Booking</span>
@@ -56,7 +54,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isBooking }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Booking detail" style="flex:1;display:flex;flex-direction:column;min-height:0">
+<div data-screen-label="Booking detail" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <sc-if value="{{ D.emergency }}" hint-placeholder-val="{{ false }}">
   <div style="flex:none;background:#DC2626;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:8px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg>
@@ -237,7 +235,7 @@ button:focus{outline:none}
 
   <sc-if value="{{ rateOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:absolute;inset:0;background:rgba(15,27,45,.4);display:flex;align-items:flex-end;z-index:20" onClick="{{ rateClose }}">
-    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:sheetUp .4s cubic-bezier(.2,.9,.3,1)" onClick="{{ stop }}">
+    <div style="width:100%;background:#fff;border-radius:28px 28px 0 0;padding:14px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:{{ sheetAnim }}" onClick="{{ stop }}">
       <span style="width:40px;height:4px;border-radius:99px;background:#E3EAF3"></span>
       <span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">How was Mariyam's work?</span>
       <div style="display:flex;gap:8px">
@@ -260,6 +258,8 @@ button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;confirmed&quot;,&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;emergency_active&quot;,&quot;completed&quot;,&quot;disputed&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;'confirmed' | 'awaiting_payment' | 'payment_sent' | 'emergency_active' | 'completed' | 'disputed' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
+  _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
+  componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); }
   state = { wPhase:'idle', naPhase:'idle', rateOpen:false, rating:0 };
   D = {
     awaiting_payment: {
@@ -335,6 +335,8 @@ class Component extends DCLogic {
       completed:[['Report a problem','#5B6B84']], disputed:[] }[sc] ?? []).map(a => ({ label:a[0], color:a[1], tap:() => { if (ACTION_HREF[a[0]]) window.location.href = ACTION_HREF[a[0]]; } }));
     const rated = s.rating > 0;
     return {
+      dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
+      sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
       isLoading, isError, isBooking, D, statusKey, timeline, foots, textActions,
       isDisputed: sc==='disputed', isEmergency: sc==='emergency_active', isCompleted: sc==='completed',
       naIdle: s.naPhase==='idle', naSent: s.naPhase==='sent', naReport: () => this.setState({ naPhase:'sent' }),
@@ -347,7 +349,7 @@ class Component extends DCLogic {
       amChipBg: D.amendment==='pending' ? '#FEF3DC' : '#E5F6EC', amChipFg: D.amendment==='pending' ? '#A15C00' : '#166534',
       hasPriceWas: !!D.agPriceWas,
       rateOpen: s.rateOpen, rated,
-      rateClose: () => this.setState({ rateOpen:false }), rateDone: () => this.setState({ rateOpen:false }),
+      rateClose: () => this._close({ rateOpen:false }), rateDone: () => this._close({ rateOpen:false }),
       stop: (e) => e.stopPropagation(),
       stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=s.rating ? '#F3B23E' : 'none', stroke: n<=s.rating ? '#D99A1E' : '#C6D4EA', tap:() => this.setState({ rating:n }) })),
       rateHint: rated ? 'Your rating is public on Mariyam’s profile, alongside the job count.' : 'Ratings are public and stay on the record — like everything else on this booking.',
