@@ -44,6 +44,14 @@ Two things remain outstanding, neither of them a session:
 - ⚠ **The island pickers show a name with no atoll.** The real list now exists — `docs/data/inhabited-islands.json`, 192 inhabited islands — and it establishes that **island names are not unique**: fifteen repeat across atolls and `Meedhoo` exists in three. Every picker in Sessions 2, 9 and 11 renders a bare name, which is ambiguous against real data. Needs a correction round before the seed lands.
 - The prototype-supersedes table in `mockups/README.md` still lags sessions 3–13.
 
+### 🔧 A conditional render cannot animate its own removal
+
+Added after Round 40. Sixteen screens animated a sheet **in** and none animated one **out** — the `sc-if` flag flipped and the node was simply gone. Opening felt considered; closing felt like the screen had broken, and that one asymmetry was most of what read as rigidity across the whole app.
+
+The fix is a **closing state**: set a flag, run the reverse animation, and unmount on a timer. Two details make it safe — a guard so a second tap during the exit is ignored rather than queuing a second timer, and clearing the timer in `componentWillUnmount` alongside the toast timers already there.
+
+The general lesson is about where motion lives. Ten keyframes were copy-pasted into 39 separate `<style>` blocks, and that is precisely why five different entry durations and two near-identical easing curves had drifted into use, split evenly across twelve files each. **Motion is a shared vocabulary or it is not a vocabulary** — it belongs in one file, like `session.js`, not in every screen that happens to need a fade.
+
 ### 🔧 An editor hint is a claim, and the component has to honour it
 
 Added after Round 36. Three separate defects have now come from a declared value drifting from the real one, and none of them looked wrong on screen:
