@@ -67,7 +67,9 @@ Measured from the delivered designs, not proposed. Keep these unless you have a 
 | Gold | `#FEF3C7` | `#B45309` | `#FCD34D` |
 | None | — | — | — (the badge is absent; never a grey "unverified" chip) |
 
-**Category accents** — each of the twelve carries its own tint for icon chips: Cleaning indigo, Plumbing emerald, Electrical amber, AC Repair blue, Beauty pink, Photography orange, Gardening green, Computer blue, Moving orange, Fitness violet, Events yellow, Boat Charter cyan. Tints sit around 8% saturation on white; the icon takes the full colour.
+**Category accents** — each of the twelve carries its own tint for icon chips, tint · icon: Cleaning indigo `#EEF2FF`·`#4F46E5`, Plumbing emerald `#ECFDF5`·`#059669`, Electrical amber `#FFFBEB`·`#D97706`, AC Repair blue `#EFF6FF`·`#2563EB`, Beauty pink `#FDF2F8`·`#DB2777`, Photography orange `#FFF7ED`·`#EA580C`, Pest Control green `#F0FDF4`·`#16A34A`, Appliance Repair sky `#F0F9FF`·`#0284C7`, Moving burnt orange `#FFF7ED`·`#C2410C`, Fitness violet `#F5F3FF`·`#7C3AED`, Home Repairs yellow `#FEFCE8`·`#CA8A04`, Boat Charter cyan `#ECFEFF`·`#0891B2`. Tints sit around 8% saturation on white; the icon takes the full colour. **These twelve are category identity — never borrow one for a non-category meaning.** The system roles above (primary, success, error, warning, grey) are what a status, a count or a shortcut uses.
+
+Corrected against the plan: **Gardening**, **Computer** and **Events** appeared here after they had been replaced by **Pest Control**, **Appliance Repair** and **Home Repairs** in Rounds 25 and 26. The live list is `01_Development_Plan_v5.md` §Phase 4; `Discovery.dc.html`'s `CATS` table is the rendered copy.
 
 ### Type — Inter
 
