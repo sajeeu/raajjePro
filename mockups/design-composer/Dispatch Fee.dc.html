@@ -44,7 +44,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Dispatch fee</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="message" title="Couldn't load the fee details" body="Never transfer to an account you got outside this screen. Try again to load RaajjePro's details." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="message" title="Couldn't load the fee details" body="Never transfer to an account you got outside this screen. Try again to load RaajjePro's details." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -199,7 +199,7 @@ button:focus{outline:none}
 class Component extends DCLogic {
   state = { phase:null, proof:false, copied:null };
   renderVals() {
-    const s = this.state, sc = this.props.scenario ?? 'owed';
+    const s = this.state, sc = s.scnOverride ?? this.props.scenario ?? 'owed';
     const eff = s.phase ?? sc;
     const isLoading = eff==='loading', isError = eff==='error';
     const canSubmit = s.proof;
@@ -223,7 +223,7 @@ class Component extends DCLogic {
       subCursor: canSubmit ? 'pointer' : 'default', subShadow: canSubmit ? '0 8px 18px rgba(15,27,45,.28)' : 'none',
       submit: () => { if (canSubmit) this.setState({ phase:'submitted' }); },
       settle: () => this.setState({ phase:'owed' }),
-      noop: () => {}, notNow: () => { window.location = 'Booking%20Detail.dc.html'; }
+      retry: () => this.setState({ scnOverride: 'owed' }), notNow: () => { window.location = 'Booking%20Detail.dc.html'; }
     };
   }
 }

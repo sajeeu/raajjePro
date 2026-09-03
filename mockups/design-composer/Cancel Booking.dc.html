@@ -44,7 +44,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Cancel booking</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. The booking is unchanged — nothing was cancelled. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. The booking is unchanged — nothing was cancelled. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -166,7 +166,7 @@ class Component extends DCLogic {
       factBody:'He cancelled at 21:12. The cancellation goes on his record. Here’s what happens next — automatically.' }
   };
   renderVals() {
-    const sc = this.props.scenario ?? 'customer_cancel', s = this.state;
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'customer_cancel', s = this.state;
     const isLoading = sc==='loading', isError = sc==='error';
     const isProvider = sc==='provider_cancelled' || sc==='provider_cancelled_emergency';
     return {
@@ -178,7 +178,7 @@ class Component extends DCLogic {
       notDone: !s.done, isDone: s.done,
       reasons: this.REASONS.map((r,i) => ({ label:r, on: s.picked===i, tap:() => this.setState({ picked: s.picked===i ? null : i }) })),
       doCancel: () => this.setState({ done:true }),
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'customer_cancel' })
     };
   }
 }
