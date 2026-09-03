@@ -45,6 +45,11 @@ FORBIDDEN = [
 
 # (label, pattern, why) — a hit is a warning worth a human look.
 SUSPECT = [
+    # Round 44 renamed the slot-mode card affordance. "Book instantly" named an immediacy the
+    # state machine does not produce: a slot booking enters `requested` and waits for the
+    # provider on the same 24-hour clock as a request. Promote to FORBIDDEN once Round 44 lands.
+    ("pre-Round-44 slot affordance", r"Book instantly|confirmed straight away|books? instantly",
+     "Round 44: the slot label is 'Pick a time'. A slot booking still needs the provider to accept."),
     ("possible phone number rendered", r">\s*[79]\d{6}\s*<",
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",
