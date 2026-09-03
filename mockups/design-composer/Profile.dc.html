@@ -39,7 +39,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <span style="position:relative;width:108px;height:108px;flex:none;display:block">
         <span style="position:absolute;inset:-5px;border-radius:50%;border:2px solid #CDDDFB"></span>
         <image-slot id="aishath-profile-photo" shape="circle" style="width:108px;height:108px" placeholder="Photo"></image-slot>
-        <span aria-label="Change photo" style="position:absolute;right:-2px;bottom:2px;width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(15,27,45,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4zM12 15.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6"></path></svg></span>
+        <button onClick="{{ pickPhoto }}" aria-label="Change photo" style="position:absolute;right:-11px;bottom:-7px;width:48px;height:48px;padding:0;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><span style="width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(15,27,45,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#41526B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4zM12 15.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6"></path></svg></span></button>
       </span>
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
         <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Aishath Naeema</div>
@@ -56,8 +56,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
   <div style="padding:14px 20px 26px;display:flex;flex-direction:column;gap:12px">
     <div style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;padding:0 2px">My bookings</div>
-    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 8px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="6">
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px 8px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
         <a href="{{ t.href }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none" style-hover="opacity:.8">
           <span style="width:52px;height:52px;border-radius:17px;background:{{ t.tint }};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ t.color }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{ t.d }}"></path></svg></span>
           <span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:center">{{ t.t }}</span>
@@ -96,8 +96,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     <div style="height:60px;align-self:stretch;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
   </div>
   <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
-    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 8px">
-      <sc-for list="{{ skels }}" as="k" hint-placeholder-count="6">
+    <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:18px 12px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px 8px">
+      <sc-for list="{{ skels }}" as="k" hint-placeholder-count="4">
         <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
           <div style="width:52px;height:52px;border-radius:17px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
           <div style="height:10px;width:56px;border-radius:5px;background:linear-gradient(90deg,#E8EEF6 25%,#F4F8FC 50%,#E8EEF6 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>
@@ -158,15 +158,15 @@ class Component extends DCLogic {
   _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { view:null, sheet:null, toast:'' };
   TILES = [
-    { t:'Waiting', color:'#D97706', tint:'#FEF3DC', href:'./My%20Bookings.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5V12l3 2' },
-    { t:'Upcoming', color:'#2563EB', tint:'#E8F0FE', href:'./My%20Bookings.dc.html', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
-    { t:'Completed', color:'#16A34A', tint:'#E5F6EC', href:'./My%20Bookings.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 12.5l2.5 2.5 4.5-5' },
-    { t:'Cancelled', color:'#DC2626', tint:'#FEF2F2', href:'./My%20Bookings.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5l5 5M14.5 9.5l-5 5' },
-    { t:'Saved', color:'#DB2777', tint:'#FDF2F8', href:'./Discovery.dc.html?screen=Saved', d:'M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z' },
-    { t:'Support', color:'#7C3AED', tint:'#F3EFFE', href:'./Help%20Support.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9M12 17.5v.1' } ];
+    { t:'All', color:'#8296B3', tint:'#EEF3FA', href:'./My%20Bookings.dc.html?tab=All', d:'M4 5.5h16M4 12h16M4 18.5h16' },
+    { t:'Upcoming', color:'#16A34A', tint:'#E5F6EC', href:'./My%20Bookings.dc.html?tab=Upcoming', d:'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5' },
+    { t:'Active', color:'#D97706', tint:'#FEF3DC', href:'./My%20Bookings.dc.html?tab=Active', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5V12l3 2' },
+    { t:'Completed', color:'#2563EB', tint:'#E8F0FE', href:'./My%20Bookings.dc.html?tab=Completed', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 12.5l2.5 2.5 4.5-5' } ];
   ROWS = [
+    { t:'Saved', href:'./Discovery.dc.html?screen=Saved', d:'M12 20.5s-8-4.9-8-10.2C4 7 6 5 8.6 5c1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2C18 5 20 7 20 10.3c0 5.3-8 10.2-8 10.2z' },
     { t:'Saved preferences', href:'./Saved%20Preferences.dc.html', d:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1.5 14h5M9.5 8h5M17.5 16h5' },
     { t:'Account settings', href:'./Account%20Settings.dc.html', d:'M5.5 11h13v9.5h-13zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11' },
+    { t:'Help & support', href:'./Help%20Support.dc.html', d:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9M12 17.5v.1' },
     { t:'Legal', href:'./Legal.dc.html', d:'M7 3h7l5 5v13H7zM14 3v5h5M10.5 12.5h5M10.5 16h5' } ];
   toastMsg(m){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast:m , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2600) - 200); this._tt = setTimeout(() => this.setState({ toast:'' , toastOut:false }), 2600); }
   componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); }
@@ -180,7 +180,8 @@ class Component extends DCLogic {
       isPopulated: populated, isLoading: view === 'loading', isError: view === 'error',
       tiles: this.TILES,
       rows: ((window.RPSession && window.RPSession.role() === 'provider') ? [{ t:'Verification', href:'./Verification.dc.html', d:'M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6zM9 12l2 2 4-4' }, ...this.ROWS] : this.ROWS),
-      skels: [1,2,3,4,5,6], skelRows: [1,2,3],
+      skels: [1,2,3,4], skelRows: [1,2,3],
+      pickPhoto: () => { const s = document.getElementById('aishath-profile-photo'); if (s && s.openFilePicker) s.openFilePicker(); },
       sheetOn: populated && (this.state.sheet ?? (view === 'role_switcher')),
       openSheet: () => this.setState({ sheet:true }),
       closeSheet: () => this._close({ sheet:false }),
