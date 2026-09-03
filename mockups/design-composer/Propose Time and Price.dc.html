@@ -17,15 +17,12 @@ a{color:#2563EB;text-decoration:none}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus{outline:none}
 ::placeholder{color:#9AA9C0}
-@keyframes screenIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes pulseRing{0%{transform:scale(.55);opacity:.5}100%{transform:scale(1.9);opacity:0}}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
-<div data-screen-label="Propose time & price" style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
+<div data-screen-label="Propose time & price" style="animation:fadeUp var(--m-page) var(--e-out) both;width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;padding:14px 20px 12px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
     <a href="Booking Request.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;color:#0F1B2D;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
@@ -47,7 +44,7 @@ input:focus,textarea:focus,button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fError }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp .25s ease both">
+      <div style="padding:24px 20px;display:flex;justify-content:center;animation:fadeUp var(--m-page) var(--e-out) both">
         <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
           <span style="width:48px;height:48px;border-radius:50%;background:#FDECEC;color:#B42318;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
           <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Couldn't load the request</div>
@@ -58,7 +55,7 @@ input:focus,textarea:focus,button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fExpired }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp .25s ease both">
+      <div style="padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeUp var(--m-page) var(--e-out) both">
         <div style="width:100%;background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:34px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
           <div style="width:72px;height:72px;border-radius:50%;background:#F4F8FD;border:1.5px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M12 7.5V12l3 2"></path></svg></div>
           <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your quote expired</div>
@@ -69,7 +66,7 @@ input:focus,textarea:focus,button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fSent }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn var(--m-page) var(--e-out) both">
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <div style="position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center;margin-bottom:4px" aria-hidden="true">
             <span style="position:absolute;inset:0;border-radius:50%;background:rgba(37,99,235,.12);animation:pulseRing 2.4s ease-out infinite"></span>
@@ -91,7 +88,7 @@ input:focus,textarea:focus,button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ fCompose }}" hint-placeholder-val="{{ true }}">
-      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn .35s cubic-bezier(.2,.8,.3,1) both">
+      <div style="padding:6px 20px 28px;display:flex;flex-direction:column;gap:14px;animation:screenIn var(--m-page) var(--e-out) both">
 
         <div style="background:#E8F0FE;border:1.5px solid #CDDDFB;border-radius:20px;padding:14px 18px;display:flex;flex-direction:column;gap:4px">
           <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2B4A8C">Mariyam asked for</span>
@@ -119,11 +116,11 @@ input:focus,textarea:focus,button:focus{outline:none}
 
         <div style="display:flex;flex-direction:column;gap:8px">
           <label for="qprice" style="font-size:14px;font-weight:700;color:#0F1B2D">Your price</label>
-          <div style="display:flex;align-items:center;background:#fff;border:1.5px solid {{ priceBd }};border-radius:16px;overflow:hidden;transition:border-color .15s">
+          <div style="display:flex;align-items:center;background:#fff;border:1.5px solid {{ priceBd }};border-radius:16px;overflow:hidden;transition:border-color var(--m-fast)">
             <span style="flex:none;padding:0 4px 0 18px;font-size:18px;font-weight:800;color:#5B6B84">MVR</span>
             <input id="qprice" type="text" inputMode="numeric" value="{{ price }}" onChange="{{ setPrice }}" placeholder="0" style="flex:1;height:56px;border:none;background:none;padding:0 18px 0 8px;font-size:22px;font-weight:800;color:#0F1B2D;letter-spacing:-.01em;font-variant-numeric:tabular-nums;min-width:0">
           </div>
-          <sc-if value="{{ hasPriceErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp .2s ease both">{{ priceErr }}</div></sc-if>
+          <sc-if value="{{ hasPriceErr }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#DC2626;animation:fadeUp var(--m-page) var(--e-out) both">{{ priceErr }}</div></sc-if>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:8px">
