@@ -187,7 +187,7 @@ class Component extends DCLogic {
   state = { famt: '', famtErr: null, done: false };
   renderVals() {
     const S = this.state;
-    const scn = this.props.scenario ?? 'Normal booking';
+    const scn = S.scnOverride ?? this.props.scenario ?? 'Normal booking';
     const emergency = scn === 'Emergency job';
     const loading = scn === 'Loading', error = scn === 'Error';
     const bAmend = scn === 'Blocked — amendment open';

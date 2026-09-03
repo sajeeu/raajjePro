@@ -183,6 +183,20 @@ def dead_handlers(s):
 # looked at buttons. A component's own action - EmptyState's `on-action` - is the same dead end
 # in a shape neither rule could see, which is how eighteen of them survived the round that was
 # meant to remove them. Warn-only while that backlog stands.
+# A retry that writes `scnOverride` into state but never reads it back is dead in a way neither
+# dead-control rule can see: the handler has a body, and the control is not `noop`. Round 45 shipped
+# this shape across nineteen screens, which turned a real warning into a clean pass while the button
+# went on doing nothing. If a file writes the flag, something in it has to read the flag.
+WRITES_OVERRIDE = re.compile(r"setState\(\s*\{\s*scnOverride\s*:")
+READS_OVERRIDE = re.compile(r"(?:this\.state|\bs|\bS)\.scnOverride")
+
+
+def write_only_override(s):
+    if not WRITES_OVERRIDE.search(s):
+        return []
+    return [] if READS_OVERRIDE.search(s) else ["scnOverride"]
+
+
 NOOP_ACTION = re.compile(r'action-label="([^"]+)"[^>]*on-action="\{\{\s*noop\s*\}\}"')
 
 
@@ -294,6 +308,12 @@ def check(path):
         fails.append(("labelled button wired to noop (%s)" % label,
                       "noop is for deliberate placeholders, not for a control with a real label. "
                       "Point it at the screen it names."))
+
+    for _ in write_only_override(s):
+        warns.append(("retry writes scnOverride but nothing reads it",
+                      "The handler runs and the screen does not move - a dead control with a body. "
+                      "Read it where the scenario is resolved: `const sc = s.scnOverride ?? props.scenario ?? ...`. "
+                      "Warn-only until Round 47 clears it."))
 
     for label in noop_component_actions(s):
         warns.append(("component action wired to noop (%s)" % label,
