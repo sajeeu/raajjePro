@@ -25,7 +25,7 @@
         conduct: { completed: 94, cancelled: 3, noShow: 2, onTime: 91, priceHonoured: 97 }
       }
     },
-    // slot ("Book instantly") only for Cleaning, Beauty, Fitness. Callback guarantee and
+    // slot ("Pick a time") only for Cleaning, Beauty, Fitness. Callback guarantee and
     // emergency cover follow the category rules exactly.
     categories: [
       { name: 'Cleaning', mode: 'slot' },

@@ -124,7 +124,7 @@ class Component extends DCLogic {
       hasRating, ratingText: hasRating ? `${p.rating} (${p.count ?? 0})` : '',
       hasIsland: !!p.island, island: p.island ?? '',
       price: p.price ?? '', hasUnit: !!p.unit, unit: p.unit ?? '',
-      modeLabel: instant ? 'Book instantly' : 'Request a time',
+      modeLabel: instant ? 'Pick a time' : 'Request a time',
       modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
       modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
       callback: cb, hasSignal, signalText, hasFoot: true, sponsored: !!p.sponsored,

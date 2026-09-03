@@ -116,7 +116,7 @@ class Component extends DCLogic {
       items, skels: [1,2,3,4,5],
       unreadLine: view === 'populated' ? (unreadCount > 0 ? unreadCount + ' unread' : "You're all caught up") : ' ',
       markAllOn: view === 'populated' && unreadCount > 0,
-      markAll: () => this.setState({ read: { accepted:true, payment:true, message:true } }),
+      markAll: () => this.setState({ read: Object.fromEntries(this.ITEMS.map(n => [n.id, true])) }),
       goExplore: () => { window.location = 'Discovery.dc.html'; },
       retry: () => this.setState({ view:'populated' }),
       toastOn: !!this.state.toast, toast: this.state.toast,

@@ -132,9 +132,9 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 class Component extends DCLogic {
   state = { view:null, query:'', open:null, tab:'support', subject:'', message:'', attached:false, submittedTab:'support' };
   FAQS = [
-    { q:'How do I book a service?', a:'Find a service on Explore, pick a time, and confirm. Your saved address and instructions pre-fill the booking — you can edit them right there.' },
+    { q:'How do I book a service?', a:'Find a service on Explore and pick a time, or send a request if the provider quotes per job. Your saved address and instructions pre-fill it — you can edit them right there. The provider confirms, and you\u2019re notified as soon as they do.' },
     { q:'How does payment work?', a:'You pay the provider directly in MVR. When the provider confirms receipt in the app, the booking record shows it — that confirmation is between the two of you.' },
-    { q:'Can I cancel or reschedule a booking?', a:'Yes — open the booking and choose cancel or reschedule. The provider is notified straight away.' },
+    { q:'Can I cancel or reschedule a booking?', a:'Yes. Cancelling is immediate — the provider is told straight away, and a late cancellation counts towards your record. Rescheduling is a request: the time was agreed by both of you, so the provider has to accept the new one before it is set.' },
     { q:'What if a provider cancels on me, say a Pest Control visit?', a:'You’re notified immediately and the booking record keeps the history. You can rebook the same service or pick another provider.' },
     { q:'How do reviews work for something like Appliance Repair?', a:'After a booking completes, you can review the provider. Reviews stay on their profile and can’t be edited by the provider.' } ];
   renderVals(){
@@ -169,7 +169,7 @@ class Component extends DCLogic {
       submit: () => { if (canSubmit) this.setState({ view:'submitted', submittedTab: this.state.tab }); },
       wasSupport,
       doneTitle: wasSupport ? 'Your case is open' : 'Feedback sent',
-      doneBody: wasSupport ? 'Support has your message and screenshot. It’s a tracked case, not an email into a void.' : 'Thank you — it goes to the product team and never appears on any provider’s profile.',
+      doneBody: wasSupport ? 'Support has your message' + (this.state.attached ? ' and screenshot' : '') + '. It’s a tracked case, not an email into a void.' : 'Thank you — it goes to the product team and never appears on any provider’s profile.',
       backToHelp: () => this.setState({ view:'main', subject:'', message:'', attached:false }),
       retry: () => this.setState({ view:'main' }),
     };

@@ -299,8 +299,8 @@ class Component extends DCLogic {
       isLoading: sc === 'loading', isBody: sc === 'populated', isGone: sc === 'unavailable', isError: sc === 'error',
       priceBig: pr.big, priceUnit: pr.unit, hasUnit: !!pr.unit, priceLabel: pr.label, priceNote: pr.note,
       footPrice: pr.foot, footSub: pr.sub,
-      modeTitle: instant ? 'Book instantly' : 'Request a time',
-      modeSub: instant ? "Pick one of " + L.first + "'s published times — confirmed straight away." : L.requestSub,
+      modeTitle: instant ? 'Pick a time' : 'Request a time',
+      modeSub: instant ? "Pick one of " + L.first + "'s published times — " + L.first + " confirms it, usually within the hour." : L.requestSub,
       modeBg: instant ? '#E8F0FE' : '#EEF3FA', modeFg: instant ? '#1D4ED8' : '#41526B',
       modeD: instant ? 'M13 2L5 13h6l-1 9 8-11h-6l1-9z' : 'M4 6h16v14H4zM4 10h16M8 3v5M16 3v5',
       ctaLabel: instant ? 'Book now' : 'Request a time',
@@ -316,7 +316,7 @@ class Component extends DCLogic {
       heartFill: s.saved ? '#DC2626' : 'none', heartStroke: s.saved ? '#DC2626' : '#41526B',
       toggleSave: () => this.setState({ saved: !s.saved }),
       cbOn: !!this.CALLBACK[L.cat],
-      report: () => {}, message: () => { location.href = 'Enquiry%20Thread.dc.html'; }, book: () => { location.href = instant ? 'Pick%20a%20Time.dc.html' : 'Request%20a%20Time.dc.html'; },
+      report: () => { location.href = 'Report.dc.html'; }, message: () => { location.href = 'Enquiry%20Thread.dc.html'; }, book: () => { location.href = instant ? 'Pick%20a%20Time.dc.html' : 'Request%20a%20Time.dc.html'; },
       goExplore: () => { location.href = 'Discovery.dc.html'; },
       retry: () => { this.setState({ override: 'loading' }); setTimeout(() => this.setState({ override: 'populated' }), 1200); }
     };

@@ -366,7 +366,7 @@ class Component extends DCLogic {
     return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
       .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
   }
-  QUICK = ['Near me', 'Available today', 'Book instantly'];
+  QUICK = ['Near me', 'Available today', 'Pick a time'];
   scn() { return this.props.scenario ?? 'Populated'; }
   componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearTimeout(this._tt); clearTimeout(this._rt); }
   toastMsg(t){ clearTimeout(this._tt); clearTimeout(this._to); this.setState({ toast: t , toastOut:false }); this._to = setTimeout(() => this.setState({ toastOut:true }), (2200) - 200); this._tt = setTimeout(() => this.setState({ toast: null , toastOut:false }), 2200); }
