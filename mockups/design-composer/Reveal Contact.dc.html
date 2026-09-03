@@ -139,7 +139,7 @@ button:focus{outline:none}
 class Component extends DCLogic {
   state = { phase:null };
   renderVals() {
-    const p = this.props, sc = p.scenario ?? 'available';
+    const p = this.props, sc = this.state.scnOverride ?? p.scenario ?? 'available';
     const eff = this.state.phase ?? sc;
     const isLoading = eff==='loading', isError = eff==='error';
     return {
@@ -154,7 +154,7 @@ class Component extends DCLogic {
         { head:'It’s recorded', rest:'every reveal goes on the record, and RaajjePro reviews the patterns.' } ],
       reveal: () => this.setState({ phase:'revealed' }),
       revealTime: '21:26',
-      noop: () => {}, retry: () => this.setState({ scnOverride: 'available' }), goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
+      retry: () => this.setState({ scnOverride: 'available' }), goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
     };
   }
 }

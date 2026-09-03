@@ -87,7 +87,7 @@ button:focus{outline:none}
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'empty' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
   renderVals() {
-    const sc = this.props.scenario ?? 'populated';
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'populated';
     const isLoading = sc === 'loading', isError = sc === 'error', isEmpty = sc === 'empty';
     const KIND = {
       enquiry: { label: 'Enquiry', bg: '#EEF3FA', fg: '#41526B', bd: '#E1EAF5' },
@@ -109,7 +109,7 @@ class Component extends DCLogic {
         lastW: t.unread ? '700' : '600' }; }),
       navTap: (t) => { const m = { Home: 'Home.dc.html', Explore: 'Discovery.dc.html', Bookings: 'My%20Bookings.dc.html' }; if (m[t]) window.location = m[t]; },
       goExplore: () => { window.location = 'Discovery.dc.html'; },
-      noop: () => {}, retry: () => this.setState({ scnOverride: 'populated' })
+      retry: () => this.setState({ scnOverride: 'populated' })
     };
   }
 }

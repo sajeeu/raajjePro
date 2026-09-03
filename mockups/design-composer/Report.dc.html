@@ -141,7 +141,7 @@ class Component extends DCLogic {
       reasons:['Not their own work','Inappropriate content','Contains contact details'] }
   };
   renderVals() {
-    const sc = this.props.scenario ?? 'form', tg = this.props.target ?? 'listing', s = this.state;
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'form', tg = this.props.target ?? 'listing', s = this.state;
     const isLoading = sc==='loading', isError = sc==='error';
     const done = sc==='submitted' || s.done;
     const T = this.T[tg] ?? this.T.listing;
@@ -161,7 +161,7 @@ class Component extends DCLogic {
       btnLabel: canSend ? 'Send report' : 'Pick a reason to send',
       submit: () => { if (this.state.reason != null) this.setState({ done:true }); },
       doneReason: T.reasons[reasonIdx],
-      noop: () => {}, retry: () => this.setState({ scnOverride: 'form' })
+      retry: () => this.setState({ scnOverride: 'form' })
     };
   }
 }
