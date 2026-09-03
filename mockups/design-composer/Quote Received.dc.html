@@ -16,15 +16,15 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 button:focus{outline:none}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
+<link rel="stylesheet" href="./motion.css">
+<script src="./session.js"></script>
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
 <sc-if value="{{ isLoading }}">
-<div data-screen-label="Quote received — loading" aria-hidden="true" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<div data-screen-label="Quote received — loading" aria-hidden="true" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;overflow:hidden">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <div style="width:44px;height:44px;border-radius:50%;background:#E8EEF6"></div>
     <div style="height:18px;width:140px;border-radius:8px;background:#E8EEF6"></div>
@@ -43,7 +43,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isError }}">
-<div data-screen-label="Quote received — error" style="flex:1;display:flex;flex-direction:column">
+<div data-screen-label="Quote received — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <a href="Home.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Quote</span>
@@ -55,7 +55,7 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isQuote }}" hint-placeholder-val="{{ true }}">
-<div data-screen-label="Quote received" style="flex:1;display:flex;flex-direction:column;min-height:0">
+<div data-screen-label="Quote received" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <div style="flex:none;padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
     <a href="Home.dc.html" aria-label="Back" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
     <span style="display:flex;flex-direction:column;min-width:0;flex:1"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Quote from Ibrahim</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Emergency Plumbing &amp; Pipe Repair</span></span>
@@ -144,12 +144,12 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isAccepted }}">
-<div data-screen-label="Quote received — accepted" style="flex:1;display:flex;flex-direction:column;min-height:0">
+<div data-screen-label="Quote received — accepted" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <span style="flex:1"></span>
     <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp var(--m-page) var(--e-out)">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
       <span style="width:64px;height:64px;border-radius:50%;background:#E8F0FE;color:#1D4ED8;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 4v14H3V3z"></path><path d="M8 12h8M8 16h5"></path></svg></span>
       <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">It's agreed</span>
@@ -168,12 +168,12 @@ button:focus{outline:none}
 </sc-if>
 
 <sc-if value="{{ isDeclined }}">
-<div data-screen-label="Quote received — declined" style="flex:1;display:flex;flex-direction:column;min-height:0">
+<div data-screen-label="Quote received — declined" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <div style="flex:none;padding:14px 16px;display:flex;align-items:center;gap:10px">
     <span style="flex:1"></span>
     <a href="Home.dc.html" aria-label="Close" style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid #E3EAF3;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F1B2D" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp .35s ease">
+  <div style="flex:1;overflow-y:auto;padding:6px 24px 24px;display:flex;flex-direction:column;gap:16px;animation:fadeUp var(--m-page) var(--e-out)">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:12px">
       <span style="width:64px;height:64px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></span>
       <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Quote declined</span>

@@ -150,6 +150,23 @@ def dead_handlers(s):
             out.append(name)
     return sorted(set(out))
 
+# `noop` is exempt above as the name for a deliberate placeholder - but that exemption can
+# be used to hide a real dead end. A <button> with a visible label wired to noop is a control
+# a person will tap expecting something: Quote Received had three of them, all saying
+# "Message Ibrahim". An EmptyState's on-action is a different case and stays exempt.
+NOOP_BUTTON = re.compile(r"<button[^>]*onClick=\"\{\{\s*noop\s*\}\}\"[^>]*>(.*?)</button>", re.S)
+
+def noop_labelled_buttons(s):
+    """Buttons carrying real label text but wired to the placeholder handler."""
+    out = []
+    for m in NOOP_BUTTON.finditer(s):
+        text = re.sub(r"<[^>]+>", " ", m.group(1))
+        text = re.sub(r"\{\{[^}]*\}\}", " ", text)
+        text = " ".join(text.split())
+        if len(text) >= 6 and re.search(r"[A-Za-z]{3}", text):
+            out.append(text[:48])
+    return sorted(set(out))
+
 def mode_mismatches(s):
     """Object literals carrying both a category and a booking mode that contradict §1c."""
     out = []
@@ -232,6 +249,11 @@ def check(path):
         warns.append(("control wired to an empty handler (%s)" % name,
                       "Tapping it does nothing. Name a deliberate placeholder `noop`; otherwise "
                       "point it at the screen it belongs to."))
+
+    for label in noop_labelled_buttons(s):
+        warns.append(("labelled button wired to noop (%s)" % label,
+                      "noop is for deliberate placeholders, not for a control with a real label. "
+                      "Point it at the screen it names."))
 
     for detail in mode_mismatches(s):
         fails.append(("booking mode contradicts the category", detail + " — §1c. "
