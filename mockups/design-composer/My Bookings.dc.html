@@ -44,7 +44,7 @@ button:focus{outline:none}
 <div data-screen-label="My bookings — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column">
   <div style="flex:none;padding:18px 20px 12px"><span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your bookings</span></div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="Couldn't load your bookings" body="Your connection may have dropped. Nothing is lost — every booking is safe on the record. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load your bookings" body="Your connection may have dropped. Nothing is lost — every booking is safe on the record. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
   <div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Bookings" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
 </div>
@@ -141,7 +141,7 @@ class Component extends DCLogic {
          Active:   ['Nothing needs you right now','Bookings that are underway or waiting on someone appear here.'],
          Completed:['Nothing completed yet','Finished bookings stay here for good \u2014 with their full record and their chat.'] };
   renderVals() {
-    const p = this.props, sc = p.scenario ?? 'populated', f = this.state.filter;
+    const p = this.props, sc = this.state.scnOverride ?? p.scenario ?? 'populated', f = this.state.filter;
     const isLoading = sc==='loading', isError = sc==='error', isEmpty = sc==='empty';
     const isList = !isLoading && !isError && !isEmpty;
     const rows = this.ROWS.filter(r => f==='All' || r.group===f);
@@ -155,7 +155,7 @@ class Component extends DCLogic {
       feeOwed: (p.feeOwed ?? true) && f!=='Completed',
       goExplore: () => { window.location = 'Discovery.dc.html'; },
       navTap: (t) => { const m = { Home:'Home.dc.html', Explore:'Discovery.dc.html', Messages:'Messages.dc.html' }; if (m[t]) window.location = m[t]; },
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'populated' })
     };
   }
 }

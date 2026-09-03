@@ -114,7 +114,7 @@ button:focus{outline:none}
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:860},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;slot&quot;,&quot;request&quot;,&quot;delisted&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;slot&quot;,&quot;tsType&quot;:&quot;'slot' | 'request' | 'delisted' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
   renderVals() {
-    const sc = this.props.scenario ?? 'slot';
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'slot';
     const isLoading = sc==='loading', isError = sc==='error', isDelisted = sc==='delisted';
     const isRequestMode = sc==='request';
     return {
@@ -125,7 +125,7 @@ class Component extends DCLogic {
       ctaLabel: isRequestMode ? 'Request a time' : 'Pick a time',
       ctaNote: isRequestMode ? 'Your details go with the request — Mariyam confirms the time.' : 'Mariyam still has to accept — picking a slot sends her the request.',
       goDiscovery: () => { window.location = 'Discovery.dc.html'; },
-      noop: () => {}, retry: () => this.setState({ scnOverride: 'slot' }), goChange: () => { window.location = isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html'; }
+      retry: () => this.setState({ scnOverride: 'slot' }), goChange: () => { window.location = isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html'; }
     };
   }
 }

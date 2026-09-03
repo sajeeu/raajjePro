@@ -48,7 +48,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Booking</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this booking" body="Your connection may have dropped. The record is safe — nothing here is lost. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this booking" body="Your connection may have dropped. The record is safe — nothing here is lost. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -306,7 +306,7 @@ class Component extends DCLogic {
       tl:[['Requested','you','22 Aug 09:14'],['Quote sent · MVR 650','Ibrahim Rasheed','22 Aug 09:32'],['Quote accepted — terms locked','you','22 Aug 09:41'],['“I’ve Paid” sent','you','22 Aug 10:02'],['Disputed','you','23 Aug 18:40']] }
   };
   renderVals() {
-    const p = this.props, s = this.state, sc = p.scenario ?? 'confirmed';
+    const p = this.props, s = this.state, sc = s.scnOverride ?? p.scenario ?? 'confirmed';
     const isLoading = sc==='loading', isError = sc==='error';
     const D = this.D[sc] ?? this.D.confirmed;
     const isBooking = !isLoading && !isError;
@@ -353,7 +353,7 @@ class Component extends DCLogic {
       stop: (e) => e.stopPropagation(),
       stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=s.rating ? '#F3B23E' : 'none', stroke: n<=s.rating ? '#D99A1E' : '#C6D4EA', tap:() => this.setState({ rating:n }) })),
       rateHint: rated ? 'Your rating is public on Mariyam’s profile, alongside the job count.' : 'Ratings are public and stay on the record — like everything else on this booking.',
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'confirmed' })
     };
   }
 }
