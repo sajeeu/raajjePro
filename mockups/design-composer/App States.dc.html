@@ -16,17 +16,15 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
+<link rel="stylesheet" href="./motion.css">
 </helmet>
 <div style="min-height:100dvh;display:flex;justify-content:center;align-items:stretch;background:#DEE7F3;font-family:'Inter',system-ui,-apple-system,sans-serif">
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
 
   <sc-if value="{{ sessionOn }}">
-    <div data-screen-label="Session expired" style="min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px;gap:16px;animation:fadeUp .3s ease both">
+    <div data-screen-label="Session expired" style="min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px;gap:16px;animation:fadeUp var(--m-page) var(--e-out) both">
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:32px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
         <span style="position:relative;width:88px;height:88px;flex:none">
           <span style="position:absolute;inset:0;border-radius:26px;background:#DBE7FD;display:flex;align-items:center;justify-content:center"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg></span>
@@ -44,7 +42,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <sc-if value="{{ offlineOn }}" hint-placeholder-val="{{ true }}">
-    <div data-screen-label="No connection" style="min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px;gap:14px;animation:fadeUp .3s ease both">
+    <div data-screen-label="No connection" style="min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:32px 24px;gap:14px;animation:fadeUp var(--m-page) var(--e-out) both">
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:24px;padding:28px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04)">
         <span style="width:76px;height:76px;border-radius:24px;background:#EEF3FA;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 4.2-2.7M12 8.5c3.5 0 6.4 1.6 8.3 3.5M8.5 16a5.5 5.5 0 0 1 5-1.4M12 19.5v.1M3 3l18 18"></path></svg></span>
         <div style="font-size:23px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">No internet connection.</div>
@@ -53,7 +51,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           <sc-if value="{{ retrying }}"><span aria-hidden="true" style="width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite"></span></sc-if>
           {{ retryLabel }}
         </button>
-        <sc-if value="{{ stillOffline }}"><div role="status" style="font-size:12px;font-weight:700;color:#A15C00;animation:fadeIn .2s ease both">Still offline — we'll keep trying in the background.</div></sc-if>
+        <sc-if value="{{ stillOffline }}"><div role="status" style="font-size:12px;font-weight:700;color:#A15C00;animation:fadeIn var(--m-page) var(--e-out) both">Still offline — we'll keep trying in the background.</div></sc-if>
       </div>
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
         <div style="font-size:13px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">These keep working offline</div>
