@@ -44,7 +44,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Book again</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. Your saved details are safe. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load this" body="Your connection may have dropped. Your saved details are safe. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -122,10 +122,10 @@ class Component extends DCLogic {
       isMain: !isLoading && !isError && !isDelisted,
       isRequestMode,
       ctaHref: isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html',
-      ctaLabel: isRequestMode ? 'Request a time' : 'Choose a slot',
+      ctaLabel: isRequestMode ? 'Request a time' : 'Pick a time',
       ctaNote: isRequestMode ? 'Your details go with the request — Mariyam confirms the time.' : 'Mariyam still has to accept — picking a slot sends her the request.',
       goDiscovery: () => { window.location = 'Discovery.dc.html'; },
-      noop: () => {}, goChange: () => { window.location = isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html'; }
+      noop: () => {}, retry: () => this.setState({ scnOverride: 'slot' }), goChange: () => { window.location = isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html'; }
     };
   }
 }

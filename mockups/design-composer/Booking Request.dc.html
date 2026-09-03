@@ -146,7 +146,7 @@ button{font-family:inherit}button:focus{outline:none}
 
         <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px">
           <span style="width:36px;height:36px;border-radius:11px;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></span>
-          <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>No phone number here, and no chat yet</b> — that's deliberate, not missing. RaajjePro never shares numbers. Accepting opens the chat, and that's where the exact meeting point and details get arranged.</span>
+          <span style="font-size:12.5px;line-height:1.55;color:#41526B;text-wrap:pretty"><b>No phone number here, and no chat yet</b> — that's deliberate, not missing. RaajjePro doesn't share numbers on bookings like this one. Accepting opens the chat, and that's where the exact meeting point and details get arranged.</span>
         </div>
 
         <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
@@ -259,7 +259,7 @@ class Component extends DCLogic {
       cdSubFg: near ? '#A15C00' : '#8296B3',
       pendingOn: pending, pendingWhat: S.pending === 'accept' ? 'acceptance' : 'answer',
       proposeOn: mode === 'Request-based',
-      whenLabel: mode === 'Slot booking' ? 'Booked time' : 'Requested window',
+      whenLabel: mode === 'Slot booking' ? 'Requested time' : 'Requested window',
       footerOn: open && !pending,
       pendingFooterOn: open && pending,
       acceptedFooterOn: phase === 'accepted',

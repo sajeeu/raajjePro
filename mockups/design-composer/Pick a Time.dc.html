@@ -63,7 +63,7 @@ button:focus{outline:none}
     <span style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800;color:#0F1B2D">Pick a time</span><span style="font-size:11.5px;font-weight:600;color:#5B6B84">Home Deep Cleaning</span></span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="No times published yet" body="Mariyam hasn't put up open times right now. You can ask her in chat — messaging is open before you book." action-label="Message Mariyam" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="No times published yet" body="Mariyam hasn't put up open times right now. You can ask her in chat — messaging is open before you book." action-label="Message Mariyam" on-action="{{ goEnquiry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -200,7 +200,7 @@ button:focus{outline:none}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>
       <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">No chat yet — it opens the moment Mariyam accepts. You'll get a notification either way.</span>
     </div>
-    <a href="Home.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
+    <a href="My%20Bookings.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
     <button onClick="{{ cancelSent }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">Cancel this request</button>
   </div>
 </div>
@@ -275,7 +275,7 @@ class Component extends DCLogic {
       sentWhen: days[s.day].full + ' · ' + (effTime ?? '14:00'),
       sentAddr: addr.id==='new' ? 'New address, Malé' : addr.name + ' · ' + addr.line,
       cancelSent: () => this.setState({ phase:'form', time:null }),
-      retry: () => this.setState({ scnOverride:'populated' }), noop: () => {},
+      retry: () => this.setState({ scnOverride:'populated' }), goEnquiry: () => { window.location = 'Enquiry%20Thread.dc.html'; },
       resendReady: s.resendLeft === 0, resendWaiting: s.resendLeft > 0,
       resendClock: '0:' + String(s.resendLeft).padStart(2,'0'),
       resend: () => { clearInterval(this._rt); this._rt = setInterval(() => this.setState(x => { const n = Math.max(0, x.resendLeft - 1); if (n === 0) clearInterval(this._rt); return { resendLeft: n }; }), 1000); this.setState({ resendLeft: 45 }); }
