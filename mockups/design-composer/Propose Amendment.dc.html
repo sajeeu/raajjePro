@@ -162,7 +162,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">The original terms stand</span>
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">MVR 450 stays the agreed price. The proposal — and your decision — stay on the booking's record. If the day's work really did grow, chat is the place to sort it out.</span>
       </div>
-      <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Mariyam</button>
+      <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Mariyam</button>
       <a href="Booking%20Detail.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
     </sc-if>
   </div>
@@ -234,7 +234,7 @@ class Component extends DCLogic {
       sentReason: '\u201c' + (s.reason || defReason || 'Afternoon slot works better for both of us') + '\u201d',
       accept: () => this.setState({ phase:'accepted' }),
       reject: () => this.setState({ phase:'rejected' }),
-      noop: () => {}
+      noop: () => {}, goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
     };
   }
 }

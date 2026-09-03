@@ -104,7 +104,7 @@ button:focus,input:focus{outline:none}
         <span style="font-size:13px;font-weight:800;color:#0F1B2D">Verify your email to reply</span>
         <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">You can read everything here. Sending messages needs a verified email — it takes about a minute.</span>
       </span>
-      <button onClick="{{ noop }}" style="height:44px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 70%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-start;padding:0 18px;box-shadow:0 4px 10px rgba(37,99,235,.25)">Verify my email</button>
+      <button onClick="{{ goVerify }}" style="height:44px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 70%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;align-self:flex-start;padding:0 18px;box-shadow:0 4px 10px rgba(37,99,235,.25)">Verify my email</button>
     </span>
   </div>
   </sc-if>
@@ -165,7 +165,7 @@ class Component extends DCLogic {
       msgs, menuOpen: this.state.menuOpen,
       toggleMenu: () => this.state.menuOpen ? this._close({ menuOpen: false }) : this.setState({ menuOpen: true }),
       closeMenu: () => this._close({ menuOpen: false }),
-      noop: () => {}
+      noop: () => {}, goVerify: () => { window.location = 'Verify%20Email.dc.html'; }
     };
   }
 }

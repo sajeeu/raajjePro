@@ -186,7 +186,7 @@ button:focus{outline:none}
         <span style="flex:1;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#166534">Also fine</span><span style="font-size:11.5px;font-weight:600;line-height:1.45;color:#1F5C38">Your account — not suspended, chat works</span></span>
       </div>
       <button onClick="{{ settle }}" style="height:54px;border:none;border-radius:16px;background:#0F1B2D;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(15,27,45,.28)" style-active="transform:scale(.98)">Settle MVR 200 now</button>
-      <button onClick="{{ noop }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px">Not now</button>
+      <button onClick="{{ notNow }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px">Not now</button>
     </div>
   </div>
 </div>
@@ -223,7 +223,7 @@ class Component extends DCLogic {
       subCursor: canSubmit ? 'pointer' : 'default', subShadow: canSubmit ? '0 8px 18px rgba(15,27,45,.28)' : 'none',
       submit: () => { if (canSubmit) this.setState({ phase:'submitted' }); },
       settle: () => this.setState({ phase:'owed' }),
-      noop: () => {}
+      noop: () => {}, notNow: () => { window.location = 'Booking%20Detail.dc.html'; }
     };
   }
 }

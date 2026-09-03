@@ -91,7 +91,7 @@ button:focus{outline:none}
         <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Preferred window</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Tuesday afternoons</span></div>
         <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0"><span style="font-size:12px;font-weight:600;color:#5B6B84">Standing notes</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">Gate code 4471 — keys with the caretaker</span></div>
       </div>
-      <button onClick="{{ noop }}" style="border:none;background:none;color:#2563EB;font-size:12px;font-weight:700;cursor:pointer;padding:0;align-self:flex-start">Change something</button>
+      <button onClick="{{ goChange }}" style="border:none;background:none;color:#2563EB;font-size:12px;font-weight:700;cursor:pointer;padding:0;align-self:flex-start">Change something</button>
     </div>
 
     <sc-if value="{{ isRequestMode }}" hint-placeholder-val="{{ false }}">
@@ -125,7 +125,7 @@ class Component extends DCLogic {
       ctaLabel: isRequestMode ? 'Request a time' : 'Choose a slot',
       ctaNote: isRequestMode ? 'Your details go with the request — Mariyam confirms the time.' : 'Mariyam still has to accept — picking a slot sends her the request.',
       goDiscovery: () => { window.location = 'Discovery.dc.html'; },
-      noop: () => {}
+      noop: () => {}, goChange: () => { window.location = isRequestMode ? 'Request%20a%20Time.dc.html' : 'Pick%20a%20Time.dc.html'; }
     };
   }
 }
