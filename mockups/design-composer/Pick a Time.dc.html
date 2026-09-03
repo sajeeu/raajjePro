@@ -82,7 +82,7 @@ button:focus{outline:none}
       <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
         <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email to book</span>
         <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, requests can't be sent.</span>
-        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+        <sc-if value="{{ resendReady }}" hint-placeholder-val="{{ true }}"><button onClick="{{ resend }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button></sc-if><sc-if value="{{ resendWaiting }}" hint-placeholder-val="{{ false }}"><span role="status" style="align-self:flex-start;margin-top:3px;height:32px;display:flex;align-items:center;font-size:12px;font-weight:800;color:#A15C00;font-variant-numeric:tabular-nums">Link sent — resend in {{ resendClock }}</span></sc-if>
       </span>
     </div>
     </sc-if>
@@ -211,7 +211,8 @@ button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;slot_taken&quot;,&quot;lead_today_empty&quot;,&quot;no_times&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'loading' | 'error' | 'slot_taken' | 'lead_today_empty' | 'no_times' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
-  state = { day: 0, time: null, addr: 'home', phase: 'form' };
+  state = { day: 0, time: null, addr: 'home', phase: 'form', resendLeft: 0 };
+  componentWillUnmount() { clearInterval(this._rt); }
   // Lead time is a category rule, not a screen constant.
   CAT = { name: 'Cleaning', leadH: 3, leadCopy: '3 hours' };
   SLOTS = ['09:00', '11:00', '14:00'];
@@ -226,7 +227,7 @@ class Component extends DCLogic {
   min(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
   fmt(m) { return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
   renderVals() {
-    const p = this.props, s = this.state, sc = p.scenario ?? 'populated';
+    const p = this.props, s = this.state, sc = s.scnOverride ?? p.scenario ?? 'populated';
     const isLoading = sc==='loading', isError = sc==='error', isNoTimes = sc==='no_times';
     const unverified = sc==='email_unverified', taken = sc==='slot_taken', leadEmpty = sc==='lead_today_empty';
     const isSent = s.phase==='sent' && !isLoading && !isError && !isNoTimes;
@@ -274,7 +275,10 @@ class Component extends DCLogic {
       sentWhen: days[s.day].full + ' · ' + (effTime ?? '14:00'),
       sentAddr: addr.id==='new' ? 'New address, Malé' : addr.name + ' · ' + addr.line,
       cancelSent: () => this.setState({ phase:'form', time:null }),
-      retry: () => {}, noop: () => {}
+      retry: () => this.setState({ scnOverride:'populated' }), noop: () => {},
+      resendReady: s.resendLeft === 0, resendWaiting: s.resendLeft > 0,
+      resendClock: '0:' + String(s.resendLeft).padStart(2,'0'),
+      resend: () => { clearInterval(this._rt); this._rt = setInterval(() => this.setState(x => { const n = Math.max(0, x.resendLeft - 1); if (n === 0) clearInterval(this._rt); return { resendLeft: n }; }), 1000); this.setState({ resendLeft: 45 }); }
     };
   }
 }

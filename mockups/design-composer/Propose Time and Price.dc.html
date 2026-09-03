@@ -173,7 +173,7 @@ class Component extends DCLogic {
   renderVals() {
     const S = this.state;
     const cat = this.props.category ?? 'Boat Charter';
-    const scn = this.props.scenario ?? 'Composing';
+    const scn = S.scnOverride ?? this.props.scenario ?? 'Composing';
     const win = this.winFor(cat);
     const winTxt = win + ' hours';
     const loading = scn === 'Loading', error = scn === 'Error';
@@ -192,7 +192,7 @@ class Component extends DCLogic {
       fCompose: !loading && !error && phase === 'compose',
       fSent: !loading && !error && phase === 'sent',
       fExpired: !loading && !error && phase === 'expired',
-      retry: () => {},
+      retry: () => this.setState({ scnOverride:'Composing' }),
       winTxt, heldTxt, pickedTxt: heldTxt,
       listPriceTxt: 'MVR 3,200/trip',
       dateOpts: ['Wed 2 Sep', 'Thu 3 Sep', 'Fri 4 Sep'].map(mkDate),

@@ -71,7 +71,7 @@ button:focus{outline:none}
       <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
         <span style="font-size:13px;font-weight:800;color:#A15C00">Verify your email to book</span>
         <span style="font-size:12px;font-weight:600;line-height:1.5;color:#8A5A10;text-wrap:pretty">We emailed a link to aish•••@gmail.com. Until it's verified, requests can't be sent.</span>
-        <button onClick="{{ noop }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button>
+        <sc-if value="{{ resendReady }}" hint-placeholder-val="{{ true }}"><button onClick="{{ resend }}" style="align-self:flex-start;margin-top:3px;height:32px;border:1.5px solid #E8BE7A;border-radius:10px;background:#fff;color:#A15C00;font-size:12px;font-weight:800;cursor:pointer;padding:0 12px">Resend link</button></sc-if><sc-if value="{{ resendWaiting }}" hint-placeholder-val="{{ false }}"><span role="status" style="align-self:flex-start;margin-top:3px;height:32px;display:flex;align-items:center;font-size:12px;font-weight:800;color:#A15C00;font-variant-numeric:tabular-nums">Link sent — resend in {{ resendClock }}</span></sc-if>
       </span>
     </div>
     </sc-if>
@@ -185,7 +185,8 @@ button:focus{outline:none}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;sending&quot;,&quot;sent&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;email_unverified&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;'populated' | 'sending' | 'sent' | 'loading' | 'error' | 'email_unverified'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
-  state = { win: null, winText: '', desc: '', addr: 'home', phase: 'form' };
+  state = { win: null, winText: '', desc: '', addr: 'home', phase: 'form', resendLeft: 0 };
+  componentWillUnmount() { clearInterval(this._rt); }
   // Quote + approval windows are category rules, not screen constants.
   CAT = { name: 'Plumbing', quoteCopy: '2 hours', approveCopy: '4 hours', replyDue: '12:30 today' };
   WINDOWS = ['Tomorrow morning', 'Tomorrow afternoon', 'This week', 'This weekend'];
@@ -232,6 +233,9 @@ class Component extends DCLogic {
       sentAddr: addr.id==='new' ? 'New address, Malé' : addr.name + ' · ' + addr.line,
       sentChatNote: 'Chat with Ibrahim opens the moment his quote arrives — you’ll get ' + this.CAT.approveCopy + ' to accept it.',
       cancelSent: () => this.setState({ phase:'form' }),
+      resendReady: s.resendLeft === 0, resendWaiting: s.resendLeft > 0,
+      resendClock: '0:' + String(s.resendLeft).padStart(2,'0'),
+      resend: () => { clearInterval(this._rt); this._rt = setInterval(() => this.setState(x => { const n = Math.max(0, x.resendLeft - 1); if (n === 0) clearInterval(this._rt); return { resendLeft: n }; }), 1000); this.setState({ resendLeft: 45 }); },
       noop: () => {}
     };
   }

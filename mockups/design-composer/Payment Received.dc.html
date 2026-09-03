@@ -172,7 +172,7 @@ class Component extends DCLogic {
   state = { sheet: null, answered: null };
   renderVals() {
     const S = this.state;
-    const scn = this.props.scenario ?? 'Awaiting your answer';
+    const scn = S.scnOverride ?? this.props.scenario ?? 'Awaiting your answer';
     const loading = scn === 'Loading', error = scn === 'Error';
     const withdrawn = scn === 'Claim withdrawn' && !S.answered;
     let answered = S.answered;
@@ -189,7 +189,7 @@ class Component extends DCLogic {
       dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
       sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
       fLoading: loading, fError: error, fMain: !loading && !error,
-      retry: () => {},
+      retry: () => this.setState({ scnOverride:'Awaiting your answer' }),
       pillStatus, leadCopy,
       withdrawnOn: withdrawn,
       awaitingOn: awaiting,

@@ -11,6 +11,18 @@ import sys, re, json, html, pathlib
 # matches the surrounding text. Email verification is real and allowed to say so;
 # provider-tier and phone 'Verified' are not.
 FORBIDDEN = [
+    # Round 44 renamed the slot-mode card affordance. "Book instantly" named an immediacy the
+    # state machine does not produce: a slot booking enters `requested` and waits for the
+    # provider on the same 24-hour clock as a request. Cleared by Round 44 - LOCKED.
+    ("pre-Round-44 slot affordance", r"Book instantly|confirmed straight away|books? instantly",
+     "Round 44: the slot label is 'Pick a time'. A slot booking still needs the provider to accept."),
+    # Round 27 amended the never-torn-down rule: the booking thread stays open for the life of
+    # the booking and 7 days after completion - the callback window - then locks read-only.
+    # Copy promising an unlimited thread is pre-Round-27, and it misleads at the worst moment,
+    # since it appears where a customer is being told what recourse they still have.
+    ("pre-Round-27 claim that the chat never ends",
+     r"chat never (expires|ends|closes)|never torn down|thread never (expires|ends|closes)|stays open after completion",
+     "Round 27: the thread locks read-only 7 days after completion. Say the window, not 'never'."),
     ("payment claimed as verified", r"Payment verified|Payment Verified|Paid\s*✓|payment_verified",
      "RaajjePro cannot see a bank transfer. Use 'Provider confirmed receipt'."),
     ("bare Verified badge", r">\s*Verified\s*<|Verified [Pp]rovider(?!s\b)",
@@ -24,8 +36,6 @@ FORBIDDEN = [
      "Round 25: Pest Control replaced Gardening, and Computer is now Appliance Repair."),
     ("pre-Round-26 category", r"'Events'|>Events<|&quot;Events&quot;",
      "Round 26: Home Repairs replaced Events."),
-    ("pre-Round-27 chat claim", r"never torn down|stays open after completion",
-     "Round 27: the booking thread locks read-only 7 days after completion."),
     ("callback on an ineligible category", r"cat:\s*'(Cleaning|Beauty|Fitness|Photography|Moving|Boat Charter)'[^}]*\b(cb|callback):\s*true|\b(cb|callback):\s*true[^}]*cat:\s*'(Cleaning|Beauty|Fitness|Photography|Moving|Boat Charter)'",
      "Round 28: callback is Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs only."),
     ("encryption claim", r"[Ee]ncrypt",
@@ -45,22 +55,10 @@ FORBIDDEN = [
 
 # (label, pattern, why) — a hit is a warning worth a human look.
 SUSPECT = [
-    # Round 44 renamed the slot-mode card affordance. "Book instantly" named an immediacy the
-    # state machine does not produce: a slot booking enters `requested` and waits for the
-    # provider on the same 24-hour clock as a request. Promote to FORBIDDEN once Round 44 lands.
-    ("pre-Round-44 slot affordance", r"Book instantly|confirmed straight away|books? instantly",
-     "Round 44: the slot label is 'Pick a time'. A slot booking still needs the provider to accept."),
     ("possible phone number rendered", r">\s*[79]\d{6}\s*<",
      "No screen shows a phone number except the emergency reveal."),
     ("guarantee language on a provider claim", r"[Gg]uaranteed\s+(warranty|insurance)",
      "A provider warranty is attributed, never guaranteed."),
-    # Round 27 amended the never-torn-down rule: the booking thread stays open for the life of
-    # the booking and 7 days after completion - the callback window - then locks read-only.
-    # Copy promising an unlimited thread is pre-Round-27, and it misleads at the worst moment,
-    # since it appears where a customer is being told what recourse they still have.
-    ("pre-Round-27 claim that the chat never ends",
-     r"chat never (expires|ends|closes)|never torn down|thread never (expires|ends|closes)",
-     "Round 27: the thread locks read-only 7 days after completion. Say the window, not 'never'."),
     # Invariant 15: "Never print an island total in UI copy." The register is revised, so any
     # printed count is wrong the moment it changes; and the picker is a search rather than a
     # browsable list, so its size was never the reader's problem. Cleared by Round 41 - LOCKED.
@@ -181,6 +179,17 @@ def dead_handlers(s):
 # be used to hide a real dead end. A <button> with a visible label wired to noop is a control
 # a person will tap expecting something: Quote Received had three of them, all saying
 # "Message Ibrahim". An EmptyState's on-action is a different case and stays exempt.
+# Round 43 wired up every `<button onClick="{{ noop }}">`, and the two rules above only ever
+# looked at buttons. A component's own action - EmptyState's `on-action` - is the same dead end
+# in a shape neither rule could see, which is how eighteen of them survived the round that was
+# meant to remove them. Warn-only while that backlog stands.
+NOOP_ACTION = re.compile(r'action-label="([^"]+)"[^>]*on-action="\{\{\s*noop\s*\}\}"')
+
+
+def noop_component_actions(s):
+    return sorted(set(NOOP_ACTION.findall(s)))
+
+
 NOOP_BUTTON = re.compile(r"<button[^>]*onClick=\"\{\{\s*noop\s*\}\}\"[^>]*>(.*?)</button>", re.S)
 
 def noop_labelled_buttons(s):
@@ -257,34 +266,39 @@ def check(path):
             warns.append((label, why))
 
     for who in near_miss_persona(path, s):
-        warns.append(("persona name one character short (%s)" % who,
+        fails.append(("persona name one character short (%s)" % who,
                       "A name spelled almost right reads as a different person. Match session.js."))
 
     for who in provider_as_customer(path, s):
-        warns.append(("provider persona shown as the customer (%s)" % who,
+        fails.append(("provider persona shown as the customer (%s)" % who,
                       "This screen's subject is the customer, so a provider persona here is in the "
                       "wrong role. Check it against session.js rather than renaming ad hoc."))
 
     for detail in badge_on_a_customer(path, s):
-        warns.append(("verification badge shown for a customer (%s)" % detail,
+        fails.append(("verification badge shown for a customer (%s)" % detail,
                       "verificationTier is a provider attribute - a customer has no tier, so the "
-                      "badge claims a check that never happened. Warn-only until Round 41 removes it."))
+                      "badge claims a check that never happened."))
 
     for chip in emergency_filter_chips(s):
         fails.append(("emergency offered as a browse filter (%s)" % chip,
                       "Round 23 removed the emergency search filter - dispatch never targets a "
                       "provider, so the filter advertised a cut that does not exist. Emergency has "
-                      "its own entry on Home and Explore. Warn-only until Round 41 removes the chip."))
+                      "its own entry on Home and Explore."))
 
     for name in dead_handlers(s):
-        warns.append(("control wired to an empty handler (%s)" % name,
+        fails.append(("control wired to an empty handler (%s)" % name,
                       "Tapping it does nothing. Name a deliberate placeholder `noop`; otherwise "
                       "point it at the screen it belongs to."))
 
     for label in noop_labelled_buttons(s):
-        warns.append(("labelled button wired to noop (%s)" % label,
+        fails.append(("labelled button wired to noop (%s)" % label,
                       "noop is for deliberate placeholders, not for a control with a real label. "
                       "Point it at the screen it names."))
+
+    for label in noop_component_actions(s):
+        warns.append(("component action wired to noop (%s)" % label,
+                      "Same dead end as a noop button, passed to a component instead. The label "
+                      "promises something; point it at the screen or state it belongs to."))
 
     for detail in mode_mismatches(s):
         fails.append(("booking mode contradicts the category", detail + " — §1c. "

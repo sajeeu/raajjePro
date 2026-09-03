@@ -219,7 +219,7 @@ class Component extends DCLogic {
   componentWillUnmount() { clearTimeout(this._ct); clearTimeout(this._to); clearInterval(this._iv); clearTimeout(this._tt); }
   startFor(scn) { return scn === 'Near expiry' ? 84 * 60 + 12 : 23 * 3600 + 41 * 60 + 7; }
   tick() {
-    const scn = this.props.scenario ?? 'Live countdown';
+    const scn = this.state.scnOverride ?? this.props.scenario ?? 'Live countdown';
     if (scn !== 'Live countdown' && scn !== 'Near expiry') return;
     if (this.state.phase !== 'open') return;
     const r = this.state.remain == null ? this.startFor(scn) : Math.max(0, this.state.remain - 1);
@@ -231,7 +231,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const S = this.state;
-    const scn = this.props.scenario ?? 'Live countdown';
+    const scn = this.state.scnOverride ?? this.props.scenario ?? 'Live countdown';
     const mode = this.props.mode ?? 'Request-based';
     const offline = scn === 'Offline — accept pending';
     const remain = S.remain == null ? this.startFor(scn) : S.remain;
@@ -250,7 +250,7 @@ class Component extends DCLogic {
       fTimedOut: !loading && !error && phase === 'timedout',
       fAccepted: phase === 'accepted', fDeclined: phase === 'declined',
       fOpen: open,
-      retry: () => {},
+      retry: () => this.setState({ scnOverride:'Live countdown' }),
       cdBg: near ? '#FEF3DC' : '#fff', cdBd: near ? '#F3C77B' : '#E9EFF7',
       cdIcoBg: near ? '#FDE7BE' : '#E8F0FE', cdIcoFg: near ? '#B45309' : '#1D4ED8',
       cdLabel: near ? 'Under 2 hours left to answer' : 'Time left to answer — 24-hour window',

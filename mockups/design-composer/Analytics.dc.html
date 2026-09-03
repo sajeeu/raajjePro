@@ -167,7 +167,7 @@ class Component extends DCLogic {
       rating:{ sub:'4.6 now', bars:[4.3,4.4,4.5,4.5,4.6,4.6] } };
   renderVals(){
     const p=this.props, s=this.state;
-    const scenario=p.scenario ?? 'normal';
+    const scenario=s.scnOverride ?? p.scenario ?? 'normal';
     const isFree=(p.plan ?? 'premium')==='free';
     const svc=isFree?this.EXAMPLE:(this.SVCS.find(x=>x.id===s.svc)||this.SVCS[0]);
     const isDraft=svc.status==='draft';
@@ -183,7 +183,7 @@ class Component extends DCLogic {
       { v:svc.rating?svc.rating.bars[svc.rating.bars.length-1].toFixed(1):'No data yet', label:'rating · last 90 days', vFg:'#0F1B2D', vSize:'22px' } ];
     return {
       isLoading:scenario==='loading', isError:scenario==='error', isNormal:scenario==='normal',
-      retry:()=>{},
+      retry:()=>this.setState({ scnOverride:'normal' }),
       isFree,
       contentOpacity:isFree?'.62':'1', contentPe:isFree?'none':'auto',
       svcChips:(isFree?[this.EXAMPLE]:this.SVCS).map(x=>({ label:x.label, sel:isFree?true:s.svc===x.id, tap:()=>this.setState({ svc:x.id }) })),
