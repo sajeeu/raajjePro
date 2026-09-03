@@ -44,7 +44,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Change the agreement</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="calendar" title="Couldn't load the agreement" body="Your connection may have dropped. Anything you typed is kept on this phone — try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="calendar" title="Couldn't load the agreement" body="Your connection may have dropped. Anything you typed is kept on this phone — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -194,7 +194,7 @@ class Component extends DCLogic {
     time:{ label:'Time', orig:'14:00', ph:'e.g. 16:00', demo:'16:00' },
     scope:{ label:'Scope', orig:'Deep clean — two bedrooms and kitchen', ph:'Describe the new scope', demo:'Deep clean — three bedrooms and kitchen' } };
   renderVals() {
-    const p = this.props, s = this.state, sc = p.scenario ?? 'receiving';
+    const p = this.props, s = this.state, sc = s.scnOverride ?? p.scenario ?? 'receiving';
     const isProvider = sc==='compose_provider';
     const eff = s.phase ?? (sc==='compose_provider' ? 'compose' : sc);
     const isLoading = eff==='loading', isError = eff==='error';
@@ -234,7 +234,7 @@ class Component extends DCLogic {
       sentReason: '\u201c' + (s.reason || defReason || 'Afternoon slot works better for both of us') + '\u201d',
       accept: () => this.setState({ phase:'accepted' }),
       reject: () => this.setState({ phase:'rejected' }),
-      noop: () => {}, goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
+      retry: () => this.setState({ scnOverride: 'receiving' }), goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
     };
   }
 }
