@@ -227,12 +227,32 @@ def mode_mismatches(s):
         if not (c and d):
             continue
         cat, mode = c.group(1), d.group(1)
+        # This check asks whether category and mode AGREE, so 'instant' still
+        # normalises to slot here — it is a stale spelling of the right answer,
+        # not a wrong category. stale_instant_mode owns the spelling, and stays
+        # a warn only until the four live seeds are fixed; promote it then.
         norm = "slot" if mode in ("instant", "slot") else "request"
         if cat in SLOT_CATEGORIES and norm != "slot":
             out.append("%s is slot-mode, found %s" % (cat, mode))
         elif cat in REQUEST_CATEGORIES and norm != "request":
             out.append("%s quotes, so it is request-mode, found %s" % (cat, mode))
     return out
+
+
+STALE_MODE = re.compile(r"mode:\s*'instant'")
+
+
+def stale_instant_mode(s):
+    """Seed data still on the pre-Round-45 prop value.
+
+    ServiceCard and Service Preview resolve slot mode with `(p.mode ?? …) === 'slot'`
+    since Round 45 §3c, and their prop enum is 'slot' | 'request'. A seed still
+    carrying 'instant' falls through to the request branch, so a slot listing
+    renders "Request a time" with a calendar icon — the exact affordance Round 44
+    existed to get right. Home and Discovery pass the seed value straight into the
+    card, so this is visible on the two most-seen screens.
+    """
+    return ["mode: 'instant'"] * len(STALE_MODE.findall(s))
 
 
 def check(path):
@@ -318,6 +338,13 @@ def check(path):
         warns.append(("component action wired to noop (%s)" % label,
                       "Same dead end as a noop button, passed to a component instead. The label "
                       "promises something; point it at the screen or state it belongs to."))
+
+    n = len(stale_instant_mode(s))
+    if n:
+        warns.append(("seed still on the pre-Round-45 mode value (%d)" % n,
+                      "ServiceCard's prop enum is 'slot' | 'request' and it tests === 'slot', "
+                      "so 'instant' renders as request. Round 45 \u00a73c renamed the value; "
+                      "these seeds were missed."))
 
     for detail in mode_mismatches(s):
         fails.append(("booking mode contradicts the category", detail + " — §1c. "
