@@ -183,7 +183,7 @@ class Component extends DCLogic {
       saveLabel: s.saved ? 'Remove saved provider' : 'Save this provider',
       heartFill: s.saved ? '#DC2626' : 'none', heartStroke: s.saved ? '#DC2626' : '#41526B',
       toggleSave: () => this.setState({ saved: !s.saved }),
-      report: () => {}, message: () => {},
+      report: () => { location.href = 'Report.dc.html'; }, message: () => { location.href = 'Enquiry%20Thread.dc.html'; },
       goExplore: () => { location.href = 'Discovery.dc.html'; },
       retry: () => { this.setState({ override: 'loading' }); setTimeout(() => this.setState({ override: 'populated' }), 1200); }
     };

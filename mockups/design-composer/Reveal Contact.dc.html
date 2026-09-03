@@ -105,7 +105,7 @@ button:focus{outline:none}
         <div style="display:flex;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #EEF3FA"><span style="width:6px;height:6px;border-radius:50%;background:#8296B3;flex:none"></span><span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Both numbers disappear 24 hours after this booking closes.</span></div>
         <div style="display:flex;gap:10px;align-items:center;padding:11px 0"><span style="width:6px;height:6px;border-radius:50%;background:#8296B3;flex:none"></span><span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">This reveal is on the record, and RaajjePro reviews reveal patterns.</span></div>
       </div>
-      <button onClick="{{ noop }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;cursor:pointer">Back to chat — arrival details live there</button>
+      <button onClick="{{ goChat }}" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;cursor:pointer">Back to chat — arrival details live there</button>
       </div>
     </sc-if>
 
@@ -115,8 +115,8 @@ button:focus{outline:none}
         <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Access has ended</span>
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">This booking closed yesterday at 21:40. The numbers stayed available for 24 hours after that and have now been removed — from your side and from Ibrahim's, at the same time.</span>
       </div>
-      <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-align:center;text-wrap:pretty">The chat never expires — a follow-up question or a warranty claim still has its thread.</div>
-      <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
+      <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-align:center;text-wrap:pretty">The chat stays open for 7 days after the job, then locks — the history stays readable, and a callback claim or a dispute reopens it.</div>
+      <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
     </sc-if>
 
     <sc-if value="{{ isOff }}" hint-placeholder-val="{{ false }}">
@@ -126,7 +126,7 @@ button:focus{outline:none}
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">RaajjePro has switched contact reveal off across the app for the moment. It's nothing about you, Ibrahim or this booking — and it isn't an error.</span>
       </div>
       <div style="background:#EEF3FA;border-radius:16px;padding:13px 14px;font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-align:center;text-wrap:pretty">Chat is unaffected and instant — arrival updates, the door, the address all work there as usual.</div>
-      <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
+      <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
     </sc-if>
   </div>
 </div>
@@ -154,7 +154,7 @@ class Component extends DCLogic {
         { head:'It’s recorded', rest:'every reveal goes on the record, and RaajjePro reviews the patterns.' } ],
       reveal: () => this.setState({ phase:'revealed' }),
       revealTime: '21:26',
-      noop: () => {}
+      noop: () => {}, goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
     };
   }
 }

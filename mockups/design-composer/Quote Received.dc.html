@@ -110,7 +110,7 @@ button:focus{outline:none}
           <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Your chat with Ibrahim is already open. If the time or price is close, a message usually moves it — declining just ends it.</span>
         </span>
       </div>
-      <button onClick="{{ noop }}" style="height:48px;border:1.5px solid #CDDDFB;border-radius:13px;background:#fff;color:#1D4ED8;font-size:13.5px;font-weight:800;cursor:pointer" style-hover="background:#F5F9FF">Message Ibrahim about the time or price</button>
+      <button onClick="{{ goChat }}" style="height:48px;border:1.5px solid #CDDDFB;border-radius:13px;background:#fff;color:#1D4ED8;font-size:13.5px;font-weight:800;cursor:pointer" style-hover="background:#F5F9FF">Message Ibrahim about the time or price</button>
     </div>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
@@ -125,7 +125,7 @@ button:focus{outline:none}
     </sc-if>
 
     <sc-if value="{{ isExpired }}" hint-placeholder-val="{{ false }}">
-    <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Ask Ibrahim again in chat</button>
+    <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Ask Ibrahim again in chat</button>
     <a href="Request%20a%20Time.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Send a new request</a>
     </sc-if>
   </div>
@@ -180,7 +180,7 @@ button:focus{outline:none}
       <dc-import name="StatusPill" status="declined" hint-size="100px,28px"></dc-import>
       <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">The 14:00 hold was released. Your chat with Ibrahim stays open — if it was nearly right, you can still ask for a different time or price.</span>
     </div>
-    <button onClick="{{ noop }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
+    <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Ibrahim</button>
     <a href="Request%20a%20Time.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Send a new request</a>
   </div>
 </div>
@@ -234,7 +234,7 @@ class Component extends DCLogic {
       ctaShadow: canAccept ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
       accept: () => { if (canAccept) this.setState({ phase:'accepted' }); },
       decline: () => this.setState({ phase:'declined' }),
-      noop: () => {}
+      noop: () => {}, goChat: () => { window.location = 'Booking%20Thread.dc.html'; }
     };
   }
 }
