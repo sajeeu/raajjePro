@@ -62,7 +62,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           </div>
           <div style="display:flex;align-items:flex-start;gap:11px">
             <span style="width:34px;height:34px;border-radius:10px;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"></rect><path d="M4 10.5h16M8.5 3.5v4M15.5 3.5v4M9 15l2 2 4-4"></path></svg></span>
-            <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px"><span style="font-size:13px;line-height:1.4;font-weight:600;color:#41526B;text-wrap:pretty">Accepting a booking</span><dc-import name="StatusPill" status="pending_offline" hint-size="180px,26px"></dc-import></div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px"><span style="font-size:13px;line-height:1.4;font-weight:600;color:#41526B;text-wrap:pretty">Accepting a booking — not emergencies</span><dc-import name="StatusPill" status="pending_offline" hint-size="180px,26px"></dc-import></div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:11px">
             <span style="width:34px;height:34px;border-radius:10px;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1L3 20l1-5.3c-.6-1.2-1-2.7-1-4.2A8.5 8.5 0 0 1 11.5 2 8.5 8.5 0 0 1 21 11.5z" transform="scale(.95)"></path></svg></span>
@@ -70,6 +70,10 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
           </div>
         </div>
         <div style="font-size:11.5px;line-height:1.55;font-weight:600;color:#8296B3;text-wrap:pretty;border-top:1px solid #EEF3FA;padding-top:11px">They send when the connection returns. Nothing is confirmed — and no payment is recorded — until it sends.</div>
+        <div style="display:flex;align-items:flex-start;gap:11px;border-top:1px solid #EEF3FA;padding-top:13px">
+          <span style="width:34px;height:34px;border-radius:10px;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h6l-1 9 8-11h-6l1-9z"></path></svg></span>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:13px;line-height:1.4;font-weight:600;color:#5B6B84;text-wrap:pretty">Emergency offers need a live connection</span><span style="font-size:11.5px;line-height:1.5;font-weight:600;color:#8296B3;text-wrap:pretty">Your callout fee and arrival estimate have to be current, and offers are collected in 90 seconds.</span></div>
+        </div>
       </div>
     </div>
   </sc-if>

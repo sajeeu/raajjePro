@@ -69,6 +69,18 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               <div style="font-size:11.5px;font-weight:600;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px">Exact address is shared if the customer picks you.</div>
             </div>
 
+            <sc-if value="{{ offlineOn }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;box-shadow:0 1px 3px rgba(15,27,45,.04);animation:fadeUp var(--m-page) var(--e-out) both">
+              <span style="width:48px;height:48px;border-radius:50%;background:#EEF3FA;color:#5B6B84;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg></span>
+              <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">You're offline</div>
+              <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:280px;text-wrap:pretty">Emergency jobs need a live connection — your fee and arrival estimate have to be current, and offers are collected in 90 seconds.</div>
+              <button onClick="{{ retryConn }}" style="margin-top:2px;height:44px;border:1.5px solid #CDDDFB;border-radius:13px;background:#E8F0FE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 20px">Retry connection</button>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ acceptOn }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:16px">
+
             <div style="background:#E8F0FE;border:1.5px solid #CDDDFB;border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
               <div style="display:flex;align-items:center;gap:10px">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3.5" y="5" width="7.5" height="14" rx="1.5"></rect><rect x="13" y="5" width="7.5" height="14" rx="1.5"></rect></svg>
@@ -122,6 +134,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                   <div style="font-size:12.5px;line-height:1.5;color:#7F3535">The connection dropped before it reached us. The request is still open — your fee is kept on this phone. Retry when you're ready.</div>
                 </div>
               </div>
+            </sc-if>
+            </div>
             </sc-if>
           </div>
         </sc-if>
@@ -220,7 +234,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
   <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
     <sc-if value="{{ fRequest }}" hint-placeholder-val="{{ true }}">
-      <sc-if value="{{ reqOn }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ acceptOn }}" hint-placeholder-val="{{ true }}">
         <button onClick="{{ sendOffer }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
           <sc-if value="{{ submitting }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Sending offer…</span></sc-if>
           <sc-if value="{{ notSubmitting }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ submitFailed }}"><span>Retry — {{ ctaTxt }}</span></sc-if><sc-if value="{{ notFailed }}" hint-placeholder-val="{{ true }}"><span>{{ ctaTxt }}</span></sc-if></sc-if>
@@ -267,7 +281,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Customer picks you&quot;,&quot;Customer picks another&quot;,&quot;No decision&quot;,&quot;Connection error&quot;],&quot;default&quot;:&quot;Customer picks you&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Customer picks you&quot;,&quot;Customer picks another&quot;,&quot;No decision&quot;,&quot;Connection error&quot;,&quot;Offline&quot;],&quot;default&quot;:&quot;Customer picks you&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;compressTime&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;demoBadge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
 class Component extends DCLogic {
   _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   state = { booted: false, screen: 'request', fee: '350', feeErr: null, eta: null, etaCustom: '', etaErr: null,
@@ -284,7 +298,7 @@ class Component extends DCLogic {
   JOB = { cat: 'Plumbing', island: 'Malé', dist: '1.2 km', custFirst: 'Aishath',
     desc: 'Pipe burst under the kitchen sink — water is spreading fast',
     addr: 'M. Fehivina, 2nd floor, Majeedhee Magu' };
-  scn() { return ({ 'Customer picks you': 'chosen', 'Customer picks another': 'notChosen', 'No decision': 'expired', 'Connection error': 'conn' })[this.props.scenario ?? 'Customer picks you'] || 'chosen'; }
+  scn() { return ({ 'Customer picks you': 'chosen', 'Customer picks another': 'notChosen', 'No decision': 'expired', 'Connection error': 'conn', 'Offline': 'offline' })[this.state.scnOverride ?? this.props.scenario ?? 'Customer picks you'] || 'chosen'; }
   catObj() { return this.CATS.find(c => c.name === this.JOB.cat) || this.CATS[0]; }
   fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   componentDidMount() {
@@ -335,6 +349,8 @@ class Component extends DCLogic {
       fExpired: S.screen === 'expired', fDeclined: S.screen === 'declined',
       fEnded: S.screen === 'notChosen' || S.screen === 'expired' || S.screen === 'declined',
       skel: !S.booted, reqOn: S.booted,
+      offlineOn: sc === 'offline', acceptOn: sc !== 'offline',
+      retryConn: () => this.setState({ scnOverride: 'Customer picks you' }),
       catName: cat.name, winMin: cat.win,
       custFirst: this.JOB.custFirst, jobDesc: this.JOB.desc, island: this.JOB.island, dist: this.JOB.dist,
       custAddr: this.JOB.addr,
