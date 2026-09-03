@@ -127,6 +127,28 @@ def provider_as_customer(path, s):
     # match flags every screen she legitimately appears on.
     return sorted(n for n in _seed_providers(path) if n in s)
 
+# A persona name spelled almost right reads as a second person. "Aishath Naeem" for
+# "Aishath Naeema" is one character, and it appeared on exactly one screen out of six.
+# Catch a seed name that has lost its last character and is not part of a longer word.
+def near_miss_persona(path, s):
+    """A seed persona name rendered one character short."""
+    seed = pathlib.Path(path).parent / "session.js"
+    if not seed.exists():
+        return []
+    try:
+        txt = seed.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    names = set(re.findall(r"(?:provider|name):\s*'([A-Z][a-z]+ [A-Z][a-z]+)'", txt))
+    out = []
+    for n in names:
+        if len(n) < 9:
+            continue
+        truncated = n[:-1]
+        if re.search(re.escape(truncated) + r"(?![A-Za-z])", s):
+            out.append("%s (should be %s)" % (truncated, n))
+    return sorted(set(out))
+
 def badge_on_a_customer(path, s):
     """A VerificationBadge mounted on a screen whose subject is the customer."""
     stem = pathlib.Path(path).name.replace(".dc.html", "")
@@ -228,6 +250,10 @@ def check(path):
     for label, pat, why in SUSPECT:
         if re.search(pat, s):
             warns.append((label, why))
+
+    for who in near_miss_persona(path, s):
+        warns.append(("persona name one character short (%s)" % who,
+                      "A name spelled almost right reads as a different person. Match session.js."))
 
     for who in provider_as_customer(path, s):
         warns.append(("provider persona shown as the customer (%s)" % who,
