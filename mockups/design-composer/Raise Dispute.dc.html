@@ -46,7 +46,7 @@ textarea:focus{outline:none;border-color:#CDDDFB}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Raise a dispute</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost, and no dispute was raised. Try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost, and no dispute was raised. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -152,7 +152,7 @@ class Component extends DCLogic {
       intro:'This booking is completed — you can still dispute it. The dispute runs on its own track and doesn’t reopen the booking.',
       footNote:'The booking stays completed. The dispute is its own track.' } };
   renderVals() {
-    const sc = this.props.scenario ?? 'active', s = this.state;
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'active', s = this.state;
     const isLoading = sc==='loading', isError = sc==='error';
     const done = sc==='submitted' || s.done;
     const D = this.D[sc==='completed' ? 'completed' : 'active'];
@@ -175,7 +175,7 @@ class Component extends DCLogic {
       submit: () => { if (this.state.reason != null && this.state.desc.trim()) this.setState({ done:true }); },
       doneReason: 'Recorded as “' + this.REASONS[reasonIdx ?? 0].label + '”.',
       wasCompleted: sc==='completed' || sc==='submitted',
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'active' })
     };
   }
 }

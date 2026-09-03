@@ -310,10 +310,9 @@ def check(path):
                       "Point it at the screen it names."))
 
     for _ in write_only_override(s):
-        warns.append(("retry writes scnOverride but nothing reads it",
+        fails.append(("retry writes scnOverride but nothing reads it",
                       "The handler runs and the screen does not move - a dead control with a body. "
-                      "Read it where the scenario is resolved: `const sc = s.scnOverride ?? props.scenario ?? ...`. "
-                      "Warn-only until Round 47 clears it."))
+                      "Read it where the scenario is resolved: `const sc = s.scnOverride ?? props.scenario ?? ...`."))
 
     for label in noop_component_actions(s):
         warns.append(("component action wired to noop (%s)" % label,

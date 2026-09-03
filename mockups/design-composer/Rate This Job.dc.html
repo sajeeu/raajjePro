@@ -46,7 +46,7 @@ textarea:focus{outline:none;border-color:#CDDDFB}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Rate this job</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost — try again." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="message" title="Couldn't load this" body="Your connection may have dropped. Nothing you typed is lost — try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -142,7 +142,7 @@ class Component extends DCLogic {
   state = { rating:0, picked:{}, review:'', done:false };
   TAGS = ['On time','Fair price','Quality materials','Good communication','Left a mess','Arrived late','Poor communication','Price changed on site'];
   renderVals() {
-    const sc = this.props.scenario ?? 'unrated', s = this.state;
+    const sc = this.state.scnOverride ?? this.props.scenario ?? 'unrated', s = this.state;
     const isLoading = sc==='loading', isError = sc==='error';
     const done = sc==='submitted' || s.done;
     const rating = sc==='submitted' ? 5 : s.rating;
@@ -163,7 +163,7 @@ class Component extends DCLogic {
       submit: () => { if (this.state.rating > 0) this.setState({ done:true }); },
       doneStars: [1,2,3,4,5].map(n => ({ fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#D99A1E' : '#C6D4EA' })),
       doneTags: pickedLabels, hasDoneTags: pickedLabels.length > 0,
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'unrated' })
     };
   }
 }

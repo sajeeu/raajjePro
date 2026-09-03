@@ -49,7 +49,7 @@ button:focus{outline:none}
     <span style="font-size:15px;font-weight:800;color:#0F1B2D">Payment</span>
   </div>
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
-    <dc-import name="EmptyState" icon="message" title="Couldn't load the payment details" body="Never transfer to an account you got outside this screen. Try again to load the details." action-label="Try again" on-action="{{ noop }}" hint-size="340px,220px"></dc-import>
+    <dc-import name="EmptyState" icon="message" title="Couldn't load the payment details" body="Never transfer to an account you got outside this screen. Try again to load the details." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
   </div>
 </div>
 </sc-if>
@@ -199,7 +199,7 @@ class Component extends DCLogic {
       nameNote:'The account is under Rasheed Plumbing Services — that’s Ibrahim Rasheed’s registered business, so the name won’t match his. This is the right account.',
       emergency:true, back:'Provider%20Emergency.dc.html' } };
   renderVals() {
-    const p = this.props, s = this.state, sc = p.scenario ?? 'awaiting_payment';
+    const p = this.props, s = this.state, sc = s.scnOverride ?? p.scenario ?? 'awaiting_payment';
     const B = this.BOOKINGS[p.booking ?? 'plumbing_quote'] ?? this.BOOKINGS.plumbing_quote;
     const isLoading = sc==='loading', isError = sc==='error';
     const isPaid = (sc==='payment_sent' || s.phase==='paid') && !isLoading && !isError;
@@ -227,7 +227,7 @@ class Component extends DCLogic {
       markPaid: () => this.setState({ phase:'paid' }),
       // Withdraw an unanswered payment claim — §1c step 7 (Round 24). Allowed only while the provider has not responded; once per booking.
       undo: () => this.setState({ phase:'pay' }),
-      noop: () => {}
+      retry: () => this.setState({ scnOverride: 'awaiting_payment' })
     };
   }
 }
