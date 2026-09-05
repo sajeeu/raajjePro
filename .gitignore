@@ -1,5 +1,14 @@
-# Unrelated projects that happen to share this working directory
-# (Petty Cash now lives in its own repo — these are leftover duplicates)
+# Unrelated projects used to share this working directory. They are gone as of
+# September 2026 — every one of them is now in the repository it belongs to:
+#   petty cash  →  gitlab.com/neopacific/eng1/petty-cash-management
+#   books       →  github.com/sajeeu/books
+#
+# Fifteen of those files existed in NO repository at all, despite a comment here
+# that called them "leftover duplicates". They are archived under
+# docs/archive/2026-09-from-claude-workdir/ in the petty-cash repo.
+#
+# The patterns stay as a guard: if one of these reappears here it is a stray, and
+# it should be moved to its own repo rather than committed to this one.
 petty-cash-*
 Petty-Cash-*
 zoho-books-*
@@ -23,7 +32,8 @@ SUPPORTING-DOCS-STATUS.md
 .claude/worktrees/
 .claude/projects/
 
-# Personal notes — not part of this project
+# Personal notes — not part of this project. Moved to github.com/sajeeu/books
+# in September 2026; patterns kept as a guard against them reappearing.
 chatgpt-books-history.md
 entrepreneurship/
 
