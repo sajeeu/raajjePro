@@ -336,7 +336,7 @@ class Component extends DCLogic {
   ISLANDS = [
     { l: 'Malé', c: '', a: 'Malé Region' },
     { l: 'Hulhumalé', c: '', a: 'Malé Region' },
-    { l: 'Villimalé', c: '', a: 'Malé Region' },
+    { l: 'Villimalé', c: '', a: 'Malé Region', alias: 'Vilingili K. Villingili' },
     { l: 'Maafushi', c: 'K', a: 'Kaafu' },
     { l: 'Thulusdhoo', c: 'K', a: 'Kaafu' },
     { l: 'K. Guraidhoo', c: 'K', a: 'Kaafu' },
@@ -346,7 +346,6 @@ class Component extends DCLogic {
     { l: 'S. Meedhoo', c: 'S', a: 'Addu' },
     { l: 'L. Hithadhoo', c: 'L', a: 'Laamu' },
     { l: 'S. Hithadhoo', c: 'S', a: 'Addu' },
-    { l: 'K. Vilingili', c: 'K', a: 'Kaafu' },
     { l: 'GA. Vilin\'gili', c: 'GA', a: 'Gaafu Alifu' },
     { l: 'An\'golhitheemu', c: 'R', a: 'Raa' },
     { l: 'Kulhudhuffushi', c: 'HDh', a: 'Haa Dhaalu' },
@@ -361,7 +360,8 @@ class Component extends DCLogic {
     if (!query) return all.slice();
     const bare = i => norm(i.l.replace(/^[A-Za-z]+\.\s*/, ''));
     const starts = i => (norm(i.l).startsWith(query) || bare(i).startsWith(query) || norm(i.c + bare(i)).startsWith(query)) ? 0 : 1;
-    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query))
+    return all.filter(i => norm(i.l).includes(query) || norm(i.c + i.l).includes(query)
+                    || (i.alias && norm(i.alias).includes(query)))
       .sort((x, y) => starts(x) - starts(y) || x.l.localeCompare(y.l));
   }
   componentDidMount() {

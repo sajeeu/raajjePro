@@ -39,21 +39,21 @@ button:focus{outline:none}
     </div>
   </sc-for>
 </div>
-<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
+<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 <sc-if value="{{ isError }}">
 <div data-screen-label="Messages — error" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
   <dc-import name="EmptyState" icon="message" title="Couldn't load your messages" body="Your connection may have dropped. Nothing is lost — every conversation is safe. Try again." action-label="Try again" on-action="{{ retry }}" hint-size="340px,220px"></dc-import>
 </div>
-<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
+<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 <sc-if value="{{ isEmpty }}">
 <div data-screen-label="Messages — empty" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;align-items:center;justify-content:center;padding:20px">
   <dc-import name="EmptyState" icon="message" title="No messages yet" body="Message a service from its page, or book one — every booking opens its own chat, and it all lives here." action-label="Explore services" on-action="{{ goExplore }}" hint-size="340px,230px"></dc-import>
 </div>
-<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
+<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
@@ -78,7 +78,7 @@ button:focus{outline:none}
     </a>
   </sc-for>
 </div>
-<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" on-tap="{{ navTap }}" hint-size="372px,90px"></dc-import></div>
+<div style="flex:none;display:flex;justify-content:center;padding:10px 20px 14px"><dc-import name="BottomNav" active="Messages" hint-size="372px,90px"></dc-import></div>
 </sc-if>
 
 </div>
@@ -107,7 +107,6 @@ class Component extends DCLogic {
         ageFg: t.unread ? '#1D4ED8' : '#9AA9C0',
         lastFg: t.unread ? '#0F1B2D' : '#8296B3',
         lastW: t.unread ? '700' : '600' }; }),
-      navTap: (t) => { const m = { Home: 'Home.dc.html', Explore: 'Discovery.dc.html', Bookings: 'My%20Bookings.dc.html' }; if (m[t]) window.location = m[t]; },
       goExplore: () => { window.location = 'Discovery.dc.html'; },
       retry: () => this.setState({ scnOverride: 'populated' })
     };
