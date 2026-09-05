@@ -1,4 +1,4 @@
-# Local infrastructure for RaajjePro. One service so far: PostgreSQL 16 with
+# Local infrastructure for RaajjePro. One service so far: PostgreSQL 18 with
 # pg_cron and WAL archiving.
 #
 #   docker compose up -d            start

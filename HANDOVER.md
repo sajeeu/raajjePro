@@ -63,7 +63,7 @@ None of that was visible in a design review. All of it would have been implement
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 16. Phase 0 only: boot, first migration, job runner. Fastify arrives in Phase 2 |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phase 0 only: boot, first migration, job runner. Fastify arrives in Phase 2 |
 | `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phase 0 only: boots to a placeholder |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |

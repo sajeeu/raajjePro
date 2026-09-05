@@ -30,7 +30,7 @@ Prerequisites: Node 22 (`.nvmrc`), Docker with Compose, Flutter 3.47 stable on y
 
 ```bash
 npm install                          # root: commit hooks only
-docker compose up -d                 # PostgreSQL 16 + pg_cron + WAL archiving, port 5435
+docker compose up -d                 # PostgreSQL 18 + pg_cron + WAL archiving, port 5435
 cd backend && cp .env.example .env && npm install
 npm run db:migrate                   # applies prisma/migrations, schedules the heartbeat job
 npm run dev                          # boots: reaches the DB, reports the job runner, exits 0
@@ -38,11 +38,25 @@ npm run jobs:status                  # is the scheduled no-op job firing? (exit 
 cd ../frontend && flutter pub get && flutter run
 ```
 
+> **Upgrading from the Postgres 16 volume.** Dependabot moved the base image from
+> 16 to 18. PostgreSQL refuses to start on a data directory written by a different
+> major version, so an existing `docker compose` volume will not mount. Phase 0
+> holds one heartbeat row and nothing else, so the cheap fix is to discard it:
+>
+> ```bash
+> docker compose down -v && docker compose up -d --build
+> npx prisma migrate deploy --schema backend/prisma/schema.prisma
+> ```
+>
+> Do this deliberately — `-v` deletes the volume. From Phase 2 onward, when the
+> database holds something worth keeping, a major bump needs `pg_upgrade` or a
+> dump/restore instead.
+
 `scripts/verify.sh` runs every check that does not need a running app — design rules, backend lint/typecheck/tests, `flutter analyze`/`flutter test`. `scripts/db/pitr-status.sh` reports whether WAL archiving is protecting the local database; `scripts/db/base-backup.sh` takes the base backup PITR replays onto (`scripts/db/README.md` has the restore procedure).
 
 | | Backend | Frontend |
 |---|---|---|
-| Stack | TypeScript 6 · Prisma 7 · PostgreSQL 16 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
+| Stack | TypeScript 7 · Prisma 7 · PostgreSQL 18 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
 | Lint | ESLint 10 (typescript-eslint strict, type-checked) + Prettier | `flutter_lints` + strict casts/inference/raw types |
 | Tests | Vitest | `flutter_test` |
 | Layout | `src/modules/<domain>/`, one per domain as phases add them — see `backend/CLAUDE.md` | `lib/features/<feature>/`, one per feature as phases add them — see `frontend/lib/README.md` |
