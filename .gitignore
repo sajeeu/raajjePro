@@ -39,3 +39,15 @@ entrepreneurship/
 
 # end-of-day push log
 .eod-push.log
+
+# Build tooling
+node_modules/
+backend/dist/
+backend/coverage/
+backend/src/generated/
+frontend/build/
+frontend/.dart_tool/
+# Real environment values never enter git; the contract is backend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example

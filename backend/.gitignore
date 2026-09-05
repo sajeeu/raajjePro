@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+# Prisma client is generated on install (npm run postinstall); never committed.
+src/generated/
+# Real environment values live only on the machine that uses them.
+.env
+.env.*
+!.env.example

@@ -1,0 +1,48 @@
+{
+  "name": "@raajjepro/backend",
+  "version": "0.0.0",
+  "description": "RaajjePro API — TypeScript / Fastify / Prisma / PostgreSQL",
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=.env src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write . && eslint --fix .",
+    "test": "vitest run",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "jobs:status": "tsx --env-file-if-exists=.env src/jobs/status.ts"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.11"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "dotenv": "17.4.2",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.1",
+    "@types/pg": "8.23.1",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.6",
+    "prisma": "7.10.0",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.69.0",
+    "vitest": "5.0.0"
+  },
+  "overrides": {
+    "mysql2": ">=3.24.3",
+    "deepmerge-ts": ">=8.0.2"
+  }
+}

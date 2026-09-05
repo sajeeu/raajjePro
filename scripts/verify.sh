@@ -52,8 +52,9 @@ fi
 
 if [[ -f frontend/pubspec.yaml ]]; then
   echo "Frontend"
-  run "analyze" flutter analyze --no-pub
-  run "tests"   flutter test
+  # Flutter resolves the project from the working directory, so run inside it.
+  run "analyze" bash -c 'cd frontend && flutter analyze --no-pub'
+  run "tests"   bash -c 'cd frontend && flutter test'
   echo
 fi
 

@@ -1,0 +1,38 @@
+# Automated dependency scanning (plan §Phase 0, Round 15). Dependabot opens a
+# PR for every security advisory as it lands, and a weekly batch for routine
+# version bumps. CI's `npm audit` and dependency-review-action cover the
+# pull-request side; this covers what is already merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      backend-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: pub
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+
+  - package-ecosystem: docker
+    directory: /infra/postgres
+    schedule:
+      interval: weekly
+      day: monday

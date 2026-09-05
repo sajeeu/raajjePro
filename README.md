@@ -3,13 +3,13 @@
 Planning and specification for RaajjePro, a local services marketplace for the Maldives.
 Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-Nothing is built yet. This repository holds the specification the build will follow, and the Claude Code configuration that builds it.
+Phase 0 is built: both apps boot, lint is clean, the job runner fires. Everything from Phase 1 onward is still specification. See **Running locally** below.
 
 ## The source of truth
 
 | File | What it is |
 |---|---|
-| `01_Development_Plan_v5.md` | **The authoritative spec**, at revision 5.7. Standalone. Read §0.0 first — it is a precedence rule. |
+| `01_Development_Plan_v5.md` | **The authoritative spec**, at revision 5.19. Standalone. Read §0.0 first — it is a precedence rule. |
 
 Everything else in this repo derives from that file, and nothing else restates it. Seventeen review rounds established why: every copy of a decision eventually drifts from the original, and it happened five times before the copies were removed.
 
@@ -23,6 +23,45 @@ Everything else in this repo derives from that file, and nothing else restates i
 | `.claude/commands/` | One slash command per phase — `/phase-0`, `/phase-3`, `/phase-17-1`. Each cites the plan rather than restating it. |
 | `.claude/agents/` | Six subagents. Version-controlled, so they travel with a clone rather than being pasted into settings per machine. |
 | `.claude/skills/` | Thirteen skills, auto-invoked when a task matches their description. |
+
+## Running locally
+
+Prerequisites: Node 22 (`.nvmrc`), Docker with Compose, Flutter 3.47 stable on your `PATH`.
+
+```bash
+npm install                          # root: commit hooks only
+docker compose up -d                 # PostgreSQL 16 + pg_cron + WAL archiving, port 5435
+cd backend && cp .env.example .env && npm install
+npm run db:migrate                   # applies prisma/migrations, schedules the heartbeat job
+npm run dev                          # boots: reaches the DB, reports the job runner, exits 0
+npm run jobs:status                  # is the scheduled no-op job firing? (exit 0 = yes)
+cd ../frontend && flutter pub get && flutter run
+```
+
+`scripts/verify.sh` runs every check that does not need a running app — design rules, backend lint/typecheck/tests, `flutter analyze`/`flutter test`. `scripts/db/pitr-status.sh` reports whether WAL archiving is protecting the local database; `scripts/db/base-backup.sh` takes the base backup PITR replays onto (`scripts/db/README.md` has the restore procedure).
+
+| | Backend | Frontend |
+|---|---|---|
+| Stack | TypeScript 6 · Prisma 7 · PostgreSQL 16 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
+| Lint | ESLint 10 (typescript-eslint strict, type-checked) + Prettier | `flutter_lints` + strict casts/inference/raw types |
+| Tests | Vitest | `flutter_test` |
+| Layout | `src/modules/<domain>/`, one per domain as phases add them — see `backend/CLAUDE.md` | `lib/features/<feature>/`, one per feature as phases add them — see `frontend/lib/README.md` |
+
+Commit hooks (husky + lint-staged) format and lint staged files per app. CI (`.github/workflows/ci.yml`) is defined to run lint, typecheck, build and tests for both apps against the same Postgres image, boot the backend, wait for the heartbeat, and scan dependencies (`npm audit`, dependency-review on PRs, Dependabot for npm, pub, Actions and Docker). Make each job a required status check in the repository's branch protection — that is a GitHub setting, not something the workflow file can do.
+
+`backend/package.json` carries two `overrides` (`mysql2`, `deepmerge-ts`). Both are transitive through the `prisma` CLI and both were flagged high by `npm audit` on the first install; the overrides pin the fixed versions. Drop them when a Prisma release moves past the vulnerable ranges.
+
+## Conventions every line of code follows
+
+These four are fixed by the plan (§2 Architecture Decisions) and are restated here because §Phase 0 asks the README to carry them. The plan is authoritative if the two ever differ.
+
+**UUID primary keys.** Every entity's `id` is a UUID — `String @id @default(uuid()) @db.Uuid` in Prisma. No serial integers anywhere, including join and infrastructure tables (`job_heartbeat` in the first migration sets the pattern). This removes the enumeration surface: an ID in a URL reveals nothing about how many of a thing exist.
+
+**Integer laari money.** Every price, amount, fee and balance is an integer number of laari (MVR × 100): `Int` in Prisma, `number` holding an integer in TypeScript, an integer in JSON. MVR 150 is `15000`. Never a float, never a `Decimal`, never a decimal string like `"150.00"`. Use the plan's field name where it gives one (`agreedAmount`, `finalAmount`, `subscriptionPriceLaari`); where it does not, suffix `Laari` so the unit is visible at the call site. Formatting into `MVR 150.00` happens in the presentation layer and nowhere else.
+
+**Soft delete everywhere.** Nothing is ever `DELETE`d. Every entity carries a status or visibility field, and "deleting" sets it. Every query that returns user-visible data filters on that field. Moderation actions are reversible for the same reason. Even the Phase 0 heartbeat table follows it: the job upserts one row per job rather than inserting and pruning. The one thing the plan does purge — identity-document images, 90 days after a decision (§1e) — is a file deletion with the decision, evidence type and reviewer retained.
+
+**Idempotency keys.** Every money-adjacent and every creation `POST` requires a client-supplied idempotency key (the transport — header or body field — is fixed in Phase 2 and used identically everywhere after). The server dedupes on `(userId, operation, clientKey)` and a repeat returns the **original** result — same status, same body — rather than doing the work twice or erroring. Mobile clients retry on dropped connections; without this a retried booking is two bookings. Phase 2 builds the middleware; every later phase uses it.
 
 ## Building
 

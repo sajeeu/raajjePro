@@ -14,7 +14,17 @@ VS Code will offer the recommended extensions from `.vscode/extensions.json` —
 
 Then open Claude Code in the workspace. It reads `CLAUDE.md` at the root automatically, which carries every architectural invariant, so it starts with the same constraints it has here. **You do not need to re-explain the project.** `backend/CLAUDE.md` and `frontend/CLAUDE.md` scope themselves to their own trees and load on top of it.
 
-Nothing else installs. There is no application code yet — this repository is the specification and the design system.
+Then the toolchain. Phase 0 is built, so a checkout needs Node 22, Docker with Compose, and Flutter 3.47 stable on your `PATH` (`export PATH="$HOME/flutter/bin:$PATH"` in your shell rc — the pre-commit hook runs `dart format` and `scripts/verify.sh` runs `flutter analyze`, and both need it).
+
+```bash
+npm install                                   # commit hooks
+docker compose up -d                          # Postgres 16 + pg_cron + WAL archiving on :5435
+(cd backend && cp .env.example .env && npm install && npm run db:migrate)
+(cd frontend && flutter pub get)
+scripts/verify.sh                             # everything should be green
+```
+
+`README.md` has the day-to-day commands and the four conventions every line of code follows.
 
 ## Write in the editor, verify in the terminal
 
@@ -32,7 +42,7 @@ It runs everything that can be checked without starting the app, and exits non-z
 | `checks/journeys.py` | The six acceptance journeys from Round 38 §6, plus broken links and orphan screens |
 | `checks/locked-rules.py` | Instruction files stating a rule the plan has already reversed |
 
-Backend and frontend blocks activate on their own once `backend/package.json` and `frontend/pubspec.yaml` exist — Phase 0 and Phase 1 create them, and nothing needs editing here when they do.
+The backend block (typecheck, lint, tests) and the frontend block (`flutter analyze`, `flutter test`) run as well. The backend tests need the Docker database up and migrated; without `DATABASE_URL` they skip rather than fail.
 
 The same three are VS Code tasks. **Ctrl/Cmd-Shift-P → Run Test Task** runs the lot; the individual ones are under **Run Task**.
 
@@ -44,7 +54,7 @@ None of that was visible in a design review. All of it would have been implement
 
 ## What this repository is, right now
 
-**No code has been written.** This is the specification and a finished design system. The build starts at `/phase-0`.
+**Phase 0 is built** — the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. **Phase 1 is next**: `/phase-1`.
 
 | | |
 |---|---|
@@ -53,6 +63,11 @@ None of that was visible in a design review. All of it would have been implement
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 16. Phase 0 only: boot, first migration, job runner. Fastify arrives in Phase 2 |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phase 0 only: boots to a placeholder |
+| `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
+| `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
+| `.github/` | CI workflow and Dependabot |
 | `.claude/commands/` | 38 phase commands — `/phase-0`, `/phase-17-1`, … |
 | `.claude/skills/` | 13 skills that trigger on relevant work |
 | `docs/design/checks/` | The verification scripts `scripts/verify.sh` runs |
@@ -121,9 +136,10 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 - **AWS/SES account and domain verification**, then production access. Phase 3 cannot be tested from a sandboxed account, and it gates booking, enquiry and messaging
 - **Legal counsel on liability** (§1i) — whether a platform that verifies identity, gates emergency work by tier and dispatches providers is still "just a marketplace" under Maldivian law
 - **App Store submission outcome.** Phase 10a ships in-app bank-transfer billing as a deliberate test of guideline 3.1.1; rejection is likely and the fallback is mapped
-- **Admin load costing** at 200 providers
+- **Admin load costing** at 50, 200 and 500 providers. Plan §4 Sequencing places this *before Phase 0*; Phase 0 has been built without it, so it is overdue rather than backlog
+- **SES production access request**, as soon as Phase 2 lands the bounce/complaint handling it depends on. That handling is builder work in Phase 2 (the plan's "Phase 0–2 window" — `CLAUDE.md` used to say Phase 0; the plan does not); the AWS account, domain verification and the request itself are yours
 
-**Mine, on request:** the twelve remaining design sessions, and Phase 0 onward when you say go.
+**Mine, on request:** Phase 1 onward when you say go.
 
 ## One rule that overrides everything
 

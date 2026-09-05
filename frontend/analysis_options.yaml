@@ -1,0 +1,55 @@
+# Dart analysis for the RaajjePro app.
+#
+# Starts from the Flutter team's recommended set and tightens the places where
+# an oversight becomes a product defect: implicit dynamic (a laari amount that
+# turns out to be a double), silent casts, unawaited futures, and print() in
+# shipped code. One Phase 1 rule the analyzer cannot enforce and review must:
+# directional insets only (EdgeInsetsDirectional, start/end), never
+# EdgeInsets.only(left:) — the app is built RTL-ready (plan §Phase 1).
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # Warnings fail `flutter analyze` in CI; fix them, do not accumulate them.
+    missing_required_param: error
+    missing_return: error
+    dead_code: warning
+    unused_import: warning
+    unused_local_variable: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+linter:
+  rules:
+    # Imports
+    always_use_package_imports: true
+    directives_ordering: true
+    # Correctness
+    avoid_dynamic_calls: true
+    avoid_print: true
+    avoid_type_to_string: true
+    cancel_subscriptions: true
+    close_sinks: true
+    unawaited_futures: true
+    use_build_context_synchronously: true
+    # Style that reads consistently across features
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    sort_child_properties_last: true
+    unnecessary_lambdas: true
+    unnecessary_parenthesis: true

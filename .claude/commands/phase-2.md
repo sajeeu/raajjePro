@@ -8,6 +8,7 @@ Build **Phase 2 — Backend Core Infrastructure** of RaajjePro.
 
 1. `01_Development_Plan_v5.md` §0.0 — the precedence rule. Where §0.1–0.3 conflict with a later section, the later section wins.
 2. **§Phase 2** — the full specification for this phase, including its **Done when** criteria.
+3. **§0.0 item 8, §4 Sequencing and §Phase 3's SES note.** SES bounce/complaint handling — SNS event destination, a stored per-message delivery result, the suppression list honoured before send — is a "Phase 0–2 window" prerequisite and **this phase is where it is built** (decided at Phase 0, 2026-09-05: it needs Prisma, an HTTP route and the `EmailSender` interface, none of which exist earlier). When it lands, SES production access is requested before Phase 3 starts.
 
 ## How to work
 

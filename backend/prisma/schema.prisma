@@ -1,0 +1,30 @@
+// RaajjePro database schema.
+//
+// Conventions every model follows (plan §2 Architecture Decisions):
+//   - UUID primary key:      id String @id @default(uuid()) @db.Uuid
+//   - integer laari money:   ...Laari Int   — MVR × 100, never Float or Decimal
+//   - soft delete:           a status/visibility field; no row is ever DELETEd
+//   - snake_case in the DB:  @@map / @map, camelCase in code
+// Phase 2 encodes these as reusable base patterns. Phase 0 carries only the
+// infrastructure table below.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// One row per scheduled job, holding when it last fired. The Phase 0 no-op
+/// job upserts its row every minute, which is how "the runner is running" is
+/// observed — by a query, not by reading a log. Upserting keeps the table at
+/// one row per job with nothing to prune, so the no-delete rule holds here too.
+model JobHeartbeat {
+  id      String   @id @default(uuid()) @db.Uuid
+  jobName String   @unique @map("job_name")
+  firedAt DateTime @default(now()) @map("fired_at") @db.Timestamptz(6)
+
+  @@map("job_heartbeat")
+}

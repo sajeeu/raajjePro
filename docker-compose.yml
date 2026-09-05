@@ -1,0 +1,66 @@
+# Local infrastructure for RaajjePro. One service so far: PostgreSQL 16 with
+# pg_cron and WAL archiving.
+#
+#   docker compose up -d            start
+#   docker compose logs -f db       watch
+#   docker compose down             stop, keep data
+#   docker compose down -v          stop, DROP data, WAL archive and backups
+#
+# The credentials below are for this local container only. They are not a
+# secret and they never leave this file — real environments get theirs from the
+# host's secret store, never from a committed file (see backend/.env.example).
+name: raajjepro
+
+services:
+  db:
+    build: infra/postgres
+    container_name: raajjepro-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: raajjepro
+      POSTGRES_PASSWORD: raajjepro
+      POSTGRES_DB: raajjepro
+    ports:
+      # 5432–5434 are taken on the primary dev machine; keep 5435 everywhere so
+      # backend/.env.example is right without editing.
+      - "5435:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - db_wal_archive:/var/lib/postgresql/wal_archive
+      - db_backups:/var/lib/postgresql/backups
+    # Server configuration is passed as flags so it is reviewable here rather
+    # than buried in a postgresql.conf inside the data volume.
+    command:
+      - postgres
+      # --- Job runner (plan §2 "pg_cron or equivalent", §Phase 0) -------------
+      # pg_cron is a background worker: it must be preloaded, and it can only be
+      # installed into the one database named here. The first migration creates
+      # the extension and schedules the no-op heartbeat job.
+      - -c
+      - shared_preload_libraries=pg_cron
+      - -c
+      - cron.database_name=raajjepro
+      # --- Point-in-time recovery (plan §Phase 0, §5: RPO ≤ 5 min) -----------
+      # Every completed WAL segment is copied to the archive volume, and a
+      # partial segment is forced out at least every 300 s, which is what bounds
+      # the recovery point. archive_command refuses to overwrite an existing
+      # segment, as the PostgreSQL manual requires.
+      # A base backup is also needed for PITR: scripts/db/base-backup.sh.
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_timeout=300
+      - -c
+      - archive_command=test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raajjepro -d raajjepro"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db_data:
+  db_wal_archive:
+  db_backups:
