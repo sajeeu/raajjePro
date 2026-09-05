@@ -40,7 +40,9 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 
 # Design tokens — extracted from the delivered designs
 
-🔧 **These are measured values, not proposals.** They come from `mockups/design-composer/Become a Provider.dc.html`, which is a working Design Composer prototype rather than a flat image — so every colour, radius and duration below is exact rather than eyedropped. Phase 1 builds the Theme extension from these.
+🔧 **These are measured values, not proposals** — but measured from **one** prototype, `Become a Provider.dc.html`, back when five existed. There are now **61**, and the corpus is wider than this section says. Colours and motion still hold. **Type and radii do not** — see the corrections below each.
+
+Phase 1's job is to derive a real token set from all 61, not to transliterate the numbers here. Where this file and the prototypes disagree, measure the prototypes.
 
 **`Become a Provider.dc.html` is the highest-fidelity reference in the repo.** It carries interaction detail no image can: which field shows which error text, when a CTA disables, how long a transition runs. When implementing a screen it covers, read it rather than the JPEGs.
 
@@ -63,11 +65,29 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 
 ## Type — Inter
 
-Sizes in use: **11 · 12 · 12.5 · 13 · 13.5 · 14 · 14.5 · 15 · 16 · 22 · 24 · 26**. Weights: **600 · 700 · 800** only — nothing lighter than semibold appears anywhere. Headings carry `letter-spacing: -.02em`; uppercase labels carry `+.06em`.
+🔧 **Corrected against all 61 prototypes.** The list above was measured from one file and is wrong on both axes.
+
+**Weights actually used:** `500` (28×), `600` (543×), `700` (616×), **`750` (37×)**, `800` (674×). The old claim of "600 · 700 · 800 only — nothing lighter than semibold" is wrong twice: 500 appears, and so does 750.
+
+⚠️ **`750` has no Flutter equivalent.** `FontWeight` is defined in hundreds — there is no `w750`. Inter is a variable font so it renders on the web, but the 37 uses across 12 screens must resolve to `w700` or `w800`. **Pick one, apply it everywhere, and record the choice** — do not let each screen decide.
+
+**Sizes:** 34 distinct values are in use, from 8.5 to 44. That is not a scale, it is the residue of 61 hand-built screens, and Phase 1 should rationalise rather than reproduce it. The nine that carry the type system are, by frequency:
+
+| px | uses | | px | uses |
+|---|---|---|---|---|
+| 12.5 | 319 | | 14 | 178 |
+| 13 | 235 | | 15 | 145 |
+| 13.5 | 207 | | 11 | 134 |
+| 11.5 | 198 | | 14.5 | 130 |
+| 12 | 182 | | | |
+
+Everything above 16px is a heading or a display number and appears in single or double digits.
+
+Headings carry `letter-spacing: -.02em`; uppercase labels carry `+.06em`. **The font is Inter, and only Inter** — §Phase 1 writes "Plus Jakarta Sans / Inter", but all 61 prototypes load `family=Inter` and the word Jakarta appears in no prototype, no design document and no token file.
 
 ## Geometry
 
-- **Radii:** 10 · 12 · 14 (inputs) · 16 (buttons, cards) · 20 · 24 (feature cards) · 28 (bottom sheets) · `999` (pills)
+- **Radii**, 🔧 by frequency across all 61: **20** (289×, cards) · **16** (205×, buttons and cards) · **`999`** (176×, pills) · **14** (150×, inputs) · **12** (84×) · **13** (74×) · **24** (44×, feature cards) · **18** (42×) · **8** and **10** (40× each) · **28** (bottom sheets). The one-file list omitted 13, 18 and 8 and understated how dominant 20 is.
 - **Heights:** 52 inputs · 54 primary CTA · 44 touch targets and icon buttons · 38 filter chips · 26 checkboxes
 - **Borders:** `1px` dividers, `1.5px` inputs and selectable cards, `2px` selected states
 
