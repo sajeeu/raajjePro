@@ -12,28 +12,57 @@ code .
 
 VS Code will offer the recommended extensions from `.vscode/extensions.json` — the important one is **Claude Code**. Accept them.
 
-Then open Claude Code in the workspace. It reads `CLAUDE.md` at the root automatically, which carries every architectural invariant, so it starts with the same constraints it has here. **You do not need to re-explain the project.**
+Then open Claude Code in the workspace. It reads `CLAUDE.md` at the root automatically, which carries every architectural invariant, so it starts with the same constraints it has here. **You do not need to re-explain the project.** `backend/CLAUDE.md` and `frontend/CLAUDE.md` scope themselves to their own trees and load on top of it.
 
 Nothing else installs. There is no application code yet — this repository is the specification and the design system.
 
+## Write in the editor, verify in the terminal
+
+The split that works: **code in VS Code with the Claude extension, check with one command.**
+
+```bash
+scripts/verify.sh
+```
+
+It runs everything that can be checked without starting the app, and exits non-zero if anything fails:
+
+| Check | What it catches |
+|---|---|
+| `verify-dc.py` | Prototype structure, plus every locked product rule — a stale category, a claim the product cannot keep, a dead control |
+| `checks/journeys.py` | The six acceptance journeys from Round 38 §6, plus broken links and orphan screens |
+| `checks/locked-rules.py` | Instruction files stating a rule the plan has already reversed |
+
+Backend and frontend blocks activate on their own once `backend/package.json` and `frontend/pubspec.yaml` exist — Phase 0 and Phase 1 create them, and nothing needs editing here when they do.
+
+The same three are VS Code tasks. **Ctrl/Cmd-Shift-P → Run Test Task** runs the lot; the individual ones are under **Run Task**.
+
+### Why `locked-rules.py` exists
+
+`verify-dc.py` only ever reads `.dc.html`. Nothing read the files that tell you what to build — and they drifted. `frontend/CLAUDE.md` was still instructing Phase 1 to label slot cards `Book instantly` six rounds after Round 44 renamed it, and to render an `Emergency available` marker long after Round 23 deleted it. The style guide and the designer brief carried the same stale label, and `admin-panel-conventions` still described the three kill switches as SMS in a product with no SMS.
+
+None of that was visible in a design review. All of it would have been implemented as written.
+
 ## What this repository is, right now
 
-**No code has been written.** This is the specification, thirteen design prototypes' worth of work planned, and five of them built. The build starts at `/phase-0` when the specification stops moving.
+**No code has been written.** This is the specification and a finished design system. The build starts at `/phase-0`.
 
 | | |
 |---|---|
-| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.9. Every product decision. Read §0.0 first — it is a precedence rule |
+| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.19. Every product decision. Read §0.0 first — it is a precedence rule |
 | `CLAUDE.md` | Architectural invariants Claude must never violate. Loaded automatically |
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
-| `mockups/design-composer/` | Working prototypes — the current design reference |
+| `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
 | `.claude/commands/` | 38 phase commands — `/phase-0`, `/phase-17-1`, … |
 | `.claude/skills/` | 13 skills that trigger on relevant work |
+| `docs/design/checks/` | The verification scripts `scripts/verify.sh` runs |
 | `archive/` | Superseded. **Never read as current** |
 
-## Continuing the design work
+## The design work is done
 
-The app is being rebuilt screen by screen in Claude Design. **13 sessions, 1 done, 16 of 71 screens built.**
+**61 prototypes, every session imported, Rounds 40–52 applied.** `scripts/verify.sh` passes clean: no warnings, all six acceptance journeys run start to finish, zero broken links, zero orphan screens.
+
+The loop below is kept because it is how a correction round runs, and there will be more.
 
 Read `docs/design/redesign-plan.md` — it has the full sequence, what each session covers, and which mockups to attach.
 
@@ -90,7 +119,6 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 **Yours — none of this can be done from a keyboard here:**
 
 - **AWS/SES account and domain verification**, then production access. Phase 3 cannot be tested from a sandboxed account, and it gates booking, enquiry and messaging
-- **The real Maldivian island list.** Three design sessions render an island picker against six placeholders
 - **Legal counsel on liability** (§1i) — whether a platform that verifies identity, gates emergency work by tier and dispatches providers is still "just a marketplace" under Maldivian law
 - **App Store submission outcome.** Phase 10a ships in-app bank-transfer billing as a deliberate test of guideline 3.1.1; rejection is likely and the fallback is mapped
 - **Admin load costing** at 200 providers

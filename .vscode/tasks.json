@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Verify everything",
+      "type": "shell",
+      "command": "scripts/verify.sh",
+      "group": { "kind": "test", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify: prototypes",
+      "type": "shell",
+      "command": "python3 docs/design/verify-dc.py mockups/design-composer/*.dc.html",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify: acceptance journeys",
+      "type": "shell",
+      "command": "python3 docs/design/checks/journeys.py",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Verify: locked rules",
+      "type": "shell",
+      "command": "python3 docs/design/checks/locked-rules.py",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "End of day push",
+      "type": "shell",
+      "command": "scripts/eod-push.sh",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "End of day push (dry run)",
+      "type": "shell",
+      "command": "scripts/eod-push.sh --dry-run",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    }
+  ]
+}

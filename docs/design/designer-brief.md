@@ -17,7 +17,7 @@ A mobile app for finding and booking local services in the Maldives — plumbers
 - Every value in this document is fixed data. Use it verbatim; invent no figure that is not here. Rows marked *(illustrative)* stand for "any record in this state" — their state is required, their figures are examples.
 - **Currency is code-first: `MVR 450`.** Decimals appear only when a value has them (`MVR 1,250.50`, but `MVR 450`). Never a decimal point on a whole number, never a currency symbol.
 - **There are twelve categories**, no more and no fewer: `Cleaning` · `Plumbing` · `Electrical` · `AC Repair` · `Beauty` · `Photography` · `Pest Control` · `Appliance Repair` · `Moving` · `Fitness` · `Home Repairs` · `Boat Charter`. There is no Tuition category and no Events category. Any grid showing categories shows twelve.
-- **Every service is one of two booking modes**, and every card, result and listing must say which: **`slot`** — the customer picks a published time — labelled `Book instantly`; **`request`** — the customer proposes a window and the provider comes back with a time and a price — labelled `Request a time`.
+- **Every service is one of two booking modes**, and every card, result and listing must say which: **`slot`** — the customer picks a published time — labelled 🔧 `Pick a time` (**Round 44** — was `Book instantly`); **`request`** — the customer proposes a window and the provider comes back with a time and a price — labelled `Request a time`.
 - **A card carries a second signal, matched to its mode**: `slot` shows the next open time (`Next: today 14:00`), `request` shows the provider's typical reply time (`Usually replies in 12 min`, or `New provider` below ten bookings). Both are measured numbers, never labels.
 - **There is no `Emergency available` marker on a card, and no emergency filter.** Emergency dispatch goes to every eligible provider at once, so it can never be aimed at the one whose card you are reading. Emergency is reached from its own entry on Home and Explore — **a compact single-line row above the fold (small red bolt, `Something urgent? Get help now`), never a full banner card.** It has to be findable in a hurry without setting the tone of a page whose job is ordinary browsing. How dispatch works — the broadcast, the 90-second collection window, the `MVR 200` fee — is explained inside the emergency flow, not on the entry.
 - **Verification is three tiers**, and the badge carries its own words: `Bronze` — `ID checked by RaajjePro` · `Silver` — `ID checked, work verified` · `Gold` — `ID checked, registered trade`. A provider may have no tier at all and still be fully listed and bookable. **Never render a bare "Verified"** — a customer reads that as "has a good track record" rather than "passed an ID check".
@@ -37,7 +37,7 @@ A fixed cast. Use these names; invent no others.
 
 ### Services
 
-- `Home Deep Cleaning` — Cleaning — `Mariyam Shifa` — `MVR 450/session` — **Book instantly**
+- `Home Deep Cleaning` — Cleaning — `Mariyam Shifa` — `MVR 450/session` — **Pick a time**
 - `Emergency Plumbing & Pipe Repair` — Plumbing — `Ibrahim Rasheed` — `From MVR 350` — **Request a time**
 - `AC Servicing & Gas Refill` — AC Repair — `Ahmed Shakir` — `MVR 600/visit` — **Request a time**
 
@@ -250,8 +250,8 @@ The customer's landing screen. Where a customer who does not yet know what they 
 - Search entry
 - The twelve-category grid, or a route to it
 - Sections, each a horizontal set of service cards: `Popular near you` · `Featured providers` · `Popular this week` · `Nearby` · `Recently viewed`
-- **A service card carries:** cover image, service name, provider name, category, rating with review count, price with its unit, island, verification badge where the provider has one, save control, and **its booking mode** — `Book instantly` or `Request a time`; a **callback guarantee** badge where the listing offers one; and a **mode-appropriate second signal** — the next open time for `Book instantly`, the median reply time for `Request a time`, or `New provider` below ten completed bookings
-  - `Home Deep Cleaning` — `Mariyam Shifa` — `Cleaning` — `4.8 (24)` — `MVR 450/session` — `Malé` — Silver — **Book instantly**
+- **A service card carries:** cover image, service name, provider name, category, rating with review count, price with its unit, island, verification badge where the provider has one, save control, and **its booking mode** — `Pick a time` or `Request a time`; a **callback guarantee** badge where the listing offers one; and a **mode-appropriate second signal** — the next open time for `Pick a time`, the median reply time for `Request a time`, or `New provider` below ten completed bookings
+  - `Home Deep Cleaning` — `Mariyam Shifa` — `Cleaning` — `4.8 (24)` — `MVR 450/session` — `Malé` — Silver — **Pick a time**
   - `Emergency Plumbing & Pipe Repair` — `Ibrahim Rasheed` — `Plumbing` — `4.6 (31)` — `From MVR 350` — `Malé` — Gold — **Request a time**
 - A **Become a Provider** entry
 - **Trust content**, and its wording is corrected data: `Private messaging — your contact details are never shared`. The delivered mockup says "Secure Messaging — Private, encrypted communication within the app", which is **false and must not be reproduced**
@@ -305,7 +305,7 @@ One service, everything needed to decide to book it. The most important customer
 - Cover image and gallery
 - Service name `Home Deep Cleaning` · category `Cleaning` · rating `4.8 (24 reviews)`
 - Price `MVR 450/session`, and the price is labelled by how it is calculated — a flat rate, an hourly rate, a daily rate, a **range** (`From MVR 350`), or **price on request**
-- **Booking mode, unmissable:** `Book instantly` or `Request a time`. Where emergency applies, it is presented **alongside** the normal path, never instead of it, and states the callout-fee expectation up front
+- **Booking mode, unmissable:** 🔧 `Pick a time` (Round 44 — was `Book instantly`) or `Request a time`. Emergency is **not** signalled on the card at all (Round 23) — it is reached from its own entry on Home and Explore, and the callout-fee expectation is stated there
 - Provider identity: name, photo, **verification tier with its exact words**, response time, jobs completed
 - The delivered mockup shows a single `Verified Provider` badge. **There are three tiers** — Bronze, Silver and Gold must be visually distinct and each carries its own copy
 - The delivered mockup's description is about AC installation under a Cleaning listing. **Match the description to the service**

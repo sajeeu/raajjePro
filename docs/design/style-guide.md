@@ -126,9 +126,11 @@ Verification is **three tiers, not a yes/no**, and the tier decides what a provi
 
 ### Booking mode is on every card
 
-Every listing card, search result and Home card states how it is booked: **`Book instantly`** (the customer picks a published time) or **`Request a time`** (the provider comes back with a time and a price). A customer must never be uncertain which kind of wait they are in.
+Every listing card, search result and Home card states how it is booked: 🔧 **`Pick a time`** (the customer picks a published time — **Round 44**, replacing `Book instantly`) or **`Request a time`** (the provider comes back with a time and a price). A customer must never be uncertain which kind of wait they are in.
 
-Alongside it sits a **second signal matched to the mode** — the next open time for `Book instantly`, the provider's typical reply time for `Request a time` — and the **callback guarantee** badge where a listing offers one.
+The rename matters because the old label named an immediacy the product does not produce: picking a published slot creates a `requested` booking the provider still has to accept, on the same 24-hour clock a request-based booking runs on. Pick versus request is the real difference, and neither label now implies the booking is settled on tapping.
+
+Alongside it sits a **second signal matched to the mode** — the next open time for `Pick a time`, the provider's typical reply time for `Request a time` — and the **callback guarantee** badge where a listing offers one.
 
 **There is no `Emergency available` marker.** Emergency dispatch broadcasts to every eligible provider, so it can never be aimed at the provider whose card you are looking at.
 

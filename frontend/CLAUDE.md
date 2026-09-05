@@ -20,7 +20,8 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 - A button that triggers a network call shows ITS OWN loading state. Do not cover the screen with a page-level spinner for a local action.
 - Skeleton loaders for content that is fetching; not spinners, and not a blank screen.
 - Verification tier badges are three distinct treatments (Bronze/Silver/Gold), each carrying the exact public copy from the plan's §1e: "ID checked by RaajjePro" / "ID checked, work verified" / "ID checked, registered trade". NEVER render a bare "Verified" — a customer may read that as "has a good track record" rather than "passed an ID and trade check".
-- Booking-mode affordances appear on every card and listing surface: "Book instantly" (slot), "Request a time" (request), plus an "Emergency available" marker where applicable. A customer must never be uncertain which kind of wait they are in.
+- Booking-mode affordances appear on every card and listing surface: 🔧 **"Pick a time"** (slot — Round 44; it was "Book instantly", which named an immediacy the state machine does not produce, since a slot booking is still a `requested` booking the provider has to accept) and **"Request a time"** (request). A customer must never be uncertain which kind of wait they are in.
+- 🔧 **There is no "Emergency available" marker on a card, and no emergency search filter — Round 23.** Dispatch never targets a provider, so both advertised an action that does not exist. The card's second signal is mode-appropriate instead: next open time for `slot`, median response time for `request`. The callback guarantee is the card badge. Emergency is reached from its own entry on Home and Explore.
 - Where a mockup predates the current plan, THE PLAN WINS and you flag the mismatch — do not silently implement the mockup.
 
 ---
@@ -72,6 +73,15 @@ Sizes in use: **11 · 12 · 12.5 · 13 · 13.5 · 14 · 14.5 · 15 · 16 · 22 �
 
 ## Motion
 
-`screenIn` 350ms `cubic-bezier(.2,.8,.3,1)` · `fadeUp` 200ms ease · `sheetUp` 400ms `cubic-bezier(.2,.9,.3,1)` · `toastIn` 250ms ease · spinner 800ms linear.
+🔧 **Round 40 replaced the per-animation durations with a four-step scale.** Build the Flutter side from the scale, not from the old literals — `mockups/design-composer/motion.css` is the live definition.
+
+| Token | Duration | Used for |
+|---|---|---|
+| `--m-fast` | **120ms** | hover, press, colour, border |
+| `--m-base` | **200ms** | in-place change, content swap, sheet OUT |
+| `--m-sheet` | **300ms** | sheets, overlays, dialogs IN |
+| `--m-page` | **350ms** | page and view transitions |
+
+Two curves only: `--e-out` `cubic-bezier(.2,.8,.3,1)` for entering and settling, `--e-in` `cubic-bezier(.4,0,1,1)` for leaving. Infinite loops keep literal durations by convention — shimmer 1.4s, spinner .7s/.8s — because they are ambient rather than a response to a tap.
 
 🔧 **These are web idioms and must not be transliterated.** `100dvh`, CSS gradients, `box-shadow` and `overflow-y:auto` all have Flutter equivalents, but copying them literally produces something that feels like a website in an app. Match the *values*; use Flutter's own elevation, scroll physics and page transitions.

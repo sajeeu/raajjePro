@@ -18,7 +18,7 @@ SECURITY IS MANDATORY AND SPECIFIED, not left to judgment. This app renders user
 - VIEW-AS-USER EXCLUDES MESSAGE CONTENT. An admin reaches a thread only via a specific report or dispute that names it, scoped and separately logged.
 - Suspension feeds `findVisibleProviders` — one shared query, not a per-surface filter.
 - Ban and hard-delete are NOT panel actions. They stay manual database operations, deliberately.
-- Kill switches: SMS is THREE separate switches (OTP / notification / marketing). A single one would kill OTP and lock every user out of authentication.
+- Kill switches: 🔧 **email is THREE separate switches (OTP / notification / marketing)**, backed by three SES configuration sets. A single one would kill OTP and lock every user out of authentication. *This line used to say SMS; there is no SMS anywhere in this system — OTP goes to email, and SES is the only transactional sender.*
 - Alerts de-duplicate per threshold crossing — once on cross, again only after clear and re-cross. An alert firing every fifteen minutes gets muted within a day.
 - TOTP MFA and session controls ARE in scope as of Round 12 — Phase 2 builds them, every admin account must enrol before taking any action, and this panel enforces re-authentication before an identity document is viewed. Any older text telling you to skip them is obsolete.
 - DO NOT BUILD, deliberately out of scope: IP allowlisting, second-admin sign-off, bulk queue actions, keyboard triage, a proactive risk-signal dashboard, broadcast messaging, or general booking-state override beyond dispute and `payment_unresolved` resolution.
