@@ -4,7 +4,7 @@
 # matching major version and nothing else — configuration lives in
 # docker-compose.yml so that it is visible next to the ports and volumes it
 # depends on.
-FROM postgres:16
+FROM postgres:18
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends postgresql-16-cron \
