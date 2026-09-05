@@ -19,12 +19,12 @@ transition:transform .15s ease
 
 Before that restyle, **all 61 files contained zero literal transition
 durations** — every one used `--m-fast`, `--m-base`, `--m-sheet` or `--m-page`.
-There are now twelve, in two files:
+There are now twelve, across eleven declarations in two files:
 
-| File | Count |
-|---|---|
-| `Dispatch fee` | 9 |
-| `Your bookings` | 2 (plus one `background .2s ease`) |
+| File | `transition:` declarations | Literal durations |
+|---|---|---|
+| `Dispatch fee` | 9 | 10 — the submit button carries two |
+| `Your bookings` | 2 | 2 |
 
 `.15s` is not a token value. It sits between `--m-fast` (120ms) and `--m-base`
 (200ms), so it is not even a rounding of one — a reader can't tell whether it
