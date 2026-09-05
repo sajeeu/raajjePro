@@ -99,6 +99,17 @@ button:focus{outline:none}
       </div>
     </div>
 
+    <sc-if value="{{ isQuoteReceived }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1.5px solid #CDDDFB;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13.5px;font-weight:800;color:#0F1B2D;flex:1">Ibrahim sent a quote &mdash; MVR 650</span>
+        <span style="background:#FEF3DC;color:#A15C00;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">Awaiting you</span>
+      </span>
+      <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Sent 22 Aug 09:32 &mdash; &ldquo;Replace joint, reseal line &mdash; parts included.&rdquo; Nothing is booked until you accept.</span>
+      <a href="Quote%20Received.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review the quote</a>
+    </div>
+    </sc-if>
+
     <sc-if value="{{ isEmergency }}" hint-placeholder-val="{{ false }}">
       <sc-if value="{{ naIdle }}" hint-placeholder-val="{{ true }}">
       <div style="background:#fff;border:1px solid #F3C77B;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
@@ -256,12 +267,19 @@ button:focus{outline:none}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;confirmed&quot;,&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;emergency_active&quot;,&quot;completed&quot;,&quot;disputed&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;'confirmed' | 'awaiting_payment' | 'payment_sent' | 'emergency_active' | 'completed' | 'disputed' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:412,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;confirmed&quot;,&quot;quote_received&quot;,&quot;awaiting_payment&quot;,&quot;payment_sent&quot;,&quot;emergency_active&quot;,&quot;completed&quot;,&quot;disputed&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;confirmed&quot;,&quot;tsType&quot;:&quot;'confirmed' | 'quote_received' | 'awaiting_payment' | 'payment_sent' | 'emergency_active' | 'completed' | 'disputed' | 'loading' | 'error'&quot;,&quot;section&quot;:&quot;State&quot;}}">
 class Component extends DCLogic {
   _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
   componentWillUnmount(){ clearTimeout(this._ct); clearTimeout(this._to); }
   state = { wPhase:'idle', naPhase:'idle', rateOpen:false, rating:0 };
   D = {
+    quote_received: {
+      service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
+      biz:'Rasheed Plumbing Services \u00b7 Mal\u00e9', when:'Tue 25 Aug \u00b7 14:00', address:'H. Faiha, 2nd floor \u00b7 Ameenee Magu, Mal\u00e9',
+      notes:'Leak under the kitchen sink \u2014 cabinet cleared out already.', amount:'MVR 650', amountLabel:'Quoted price',
+      status:'quote_received', emergency:false, agPrice:'MVR 650', agPriceWas:null, scope:'Replace joint, reseal line \u2014 parts included',
+      lockNote:'These are Ibrahim\u2019s quoted terms \u2014 they lock the moment you accept.',
+      tl:[['Requested','you','22 Aug 09:14'],['Quote sent \u00b7 MVR 650','Ibrahim Rasheed','22 Aug 09:32']] },
     awaiting_payment: {
       service:'Emergency Plumbing & Pipe Repair', provider:'Ibrahim Rasheed', first:'Ibrahim', tier:'Gold', initials:'IR', avBg:'#E5F6EC', avFg:'#166534',
       biz:'Rasheed Plumbing Services · Malé', when:'Tue 25 Aug · 14:00', address:'H. Faiha, 2nd floor · Ameenee Magu, Malé',
@@ -317,7 +335,7 @@ class Component extends DCLogic {
     if (withdrawn) tl = tl.concat([['“I’ve Paid” withdrawn','you','Just now']]);
     const timeline = tl.map((e,i) => ({ t:e[0], who:e[1], when:e[2],
       dot: i===tl.length-1 ? '#5B8DF6' : '#C6D4EA', line:'#E8EEF6' }));
-    const chat = { label:'Message '+D.first, tap:() => {} };
+    const chat = { label:'Message '+D.first, tap:() => { window.location='Booking%20Thread.dc.html'; } };
     const primary = { border:'none', bg:'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)', fg:'#fff', shadow:'0 8px 18px rgba(37,99,235,.28)' };
     const outline = { border:'1.5px solid #E3EAF3', bg:'#fff', fg:'#41526B', shadow:'none' };
     let foots;
@@ -338,7 +356,7 @@ class Component extends DCLogic {
       dimAnim: this.state.closing ? 'fadeOut var(--m-base) var(--e-in) both' : 'fadeIn var(--m-base) ease both',
       sheetAnim: this.state.closing ? 'sheetDown var(--m-base) var(--e-in) both' : 'sheetUp var(--m-sheet) var(--e-out) both',
       isLoading, isError, isBooking, D, statusKey, timeline, foots, textActions,
-      isDisputed: sc==='disputed', isEmergency: sc==='emergency_active', isCompleted: sc==='completed',
+      isDisputed: sc==='disputed', isQuoteReceived: sc==='quote_received', isEmergency: sc==='emergency_active', isCompleted: sc==='completed',
       naIdle: s.naPhase==='idle', naSent: s.naPhase==='sent', naReport: () => this.setState({ naPhase:'sent' }),
       showWithdraw: isPaymentSent, wIdle: s.wPhase==='idle', wConfirm: s.wPhase==='confirm', wUsed: withdrawn,
       wAsk: () => this.setState({ wPhase:'confirm' }), wKeep: () => this.setState({ wPhase:'idle' }), wDo: () => this.setState({ wPhase:'done' }),

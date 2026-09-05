@@ -31,13 +31,17 @@ NO_INBOUND_OK = {
 # Round 38 §6, with journey 1's affordance renamed per Round 44 and the
 # intermediate screens the flows actually pass through.
 JOURNEYS = {
+    # Intermediates are named explicitly rather than left to the 2-hop search:
+    # a journey that only works through some unrelated screen is not a journey,
+    # and spelling the route out is what makes a regression visible.
     "1 Customer · slot": [
         "Start", "Home", "Discovery", "Service Preview", "Pick a Time",
-        "My Bookings", "Booking Detail", "Booking Thread", "Payment Step",
+        "My Bookings", "Booking Detail", "Booking Thread", "Booking Detail",
+        "Payment Step", "Booking Detail", "My Bookings", "Did This Happen",
         "Rate This Job"],
     "2 Customer · request": [
-        "Home", "Service Preview", "Request a Time", "Quote Received",
-        "Payment Step", "Booking Detail"],
+        "Home", "Service Preview", "Request a Time", "My Bookings",
+        "Booking Detail", "Quote Received", "Payment Step", "Booking Detail"],
     "3 Customer · emergency": [
         "Home", "Emergency Flow", "Booking Detail", "Dispatch Fee",
         "Booking Detail", "Reveal Contact"],

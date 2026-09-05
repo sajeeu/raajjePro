@@ -234,7 +234,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
   </sc-if>
 
   <div style="flex:none;display:flex;justify-content:center;padding:6px 20px 12px">
-    <dc-import name="BottomNav" active="Explore" on-tap="{{ navTap }}" hint-size="372px,86px"></dc-import>
+    <dc-import name="BottomNav" active="Explore" hint-size="372px,86px"></dc-import>
   </div>
 
   <sc-if value="{{ hasSheet }}">
@@ -288,9 +288,9 @@ class Component extends DCLogic {
     { n: 'Home Repairs', bg: '#FEFCE8', fg: '#CA8A04', d: 'M3.5 4.5h13v5h-13zM16.5 7H20v4h-8v3M12 14v6' },
     { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
   SVCS = [
-    { id: 'sp1', ph: 'uploads/cleaning.jpeg', title: 'Move-out & Deep Sofa Cleaning', prov: 'Sparkle Home Care', cat: 'Cleaning', tier: 'Bronze', rating: '4.7', count: 18, price: 'MVR 500', unit: '/session', island: 'Malé', mode: 'instant', nextSlot: 'today 16:00', sp: true, mv: true, dist: 800, pn: 500, rn: 4.7, inSearch: true },
+    { id: 'sp1', ph: 'uploads/cleaning.jpeg', title: 'Move-out & Deep Sofa Cleaning', prov: 'Sparkle Home Care', cat: 'Cleaning', tier: 'Bronze', rating: '4.7', count: 18, price: 'MVR 500', unit: '/session', island: 'Malé', mode: 'slot', nextSlot: 'today 16:00', sp: true, mv: true, dist: 800, pn: 500, rn: 4.7, inSearch: true },
     { id: 'p1', ph: 'uploads/plumbing.jpeg', title: 'Emergency Plumbing & Pipe Repair', prov: 'Ibrahim Rasheed', cat: 'Plumbing', tier: 'Gold', rating: '4.6', count: 31, price: 'From MVR 350', unit: '', island: 'Malé', mode: 'request', replyTime: '12 min', bookings: 44, cb: true, sp: false, mv: true, dist: 450, pn: 350, rn: 4.6, inSearch: true },
-    { id: 'c1', ph: 'uploads/cleaning.jpeg', title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', tier: 'Silver', rating: '4.8', count: 24, price: 'MVR 450', unit: '/session', island: 'Malé', mode: 'instant', nextSlot: 'tomorrow 09:00', cb: false, sp: false, mv: false, dist: 650, pn: 450, rn: 4.8, inSearch: true },
+    { id: 'c1', ph: 'uploads/cleaning.jpeg', title: 'Home Deep Cleaning', prov: 'Mariyam Shifa', cat: 'Cleaning', tier: 'Silver', rating: '4.8', count: 24, price: 'MVR 450', unit: '/session', island: 'Malé', mode: 'slot', nextSlot: 'tomorrow 09:00', cb: false, sp: false, mv: false, dist: 650, pn: 450, rn: 4.8, inSearch: true },
     { id: 'a1', title: 'AC Servicing & Gas Refill', prov: 'Ahmed Shakir', cat: 'AC Repair', tier: 'Silver', rating: '4.4', count: 12, price: 'MVR 600', unit: '/visit', island: 'Hulhumalé', mode: 'request', replyTime: '25 min', bookings: 20, sp: false, mv: false, dist: 1900, pn: 600, rn: 4.4, inSearch: true },
     { id: 'e1', ph: 'uploads/electrical.jpeg', title: 'Home Electrical Repairs', prov: 'Hassan Faiz', cat: 'Electrical', tier: null, rating: '4.2', count: 7, price: 'MVR 400', unit: '/visit', island: 'Malé', mode: 'request', bookings: 7, sp: false, mv: false, dist: 1200, pn: 400, rn: 4.2, inSearch: true },
     { id: 'g1', title: 'Home Pest Treatment', prov: 'Adam Naseer', cat: 'Pest Control', tier: null, rating: '4.5', count: 9, price: 'MVR 300', unit: '/visit', island: 'Hulhumalé', mode: 'request', replyTime: '', bookings: 7, cb: true, sp: false, mv: false, dist: 2400, pn: 300, rn: 4.5, inSearch: true },
@@ -596,7 +596,6 @@ class Component extends DCLogic {
       hasSavedSvc: savOk && savedSvcs.length > 0, hasSavedProv: savOk && savedProvs.length > 0,
       savedSvcs, savedProvs,
       retry, retrying: S.retrying, retryLbl: S.retrying ? 'Loading…' : 'Retry',
-      navTap: (tab) => { if (tab === 'Explore') this.go('Explore'); else this.toastMsg('Opens ' + tab); },
       hasSheet: S.sheet, openIsland: () => this.setState({ sheet: true }),
       closeSheet: () => this._close({ sheet: false }), stopProp: e => e.stopPropagation(),
       islandQ: S.islandQ, setIslandQ: e => this.setState({ islandQ: e.target.value }),

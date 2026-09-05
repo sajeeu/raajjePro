@@ -341,7 +341,7 @@ def check(path):
 
     n = len(stale_instant_mode(s))
     if n:
-        warns.append(("seed still on the pre-Round-45 mode value (%d)" % n,
+        fails.append(("seed still on the pre-Round-45 mode value (%d)" % n,
                       "ServiceCard's prop enum is 'slot' | 'request' and it tests === 'slot', "
                       "so 'instant' renders as request. Round 45 \u00a73c renamed the value; "
                       "these seeds were missed."))
