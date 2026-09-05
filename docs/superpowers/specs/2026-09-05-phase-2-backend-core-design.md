@@ -19,7 +19,7 @@ Left open, and decided here (product owner, 2026-09-05):
 | Idempotency key transport | **`Idempotency-Key` request header.** Works for every content type and stays out of the Zod body schemas. README's "fixed in Phase 2" note resolves to this. | A `clientKey` body field. |
 | Global tier numbers | **60/min anonymous per IP, 300/min authenticated per principal**; admin login 10 per 15 min per IP. Config values. | — |
 | Development email transport | **`FileEmailSender`** writing each message as JSON to gitignored `backend/.mail/`, so an OTP can be read locally without AWS. Production config refuses anything but `ses`. | Console logging (PII in logs); refusing to boot without AWS. |
-| SNS signature verification | **In-house with Node `crypto`** (~60 lines, unit-testable with a generated keypair). | The unmaintained `sns-validator` package. |
+| SNS signature verification | 🔧 **`sns-validator`** — changed from in-house on 2026-09-05, `docs/decisions/09-phase-2-defaults.md`. | In-house with Node `crypto`. Rejected: a forged notification suppresses an arbitrary address, and email carries OTP with no second channel, so the failure mode is account denial from an unauthenticated endpoint. "Unmaintained" was checked and does not hold — 404,801 weekly downloads, last published 2025-03-27, Apache-2.0, against `sns-payload-validator`'s 52,526 and 2023. A stable spec implemented correctly has little reason to publish. |
 
 ## 1. Server shape
 
@@ -173,7 +173,9 @@ interface EmailSender { send(email: OutboundEmail): Promise<SendOutcome> }
 
 **Webhook.** `POST /v1/webhooks/ses-events`, raw JSON body, no session (the SNS signature is the authentication), anonymous rate tier raised to 600/min for this route.
 
-1. Parse the SNS envelope. Verify the signature: `SigningCertURL` must be `https:` with host matching `^sns\.[a-z0-9-]+\.amazonaws\.com$`; the certificate is fetched once and cached by URL; the canonical string is built per the SNS specification for `Notification` and `SubscriptionConfirmation`/`UnsubscribeConfirmation`; `SignatureVersion` 1 → SHA1withRSA, 2 → SHA256withRSA. Failure → 400 `INVALID_SNS_SIGNATURE`, logged with the request id, no further processing.
+1. Parse the SNS envelope. Verify the signature with 🔧 **`sns-validator`** — decided 2026-09-05, see `docs/decisions/09-phase-2-defaults.md`. It performs the host check on `SigningCertURL`, the certificate fetch and cache, the canonical string for `Notification` and `SubscriptionConfirmation`/`UnsubscribeConfirmation`, and both `SignatureVersion` variants. Failure → 400 `INVALID_SNS_SIGNATURE`, logged with the request id, no further processing.
+
+   *This step was written as an in-house implementation and the specification was a careful one — it named the host regex, the cache and both signature versions, which are the parts usually missed. It is still replaced. A forged notification suppresses an arbitrary address, and email carries OTP with no second channel behind it, so the failure is account denial from an unauthenticated endpoint. For that, an implementation used 404,801 times a week beats one reviewed once.*
 2. `TopicArn` must equal `SES_EVENTS_TOPIC_ARN` → otherwise 403 `UNEXPECTED_SNS_TOPIC`.
 3. `SubscriptionConfirmation` → GET `SubscribeURL` (same host rule) and return 200. `UnsubscribeConfirmation` → log, 200.
 4. `Notification` → parse `Message` as an SES event. Insert `email_event` (dedup on `sns_message_id`; a duplicate returns 200 without re-applying). Then:
@@ -192,7 +194,7 @@ interface EmailSender { send(email: OutboundEmail): Promise<SendOutcome> }
 Written in this phase:
 - `docs/api/versioning.md` — the additive-only rule, what counts as breaking (removing/renaming/retyping a field or error code, tightening validation, changing a default), how a field is deprecated (documented, still served, `Deprecation` header on the route, removal only in a `/v2` that ships alongside `/v1` for as long as installed clients call it). §2 asks for this before the first breaking change is needed.
 - `docs/ops/ses-production-access.md` — the owner's runbook: domain identity and DKIM/SPF/DMARC; three configuration sets and their names; one SNS topic; an event destination on each set publishing Send/Delivery/Bounce/Complaint/Reject/DeliveryDelay/RenderingFailure to it; an HTTPS subscription to `https://<api>/v1/webhooks/ses-events`; the environment variables; the attestation text for the production-access request, stating what this handling does.
-- `docs/decisions/09-phase-2-backend-core.md` — decisions, written after the build in the style of `08-…`.
+- 🔧 `docs/decisions/**10**-phase-2-backend-core.md` — decisions, written after the build in the style of `08-…`. **09 is taken** by `09-phase-2-defaults.md`, the pre-build decisions.
 - `README.md` (idempotency header, running the server, `admin:create`), `HANDOVER.md` (Phase 2 built; SES request now unblocked), `backend/.env.example`.
 - CI: after `db:deploy`, start the server in the background, poll `/v1/health` for 200, stop it. Replaces the Phase 0 "boot and exit" step; the heartbeat check stays.
 
