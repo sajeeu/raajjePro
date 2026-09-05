@@ -17,3 +17,20 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Inter is bundled, not fetched at runtime: island connectivity drops
+  # constantly and a font that arrives late reflows every screen. Weights
+  # 500–800 only — nothing lighter appears anywhere in the design (plan
+  # §Phase 1 tokens; frontend/CLAUDE.md). A style asking for w400 falls back
+  # to Medium, which enforces the rule rather than fighting it.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800

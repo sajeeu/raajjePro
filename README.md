@@ -3,7 +3,7 @@
 Planning and specification for RaajjePro, a local services marketplace for the Maldives.
 Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-Phase 0 is built: both apps boot, lint is clean, the job runner fires. Everything from Phase 1 onward is still specification. See **Running locally** below.
+Phases 0 and 1 are built: both apps boot, lint is clean, the job runner fires, and the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place. Everything from Phase 2 onward is still specification. See **Running locally** below.
 
 ## The source of truth
 

@@ -2,7 +2,7 @@
 
 Mobile-first, API-first local services marketplace for the Maldives. Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-**Phase 0 is built** (repository and environment foundation — see `README.md` → Running locally). Phases 1 onward are still specification.
+**Phases 0 and 1 are built** (repository and environment foundation; design system and shared UI — see `README.md` → Running locally and `docs/decisions/08-phase-1-design-system.md`). Phases 2 onward are still specification.
 
 ## The one document that matters
 

@@ -54,7 +54,7 @@ None of that was visible in a design review. All of it would have been implement
 
 ## What this repository is, right now
 
-**Phase 0 is built** — the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. **Phase 1 is next**: `/phase-1`.
+**Phases 0 and 1 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. **Phase 2 is next**: `/phase-2`.
 
 | | |
 |---|---|
@@ -64,7 +64,7 @@ None of that was visible in a design review. All of it would have been implement
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
 | `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phase 0 only: boot, first migration, job runner. Fastify arrives in Phase 2 |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phase 0 only: boots to a placeholder |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: boots to a placeholder; the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds) |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |
@@ -139,7 +139,9 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 - **Admin load costing** at 50, 200 and 500 providers. Plan §4 Sequencing places this *before Phase 0*; Phase 0 has been built without it, so it is overdue rather than backlog
 - **SES production access request**, as soon as Phase 2 lands the bounce/complaint handling it depends on. That handling is builder work in Phase 2 (the plan's "Phase 0–2 window" — `CLAUDE.md` used to say Phase 0; the plan does not); the AWS account, domain verification and the request itself are yours
 
-**Mine, on request:** Phase 1 onward when you say go.
+**Mine, on request:** Phase 2 onward when you say go.
+
+**Yours, with a phone in hand:** the Phase 1 screen-reader pass (TalkBack or VoiceOver) — thirteen steps in `docs/decisions/08-phase-1-design-system.md`. To see the gallery without a device, `flutter run -d chrome` from a copy of `frontend/` with `flutter create --platforms=web .` applied; the repo itself carries no web target.
 
 ## One rule that overrides everything
 

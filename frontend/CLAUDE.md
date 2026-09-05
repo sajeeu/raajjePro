@@ -15,7 +15,12 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 
 # Design System — source of truth
 
-- Tokens are derived from the mockups and live in a Theme extension. Scattered constants are a defect.
+- Tokens are derived from the mockups and live in a Theme extension. Scattered constants are a defect. **Built in Phase 1:** `lib/core/theme/` (`AppColors`, `AppTypography`, `AppSpacing`/`AppRadius`/`AppSizes`, `AppMotion`, `CategoryAccents`) reached only through `context.colors`, `context.type`, `context.motion`. The shared widgets are in `lib/shared/` behind `package:raajjepro/shared/shared.dart`; the gallery at `/gallery` renders every one with sample data. `docs/decisions/08-phase-1-design-system.md` records what was decided and where the build departs from the prototypes.
+- Every tappable thing is built on `Pressable` (`lib/shared/motion/pressable.dart`). It owns the 48 dp hit floor, the semantics, the focus ring and the tap-scale — do not hand-roll a `GestureDetector` for a control.
+- `AppHeader` goes at the top of the **body**, never in `Scaffold.appBar`: a `PreferredSizeWidget` has a fixed height and clips a two-line title at 200% text.
+- `StatusBadge` owns the status → label mapping and `VerificationBadge` owns the tier copy. Duplicating either into a screen is a defect (same rule as `StatusPill` / `VerificationBadge` in the prototypes).
+- A metric with no data reads **"No data yet"** (`StatMiniCard` with `value: null`), never a zero. Three stat tiles across go through `StatMiniCardRow`, which sheds columns as text grows.
+- Tests run in the real Inter face and Material Icons via `test/flutter_test_config.dart`. Do not use `pumpAndSettle` on a screen showing a skeleton or a loading button — those animate forever by design; pump two frames instead (`test/features/gallery/gallery_a11y_test.dart` → `settle`).
 - Component states are explicit and complete: buttons carry pressed, disabled and loading; inputs carry normal, focused, error and disabled.
 - A button that triggers a network call shows ITS OWN loading state. Do not cover the screen with a page-level spinner for a local action.
 - Skeleton loaders for content that is fetching; not spinners, and not a blank screen.
@@ -42,7 +47,9 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 
 🔧 **These are measured values, not proposals** — but measured from **one** prototype, `Become a Provider.dc.html`, back when five existed. There are now **61**, and the corpus is wider than this section says. Colours and motion still hold. **Type and radii do not** — see the corrections below each.
 
-Phase 1's job is to derive a real token set from all 61, not to transliterate the numbers here. Where this file and the prototypes disagree, measure the prototypes.
+Phase 1's job was to derive a real token set from all 61, not to transliterate the numbers here. Where this file and the prototypes disagree, measure the prototypes.
+
+🔧 **Phase 1 did that, and seven measured colours failed the plan's WCAG AA bar.** `test/core/theme/contrast_test.dart` computes every text/surface pair. Placeholder `#9AA9C0` is 2.38:1; the warning amber `#D97706` is 3.19:1 as text (fine as an icon or dot); success `#16A34A` is 3.30:1 as text; `#8296B3` is 3.02:1 and is permitted **only on disabled controls**. The corrected values, with ratios, are in `docs/decisions/08-phase-1-design-system.md`, and `docs/design/sessions/round-53-contrast-corrections.md` carries them back to the prototypes. Until that round is applied, where the colour table below and `AppColors` disagree, **`AppColors` is right**.
 
 **`Become a Provider.dc.html` is the highest-fidelity reference in the repo.** It carries interaction detail no image can: which field shows which error text, when a CTA disables, how long a transition runs. When implementing a screen it covers, read it rather than the JPEGs.
 
@@ -69,7 +76,7 @@ Phase 1's job is to derive a real token set from all 61, not to transliterate th
 
 **Weights actually used:** `500` (28×), `600` (543×), `700` (616×), **`750` (37×)**, `800` (674×). The old claim of "600 · 700 · 800 only — nothing lighter than semibold" is wrong twice: 500 appears, and so does 750.
 
-⚠️ **`750` has no Flutter equivalent.** `FontWeight` is defined in hundreds — there is no `w750`. Inter is a variable font so it renders on the web, but the 37 uses across 12 screens must resolve to `w700` or `w800`. **Pick one, apply it everywhere, and record the choice** — do not let each screen decide.
+⚠️ **`750` has no Flutter equivalent.** `FontWeight` is defined in hundreds — there is no `w750`. Inter is a variable font so it renders on the web, but the 37 uses across 12 screens must resolve to `w700` or `w800`. **Pick one, apply it everywhere, and record the choice** — do not let each screen decide. 🔧 **Chosen in Phase 1: `w700`**, as `AppTypography.sectionHeading` — it keeps a section heading visibly lighter than the 800 screen title above it. Four static weights (500–800) are **bundled** in `assets/fonts/`, never fetched at runtime.
 
 **Sizes:** 34 distinct values are in use, from 8.5 to 44. That is not a scale, it is the residue of 61 hand-built screens, and Phase 1 should rationalise rather than reproduce it. The nine that carry the type system are, by frequency:
 
@@ -82,6 +89,8 @@ Phase 1's job is to derive a real token set from all 61, not to transliterate th
 | 12 | 182 | | | |
 
 Everything above 16px is a heading or a display number and appears in single or double digits.
+
+🔧 **Phase 1's roles** (`AppTypography`): screenTitle 25/800 · sectionHeading 17/700 · cardTitle 15/700 · body 14/500 · bodyStrong 14/600 · secondary 12.5/600 · caption 11.5/600 · overline 11/800 +.06em · button 15/700 · buttonSmall 13.5/700 · price 16/800 tabular · stat 18/800 tabular · pill 11.5/800. Use a role; do not reach for a size.
 
 Headings carry `letter-spacing: -.02em`; uppercase labels carry `+.06em`. **The font is Inter, and only Inter** — §Phase 1 writes "Plus Jakarta Sans / Inter", but all 61 prototypes load `family=Inter` and the word Jakarta appears in no prototype, no design document and no token file.
 
