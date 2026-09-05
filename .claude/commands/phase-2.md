@@ -15,3 +15,11 @@ Build **Phase 2 — Backend Core Infrastructure** of RaajjePro.
 - Build exactly what §Phase 2 describes. Do not build ahead into a later phase.
 - Stop and ask if a requirement appears to conflict with the plan, rather than resolving it silently.
 - Finish against the phase's own **Done when** list — it is the acceptance criteria, not a summary.
+
+## Also in this phase — SES bounce and complaint handling
+
+Not in §Phase 2's own list. It is the **Phase 0–2 prerequisite** from §0.0 item 8, and Phase 2 is where it becomes buildable — it needs Prisma, an HTTP route for the SNS event destination, and the `EmailSender` interface.
+
+Build all three parts: the SNS event destination, the stored per-message delivery/bounce result, and the suppression list **honoured before send**. Then request SES production access — the attestation required to leave the sandbox is that this handling already exists, so it must be done before Phase 3 starts, not during it.
+
+You will not be able to test it end to end without an AWS account and a verified domain, and that is outstanding on the owner's side. Build against the interface, unit-test the suppression check, and say plainly what is unverified.
