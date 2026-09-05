@@ -56,7 +56,7 @@ cd ../frontend && flutter pub get && flutter run
 
 | | Backend | Frontend |
 |---|---|---|
-| Stack | TypeScript 7 · Prisma 7 · PostgreSQL 18 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
+| Stack | TypeScript 6 · Prisma 7 · PostgreSQL 18 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
 | Lint | ESLint 10 (typescript-eslint strict, type-checked) + Prettier | `flutter_lints` + strict casts/inference/raw types |
 | Tests | Vitest | `flutter_test` |
 | Layout | `src/modules/<domain>/`, one per domain as phases add them — see `backend/CLAUDE.md` | `lib/features/<feature>/`, one per feature as phases add them — see `frontend/lib/README.md` |

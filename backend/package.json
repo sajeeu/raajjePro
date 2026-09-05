@@ -1,7 +1,7 @@
 {
   "name": "@raajjepro/backend",
   "version": "0.0.0",
-  "description": "RaajjePro API — TypeScript / Fastify / Prisma / PostgreSQL",
+  "description": "RaajjePro API \u2014 TypeScript / Fastify / Prisma / PostgreSQL",
   "scripts": {
     "dev": "tsx --env-file-if-exists=.env src/main.ts",
     "build": "tsc -p tsconfig.build.json",
@@ -37,7 +37,7 @@
     "prettier": "3.9.6",
     "prisma": "7.10.0",
     "tsx": "4.23.13",
-    "typescript": "7.0.2",
+    "typescript": "6.0.3",
     "typescript-eslint": "8.69.0",
     "vitest": "5.0.0"
   },

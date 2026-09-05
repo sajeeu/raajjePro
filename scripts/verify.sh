@@ -44,6 +44,11 @@ echo
 
 if [[ -f backend/package.json ]]; then
   echo "Backend"
+  # Resolve the lockfile first. npm scripts run happily against a stale
+  # node_modules, so every check below can pass on a tree that a clean
+  # checkout cannot even install — which is exactly how a TypeScript major
+  # bump kept CI red for three runs while this script reported all green.
+  run "lockfile resolves" npm --prefix backend ci --dry-run
   run "typecheck" npm --prefix backend run --silent typecheck
   run "lint"      npm --prefix backend run --silent lint
   run "tests"     npm --prefix backend run --silent test
