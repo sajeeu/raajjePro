@@ -2,7 +2,7 @@ import rateLimit, {
   type FastifyRateLimitStore,
   type FastifyRateLimitStoreCtor,
 } from '@fastify/rate-limit';
-import type { FastifyInstance, FastifyRequest, RouteOptions } from 'fastify';
+import type { FastifyBaseLogger, FastifyInstance, FastifyRequest, RouteOptions } from 'fastify';
 
 import { RateLimitedError } from '../core/errors.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
@@ -10,6 +10,10 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 interface CounterRow {
   count: number;
   window_started_at: Date;
+  // Computed by the same statement, in Postgres's own clock — see the note on
+  // `incr()`. Prisma may hand this back as a string (or a Decimal-shaped
+  // value) rather than a plain number, so it is coerced with `Number()`.
+  ttl_ms: number | string;
 }
 
 /**
@@ -18,7 +22,11 @@ interface CounterRow {
  * subject) is reused across windows and never deleted. See the UNLOGGED note
  * on the model.
  */
-function createPostgresStore(prisma: PrismaClient, scope: string): FastifyRateLimitStoreCtor {
+function createPostgresStore(
+  prisma: PrismaClient,
+  scope: string,
+  log: FastifyBaseLogger,
+): FastifyRateLimitStoreCtor {
   return class PostgresRateLimitStore implements FastifyRateLimitStore {
     // No explicit constructor: the plugin passes its global params object into
     // every store constructor, including per-route children created via
@@ -42,17 +50,28 @@ function createPostgresStore(prisma: PrismaClient, scope: string): FastifyRateLi
             window_started_at = CASE
               WHEN rate_limit_counter.window_started_at + make_interval(secs => ${windowSeconds}) <= now() THEN now()
               ELSE rate_limit_counter.window_started_at END
-          RETURNING count, window_started_at`
+          -- ttl_ms is computed here, in the same statement, so only Postgres's
+          -- clock is ever consulted for it. Node's Date.now() must never be
+          -- mixed with window_started_at (a DB now()) to derive a remaining
+          -- window — under clock drift that produces a wrong retryAfterSeconds
+          -- in either direction. RETURNING sees the post-update row, so
+          -- window_started_at here is already the current window's start.
+          RETURNING count, window_started_at,
+            GREATEST(EXTRACT(EPOCH FROM (rate_limit_counter.window_started_at + make_interval(secs => ${windowSeconds}) - now())) * 1000, 0) AS ttl_ms`
         .then((rows) => {
           const row = rows[0];
           if (row === undefined) {
             callback(new Error('rate limit upsert returned no row'));
             return;
           }
-          const elapsed = Date.now() - row.window_started_at.getTime();
-          callback(null, { current: row.count, ttl: Math.max(timeWindow - elapsed, 1) });
+          callback(null, { current: row.count, ttl: Math.max(Math.ceil(Number(row.ttl_ms)), 1) });
         })
         .catch((error: unknown) => {
+          // skipOnError: true (below) means the plugin lets the request
+          // through on a store failure rather than 503-ing the whole API —
+          // but that must not be silent, or an outage of this table quietly
+          // disables rate limiting with nothing in the logs to show it.
+          log.warn({ err: error }, 'rate-limit store unavailable; failing open');
           callback(error instanceof Error ? error : new Error(String(error)));
         });
     }
@@ -77,7 +96,7 @@ function createPostgresStore(prisma: PrismaClient, scope: string): FastifyRateLi
         info === undefined
           ? `${scope}:child`
           : `${String(info.method ?? '*')} ${info.prefix ?? ''}${info.url ?? info.path ?? ''}`;
-      return new (createPostgresStore(prisma, childScope))({});
+      return new (createPostgresStore(prisma, childScope, log))({});
     }
   };
 }
@@ -95,11 +114,14 @@ export async function registerRateLimit(app: FastifyInstance): Promise<void> {
   const { anonPerMinute, authPerMinute } = app.config.rateLimit;
   await app.register(rateLimit, {
     global: true,
-    store: createPostgresStore(app.deps.prisma, 'global'),
+    store: createPostgresStore(app.deps.prisma, 'global', app.log),
     keyGenerator: subjectKey,
     max: (request: FastifyRequest) => (request.principal ? authPerMinute : anonPerMinute),
     timeWindow: '1 minute',
-    // A store failure must not take the API down with it; it fails open and logs.
+    // A store failure must not take the API down with it, so it fails open —
+    // the request is let through uncounted. The store itself logs a warning
+    // when this happens (see the `.catch()` in createPostgresStore's incr());
+    // @fastify/rate-limit does not log anything on its own here.
     skipOnError: true,
     addHeadersOnExceeding: {
       'x-ratelimit-limit': true,

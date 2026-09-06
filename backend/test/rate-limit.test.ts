@@ -70,6 +70,12 @@ describe.skipIf(databaseUrl === undefined)('rate limiting', () => {
     }>();
     expect(body.error.code).toBe('RATE_LIMITED');
     expect(body.error.details.retryAfterSeconds).toBeGreaterThan(0);
+    // The anonymous tier's window is 1 minute — retryAfterSeconds is computed
+    // entirely from Postgres's own clock (window_started_at vs its own now()),
+    // so a bound here also catches a regression back to mixing it with
+    // Node's Date.now().
+    expect(body.error.details.retryAfterSeconds).toBeLessThanOrEqual(60);
+    expect(body.error.details.retryAfterSeconds).toBeGreaterThanOrEqual(1);
     expect(Number(blocked.headers['retry-after'])).toBeGreaterThan(0);
   });
 
