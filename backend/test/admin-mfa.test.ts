@@ -236,4 +236,60 @@ describe.skipIf(databaseUrl === undefined)('admin MFA', () => {
     expect(stale.statusCode).toBe(403);
     time.set(new Date());
   });
+
+  it('five wrong enrol/confirm codes revoke the session; the sixth call, even with a correct code, is refused', async () => {
+    const email = `admin-${randomUUID()}@example.test`;
+    const admin = await ctx.app.adminAuth.createAdmin(email, PASSWORD, {});
+    const login = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/admin/auth/login',
+      headers: CSRF,
+      remoteAddress: freshIp(),
+      payload: { email, password: PASSWORD },
+    });
+    const cookie = cookieFrom(login);
+    const enrol = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/admin/auth/mfa/enrol',
+      headers: { cookie, ...CSRF },
+    });
+    const { secret } = enrol.json<{ data: { secret: string; otpauthUri: string } }>().data;
+
+    for (let i = 0; i < 5; i += 1) {
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/v1/admin/auth/mfa/enrol/confirm',
+        headers: { cookie, ...CSRF },
+        payload: { code: '000000' },
+      });
+      expect(res.statusCode).toBe(422);
+    }
+    const after = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/admin/auth/mfa/enrol/confirm',
+      headers: { cookie, ...CSRF },
+      payload: { code: await totpNow(secret) },
+    });
+    expect(after.statusCode).toBe(401);
+    const row = await ctx.prisma.adminSession.findFirst({
+      where: { adminId: admin.id, revokedReason: 'mfa_failures' },
+    });
+    expect(row).not.toBeNull();
+  });
+
+  it('the reauth route carries its own stricter rate limit', async () => {
+    const admin = await createEnrolledAdmin(ctx.app);
+    const { cookie } = await loginAndVerify(ctx.app, admin.email, admin.secret);
+    let last = 0;
+    for (let i = 0; i < 11; i += 1) {
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/v1/admin/auth/reauth',
+        headers: { cookie, ...CSRF },
+        payload: { password: 'wrong password 12', code: '000000' },
+      });
+      last = res.statusCode;
+    }
+    expect(last).toBe(429);
+  });
 });

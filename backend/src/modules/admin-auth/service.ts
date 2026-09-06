@@ -281,7 +281,7 @@ export class AdminAuthService {
     };
   }
 
-  /** Who may call: same as beginEnrolment. Returns the recovery codes — the only time they are ever shown. */
+  /** Who may call: same as beginEnrolment. Returns the recovery codes — the only time they are ever shown. Five wrong codes revoke the session, same as verifyMfa — this is as much a code-guessing surface as that route. */
   async confirmEnrolment(
     adminId: string,
     sessionId: string,
@@ -295,10 +295,11 @@ export class AdminAuthService {
     if (admin.totpSecretEncrypted === null) {
       throw new BusinessRuleError('INVALID_MFA_CODE', 'Start enrolment first');
     }
+    const now = this.clock();
     if (!(await this.totpMatches(admin.totpSecretEncrypted, code))) {
+      await this.registerMfaFailure(sessionId, meta, now);
       throw new BusinessRuleError('INVALID_MFA_CODE', 'That code is not valid');
     }
-    const now = this.clock();
     const codes = newRecoveryCodes();
     await this.prisma.$transaction(async (tx) => {
       await this.repo.markEnrolled(tx, adminId, sessionId, now);
@@ -367,21 +368,7 @@ export class AdminAuthService {
       });
       return { method: 'recovery_code' };
     }
-    const session = await this.repo.incrementMfaFailures(sessionId);
-    if (session.mfaFailures >= AdminAuthService.MFA_FAILURE_LIMIT) {
-      await this.prisma.$transaction(async (tx) => {
-        await this.repo.revokeSession(tx, sessionId, now, 'mfa_failures');
-        await this.audit.record(tx, {
-          actorType: 'system',
-          action: 'admin.session.revoked',
-          targetType: 'admin_session',
-          targetId: sessionId,
-          reason: 'mfa_failures',
-          requestId: meta.requestId,
-          ipAddress: meta.ip,
-        });
-      });
-    }
+    await this.registerMfaFailure(sessionId, meta, now);
     throw new BusinessRuleError('INVALID_MFA_CODE', 'That code is not valid');
   }
 
@@ -436,6 +423,29 @@ export class AdminAuthService {
       });
     });
     return { recoveryCodes: codes };
+  }
+
+  /**
+   * Shared by verifyMfa and confirmEnrolment — both are code-guessing surfaces
+   * and both revoke the session at the same failure count, with the same
+   * system-actor audit entry.
+   */
+  private async registerMfaFailure(sessionId: string, meta: RequestMeta, now: Date): Promise<void> {
+    const session = await this.repo.incrementMfaFailures(sessionId);
+    if (session.mfaFailures >= AdminAuthService.MFA_FAILURE_LIMIT) {
+      await this.prisma.$transaction(async (tx) => {
+        await this.repo.revokeSession(tx, sessionId, now, 'mfa_failures');
+        await this.audit.record(tx, {
+          actorType: 'system',
+          action: 'admin.session.revoked',
+          targetType: 'admin_session',
+          targetId: sessionId,
+          reason: 'mfa_failures',
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+      });
+    }
   }
 
   private async mustFindAdmin(adminId: string): Promise<AdminUser> {

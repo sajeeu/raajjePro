@@ -87,9 +87,17 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   });
 
   // Who may call: same. Recovery codes come back once, here, and never again.
+  // Own tier: 6 per 5 min per principal — a code-guessing surface exactly like
+  // mfa/verify, with the same 5-failure session revocation (see
+  // registerMfaFailure); max is one above the limit for the same reason as
+  // mfa/verify's tier below.
   r.post(
     `${prefix}/mfa/enrol/confirm`,
-    { schema: { body: mfaCodeBody }, preHandler: requirePasswordSession },
+    {
+      schema: { body: mfaCodeBody },
+      preHandler: requirePasswordSession,
+      config: { rateLimit: { max: 6, timeWindow: '5 minutes' } },
+    },
     async (request, reply) => {
       const p = principalOf(request);
       return reply.send(
@@ -105,12 +113,15 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
     },
   );
 
-  // Who may call: an enrolled admin's unverified session. Own tier: 6 per 5 min per
-  // principal — one above the 5-failure limit, so the sixth request (the one after
-  // five counted failures) still reaches the service and is answered by the
-  // session-revocation rule (401) rather than by the rate limiter (429). Both limits
-  // are defensible; the failure-count revocation is the rule the plan states, so the
-  // tier is set to not pre-empt it.
+  // Who may call: any live password-verified session of an enrolled admin;
+  // requirePasswordSession also admits an already-MFA-verified session, which
+  // is harmless here — re-verifying a code just re-confirms mfaVerifiedAt.
+  // Own tier: 6 per 5 min per principal — one above the 5-failure limit, so
+  // the sixth request (the one after five counted failures) still reaches
+  // the service and is answered by the session-revocation rule (401) rather
+  // than by the rate limiter (429). Both limits are defensible; the
+  // failure-count revocation is the rule the plan states, so the tier is set
+  // to not pre-empt it.
   r.post(
     `${prefix}/mfa/verify`,
     {
@@ -129,9 +140,15 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   );
 
   // Who may call: the enrolled, MFA-verified admin, for their own session.
+  // Own tier: 10 per 15 min per principal — a password-guessing surface,
+  // stricter than the global authenticated tier.
   r.post(
     `${prefix}/reauth`,
-    { schema: { body: reauthBody }, preHandler: requireAdmin },
+    {
+      schema: { body: reauthBody },
+      preHandler: requireAdmin,
+      config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+    },
     async (request, reply) => {
       const p = principalOf(request);
       await app.adminAuth.reauthenticate(
