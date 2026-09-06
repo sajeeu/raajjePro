@@ -31,6 +31,10 @@ export function cookieOptions(config: Config): CookieSerializeOptions {
  */
 export async function registerAdminSession(app: FastifyInstance): Promise<void> {
   await app.register(cookie);
+  // `@fastify/cors` is registered without an encapsulating prefix, so the
+  // ADMIN_ORIGIN policy applies app-wide, not just under /v1/admin. That is
+  // intended: the mobile app is a native client and is never subject to CORS,
+  // and the admin panel is the only browser client this API serves.
   await app.register(cors, {
     origin: app.config.admin.origin,
     credentials: true,
@@ -39,7 +43,14 @@ export async function registerAdminSession(app: FastifyInstance): Promise<void> 
   });
 
   app.addHook('onRequest', async (request) => {
-    if (!request.url.startsWith(ADMIN_PREFIX)) return;
+    // Match on the resolved route pattern, not the raw incoming `request.url`.
+    // Routing runs before onRequest, so this is already known — and unlike the
+    // raw path, it cannot be fooled by encoded slashes, a trailing-slash
+    // variant, or any other request whose path merely starts with the prefix
+    // string yet resolved to a route outside it. `undefined` means no route
+    // matched (the 404 handler answers), so there is nothing to guard here.
+    const routeUrl = request.routeOptions.url;
+    if (!routeUrl?.startsWith(ADMIN_PREFIX)) return;
 
     if (!SAFE_METHODS.has(request.method) && request.headers[CSRF_HEADER] !== CSRF_VALUE) {
       throw new AuthorizationError(

@@ -8,6 +8,20 @@ import { createPrismaClient } from '../../src/db/client.js';
 
 export const databaseUrl = process.env.DATABASE_URL;
 
+/**
+ * A distinct source address per call. The rate-limit store is Postgres-backed
+ * and its counters persist forever by design (see the "counters survive an
+ * app restart" test) — a fixed IP shared across many test runs accumulates
+ * hits against the same window, so any test that repeats a request enough
+ * times to approach a real tier's limit (most visibly the admin login route's
+ * own 10-per-15-minutes) must not share the default inject address with a
+ * previous run.
+ */
+export function freshIp(): string {
+  const [a, b] = [Math.floor(Math.random() * 200) + 10, Math.floor(Math.random() * 250)];
+  return `10.${String(a)}.${String(b)}.${String(Math.floor(Math.random() * 250) + 1)}`;
+}
+
 export interface TestAppOptions {
   clock?: Clock;
   anonPerMinute?: number;

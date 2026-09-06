@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildTestApp, controllableClock, databaseUrl } from './helpers/app.js';
+import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
 
 const PASSWORD = 'a long enough password';
 const csrf = { 'x-requested-with': 'RaajjePro-Admin' };
@@ -33,6 +33,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
     const res = await ctx.app.inject({
       method: 'POST',
       url: '/v1/admin/auth/login',
+      remoteAddress: freshIp(),
       payload: { email, password: PASSWORD },
     });
     expect(res.statusCode).toBe(403);
@@ -44,6 +45,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email, password: PASSWORD },
     });
     expect(res.statusCode).toBe(200);
@@ -56,11 +58,23 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
     expect(res.body).not.toContain('passwordHash');
   });
 
+  it('trims a whitespace-padded email before validating it', async () => {
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/admin/auth/login',
+      headers: csrf,
+      remoteAddress: freshIp(),
+      payload: { email: `  ${email}  `, password: PASSWORD },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
   it('validates the login body and rejects wrong credentials with the same code', async () => {
     const bad = await ctx.app.inject({
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email: 'not-an-email' },
     });
     expect(bad.statusCode).toBe(400);
@@ -68,6 +82,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email, password: 'wrong password 12' },
     });
     expect(wrong.statusCode).toBe(401);
@@ -76,6 +91,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email: `x-${randomUUID()}@example.test`, password: 'wrong password 12' },
     });
     expect(unknown.json<{ error: { code: string } }>().error.code).toBe('INVALID_CREDENTIALS');
@@ -86,6 +102,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email, password: PASSWORD },
     });
     const cookie = cookieFrom(login);
@@ -110,6 +127,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
       method: 'POST',
       url: '/v1/admin/auth/login',
       headers: csrf,
+      remoteAddress: freshIp(),
       payload: { email, password: PASSWORD },
     });
     const cookie = cookieFrom(login);
@@ -124,7 +142,7 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
   });
 
   it('the login route carries its own stricter rate limit', async () => {
-    const ip = `10.77.${String(Math.floor(Math.random() * 250))}.${String(Math.floor(Math.random() * 250) + 1)}`;
+    const ip = freshIp();
     let last = 0;
     for (let i = 0; i < 11; i += 1) {
       const res = await ctx.app.inject({

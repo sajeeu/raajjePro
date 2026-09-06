@@ -3,7 +3,10 @@ import { z } from 'zod';
 import { MAX_PASSWORD_LENGTH } from './crypto.js';
 
 export const loginBody = z.object({
-  email: z.email().max(320),
+  // Trim first, then validate as an email, then bound the length — chaining
+  // .trim() after the top-level z.email() would run the format check before
+  // the trim and reject a merely whitespace-padded address.
+  email: z.string().trim().pipe(z.email()).pipe(z.string().max(320)),
   password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
 });
 

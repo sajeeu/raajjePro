@@ -2,13 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { buildTestApp, databaseUrl } from './helpers/app.js';
-
-/** Distinct address per test so counters persisted by earlier runs cannot interfere. */
-function freshIp() {
-  const [a, b] = [Math.floor(Math.random() * 200) + 10, Math.floor(Math.random() * 250)];
-  return `10.${String(a)}.${String(b)}.${String(Math.floor(Math.random() * 250) + 1)}`;
-}
+import { buildTestApp, databaseUrl, freshIp } from './helpers/app.js';
 
 describe.skipIf(databaseUrl === undefined)('rate limiting', () => {
   let ctx: Awaited<ReturnType<typeof buildTestApp>>;
