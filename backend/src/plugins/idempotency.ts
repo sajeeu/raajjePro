@@ -17,6 +17,25 @@ declare module 'fastify' {
 
 const HEADER = 'idempotency-key';
 
+function inProgress(): ConflictError {
+  return new ConflictError('IDEMPOTENT_REQUEST_IN_PROGRESS', 'The same request is being processed');
+}
+
+function sendReplay(
+  reply: FastifyReply,
+  record: {
+    responseStatus: number | null;
+    responseHeaders: Prisma.JsonValue;
+    responseBody: Prisma.JsonValue;
+  },
+) {
+  const headers = (record.responseHeaders ?? {}) as Record<string, string>;
+  void reply.code(record.responseStatus ?? 200);
+  for (const [name, value] of Object.entries(headers)) void reply.header(name, value);
+  void reply.header('idempotent-replayed', 'true');
+  return reply.send(record.responseBody);
+}
+
 /**
  * Idempotency (plan §2, §Phase 2): keyed on (subject, operation, clientKey).
  * The first request with a key runs; a repeat with the same body replays the
@@ -61,10 +80,7 @@ export function registerIdempotency(app: FastifyInstance): void {
       where: { subject_operation_clientKey: { subject, operation: opts.operation, clientKey } },
     });
     if (existing === null) {
-      throw new ConflictError(
-        'IDEMPOTENT_REQUEST_IN_PROGRESS',
-        'The same request is being processed',
-      );
+      throw inProgress();
     }
     if (existing.requestHash !== requestHash) {
       throw new BusinessRuleError(
@@ -72,33 +88,36 @@ export function registerIdempotency(app: FastifyInstance): void {
         'This Idempotency-Key was already used with a different request',
       );
     }
-    if (existing.status === 'in_progress') {
-      throw new ConflictError(
-        'IDEMPOTENT_REQUEST_IN_PROGRESS',
-        'The same request is being processed',
-      );
+    if (existing.status === 'completed') {
+      return sendReplay(reply, existing);
     }
-    if (existing.status === 'abandoned') {
-      // The earlier attempt failed on our side; let this one run and take over the record.
-      await prisma.idempotencyRecord.update({
-        where: { id: existing.id },
-        data: {
-          status: 'in_progress',
-          responseStatus: null,
-          responseBody: Prisma.JsonNull,
-          responseHeaders: Prisma.JsonNull,
-          completedAt: null,
-        },
-      });
-      request.idempotencyRecordId = existing.id;
+    if (existing.status === 'in_progress') {
+      throw inProgress();
+    }
+
+    // existing.status === 'abandoned': the earlier attempt failed on our
+    // side. The takeover itself must be one atomic, conditional statement —
+    // a plain read-then-update here would reopen exactly the race the INSERT
+    // above already guards against for a brand-new key: several concurrent
+    // requests could all read `abandoned` and all proceed to run the handler.
+    const takeover = await prisma.$queryRaw<{ id: string }[]>`
+      UPDATE idempotency_record
+      SET status = 'in_progress', response_status = NULL, response_headers = NULL, response_body = NULL, completed_at = NULL
+      WHERE id = ${existing.id} AND status = 'abandoned'
+      RETURNING id`;
+    const takeoverWinner = takeover[0];
+    if (takeoverWinner !== undefined) {
+      request.idempotencyRecordId = takeoverWinner.id;
       return;
     }
 
-    const headers = (existing.responseHeaders ?? {}) as Record<string, string>;
-    void reply.code(existing.responseStatus ?? 200);
-    for (const [name, value] of Object.entries(headers)) void reply.header(name, value);
-    void reply.header('idempotent-replayed', 'true');
-    return reply.send(existing.responseBody);
+    // Lost the takeover race — another request already claimed (or, by now,
+    // completed) this record. Re-read and respond from its current state.
+    const after = await prisma.idempotencyRecord.findUnique({ where: { id: existing.id } });
+    if (after !== null && after.status === 'completed' && after.requestHash === requestHash) {
+      return sendReplay(reply, after);
+    }
+    throw inProgress();
   });
 
   app.addHook('onSend', async (request, reply, payload: unknown) => {

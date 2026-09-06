@@ -8,6 +8,7 @@ import { buildTestApp, databaseUrl } from './helpers/app.js';
 describe.skipIf(databaseUrl === undefined)('idempotency middleware', () => {
   let ctx: Awaited<ReturnType<typeof buildTestApp>>;
   let handlerRuns = 0;
+  let flakyRuns = 0;
 
   beforeAll(async () => {
     ctx = await buildTestApp({
@@ -43,6 +44,21 @@ describe.skipIf(databaseUrl === undefined)('idempotency middleware', () => {
           { config: { idempotency: { operation: 'test.fails' } } },
           () => {
             throw new Error('boom');
+          },
+        );
+        // Fails only on its first invocation — used to seed an `abandoned`
+        // record, then check that retries racing to take it over run the
+        // handler exactly once more (not once per concurrent retry).
+        app.post(
+          '/v1/_test/flaky',
+          { config: { idempotency: { operation: 'test.flaky' } } },
+          async () => {
+            flakyRuns += 1;
+            if (flakyRuns === 1) {
+              throw new Error('boom-once');
+            }
+            await new Promise((r) => setTimeout(r, 25));
+            return { data: { run: flakyRuns } };
           },
         );
       },
@@ -133,5 +149,33 @@ describe.skipIf(databaseUrl === undefined)('idempotency middleware', () => {
     });
     expect(second.statusCode).toBe(500);
     expect(second.headers['idempotent-replayed']).toBeUndefined();
+  });
+
+  it('concurrent retries after an abandoned attempt run the handler once', async () => {
+    const key = randomUUID();
+    const seed = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/_test/flaky',
+      payload: {},
+      headers: { 'idempotency-key': key },
+    });
+    expect(seed.statusCode).toBe(500);
+    const record = await ctx.prisma.idempotencyRecord.findFirst({ where: { clientKey: key } });
+    expect(record?.status).toBe('abandoned');
+
+    const before = flakyRuns;
+    const results = await Promise.all(
+      Array.from({ length: 20 }, () =>
+        ctx.app.inject({
+          method: 'POST',
+          url: '/v1/_test/flaky',
+          payload: {},
+          headers: { 'idempotency-key': key },
+        }),
+      ),
+    );
+    expect(flakyRuns).toBe(before + 1);
+    for (const r of results) expect([200, 409]).toContain(r.statusCode);
+    expect(results.some((r) => r.statusCode === 200)).toBe(true);
   });
 });
