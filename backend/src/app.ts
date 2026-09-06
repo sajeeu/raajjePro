@@ -12,6 +12,7 @@ import { genReqId, loggerOptions } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
+import { registerIdempotency } from './plugins/idempotency.js';
 import { registerRateLimit } from './plugins/rate-limit.js';
 
 export interface AppDeps {
@@ -50,6 +51,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
 
   registerErrorHandling(app);
   await registerRateLimit(app);
+  registerIdempotency(app);
   registerHealthRoutes(app);
 
   return app;
