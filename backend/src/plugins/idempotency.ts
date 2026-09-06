@@ -17,8 +17,26 @@ declare module 'fastify' {
 
 const HEADER = 'idempotency-key';
 
+// A record left `in_progress` by a hard crash (the process died before the
+// onSend hook ever ran, so nothing moved it to `abandoned`) would otherwise
+// answer 409 forever — no other path ever revisits an in_progress record.
+// Every handler behind this middleware in this codebase completes in well
+// under a second, so anything still `in_progress` a full minute later is
+// certainly dead, not merely slow. This is a fact about this codebase's
+// handlers, not an operational tradeoff, so it is a fixed constant rather
+// than a config value — there is nothing for an operator to legitimately
+// tune it against.
+const IN_PROGRESS_STALE_MS = 60_000;
+
 function inProgress(): ConflictError {
   return new ConflictError('IDEMPOTENT_REQUEST_IN_PROGRESS', 'The same request is being processed');
+}
+
+/** The same hash the preHandler computes, exported so tests can seed a record the middleware will recognise as matching a given request. */
+export function requestHashFor(method: string, path: string, body: unknown): string {
+  return createHash('sha256')
+    .update(`${method} ${path}\n${canonicalJson(body ?? null)}`)
+    .digest('hex');
 }
 
 function sendReplay(
@@ -59,11 +77,11 @@ export function registerIdempotency(app: FastifyInstance): void {
     }
 
     const subject = request.principal ? request.principal.id : `anon:${request.ip}`;
-    const requestHash = createHash('sha256')
-      .update(
-        `${request.method} ${request.url.split('?')[0] ?? ''}\n${canonicalJson(request.body ?? null)}`,
-      )
-      .digest('hex');
+    const requestHash = requestHashFor(
+      request.method,
+      request.url.split('?')[0] ?? '',
+      request.body ?? null,
+    );
 
     const inserted = await prisma.$queryRaw<{ id: string }[]>`
       INSERT INTO idempotency_record (id, subject, operation, client_key, request_hash, status, created_at)
@@ -92,6 +110,23 @@ export function registerIdempotency(app: FastifyInstance): void {
       return sendReplay(reply, existing);
     }
     if (existing.status === 'in_progress') {
+      // Same conditional-takeover shape as the abandoned case below — a
+      // plain read-then-update would let several concurrent stale-record
+      // retries all see `in_progress` + old `created_at` and all proceed.
+      // Raw SQL because Prisma has no "conditional update, return the row
+      // only if the WHERE matched" primitive; the WHERE clause is the whole
+      // race guard, so it has to be one statement.
+      const staleTakeover = await prisma.$queryRaw<{ id: string }[]>`
+        UPDATE idempotency_record
+        SET status = 'in_progress', created_at = now(), response_status = NULL, response_headers = NULL, response_body = NULL, completed_at = NULL
+        WHERE id = ${existing.id} AND status = 'in_progress'
+          AND created_at < now() - make_interval(secs => ${IN_PROGRESS_STALE_MS / 1000})
+        RETURNING id`;
+      const staleWinner = staleTakeover[0];
+      if (staleWinner !== undefined) {
+        request.idempotencyRecordId = staleWinner.id;
+        return;
+      }
       throw inProgress();
     }
 

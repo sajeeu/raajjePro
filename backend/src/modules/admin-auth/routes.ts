@@ -40,10 +40,24 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const prefix = '/v1/admin/auth';
 
-  // Who may call: anyone — this is how a session begins. Stricter tier: 10 per 15 min per IP.
+  // Who may call: anyone — this is how a session begins. Stricter tier: 10 per
+  // 15 min per IP. keyGenerator is explicit rather than relying on the global
+  // tier's per-principal-else-IP default: login is unauthenticated so that
+  // default already falls back to the IP, but the plan states "per IP" as the
+  // rule itself, and an explicit key generator keeps it true even if a future
+  // change makes a principal available on this route.
   r.post(
     `${prefix}/login`,
-    { schema: { body: loginBody }, config: { rateLimit: { max: 10, timeWindow: '15 minutes' } } },
+    {
+      schema: { body: loginBody },
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '15 minutes',
+          keyGenerator: (request) => `ip:${request.ip}`,
+        },
+      },
+    },
     async (request, reply) => {
       const result = await app.adminAuth.login(
         request.body.email,

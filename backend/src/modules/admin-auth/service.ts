@@ -351,8 +351,15 @@ export class AdminAuthService {
       hashToken(normaliseRecoveryCode(code)),
     );
     if (recovery !== null) {
-      await this.prisma.$transaction(async (tx) => {
-        await this.repo.markRecoveryCodeUsed(tx, recovery.id, now);
+      // markRecoveryCodeUsed is a conditional updateMany (where usedAt: null)
+      // rather than a plain update: findUnusedRecoveryCode above is a read,
+      // and between that read and this write another concurrent request
+      // could have already consumed the same code. `count === 0` means we
+      // lost that race — the code was already used — so this attempt is
+      // treated as a failure, not a second successful use of one code.
+      const claimed = await this.prisma.$transaction(async (tx) => {
+        const result = await this.repo.markRecoveryCodeUsed(tx, recovery.id, now);
+        if (result.count === 0) return false;
         await this.repo.markMfaVerified(tx, sessionId, now);
         await this.audit.record(tx, {
           actorType: 'admin',
@@ -365,8 +372,9 @@ export class AdminAuthService {
           requestId: meta.requestId,
           ipAddress: meta.ip,
         });
+        return true;
       });
-      return { method: 'recovery_code' };
+      if (claimed) return { method: 'recovery_code' };
     }
     await this.registerMfaFailure(sessionId, meta, now);
     throw new BusinessRuleError('INVALID_MFA_CODE', 'That code is not valid');

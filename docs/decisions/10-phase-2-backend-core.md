@@ -128,7 +128,30 @@ caught and a ruling actually fixed.
   `mfa/enrol/confirm` now carries the same 5-failure revocation as
   `mfa/verify` under a 6/5-min tier (one above the failure limit, so the
   failing attempt that trips revocation still gets a response); `reauth`
-  carries its own 10/15-min tier per principal.
+  carries its own 10/15-min tier per principal. Note the discrepancy this
+  leaves against the design: `mfa/verify` and `mfa/enrol/confirm` are tiered
+  6 per 5 minutes **per principal**, not the spec's "5 per session" — the
+  session's own five-failure revocation (the plan's actual rule) is what
+  answers the sixth attempt, and the rate tier exists only so that sixth
+  request reaches the service instead of being pre-empted by the limiter. The
+  login tier, separately, is keyed explicitly per IP (`ip:${request.ip}`)
+  rather than relying on the global default's principal-else-IP fallback —
+  login has no principal yet regardless, so this changes nothing observable,
+  but it keeps "per IP" true as a stated rule rather than an accident of
+  routing (final-review fix).
+
+- **Idempotency `in_progress` staleness had no recovery path.** A record left
+  `in_progress` by a hard crash — the process died before the `onSend` hook
+  could mark it `abandoned` — answered `IDEMPOTENT_REQUEST_IN_PROGRESS` (409)
+  forever, since nothing else ever revisits an in-progress record. Found in
+  the final whole-branch review, not the original build. Fixed with the same
+  conditional-`UPDATE` takeover shape already used for `abandoned` records:
+  an `in_progress` row older than a fixed 60-second staleness window
+  (`IN_PROGRESS_STALE_MS`, a constant rather than a config value — every
+  handler behind this middleware is sub-second, so anything still
+  `in_progress` a minute later is a crash, not a slow request, and there is
+  nothing for an operator to legitimately tune) is retried; a fresh
+  `in_progress` row still answers 409.
 
 - **`EmailService.send()` could mark a message `failed` for the wrong
   reason.** A single try/catch wrapped both the transport call and the
@@ -192,21 +215,37 @@ up the phase:
 - The raw SQL `INSERT` for `email_event` duplicates six columns across its
   two branches to avoid a `null::uuid` cast; a comment marks it rather than a
   rewrite.
+- The plan's §7 says Phase 2 adds eight tables; the schema actually adds nine
+  (`RateLimitCounter`, `IdempotencyRecord`, `AdminUser`, `AdminSession`,
+  `AdminRecoveryCode`, `AuditLogEntry`, `EmailMessage`, `EmailEvent`,
+  `EmailSuppression` — `JobHeartbeat` predates this phase). The plan's count
+  is off by one; the schema is right and is not being changed to match it.
 
 ## Unverified
 
 Nothing in the SES/SNS live path has been exercised against a real AWS
 account — see `docs/ops/ses-production-access.md` §9 for the specifics: a
 real SES send, a real SNS delivery to the webhook, and the subscription
-handshake itself. Everything else in this phase — including all of the
-signature verification, event handling and suppression logic — is unit- and
-integration-tested against synthetic payloads and a test-generated RSA
-keypair.
+handshake itself. Everything else in this phase — including signature
+verification, event handling and suppression logic — is unit- and
+integration-tested against synthetic payloads: `test/sns-validator.test.ts`
+generates one RSA keypair per test run, signs a v1 (RSA-SHA1) and a v2
+(RSA-SHA256) `Notification` exactly as SNS does (the documented
+key-then-value canonical string over `Message`/`MessageId`/`Subject`/
+`SubscribeURL`/`Timestamp`/`TopicArn`/`Type`), and stubs the certificate
+fetch (`vi.spyOn(https, 'get')`) so the validator resolves against the
+generated public key instead of a real AWS-issued certificate — plus a
+flipped-signature-character case and a message-tampered-after-signing case,
+alongside the pre-existing negative tests (malformed body, missing fields,
+non-AWS certificate host).
 
 The interactive `admin:create` password prompt (reads from the terminal
 without echo) has not been run manually — this build environment has no TTY.
 `test/audit-routes.test.ts` covers the audit-log query behavior the CLI's
-output feeds into; the prompt itself needs a terminal to exercise.
+output feeds into; the prompt itself needs a real terminal to exercise, and
+running it is the account owner's own step — there is no other way an admin
+account is ever created — to complete before Phase 10a, when an admin first
+needs to sign in to the panel UI.
 
 ## What Phase 3 must confirm
 

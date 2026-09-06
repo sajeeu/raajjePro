@@ -52,6 +52,11 @@ export async function registerSesEventRoutes(app: FastifyInstance): Promise<void
         }
 
         const expectedTopic = app.config.email.eventsTopicArn;
+        // eventsTopicArn is only ever null under EMAIL_TRANSPORT=file, and
+        // loadConfig refuses that transport in production (see config/env.ts)
+        // — so this skip cannot be reached in production; it exists purely so
+        // local/dev runs without an SNS topic configured don't reject every
+        // message on a topic mismatch they have no way to satisfy.
         if (expectedTopic !== null && message.TopicArn !== expectedTopic) {
           throw new AuthorizationError(
             'UNEXPECTED_SNS_TOPIC',

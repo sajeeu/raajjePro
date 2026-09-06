@@ -139,7 +139,11 @@ export class AdminRepository {
     });
   }
 
-  markRecoveryCodeUsed(db: Db, id: string, now: Date): Promise<AdminRecoveryCode> {
-    return db.adminRecoveryCode.update({ where: { id }, data: { usedAt: now } });
+  /** `updateMany` scoped to `usedAt: null` so two concurrent verifications racing on the same recovery code can never both win — returns the affected-row count so the caller can tell a lost race (0) from the normal single-use case (1) instead of trusting a prior read. */
+  markRecoveryCodeUsed(db: Db, id: string, now: Date): Promise<{ count: number }> {
+    return db.adminRecoveryCode.updateMany({
+      where: { id, usedAt: null },
+      data: { usedAt: now },
+    });
   }
 }

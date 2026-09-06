@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
+import { requestHashFor } from '../src/plugins/idempotency.js';
 import { buildTestApp, databaseUrl } from './helpers/app.js';
 
 describe.skipIf(databaseUrl === undefined)('idempotency middleware', () => {
@@ -149,6 +150,49 @@ describe.skipIf(databaseUrl === undefined)('idempotency middleware', () => {
     });
     expect(second.statusCode).toBe(500);
     expect(second.headers['idempotent-replayed']).toBeUndefined();
+  });
+
+  it('an in_progress record left stale by a hard crash is retried, not stuck at 409 forever', async () => {
+    const key = randomUUID();
+    const user = randomUUID();
+    const body = { name: 'stale' };
+    // Same hash the middleware would compute for this exact request, so it
+    // recognises the seeded row as matching rather than rejecting it as a
+    // reused key.
+    const requestHash = requestHashFor('POST', '/v1/_test/create', body);
+    await ctx.prisma.idempotencyRecord.create({
+      data: {
+        subject: user,
+        operation: 'test.create',
+        clientKey: key,
+        requestHash,
+        status: 'in_progress',
+        createdAt: new Date(Date.now() - 2 * 60_000),
+      },
+    });
+    const before = handlerRuns;
+    const res = await post(key, body, user);
+    expect(res.statusCode).toBe(201);
+    expect(handlerRuns).toBe(before + 1);
+  });
+
+  it('a fresh in_progress record still answers 409', async () => {
+    const key = randomUUID();
+    const user = randomUUID();
+    const body = { name: 'fresh' };
+    const requestHash = requestHashFor('POST', '/v1/_test/create', body);
+    await ctx.prisma.idempotencyRecord.create({
+      data: {
+        subject: user,
+        operation: 'test.create',
+        clientKey: key,
+        requestHash,
+        status: 'in_progress',
+        createdAt: new Date(),
+      },
+    });
+    const res = await post(key, body, user);
+    expect(res.statusCode).toBe(409);
   });
 
   it('concurrent retries after an abandoned attempt run the handler once', async () => {
