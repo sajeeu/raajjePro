@@ -3,7 +3,7 @@
 Planning and specification for RaajjePro, a local services marketplace for the Maldives.
 Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-Phases 0 and 1 are built: both apps boot, lint is clean, the job runner fires, and the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place. Everything from Phase 2 onward is still specification. See **Running locally** below.
+Phases 0, 1 and 2 are built: both apps boot, lint is clean, the job runner fires, the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place, and the backend now has its core infrastructure (envelope/errors/logging, rate limiting, idempotency, admin identity with TOTP MFA, the queryable audit log, and SES bounce/complaint handling with the suppression list). Everything from Phase 3 onward is still specification. See **Running locally** below.
 
 ## The source of truth
 
@@ -33,7 +33,9 @@ npm install                          # root: commit hooks only
 docker compose up -d                 # PostgreSQL 18 + pg_cron + WAL archiving, port 5435
 cd backend && cp .env.example .env && npm install
 npm run db:migrate                   # applies prisma/migrations, schedules the heartbeat job
-npm run dev                          # boots: reaches the DB, reports the job runner, exits 0
+npm run dev                          # boots a server on :3000 (Phase 2 onward — Fastify, admin identity, email)
+curl localhost:3000/v1/health        # { "data": { "status": "ok", ... } }
+npm run admin:create -- --email you@example.com   # creates the first admin; password is prompted, never a flag
 npm run jobs:status                  # is the scheduled no-op job firing? (exit 0 = yes)
 cd ../frontend && flutter pub get && flutter run
 ```
@@ -56,7 +58,7 @@ cd ../frontend && flutter pub get && flutter run
 
 | | Backend | Frontend |
 |---|---|---|
-| Stack | TypeScript 6 · Prisma 7 · PostgreSQL 18 (Fastify arrives in Phase 2) | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
+| Stack | TypeScript 6 · Prisma 7 · PostgreSQL 18 · Fastify 5 | Flutter 3.47 · Dart 3.13 · Riverpod (§2) |
 | Lint | ESLint 10 (typescript-eslint strict, type-checked) + Prettier | `flutter_lints` + strict casts/inference/raw types |
 | Tests | Vitest | `flutter_test` |
 | Layout | `src/modules/<domain>/`, one per domain as phases add them — see `backend/CLAUDE.md` | `lib/features/<feature>/`, one per feature as phases add them — see `frontend/lib/README.md` |
@@ -75,7 +77,7 @@ These four are fixed by the plan (§2 Architecture Decisions) and are restated h
 
 **Soft delete everywhere.** Nothing is ever `DELETE`d. Every entity carries a status or visibility field, and "deleting" sets it. Every query that returns user-visible data filters on that field. Moderation actions are reversible for the same reason. Even the Phase 0 heartbeat table follows it: the job upserts one row per job rather than inserting and pruning. The one thing the plan does purge — identity-document images, 90 days after a decision (§1e) — is a file deletion with the decision, evidence type and reviewer retained.
 
-**Idempotency keys.** Every money-adjacent and every creation `POST` requires a client-supplied idempotency key (the transport — header or body field — is fixed in Phase 2 and used identically everywhere after). The server dedupes on `(userId, operation, clientKey)` and a repeat returns the **original** result — same status, same body — rather than doing the work twice or erroring. Mobile clients retry on dropped connections; without this a retried booking is two bookings. Phase 2 builds the middleware; every later phase uses it.
+**Idempotency keys.** Every money-adjacent and every creation `POST` requires a client-supplied idempotency key, sent as the `Idempotency-Key` request header (fixed in Phase 2). The server dedupes on `(userId, operation, clientKey)` and a repeat returns the **original** result — same status, same body — rather than doing the work twice or erroring. Mobile clients retry on dropped connections; without this a retried booking is two bookings. Phase 2 builds the middleware; every later phase uses it.
 
 ## Building
 

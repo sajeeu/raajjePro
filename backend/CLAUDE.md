@@ -7,7 +7,7 @@ Applies to everything under `backend/`. The root `CLAUDE.md` and `01_Development
 - Every mutating endpoint has an explicit authorization check as its first act, stated in a comment naming who is allowed. Authorization on READS too — an unauthorized read of a booking or a payment detail is a real leak.
 - Zod schemas validate every request body, query and param. Never trust a client-supplied ID without checking ownership.
 - Money is integer laari end to end — in the database, in the DTO, in the JSON. Never convert to float anywhere in the path.
-- Idempotency middleware on every money-adjacent and creation POST, keyed on `(userId, operation, clientKey)`, returning the ORIGINAL result on repeat.
+- Idempotency middleware on every money-adjacent and creation POST, keyed on `(userId, operation, clientKey)` from the `Idempotency-Key` request header, returning the ORIGINAL result on repeat.
 - Scheduled work runs on the job runner from Phase 0, never as check-on-read. If a transition should happen at a time, a job makes it happen at that time.
 - Sensitive fields (payment details, identity documents, phone numbers) are excluded structurally in the DTO mapping layer, not by remembering to omit them per handler.
 - Soft-delete only. Every query that returns user-visible data filters on the visibility/status field.
