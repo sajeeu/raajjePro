@@ -8,7 +8,15 @@ import { buildApp, type AppDeps } from '../../src/app.js';
 import { loadConfig, type Config } from '../../src/config/env.js';
 import type { Clock } from '../../src/core/clock.js';
 import { createPrismaClient } from '../../src/db/client.js';
+import type { SnsMessage, SnsMessageValidator } from '../../src/modules/email/sns/validator.js';
 import { FileEmailTransport } from '../../src/modules/email/transports/file.js';
+
+/** Accepts anything shaped like an SNS message; the signature itself is sns-validator's job — used wherever a test needs the webhook route without real SNS. */
+export class TrustingValidator implements SnsMessageValidator {
+  validate(raw: string): Promise<SnsMessage> {
+    return Promise.resolve(JSON.parse(raw) as SnsMessage);
+  }
+}
 
 export const databaseUrl = process.env.DATABASE_URL;
 
@@ -47,6 +55,7 @@ export function testConfig(options: TestAppOptions = {}): Config {
       process.env.ADMIN_TOTP_ENCRYPTION_KEY ?? Buffer.alloc(32, 1).toString('base64'),
     EMAIL_FROM_ADDRESS: 'test@raajjepro.local',
     EMAIL_TRANSPORT: 'file',
+    SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:123456789012:raajjepro-ses-events',
   });
   return {
     ...base,
@@ -86,6 +95,7 @@ export async function buildTestApp(options: TestAppOptions = {}) {
     clock: options.clock ?? (() => new Date()),
     emailTransport:
       options.deps?.emailTransport ?? new FileEmailTransport(join(tmpdir(), 'raajjepro-test-mail')),
+    snsValidator: options.deps?.snsValidator ?? new TrustingValidator(),
     ...options.deps,
   });
   if (options.routes) {

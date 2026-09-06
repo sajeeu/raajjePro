@@ -8,6 +8,7 @@ import type { Config } from './config/env.js';
 import { ConfigError, loadConfig } from './config/env.js';
 import { systemClock } from './core/clock.js';
 import { createPrismaClient } from './db/client.js';
+import { SnsValidatorAdapter } from './modules/email/sns/validator.js';
 import { createEmailTransport } from './modules/email/transports/index.js';
 
 let config: Config;
@@ -23,7 +24,12 @@ try {
 
 const prisma = createPrismaClient(config.databaseUrl);
 const emailTransport = createEmailTransport(config.email);
-const app = await buildApp(config, { prisma, clock: systemClock, emailTransport });
+const app = await buildApp(config, {
+  prisma,
+  clock: systemClock,
+  emailTransport,
+  snsValidator: new SnsValidatorAdapter(),
+});
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');

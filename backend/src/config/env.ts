@@ -62,6 +62,8 @@ export interface FileEmailConfig {
   fromAddress: string;
   /** Directory the file transport writes into. Gitignored. */
   directory: string;
+  /** Set from the optional SES_EVENTS_TOPIC_ARN so the webhook route is exercisable with the file transport too. */
+  eventsTopicArn: string | null;
 }
 
 export interface Config {
@@ -153,7 +155,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       eventsTopicArn: v.SES_EVENTS_TOPIC_ARN ?? '',
     };
   } else {
-    email = { transport: 'file', fromAddress: v.EMAIL_FROM_ADDRESS, directory: '.mail' };
+    email = {
+      transport: 'file',
+      fromAddress: v.EMAIL_FROM_ADDRESS,
+      directory: '.mail',
+      eventsTopicArn: v.SES_EVENTS_TOPIC_ARN ?? null,
+    };
   }
 
   return {

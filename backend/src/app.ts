@@ -16,6 +16,8 @@ import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
 import { EmailService } from './modules/email/service.js';
+import { registerSesEventRoutes } from './modules/email/sns/routes.js';
+import type { SnsMessageValidator } from './modules/email/sns/validator.js';
 import type { EmailSender, EmailTransport } from './modules/email/types.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
 import { registerAdminSession } from './plugins/admin-session.js';
@@ -26,6 +28,9 @@ export interface AppDeps {
   prisma: PrismaClient;
   clock: Clock;
   emailTransport: EmailTransport;
+  snsValidator: SnsMessageValidator;
+  /** GETs an SNS SubscribeURL to confirm a subscription. Optional so production can default to a real fetch while tests observe the call. */
+  confirmSubscription?: (url: string) => Promise<void>;
 }
 
 declare module 'fastify' {
@@ -80,6 +85,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerHealthRoutes(app);
   registerAdminAuthRoutes(app);
   registerAuditRoutes(app);
+  await registerSesEventRoutes(app);
 
   return app;
 }
