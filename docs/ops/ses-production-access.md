@@ -5,8 +5,9 @@
 The steps below are correct and unchanged — only their timing moved. The app
 is built first against `EMAIL_TRANSPORT=file`; this runbook is run early in
 the deployment phase, not before Phase 3.
-`docs/decisions/11-email-deferred-to-deployment.md` holds the ledger of what
-stays unverified until then, and it is the checklist to work through here.
+`docs/deferred-verification.md` rows L1–L7 are the checklist to work through
+here; `docs/decisions/11-email-deferred-to-deployment.md` records why this
+moved.
 
 **§2 is incomplete:** the custom MAIL FROM subdomain also needs an MX record,
 not only the SPF record named there. Take the exact records from the SES

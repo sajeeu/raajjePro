@@ -1,7 +1,11 @@
-# Email delivery is deferred to deployment — the ledger
+# Email delivery is deferred to deployment
 
 **Decided 2026-09-06 by the owner. Recorded in the plan as §0.0 item 17,
 revision 5.20.** Build the app first; procure the email vendor last.
+
+This is the decision. The running list of what it leaves unproved lives in
+`docs/deferred-verification.md`, rows L1–L7 — that file is appended by every
+phase and worked through at deployment.
 
 ## The decision
 
@@ -11,8 +15,8 @@ built and verified against `EMAIL_TRANSPORT=file`, which Phase 2 already
 ships: each message is written as JSON into `backend/.mail/`, so an OTP is
 read out of the written file exactly as a test would read it from a mailbox.
 
-This reverses the sequencing Round 13 fixed. That reversal is deliberate and
-its cost is stated below rather than absorbed silently.
+This reverses the sequencing Round 13 fixed. That reversal is deliberate, and
+its cost is carried in the ledger rather than absorbed silently.
 
 ## What this does not change
 
@@ -29,29 +33,6 @@ its cost is stated below rather than absorbed silently.
   through the `EmailSender` interface.
 - **`docs/ops/ses-production-access.md` stays the runbook.** It is correct;
   only its timing moved.
-
-## The ledger — what is unverified, and until when
-
-Nothing here is a defect. Each line is a real thing that cannot be exercised
-without a live AWS account, and each must be closed during deployment.
-
-| # | Deferred | Closed by |
-|---|---|---|
-| 1 | A real send through the SESv2 API. `SesEmailTransport` is unit tested against a fake. | One OTP to a mailbox you control, then `email_message.status = delivered`. |
-| 2 | A live SNS notification reaching `/v1/webhooks/ses-events`. Signature checking is tested against a test-generated RSA keypair. | A growing `email_event` count after a real send. |
-| 3 | The `SubscriptionConfirmation` handshake. No real `SubscribeURL` has been fetched. | The log line `sns subscription confirmed`, once. |
-| 4 | Suppression on a real hard bounce. | Send to `bounce@simulator.amazonses.com`; a row appears in `email_suppression`. |
-| 5 | Suppression on a real complaint. | Send to `complaint@simulator.amazonses.com`; same check. |
-| 6 | Domain deliverability — SPF, DKIM, DMARC alignment and the custom MAIL FROM. | The receiving mailbox's headers show all three passing. |
-| 7 | That the three configuration sets keep their reputation metrics apart. | Three sends, one per channel, each landing under its own set in the SES console. |
-
-**Phases add to this table, they do not close their own lines.** Any phase
-that sends email — Phase 3 (OTP), 3b (reset), 3c (fallback), 10b (admin
-alerting), 19 (notifications) — is *done* when its flow works on the file
-transport, and adds a row here for whatever only a real mailbox can prove.
-A phase must never record an email Done-when criterion as met on the grounds
-that it will be checked later; it records it as met **against the file
-transport**, in those words, and adds the line here.
 
 ## Two things that will bite if forgotten
 

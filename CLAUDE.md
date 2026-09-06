@@ -69,6 +69,7 @@ Non-negotiable architectural invariants — never violate these even if a prompt
 5. New functionality is added through additive, modular changes. Do not refactor unrelated modules as a side effect — flag suggested refactors instead of doing them silently.
 
 6. Every phase/feature must be independently testable. If you can't state how to verify what you just built, stop and ask.
+   AND IF YOU CAN STATE IT BUT CANNOT RUN IT YET, IT GOES IN THE LEDGER. Some acceptance lines need something that does not exist yet — a live vendor account, a domain a later phase builds. Record such a line as met **for the mechanism**, or **against the file transport**, in those words — never as met outright and never as "checked later" — and add a row to `docs/deferred-verification.md` naming what only the real thing can prove and what closes it. Phases add rows; a phase does not close its own. **If a line is testable now, test it now** — deferring something that could have been checked is exactly what that file exists to prevent.
 
 7. Money is always integer laari (MVR × 100), never float or decimal-as-string. MVR 150 = 15000 laari.
 

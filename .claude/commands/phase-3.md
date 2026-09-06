@@ -41,7 +41,8 @@ So:
 
 **How to report a Done-when line that needs a real mailbox.** Record it as
 met **against the file transport**, in those words — never as met outright,
-and never as "will be checked later". Then add a row to the ledger in
-`docs/decisions/11-email-deferred-to-deployment.md` saying what only a real
-send can prove and how it will be proved. The ledger is what gets worked
-through at deployment; a line that never reaches it never gets checked.
+and never as "will be checked later". Then add a row to
+`docs/deferred-verification.md` saying what only a real send can prove and how
+it will be proved. That ledger is general — it takes every deferred check in
+the project, not only email — and it is what gets worked through at the end.
+A line that never reaches it never gets checked.
