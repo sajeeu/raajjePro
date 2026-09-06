@@ -39,18 +39,20 @@ const STATUS_FOR_EVENT: Record<string, EmailMessageStatus | undefined> = {
   RenderingFailure: 'failed',
 };
 
-const TERMINAL: ReadonlySet<EmailMessageStatus> = new Set([
-  'delivered',
-  'bounced',
-  'complained',
-  'rejected',
-]);
-
 /**
  * Stores the event (dedup on the SNS message id — SNS retries), moves the
  * message's status forward, and suppresses recipients of a permanent bounce or
  * a complaint. Transient bounces change status only. A terminal status never
  * moves backwards on a late `Send`.
+ *
+ * The status transition and the suppression insert are each a single
+ * conditional/upsert SQL statement rather than a JS-side read-then-write:
+ * two events for the same provider message id (or two events suppressing the
+ * same address) can arrive concurrently, and a snapshot read taken before the
+ * transaction — or a check-then-insert inside it — races. Postgres serialises
+ * concurrent statements against the same row/index entry, so folding the
+ * check into the statement's WHERE/ON CONFLICT clause is what actually
+ * prevents the regression, not the surrounding `$transaction`.
  */
 export async function applySesEvent(
   prisma: PrismaClient,
@@ -60,6 +62,9 @@ export async function applySesEvent(
   rawPayload: unknown,
 ): Promise<'applied' | 'duplicate'> {
   const now = clock();
+  // Read only to learn the message's id (to link the event row) and whether
+  // one exists at all — its `status` is never used for the regression
+  // decision below, which is made atomically inside the transaction instead.
   const message = await prisma.emailMessage.findUnique({
     where: { providerMessageId: event.mail.messageId },
   });
@@ -67,6 +72,10 @@ export async function applySesEvent(
     parseDate(event.bounce?.timestamp ?? event.complaint?.timestamp ?? event.mail.timestamp) ?? now;
 
   return prisma.$transaction(async (tx) => {
+    // Prisma's query API has no atomic "insert, or skip and tell me which"
+    // operation — SNS retries the same message, so the dedup check and the
+    // insert have to be one statement, not a find-then-create that a
+    // concurrent retry can slip between.
     const inserted = message?.id
       ? await tx.$queryRaw<{ id: string }[]>`
           INSERT INTO email_event (id, sns_message_id, message_id, provider_message_id, event_type, occurred_at, payload, received_at)
@@ -83,17 +92,23 @@ export async function applySesEvent(
 
     const next = STATUS_FOR_EVENT[event.eventType];
     if (message !== null && next !== undefined) {
-      const regress = TERMINAL.has(message.status) && !TERMINAL.has(next);
-      if (!regress) {
-        await tx.emailMessage.update({
-          where: { id: message.id },
-          data: { status: next, lastEventAt: occurredAt },
-        });
-      } else {
-        await tx.emailMessage.update({
-          where: { id: message.id },
-          data: { lastEventAt: occurredAt },
-        });
+      // Conditional UPDATE, not a JS read-then-write: the WHERE clause re-checks
+      // the row's *current* status at statement time, so two concurrent events
+      // for the same message serialise on Postgres's row lock instead of both
+      // having read the same stale non-terminal status and racing to write.
+      const updated = await tx.$executeRaw`
+        UPDATE email_message
+        SET status = ${next}::email_message_status, last_event_at = ${occurredAt}
+        WHERE id = ${message.id}::uuid
+          AND NOT (
+            status = ANY (ARRAY['delivered', 'bounced', 'complained', 'rejected']::email_message_status[])
+            AND ${next}::email_message_status <> ALL (ARRAY['delivered', 'bounced', 'complained', 'rejected']::email_message_status[])
+          )`;
+      if (updated === 0) {
+        // The guard above was a no-op (a terminal status held against a later
+        // non-terminal event) — the event was still seen, so record that.
+        await tx.$executeRaw`
+          UPDATE email_message SET last_event_at = ${occurredAt} WHERE id = ${message.id}::uuid`;
       }
     }
 
@@ -109,19 +124,16 @@ export async function applySesEvent(
       }
     }
     for (const s of toSuppress) {
-      const active = await tx.emailSuppression.findFirst({
-        where: { address: s.address, liftedAt: null },
-      });
-      if (active === null) {
-        await tx.emailSuppression.create({
-          data: {
-            address: s.address,
-            reason: s.reason,
-            sourceEventId: eventRow.id,
-            createdAt: now,
-          },
-        });
-      }
+      // Atomic insert-or-skip against the partial unique index on the active
+      // address — a JS check-then-insert races when two different SNS
+      // messages suppress the same address concurrently: both can see "no
+      // active row" and both attempt to insert, and the loser's unique
+      // violation would abort this whole transaction, losing the
+      // email_event row it was meant to commit alongside.
+      await tx.$executeRaw`
+        INSERT INTO email_suppression (id, address, reason, source_event_id, created_at)
+        VALUES (gen_random_uuid(), ${s.address}, ${s.reason}::suppression_reason, ${eventRow.id}::uuid, ${now})
+        ON CONFLICT (address) WHERE lifted_at IS NULL DO NOTHING`;
     }
     return 'applied';
   });

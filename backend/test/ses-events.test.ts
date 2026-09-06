@@ -232,6 +232,50 @@ describe.skipIf(databaseUrl === undefined)('POST /v1/webhooks/ses-events', () =>
     );
   });
 
+  it('concurrent Delivery and a late Send for the same message never regress the status', async () => {
+    for (let i = 0; i < 10; i++) {
+      const to = `race-${randomUUID()}@example.test`;
+      const m = await sent(to);
+      const delivery = sns(
+        'Notification',
+        sesEvent('Delivery', m.providerMessageId, to, { delivery: { recipients: [to] } }),
+      );
+      const lateSend = sns('Notification', sesEvent('Send', m.providerMessageId, to));
+      const [deliveryRes, sendRes] = await Promise.all([post(delivery), post(lateSend)]);
+      expect(deliveryRes.statusCode).toBe(200);
+      expect(sendRes.statusCode).toBe(200);
+      const row = await ctx.prisma.emailMessage.findUniqueOrThrow({ where: { id: m.id } });
+      expect(row.status).toBe('delivered');
+    }
+  });
+
+  it('two distinct-MessageId complaints for the same address do not race the suppression insert', async () => {
+    const to = `race-c-${randomUUID()}@example.test`;
+    const complaint = () =>
+      sns(
+        'Notification',
+        sesEvent('Complaint', `race-${randomUUID()}`, to, {
+          complaint: {
+            complainedRecipients: [{ emailAddress: to }],
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      );
+    const bodyA = complaint();
+    const bodyB = complaint();
+    const [resA, resB] = await Promise.all([post(bodyA), post(bodyB)]);
+    expect(resA.statusCode).toBe(200);
+    expect(resB.statusCode).toBe(200);
+    expect(
+      await ctx.prisma.emailSuppression.count({ where: { address: to, liftedAt: null } }),
+    ).toBe(1);
+    const idA = (JSON.parse(bodyA) as { MessageId: string }).MessageId;
+    const idB = (JSON.parse(bodyB) as { MessageId: string }).MessageId;
+    expect(await ctx.prisma.emailEvent.count({ where: { snsMessageId: { in: [idA, idB] } } })).toBe(
+      2,
+    );
+  });
+
   it('an event for an unknown provider id is stored with no message link', async () => {
     const body = sns(
       'Notification',
