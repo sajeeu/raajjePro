@@ -66,8 +66,12 @@ export class AdminRepository {
     });
   }
 
-  touchSession(sessionId: string, now: Date): Promise<AdminSession> {
-    return this.prisma.adminSession.update({ where: { id: sessionId }, data: { lastSeenAt: now } });
+  /** `updateMany` scoped to `revokedAt: null` so a concurrent revoke can never be clobbered back to live by a racing touch; the caller does not need the row back. */
+  touchSession(sessionId: string, now: Date): Promise<{ count: number }> {
+    return this.prisma.adminSession.updateMany({
+      where: { id: sessionId, revokedAt: null },
+      data: { lastSeenAt: now },
+    });
   }
 
   revokeSession(

@@ -160,13 +160,16 @@ export class AdminAuthService {
     const now = this.clock();
     const idleLimit = session.lastSeenAt.getTime() + this.config.admin.sessionIdleMinutes * 60_000;
     if (session.expiresAt.getTime() <= now.getTime()) {
-      await this.repo.revokeSession(this.prisma, session.id, now, 'absolute_expiry');
+      await this.expireSession(session.id, session.adminId, now, 'absolute_expiry');
       return { rejection: 'SESSION_EXPIRED' };
     }
     if (idleLimit < now.getTime()) {
-      await this.repo.revokeSession(this.prisma, session.id, now, 'idle_timeout');
+      await this.expireSession(session.id, session.adminId, now, 'idle_timeout');
       return { rejection: 'SESSION_EXPIRED' };
     }
+    // Ignore the affected-row count: a concurrent revoke racing this touch
+    // means the update matched zero rows, which is fine — the principal below
+    // was already computed from the row we read while it was still live.
     await this.repo.touchSession(session.id, now);
     return {
       principal: {
@@ -180,6 +183,27 @@ export class AdminAuthService {
     };
   }
 
+  /** Revokes an auto-expired session and audits it in the same transaction, so an idle or absolute timeout leaves a record like any other session state change. */
+  private async expireSession(
+    sessionId: string,
+    adminId: string,
+    now: Date,
+    reason: 'absolute_expiry' | 'idle_timeout',
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await this.repo.revokeSession(tx, sessionId, now, reason);
+      await this.audit.record(tx, {
+        actorType: 'system',
+        action: 'admin.session.expired',
+        targetType: 'admin_session',
+        targetId: sessionId,
+        reason,
+        metadata: { adminId },
+      });
+    });
+  }
+
+  /** Caller must pass `sessionId`/`adminId` from its own resolved principal, never from request input — this never checks ownership itself. */
   async logout(sessionId: string, adminId: string, meta: RequestMeta): Promise<void> {
     const now = this.clock();
     await this.prisma.$transaction(async (tx) => {

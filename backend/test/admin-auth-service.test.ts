@@ -79,7 +79,7 @@ describe.skipIf(databaseUrl === undefined)('AdminAuthService — accounts and se
     const { service, time } = build({ sessionIdleMinutes: 15, sessionAbsoluteHours: 12 });
     const email = `admin-${randomUUID()}@example.test`;
     await service.createAdmin(email, PASSWORD, {});
-    const { token } = await service.login(email, PASSWORD, meta);
+    const { token, session: firstSession } = await service.login(email, PASSWORD, meta);
 
     time.advance(14 * 60_000);
     expect(await service.resolveSession(token)).toHaveProperty('principal');
@@ -88,6 +88,11 @@ describe.skipIf(databaseUrl === undefined)('AdminAuthService — accounts and se
     time.advance(15 * 60_000 + 1);
     expect(await service.resolveSession(token)).toEqual({ rejection: 'SESSION_EXPIRED' });
     expect(await service.resolveSession(token)).toEqual({ rejection: 'SESSION_EXPIRED' });
+    const idleExpiry = await prisma.auditLogEntry.findMany({
+      where: { action: 'admin.session.expired', targetId: firstSession.id },
+    });
+    expect(idleExpiry).toHaveLength(1); // one entry, not one per resolveSession call
+    expect(idleExpiry[0]?.reason).toBe('idle_timeout');
 
     const second = await service.login(email, PASSWORD, meta);
     for (let i = 0; i < 12 * 6; i += 1) {
@@ -98,6 +103,11 @@ describe.skipIf(databaseUrl === undefined)('AdminAuthService — accounts and se
     }
     const row = await prisma.adminSession.findUnique({ where: { id: second.session.id } });
     expect(row?.revokedReason).toBe('absolute_expiry');
+    const absoluteExpiry = await prisma.auditLogEntry.findMany({
+      where: { action: 'admin.session.expired', targetId: second.session.id },
+    });
+    expect(absoluteExpiry).toHaveLength(1);
+    expect(absoluteExpiry[0]?.reason).toBe('absolute_expiry');
   });
 
   it('rejects an unknown token and a revoked session; revocation touches only the named session', async () => {
