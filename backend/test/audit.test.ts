@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AuditService } from '../src/modules/audit/service.js';
 import { createPrismaClient } from '../src/db/client.js';
-import type { PrismaClient } from '../src/generated/prisma/client.js';
+import type { AuditLogEntry, PrismaClient } from '../src/generated/prisma/client.js';
 import { controllableClock, databaseUrl } from './helpers/app.js';
 
 describe.skipIf(databaseUrl === undefined)('AuditService', () => {
@@ -91,5 +91,44 @@ describe.skipIf(databaseUrl === undefined)('AuditService', () => {
       limit: 10,
     });
     expect(window.items.map((e) => e.targetId)).toEqual(['3', '2']);
+  });
+
+  it('paginates stably when several entries share a createdAt', async () => {
+    const time = controllableClock(new Date('2026-09-06T08:00:00Z'));
+    const audit = new AuditService(prisma, time.clock);
+    const actorId = randomUUID();
+    const recorded: AuditLogEntry[] = [];
+    for (let i = 0; i < 5; i += 1) {
+      // No time.advance() here — every entry shares the same createdAt, so
+      // only the (createdAt, id) tie-break keeps pagination stable.
+      recorded.push(
+        await audit.record(prisma, {
+          actorType: 'admin',
+          actorId,
+          action: 'test.same_instant',
+          targetType: 't',
+          targetId: String(i),
+          reason: 'r',
+        }),
+      );
+    }
+
+    const seen: string[] = [];
+    let cursor: string | undefined;
+    for (let page = 0; page < 3; page += 1) {
+      const result = await audit.query({ actorId, limit: 2, cursor });
+      const ids = result.items.map((e) => e.id);
+      expect(ids).toEqual([...ids].sort().reverse());
+      seen.push(...ids);
+      if (page < 2) {
+        expect(result.nextCursor).not.toBeNull();
+      } else {
+        expect(result.nextCursor).toBeNull();
+      }
+      cursor = result.nextCursor ?? undefined;
+    }
+
+    expect(new Set(seen).size).toBe(5);
+    expect(seen.sort()).toEqual(recorded.map((e) => e.id).sort());
   });
 });

@@ -22,6 +22,7 @@ export interface AuditQuery {
   to?: Date;
   actorId?: string;
   action?: string;
+  /** `| undefined` (not just `?`) because callers pass `nextCursor ?? undefined`, and `exactOptionalPropertyTypes` rejects an explicit `undefined` unless the type says so. */
   cursor?: string | undefined;
   limit: number;
 }
