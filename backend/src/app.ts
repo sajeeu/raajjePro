@@ -9,8 +9,10 @@ import type { Config } from './config/env.js';
 import type { Clock } from './core/clock.js';
 import { registerErrorHandling } from './core/error-handler.js';
 import { genReqId, loggerOptions } from './core/logging.js';
+import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
+import { registerRateLimit } from './plugins/rate-limit.js';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -29,7 +31,6 @@ declare module 'fastify' {
  * (later tasks) admin session, rate limit, idempotency — then the modules under
  * /v1. Tests call this and use inject(); main.ts calls it and listens.
  */
-// eslint-disable-next-line @typescript-eslint/require-await -- stays async: later tasks add awaited plugin registration (rate limit, cookie, cors) here
 export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger: loggerOptions(config),
@@ -48,6 +49,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
 
   registerErrorHandling(app);
+  await registerRateLimit(app);
   registerHealthRoutes(app);
 
   return app;
