@@ -178,19 +178,3 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     email,
   };
 }
-
-/**
- * Environment access.
- *
- * Superseded above by `loadConfig`, which validates every variable at startup
- * and reports every failure together. Kept only because `main.ts` and
- * `jobs/status.ts` (Phase 0) still import it — Task 3 removes it and this
- * comment along with it.
- */
-export function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (value === undefined || value === '') {
-    throw new Error(`Missing required environment variable ${name} (see .env.example)`);
-  }
-  return value;
-}

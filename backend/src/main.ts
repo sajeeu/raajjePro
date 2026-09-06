@@ -1,34 +1,35 @@
 /**
- * Backend entrypoint.
- *
- * Phase 0 boot: load configuration, reach the database, confirm the job runner
- * is alive, report, exit 0. Phase 2 replaces the exit with the Fastify server
- * and the console lines with structured logging; nothing here is meant to
- * outlive that.
+ * Backend entrypoint: validate configuration, connect, build the app, listen.
+ * A configuration error prints every issue and exits 1 before the database is
+ * touched. SIGTERM/SIGINT close the server and the connection pool.
  */
-import { requireEnv } from './config/env.js';
+import { buildApp } from './app.js';
+import type { Config } from './config/env.js';
+import { ConfigError, loadConfig } from './config/env.js';
+import { systemClock } from './core/clock.js';
 import { createPrismaClient } from './db/client.js';
-import { readHeartbeat } from './jobs/heartbeat.js';
 
-const databaseUrl = requireEnv('DATABASE_URL');
-const nodeEnv = process.env.NODE_ENV ?? 'development';
-
-const prisma = createPrismaClient(databaseUrl);
-
+let config: Config;
 try {
-  const [{ now }] = await prisma.$queryRaw<[{ now: Date }]>`SELECT now()`;
-  const heartbeat = await readHeartbeat(prisma, now);
-
-  console.log(
-    JSON.stringify({
-      event: 'backend.booted',
-      env: nodeEnv,
-      database: 'reachable',
-      databaseTime: now.toISOString(),
-      jobRunner: heartbeat.firing ? 'firing' : 'not-firing',
-      lastHeartbeatAt: heartbeat.lastFiredAt?.toISOString() ?? null,
-    }),
-  );
-} finally {
-  await prisma.$disconnect();
+  config = loadConfig(process.env);
+} catch (error) {
+  if (error instanceof ConfigError) {
+    console.error(error.message);
+    process.exit(1);
+  }
+  throw error;
 }
+
+const prisma = createPrismaClient(config.databaseUrl);
+const app = await buildApp(config, { prisma, clock: systemClock });
+
+const shutdown = async (signal: string) => {
+  app.log.info({ signal }, 'shutting down');
+  await app.close();
+  await prisma.$disconnect();
+  process.exit(0);
+};
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+
+await app.listen({ port: config.port, host: config.host });

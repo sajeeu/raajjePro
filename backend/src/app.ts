@@ -10,6 +10,7 @@ import type { Clock } from './core/clock.js';
 import { registerErrorHandling } from './core/error-handler.js';
 import { genReqId, loggerOptions } from './core/logging.js';
 import type { PrismaClient } from './generated/prisma/client.js';
+import { registerHealthRoutes } from './modules/health/routes.js';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -47,6 +48,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
 
   registerErrorHandling(app);
+  registerHealthRoutes(app);
 
   return app;
 }

@@ -4,11 +4,11 @@
  * This is the Phase 0 "observably firing" check. Exit code 0 when the job
  * fired within the last two minutes, 1 otherwise, so it can gate a script.
  */
-import { requireEnv } from '../config/env.js';
+import { loadConfig } from '../config/env.js';
 import { createPrismaClient } from '../db/client.js';
 import { HEARTBEAT_STALE_AFTER_MS, NOOP_JOB_NAME, readHeartbeat } from './heartbeat.js';
 
-const prisma = createPrismaClient(requireEnv('DATABASE_URL'));
+const prisma = createPrismaClient(loadConfig(process.env).databaseUrl);
 
 try {
   const report = await readHeartbeat(prisma);
