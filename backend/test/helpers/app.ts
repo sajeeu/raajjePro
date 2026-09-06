@@ -1,10 +1,14 @@
 import 'dotenv/config';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { FastifyInstance } from 'fastify';
 
 import { buildApp, type AppDeps } from '../../src/app.js';
 import { loadConfig, type Config } from '../../src/config/env.js';
 import type { Clock } from '../../src/core/clock.js';
 import { createPrismaClient } from '../../src/db/client.js';
+import { FileEmailTransport } from '../../src/modules/email/transports/file.js';
 
 export const databaseUrl = process.env.DATABASE_URL;
 
@@ -80,6 +84,8 @@ export async function buildTestApp(options: TestAppOptions = {}) {
   const app = await buildApp(config, {
     prisma,
     clock: options.clock ?? (() => new Date()),
+    emailTransport:
+      options.deps?.emailTransport ?? new FileEmailTransport(join(tmpdir(), 'raajjepro-test-mail')),
     ...options.deps,
   });
   if (options.routes) {

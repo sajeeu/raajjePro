@@ -8,6 +8,7 @@ import type { Config } from './config/env.js';
 import { ConfigError, loadConfig } from './config/env.js';
 import { systemClock } from './core/clock.js';
 import { createPrismaClient } from './db/client.js';
+import { createEmailTransport } from './modules/email/transports/index.js';
 
 let config: Config;
 try {
@@ -21,7 +22,8 @@ try {
 }
 
 const prisma = createPrismaClient(config.databaseUrl);
-const app = await buildApp(config, { prisma, clock: systemClock });
+const emailTransport = createEmailTransport(config.email);
+const app = await buildApp(config, { prisma, clock: systemClock, emailTransport });
 
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');

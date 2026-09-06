@@ -15,6 +15,8 @@ import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
+import { EmailService } from './modules/email/service.js';
+import type { EmailSender, EmailTransport } from './modules/email/types.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
 import { registerAdminSession } from './plugins/admin-session.js';
 import { registerIdempotency } from './plugins/idempotency.js';
@@ -23,6 +25,7 @@ import { registerRateLimit } from './plugins/rate-limit.js';
 export interface AppDeps {
   prisma: PrismaClient;
   clock: Clock;
+  emailTransport: EmailTransport;
 }
 
 declare module 'fastify' {
@@ -31,6 +34,7 @@ declare module 'fastify' {
     deps: AppDeps;
     audit: AuditService;
     adminAuth: AdminAuthService;
+    email: EmailSender;
   }
 }
 
@@ -58,6 +62,10 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   app.decorate(
     'adminAuth',
     new AdminAuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }),
+  );
+  app.decorate(
+    'email',
+    new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock),
   );
 
   app.addHook('onSend', async (request, reply) => {
