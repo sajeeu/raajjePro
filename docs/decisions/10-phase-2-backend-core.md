@@ -60,6 +60,21 @@ Each of these is a review finding from the build ledger
 the merged code — not a hypothetical risk, something the review actually
 caught and a ruling actually fixed.
 
+- **`loadConfig` short-circuited on the first Zod failure, before the
+  production business-rule checks ran.** The design's config module promises
+  to collect every issue and report them together; the first pass threw as
+  soon as schema parsing failed, so a deployment with both a missing variable
+  and a production-only violation (say, `EMAIL_TRANSPORT` not `ses` in
+  production) learned about the schema issue on the first boot and the
+  business-rule issue only on the second. Fixed: the business-rule checks now
+  run against the raw env regardless of whether the schema itself parsed, so
+  both kinds of problem land in one `ConfigError`. In the same review, the
+  new dependencies were also found pinned with caret ranges rather than
+  exact versions — a slip against the repo's own convention (Dependabot
+  bumps them deliberately), not a design change — and were re-pinned exactly,
+  with `backend/.npmrc`'s `save-exact=true` added so `npm install` cannot
+  reintroduce a caret later.
+
 - **Pino redaction matched exact key depth, not "any depth."** The design's
   redaction list named `email`, `phone`, `password`, etc. as redacted "at any
   depth," but the implementation's paths matched a fixed nesting (`*.field`),
@@ -142,6 +157,11 @@ caught and a ruling actually fixed.
 Recorded in the ledger as accepted, not fixed — each judged too small to hold
 up the phase:
 
+- `genReqId` lowercases an honoured client-supplied `X-Request-Id` even when
+  it was already a valid UUID; harmless, but worth a comment noting it.
+- No test pins that an unmatched URL under `/v1/admin` returns 404 (route not
+  found) rather than 403 (CSRF/session rejection) — the admin-session hook's
+  early return on an unmatched route is correct today but unguarded by a test.
 - `child()`'s rate-limit-scope fallback when `routeInfo` is an empty object
   (the decorator form of registration, unused today).
 - A redundant `Retry-After` header set at the plugin level alongside the

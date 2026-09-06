@@ -133,11 +133,10 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 
 **Yours — none of this can be done from a keyboard here:**
 
-- **AWS/SES account and domain verification**, then production access. Phase 3 cannot be tested from a sandboxed account, and it gates booking, enquiry and messaging
+- **Request SES production access now** — the AWS account, domain verification and the production-access request itself are yours; the bounce/complaint handling and suppression list it depends on are built as of Phase 2. `docs/ops/ses-production-access.md` is the runbook; Phase 3 waits on it
 - **Legal counsel on liability** (§1i) — whether a platform that verifies identity, gates emergency work by tier and dispatches providers is still "just a marketplace" under Maldivian law
 - **App Store submission outcome.** Phase 10a ships in-app bank-transfer billing as a deliberate test of guideline 3.1.1; rejection is likely and the fallback is mapped
 - **Admin load costing** at 50, 200 and 500 providers. Plan §4 Sequencing places this *before Phase 0*; Phase 0 has been built without it, so it is overdue rather than backlog
-- **Request SES production access now** — `docs/ops/ses-production-access.md` is the runbook; Phase 3 waits on it. The bounce/complaint handling and suppression list it depends on are built as of Phase 2; the AWS account, domain verification and the request itself are yours
 
 **Mine, on request:** Phase 2 onward when you say go.
 
