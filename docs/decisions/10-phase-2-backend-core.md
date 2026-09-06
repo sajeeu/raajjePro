@@ -264,6 +264,11 @@ needs to sign in to the panel UI.
 
 ## Next step for the owner
 
+🔧 **Superseded 2026-09-06.** SES moved to deployment by the owner's decision
+(plan §0.0 item 17, `docs/decisions/11-email-deferred-to-deployment.md`).
+Phase 3 does not wait on it. The section below is kept as written at the time.
+
+
 Request SES production access, per `docs/ops/ses-production-access.md`. The
 bounce/complaint handling and suppression list that access request depends on
 are built as of this phase; Phase 3 (OTP, registration, login) is untestable

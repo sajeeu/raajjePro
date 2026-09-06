@@ -1,6 +1,16 @@
 # SES production access — the owner's runbook
 
-**Status: ready to run. Plan revision 5.19, §0.0 item 8 / §4 Sequencing.**
+**Status: deferred to deployment (2026-09-06). Plan revision 5.20, §0.0 item 17.**
+
+The steps below are correct and unchanged — only their timing moved. The app
+is built first against `EMAIL_TRANSPORT=file`; this runbook is run early in
+the deployment phase, not before Phase 3.
+`docs/decisions/11-email-deferred-to-deployment.md` holds the ledger of what
+stays unverified until then, and it is the checklist to work through here.
+
+**§2 is incomplete:** the custom MAIL FROM subdomain also needs an MX record,
+not only the SPF record named there. Take the exact records from the SES
+console when you configure the subdomain.
 
 This is a checklist for whoever holds the AWS account, not a build task. The
 build-side work it depends on — bounce/complaint handling, the suppression
@@ -16,8 +26,9 @@ lifts that, but AWS requires attesting that bounces and complaints are
 handled and a suppression list is honoured before every send — otherwise SES
 itself becomes the thing that damages the shared sending reputation of the
 whole service. That handling exists now (root `CLAUDE.md` invariant 10; plan
-§0.0 item 8 / §4 Sequencing place it in the Phase 0–2 window, ahead of
-Phase 3, because Phase 3 cannot be tested from a sandboxed account).
+§0.0 item 8 / §4 Sequencing place it in the Phase 0–2 window; it was built
+in Phase 2 and is what the attestation below is about). §0.0 item 17
+since moved the AWS half of this to deployment.
 
 ## 2. Domain identity
 

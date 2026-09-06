@@ -31,7 +31,11 @@ INSTRUCTION_FILES = (
     "docs/design/style-guide.md",
     "docs/design/designer-brief.md",
 )
-INSTRUCTION_GLOBS = (".claude/skills/",)
+# The phase commands are the most instructional files in the repository — they
+# are what a build session is handed — and nothing checked them. `phase-2.md`
+# carried "request SES production access before Phase 3 starts" for as long as
+# that rule stood, and would have kept carrying it afterwards.
+INSTRUCTION_GLOBS = (".claude/skills/", ".claude/commands/")
 
 # A hit is excused when the line is describing the old rule rather than
 # instructing it. Keep this list honest: every entry is a phrase that only
@@ -60,6 +64,11 @@ RULES = [
      "Round 15: quote windows are per-category — 120/240 or 1440/4320. Never hardcode."),
     ("pre-Round-22 Moving window", r"Moving[^.]{0,40}\b120\b|\b120\b[^.]{0,40}Moving",
      "Round 22: the emergency response window is 30 minutes for all four categories."),
+    ("SES gating Phase 3", r"production access[^.]{0,80}before Phase 3|"
+                           r"before Phase 3[^.]{0,80}production access|"
+                           r"sandbox before this phase|Phase 3 waits on it",
+     "Plan \u00a70.0 item 17 (2026-09-06): SES moved to deployment. Phase 3 is built "
+     "against EMAIL_TRANSPORT=file and does not wait on an AWS account."),
 ]
 
 
