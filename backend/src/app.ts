@@ -65,7 +65,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   );
   app.decorate(
     'email',
-    new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock),
+    new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock, app.log),
   );
 
   app.addHook('onSend', async (request, reply) => {

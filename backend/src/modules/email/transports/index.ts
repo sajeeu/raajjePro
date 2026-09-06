@@ -7,8 +7,9 @@ import { SesEmailTransport } from './ses.js';
 
 /**
  * `config.email.directory` (`.mail`) is relative — resolve it against the
- * process's cwd (`backend/` under `npm run dev`), not against this module's
- * location, so it lands next to `package.json` where `.gitignore` expects it.
+ * process's cwd, not against this module's location. `npm run dev` and
+ * `npm start` both run with `backend/` as the cwd, so this lands `.mail/`
+ * next to `package.json`, where `.gitignore` already covers it.
  */
 export function createEmailTransport(config: Config['email']): EmailTransport {
   return config.transport === 'ses'
