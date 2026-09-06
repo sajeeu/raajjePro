@@ -79,4 +79,17 @@ describe('loadConfig', () => {
       expect(config.email.configurationSets.otp).toBe('otp');
     }
   });
+
+  it('reports a schema failure and a production business-rule violation together', () => {
+    let caught: unknown;
+    try {
+      loadConfig({ NODE_ENV: 'production', EMAIL_TRANSPORT: 'file' });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ConfigError);
+    const issues = (caught as ConfigError).issues.join('\n');
+    expect(issues).toContain('DATABASE_URL');
+    expect(issues).toContain('EMAIL_TRANSPORT');
+  });
 });

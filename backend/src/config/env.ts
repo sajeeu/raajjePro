@@ -101,31 +101,46 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     for (const issue of parsed.error.issues) {
       issues.push(`${issue.path.join('.')}: ${issue.message}`);
     }
-    throw new ConfigError(issues);
   }
-  const v = parsed.data;
 
-  const production = v.NODE_ENV === 'production';
-  if (production && v.EMAIL_TRANSPORT !== 'ses') {
+  // Business-rule checks run against the raw env regardless of whether the
+  // schema itself parsed, so a deployment with both a missing variable and a
+  // production-only violation learns about both on the first boot, not the
+  // second. They read `cleaned` directly (applying the same defaults the
+  // schema would) rather than `parsed.data`, which does not exist on failure.
+  const production = cleaned.NODE_ENV === 'production';
+  const emailTransport = cleaned.EMAIL_TRANSPORT ?? 'file';
+  const adminOrigin = cleaned.ADMIN_ORIGIN ?? 'http://localhost:5173';
+  if (production && emailTransport !== 'ses') {
     issues.push('EMAIL_TRANSPORT: must be "ses" in production');
   }
-  if (production && !v.ADMIN_ORIGIN.startsWith('https://')) {
+  if (production && !adminOrigin.startsWith('https://')) {
     issues.push('ADMIN_ORIGIN: must be an https:// origin in production');
   }
-
-  let email: Config['email'];
-  if (v.EMAIL_TRANSPORT === 'ses') {
+  if (emailTransport === 'ses') {
     const required: [string, string | undefined][] = [
-      ['AWS_REGION', v.AWS_REGION],
-      ['SES_CONFIGURATION_SET_OTP', v.SES_CONFIGURATION_SET_OTP],
-      ['SES_CONFIGURATION_SET_NOTIFICATION', v.SES_CONFIGURATION_SET_NOTIFICATION],
-      ['SES_CONFIGURATION_SET_MARKETING', v.SES_CONFIGURATION_SET_MARKETING],
-      ['SES_EVENTS_TOPIC_ARN', v.SES_EVENTS_TOPIC_ARN],
+      ['AWS_REGION', cleaned.AWS_REGION],
+      ['SES_CONFIGURATION_SET_OTP', cleaned.SES_CONFIGURATION_SET_OTP],
+      ['SES_CONFIGURATION_SET_NOTIFICATION', cleaned.SES_CONFIGURATION_SET_NOTIFICATION],
+      ['SES_CONFIGURATION_SET_MARKETING', cleaned.SES_CONFIGURATION_SET_MARKETING],
+      ['SES_EVENTS_TOPIC_ARN', cleaned.SES_EVENTS_TOPIC_ARN],
     ];
     for (const [name, value] of required) {
       if (value === undefined) issues.push(`${name}: required when EMAIL_TRANSPORT=ses`);
     }
-    if (issues.length > 0) throw new ConfigError(issues);
+  }
+
+  if (issues.length > 0) throw new ConfigError(issues);
+  if (!parsed.success) {
+    // Unreachable: a schema failure always adds at least one issue above,
+    // which throws before this line. Kept so the compiler can narrow
+    // `parsed.data` below without an unsafe cast.
+    throw new ConfigError(issues);
+  }
+  const v = parsed.data;
+
+  let email: Config['email'];
+  if (v.EMAIL_TRANSPORT === 'ses') {
     email = {
       transport: 'ses',
       fromAddress: v.EMAIL_FROM_ADDRESS,
@@ -138,7 +153,6 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       eventsTopicArn: v.SES_EVENTS_TOPIC_ARN ?? '',
     };
   } else {
-    if (issues.length > 0) throw new ConfigError(issues);
     email = { transport: 'file', fromAddress: v.EMAIL_FROM_ADDRESS, directory: '.mail' };
   }
 
