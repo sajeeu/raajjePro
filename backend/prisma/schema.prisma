@@ -5,8 +5,8 @@
 //   - integer laari money:   ...Laari Int   — MVR × 100, never Float or Decimal
 //   - soft delete:           a status/visibility field; no row is ever DELETEd
 //   - snake_case in the DB:  @@map / @map, camelCase in code
-// Phase 2 encodes these as reusable base patterns. Phase 0 carries only the
-// infrastructure table below.
+// Phase 2 encodes these as reusable base patterns. Phase 2 adds the
+// infrastructure tables below.
 
 generator client {
   provider = "prisma-client"
@@ -27,4 +27,235 @@ model JobHeartbeat {
   firedAt DateTime @default(now()) @map("fired_at") @db.Timestamptz(6)
 
   @@map("job_heartbeat")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 — core infrastructure
+// ---------------------------------------------------------------------------
+
+/// Rate-limit window counters. UNLOGGED (set in the migration): out of the WAL
+/// and PITR stream, which is right for ephemeral state — and means an unclean
+/// shutdown truncates the table and every limit fails open for one window.
+/// Rows are keyed per (scope, subject) and reused across windows, never deleted.
+model RateLimitCounter {
+  key             String   @id
+  count           Int
+  windowStartedAt DateTime @map("window_started_at") @db.Timestamptz(6)
+
+  @@map("rate_limit_counter")
+}
+
+enum IdempotencyStatus {
+  in_progress
+  completed
+  abandoned
+
+  @@map("idempotency_status")
+}
+
+/// One row per (subject, operation, client key). A repeat with the same body
+/// replays response_status/response_body; nothing here is ever deleted.
+model IdempotencyRecord {
+  id              String            @id @default(uuid()) @db.Uuid
+  subject         String
+  operation       String
+  clientKey       String            @map("client_key")
+  requestHash     String            @map("request_hash")
+  status          IdempotencyStatus
+  responseStatus  Int?              @map("response_status")
+  responseHeaders Json?             @map("response_headers")
+  responseBody    Json?             @map("response_body")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt     DateTime?         @map("completed_at") @db.Timestamptz(6)
+
+  @@unique([subject, operation, clientKey])
+  @@map("idempotency_record")
+}
+
+enum AdminStatus {
+  active
+  disabled
+
+  @@map("admin_status")
+}
+
+/// Admin identity (plan §Phase 2). One role in v1. `status` is the soft-delete
+/// field. The TOTP secret is AES-256-GCM ciphertext; null until enrolment starts.
+model AdminUser {
+  id                  String      @id @default(uuid()) @db.Uuid
+  email               String      @unique
+  passwordHash        String      @map("password_hash")
+  role                String      @default("admin")
+  status              AdminStatus @default(active)
+  totpSecretEncrypted String?     @map("totp_secret_encrypted")
+  totpEnrolledAt      DateTime?   @map("totp_enrolled_at") @db.Timestamptz(6)
+  passwordChangedAt   DateTime    @default(now()) @map("password_changed_at") @db.Timestamptz(6)
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions      AdminSession[]
+  recoveryCodes AdminRecoveryCode[]
+
+  @@map("admin_user")
+}
+
+enum SessionRevokedReason {
+  logout
+  force_logout
+  idle_timeout
+  absolute_expiry
+  mfa_failures
+  password_change
+
+  @@map("session_revoked_reason")
+}
+
+/// A browser session. The cookie holds a random token; only its sha256 is here.
+model AdminSession {
+  id                String                @id @default(uuid()) @db.Uuid
+  adminId           String                @map("admin_id") @db.Uuid
+  admin             AdminUser             @relation(fields: [adminId], references: [id])
+  tokenHash         String                @unique @map("token_hash")
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt        DateTime              @map("last_seen_at") @db.Timestamptz(6)
+  expiresAt         DateTime              @map("expires_at") @db.Timestamptz(6)
+  mfaVerifiedAt     DateTime?             @map("mfa_verified_at") @db.Timestamptz(6)
+  reauthenticatedAt DateTime?             @map("reauthenticated_at") @db.Timestamptz(6)
+  mfaFailures       Int                   @default(0) @map("mfa_failures")
+  ipAddress         String                @map("ip_address")
+  userAgent         String                @map("user_agent")
+  revokedAt         DateTime?             @map("revoked_at") @db.Timestamptz(6)
+  revokedReason     SessionRevokedReason? @map("revoked_reason")
+
+  @@index([adminId, revokedAt])
+  @@map("admin_session")
+}
+
+model AdminRecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  adminId   String    @map("admin_id") @db.Uuid
+  admin     AdminUser @relation(fields: [adminId], references: [id])
+  codeHash  String    @map("code_hash")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  @@index([adminId, codeHash])
+  @@map("admin_recovery_code")
+}
+
+enum AuditActorType {
+  admin
+  system
+
+  @@map("audit_actor_type")
+}
+
+/// Append-only. Every admin action: who, when, what, on what, why (plan
+/// §Phase 2). `metadata` holds IDs and enums only — never an email, phone or
+/// document. No code path updates or deletes a row.
+model AuditLogEntry {
+  id         String         @id @default(uuid()) @db.Uuid
+  actorType  AuditActorType @map("actor_type")
+  actorId    String?        @map("actor_id") @db.Uuid
+  action     String
+  targetType String         @map("target_type")
+  targetId   String         @map("target_id")
+  reason     String
+  metadata   Json?
+  requestId  String?        @map("request_id")
+  ipAddress  String?        @map("ip_address")
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_log_entry")
+}
+
+enum EmailChannel {
+  otp
+  notification
+  marketing
+
+  @@map("email_channel")
+}
+
+enum EmailMessageStatus {
+  queued
+  sent
+  failed
+  suppressed
+  delivered
+  bounced
+  complained
+  rejected
+  delivery_delayed
+
+  @@map("email_message_status")
+}
+
+/// Per-message delivery log — SES has no searchable console, so this is what
+/// answers "did this user actually receive it?" (plan §Phase 3c, §Phase 10b).
+model EmailMessage {
+  id                String             @id @default(uuid()) @db.Uuid
+  channel           EmailChannel
+  toAddress         String             @map("to_address")
+  recipientUserId   String?            @map("recipient_user_id") @db.Uuid
+  subject           String
+  status            EmailMessageStatus
+  configurationSet  String?            @map("configuration_set")
+  providerMessageId String?            @unique @map("provider_message_id")
+  failureReason     String?            @map("failure_reason")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  sentAt            DateTime?          @map("sent_at") @db.Timestamptz(6)
+  lastEventAt       DateTime?          @map("last_event_at") @db.Timestamptz(6)
+
+  events EmailEvent[]
+
+  @@index([toAddress, createdAt])
+  @@index([recipientUserId, createdAt])
+  @@map("email_message")
+}
+
+/// One row per SNS notification received from the SES event destination.
+/// `snsMessageId` is unique because SNS retries.
+model EmailEvent {
+  id                String        @id @default(uuid()) @db.Uuid
+  snsMessageId      String        @unique @map("sns_message_id")
+  messageId         String?       @map("message_id") @db.Uuid
+  message           EmailMessage? @relation(fields: [messageId], references: [id])
+  providerMessageId String?       @map("provider_message_id")
+  eventType         String        @map("event_type")
+  occurredAt        DateTime      @map("occurred_at") @db.Timestamptz(6)
+  payload           Json
+  receivedAt        DateTime      @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  @@index([providerMessageId])
+  @@map("email_event")
+}
+
+enum SuppressionReason {
+  hard_bounce
+  complaint
+  manual
+
+  @@map("suppression_reason")
+}
+
+/// Addresses we must not send to. Active while lifted_at IS NULL — a partial
+/// unique index on that condition is added by hand in the migration. Lifting
+/// (Phase 10b) sets lifted_at; nothing is deleted.
+model EmailSuppression {
+  id              String            @id @default(uuid()) @db.Uuid
+  address         String
+  reason          SuppressionReason
+  sourceEventId   String?           @map("source_event_id") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  liftedAt        DateTime?         @map("lifted_at") @db.Timestamptz(6)
+  liftedByAdminId String?           @map("lifted_by_admin_id") @db.Uuid
+  liftReason      String?           @map("lift_reason")
+
+  @@index([address])
+  @@map("email_suppression")
 }
