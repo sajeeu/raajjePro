@@ -18,9 +18,32 @@ export function genReqId(req: IncomingMessage): string {
 }
 
 /**
+ * Keys that must never reach a log line unredacted. fast-redact wildcards
+ * match an exact depth — `*.email` catches `{ user: { email } }` but not a
+ * top-level `{ email }` — so each key is repeated at every depth we redact.
+ */
+const SENSITIVE_KEYS = ['password', 'email', 'phone', 'code', 'token', 'secret', 'recoveryCodes'];
+
+/** Depths 0 (bare key) through 3 (three levels of nesting). */
+const REDACTED_DEPTH = 3;
+
+function sensitiveKeyPaths(): string[] {
+  const paths: string[] = [];
+  for (let depth = 0; depth <= REDACTED_DEPTH; depth += 1) {
+    const prefix = '*.'.repeat(depth);
+    for (const key of SENSITIVE_KEYS) {
+      paths.push(`${prefix}${key}`);
+    }
+  }
+  return paths;
+}
+
+/**
  * Structured logging with no PII (plan §Phase 2). Redaction is by key name at
- * any depth, so a new log call cannot leak an email by accident; bodies are
- * never logged at all because no serializer includes them.
+ * the top level and up to three levels of nesting — anything logged deeper
+ * than that must not carry sensitive data in the first place, since no
+ * wildcard depth covers it. Bodies are never logged at all because no
+ * serializer includes them.
  */
 export function loggerOptions(config: Config): NonNullable<FastifyServerOptions['logger']> {
   return {
@@ -30,20 +53,7 @@ export function loggerOptions(config: Config): NonNullable<FastifyServerOptions[
         'req.headers.authorization',
         'req.headers.cookie',
         'res.headers["set-cookie"]',
-        '*.password',
-        '*.email',
-        '*.phone',
-        '*.code',
-        '*.token',
-        '*.secret',
-        '*.recoveryCodes',
-        '*.*.password',
-        '*.*.email',
-        '*.*.phone',
-        '*.*.code',
-        '*.*.token',
-        '*.*.secret',
-        '*.*.recoveryCodes',
+        ...sensitiveKeyPaths(),
       ],
       censor: '[redacted]',
     },
