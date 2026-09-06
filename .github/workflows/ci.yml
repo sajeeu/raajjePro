@@ -24,6 +24,8 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://raajjepro:raajjepro@localhost:5435/raajjepro?schema=public
+      ADMIN_TOTP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      EMAIL_FROM_ADDRESS: ci@raajjepro.local
     steps:
       - uses: actions/checkout@v7
 
@@ -52,11 +54,22 @@ jobs:
 
       - run: npm test
 
-      # A boot must reach the database and see the runner. The heartbeat fires
-      # on the minute, so allow it one full minute after migration.
-      - name: Boot and confirm the job runner fires
+      # A boot must reach the database, answer /v1/health, and see the runner.
+      # The heartbeat fires on the minute, so allow it one full minute after
+      # migration.
+      - name: Boot the server, check /v1/health, confirm the job runner fires
+        env:
+          ADMIN_TOTP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          EMAIL_FROM_ADDRESS: ci@raajjepro.local
+          PORT: 3000
         run: |
-          npm start
+          npm start &
+          for attempt in $(seq 1 20); do
+            if curl -fsS localhost:3000/v1/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS localhost:3000/v1/health | tee health.json
+          kill %1
           for attempt in $(seq 1 14); do
             if npm run --silent jobs:status; then exit 0; fi
             sleep 5
