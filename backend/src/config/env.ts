@@ -25,7 +25,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: int(3000),
   HOST: z.string().min(1).default('0.0.0.0'),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   TRUST_PROXY: bool.default(false),
   DATABASE_URL: z.string().min(1),
 
@@ -68,7 +68,7 @@ export interface Config {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
   host: string;
-  logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+  logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
   trustProxy: boolean;
   databaseUrl: string;
   admin: {
