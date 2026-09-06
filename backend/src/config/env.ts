@@ -1,14 +1,177 @@
 /**
- * Environment access.
+ * Typed configuration, validated once at startup (plan §Phase 2: "typed
+ * config module, fail-fast on missing vars").
  *
  * Configuration comes from process environment variables and nowhere else —
- * see .env.example for the strategy. Locally the values arrive via
- * `node --env-file=.env`; in CI and deployed environments the host injects
- * them. Nothing in src/ reads a file.
+ * see .env.example, which is the contract for what a deployment must provide.
+ * Every failure is collected and reported together so a deployment with three
+ * missing variables learns about all three on the first boot, not the third.
+ */
+import { z } from 'zod';
+
+const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
+const int = (fallback: number) => z.coerce.number().int().positive().default(fallback);
+
+const base32Key = z.string().transform((v, ctx) => {
+  const bytes = Buffer.from(v, 'base64');
+  if (bytes.length !== 32) {
+    ctx.addIssue({ code: 'custom', message: 'must be 32 bytes, base64-encoded' });
+    return z.NEVER;
+  }
+  return bytes;
+});
+
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: int(3000),
+  HOST: z.string().min(1).default('0.0.0.0'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  TRUST_PROXY: bool.default(false),
+  DATABASE_URL: z.string().min(1),
+
+  ADMIN_ORIGIN: z.string().min(1).default('http://localhost:5173'),
+  ADMIN_SESSION_IDLE_MINUTES: int(15),
+  ADMIN_SESSION_ABSOLUTE_HOURS: int(12),
+  ADMIN_REAUTH_MINUTES: int(5),
+  ADMIN_TOTP_ENCRYPTION_KEY: base32Key,
+
+  RATE_LIMIT_ANON_PER_MINUTE: int(60),
+  RATE_LIMIT_AUTH_PER_MINUTE: int(300),
+
+  EMAIL_TRANSPORT: z.enum(['file', 'ses']).default('file'),
+  EMAIL_FROM_ADDRESS: z.string().min(3),
+  AWS_REGION: z.string().min(1).optional(),
+  SES_CONFIGURATION_SET_OTP: z.string().min(1).optional(),
+  SES_CONFIGURATION_SET_NOTIFICATION: z.string().min(1).optional(),
+  SES_CONFIGURATION_SET_MARKETING: z.string().min(1).optional(),
+  SES_EVENTS_TOPIC_ARN: z.string().min(1).optional(),
+});
+
+export type EmailChannel = 'otp' | 'notification' | 'marketing';
+
+export interface SesEmailConfig {
+  transport: 'ses';
+  fromAddress: string;
+  region: string;
+  configurationSets: Record<EmailChannel, string>;
+  eventsTopicArn: string;
+}
+
+export interface FileEmailConfig {
+  transport: 'file';
+  fromAddress: string;
+  /** Directory the file transport writes into. Gitignored. */
+  directory: string;
+}
+
+export interface Config {
+  nodeEnv: 'development' | 'test' | 'production';
+  port: number;
+  host: string;
+  logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+  trustProxy: boolean;
+  databaseUrl: string;
+  admin: {
+    origin: string;
+    sessionIdleMinutes: number;
+    sessionAbsoluteHours: number;
+    reauthMinutes: number;
+    totpEncryptionKey: Buffer;
+    cookieSecure: boolean;
+  };
+  rateLimit: { anonPerMinute: number; authPerMinute: number };
+  email: SesEmailConfig | FileEmailConfig;
+}
+
+export class ConfigError extends Error {
+  constructor(public readonly issues: string[]) {
+    super(`Invalid configuration (see .env.example):\n  ${issues.join('\n  ')}`);
+    this.name = 'ConfigError';
+  }
+}
+
+export function loadConfig(env: NodeJS.ProcessEnv): Config {
+  // Empty strings are "unset": a CI runner that exports FOO= did not set FOO.
+  const cleaned = Object.fromEntries(
+    Object.entries(env).filter(([, v]) => v !== undefined && v !== ''),
+  );
+  const parsed = schema.safeParse(cleaned);
+  const issues: string[] = [];
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      issues.push(`${issue.path.join('.')}: ${issue.message}`);
+    }
+    throw new ConfigError(issues);
+  }
+  const v = parsed.data;
+
+  const production = v.NODE_ENV === 'production';
+  if (production && v.EMAIL_TRANSPORT !== 'ses') {
+    issues.push('EMAIL_TRANSPORT: must be "ses" in production');
+  }
+  if (production && !v.ADMIN_ORIGIN.startsWith('https://')) {
+    issues.push('ADMIN_ORIGIN: must be an https:// origin in production');
+  }
+
+  let email: Config['email'];
+  if (v.EMAIL_TRANSPORT === 'ses') {
+    const required: [string, string | undefined][] = [
+      ['AWS_REGION', v.AWS_REGION],
+      ['SES_CONFIGURATION_SET_OTP', v.SES_CONFIGURATION_SET_OTP],
+      ['SES_CONFIGURATION_SET_NOTIFICATION', v.SES_CONFIGURATION_SET_NOTIFICATION],
+      ['SES_CONFIGURATION_SET_MARKETING', v.SES_CONFIGURATION_SET_MARKETING],
+      ['SES_EVENTS_TOPIC_ARN', v.SES_EVENTS_TOPIC_ARN],
+    ];
+    for (const [name, value] of required) {
+      if (value === undefined) issues.push(`${name}: required when EMAIL_TRANSPORT=ses`);
+    }
+    if (issues.length > 0) throw new ConfigError(issues);
+    email = {
+      transport: 'ses',
+      fromAddress: v.EMAIL_FROM_ADDRESS,
+      region: v.AWS_REGION ?? '',
+      configurationSets: {
+        otp: v.SES_CONFIGURATION_SET_OTP ?? '',
+        notification: v.SES_CONFIGURATION_SET_NOTIFICATION ?? '',
+        marketing: v.SES_CONFIGURATION_SET_MARKETING ?? '',
+      },
+      eventsTopicArn: v.SES_EVENTS_TOPIC_ARN ?? '',
+    };
+  } else {
+    if (issues.length > 0) throw new ConfigError(issues);
+    email = { transport: 'file', fromAddress: v.EMAIL_FROM_ADDRESS, directory: '.mail' };
+  }
+
+  return {
+    nodeEnv: v.NODE_ENV,
+    port: v.PORT,
+    host: v.HOST,
+    logLevel: v.LOG_LEVEL,
+    trustProxy: v.TRUST_PROXY,
+    databaseUrl: v.DATABASE_URL,
+    admin: {
+      origin: v.ADMIN_ORIGIN,
+      sessionIdleMinutes: v.ADMIN_SESSION_IDLE_MINUTES,
+      sessionAbsoluteHours: v.ADMIN_SESSION_ABSOLUTE_HOURS,
+      reauthMinutes: v.ADMIN_REAUTH_MINUTES,
+      totpEncryptionKey: v.ADMIN_TOTP_ENCRYPTION_KEY,
+      cookieSecure: production,
+    },
+    rateLimit: {
+      anonPerMinute: v.RATE_LIMIT_ANON_PER_MINUTE,
+      authPerMinute: v.RATE_LIMIT_AUTH_PER_MINUTE,
+    },
+    email,
+  };
+}
+
+/**
+ * Environment access.
  *
- * Phase 2 replaces call sites of this helper with the typed config module that
- * validates every variable at startup. Until then, a missing variable fails at
- * first use with a message naming it.
+ * Superseded above by `loadConfig`, which validates every variable at startup
+ * and reports every failure together. Kept only because `main.ts` and
+ * `jobs/status.ts` (Phase 0) still import it — Task 3 removes it and this
+ * comment along with it.
  */
 export function requireEnv(name: string): string {
   const value = process.env[name];

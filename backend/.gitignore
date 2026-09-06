@@ -1,6 +1,8 @@
 node_modules/
 dist/
 coverage/
+# File-transport email output (EMAIL_TRANSPORT=file), development/test only.
+.mail/
 # Prisma client is generated on install (npm run postinstall); never committed.
 src/generated/
 # Real environment values live only on the machine that uses them.
