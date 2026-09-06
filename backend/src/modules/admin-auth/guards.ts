@@ -18,8 +18,24 @@ export function principalOf(request: FastifyRequest): AdminPrincipal {
   return request.principal;
 }
 
+// Every guard below is declared `async` even though its body is synchronous
+// logic that only ever throws or returns. Fastify's hook runner requires a
+// two-argument (request, reply) hook to come back as a Promise; a plain sync
+// function that returns `undefined` on its non-throwing path is not a
+// recognised hook shape and the request hangs forever waiting for a
+// done()/Promise that never arrives. Every route that reached one of these
+// guards until Task 10 always hit the throwing path (no account had ever
+// enrolled MFA), so the hang was latent — the first passing call is Task 10's
+// own "guard lets a genuinely authorised request through" case, and it is
+// what surfaced this. Keep these `async`; do not simplify back to plain
+// functions.
+
 /** A live session whose password was verified. Enough for the MFA routes only. */
-export function requirePasswordSession(request: FastifyRequest, _reply: FastifyReply): void {
+// eslint-disable-next-line @typescript-eslint/require-await -- async is load-bearing, see note above
+export async function requirePasswordSession(
+  request: FastifyRequest,
+  _reply: FastifyReply,
+): Promise<void> {
   principalOf(request);
 }
 
@@ -28,7 +44,8 @@ export function requirePasswordSession(request: FastifyRequest, _reply: FastifyR
  * Nothing else in /v1/admin is reachable without this (plan §Phase 2: enrolment
  * required before the account can take any action).
  */
-export function requireAdmin(request: FastifyRequest, _reply: FastifyReply): void {
+// eslint-disable-next-line @typescript-eslint/require-await -- async is load-bearing, see note above
+export async function requireAdmin(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
   const p = principalOf(request);
   if (!p.totpEnrolled)
     throw new AuthorizationError(
@@ -40,8 +57,11 @@ export function requireAdmin(request: FastifyRequest, _reply: FastifyReply): voi
 }
 
 /** requireAdmin plus a re-authentication within ADMIN_REAUTH_MINUTES. Phase 10a puts this before identity documents. */
-export function requireRecentReauth(request: FastifyRequest, reply: FastifyReply): void {
-  requireAdmin(request, reply);
+export async function requireRecentReauth(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  await requireAdmin(request, reply);
   const p = principalOf(request);
   const limitMs = request.server.config.admin.reauthMinutes * 60_000;
   const now = request.server.deps.clock().getTime();

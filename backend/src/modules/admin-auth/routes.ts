@@ -4,8 +4,19 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ok } from '../../core/envelope.js';
 import type { AdminSession } from '../../generated/prisma/client.js';
 import { ADMIN_COOKIE, cookieOptions } from '../../plugins/admin-session.js';
-import { principalOf, requireAdmin } from './guards.js';
-import { loginBody, revokeSessionBody, sessionIdParams } from './schema.js';
+import {
+  principalOf,
+  requireAdmin,
+  requirePasswordSession,
+  requireRecentReauth,
+} from './guards.js';
+import {
+  loginBody,
+  mfaCodeBody,
+  reauthBody,
+  revokeSessionBody,
+  sessionIdParams,
+} from './schema.js';
 import type { RequestMeta } from './service.js';
 
 export function requestMeta(request: FastifyRequest): RequestMeta {
@@ -66,6 +77,85 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
     void reply.clearCookie(ADMIN_COOKIE, cookieOptions(app.config));
     return reply.send(ok({ loggedOut: true }));
   });
+
+  // Who may call: a password-verified session that has not enrolled yet.
+  r.post(`${prefix}/mfa/enrol`, { preHandler: requirePasswordSession }, async (request, reply) => {
+    const p = principalOf(request);
+    return reply.send(
+      ok(await app.adminAuth.beginEnrolment(p.id, p.sessionId, requestMeta(request))),
+    );
+  });
+
+  // Who may call: same. Recovery codes come back once, here, and never again.
+  r.post(
+    `${prefix}/mfa/enrol/confirm`,
+    { schema: { body: mfaCodeBody }, preHandler: requirePasswordSession },
+    async (request, reply) => {
+      const p = principalOf(request);
+      return reply.send(
+        ok(
+          await app.adminAuth.confirmEnrolment(
+            p.id,
+            p.sessionId,
+            request.body.code,
+            requestMeta(request),
+          ),
+        ),
+      );
+    },
+  );
+
+  // Who may call: an enrolled admin's unverified session. Own tier: 6 per 5 min per
+  // principal — one above the 5-failure limit, so the sixth request (the one after
+  // five counted failures) still reaches the service and is answered by the
+  // session-revocation rule (401) rather than by the rate limiter (429). Both limits
+  // are defensible; the failure-count revocation is the rule the plan states, so the
+  // tier is set to not pre-empt it.
+  r.post(
+    `${prefix}/mfa/verify`,
+    {
+      schema: { body: mfaCodeBody },
+      preHandler: requirePasswordSession,
+      config: { rateLimit: { max: 6, timeWindow: '5 minutes' } },
+    },
+    async (request, reply) => {
+      const p = principalOf(request);
+      return reply.send(
+        ok(
+          await app.adminAuth.verifyMfa(p.id, p.sessionId, request.body.code, requestMeta(request)),
+        ),
+      );
+    },
+  );
+
+  // Who may call: the enrolled, MFA-verified admin, for their own session.
+  r.post(
+    `${prefix}/reauth`,
+    { schema: { body: reauthBody }, preHandler: requireAdmin },
+    async (request, reply) => {
+      const p = principalOf(request);
+      await app.adminAuth.reauthenticate(
+        p.id,
+        p.sessionId,
+        request.body.password,
+        request.body.code,
+        requestMeta(request),
+      );
+      return reply.send(ok({ reauthenticatedAt: app.deps.clock().toISOString() }));
+    },
+  );
+
+  // Who may call: the enrolled, MFA-verified admin who re-authenticated within ADMIN_REAUTH_MINUTES.
+  r.post(
+    `${prefix}/mfa/recovery-codes/regenerate`,
+    { preHandler: requireRecentReauth },
+    async (request, reply) => {
+      const p = principalOf(request);
+      return reply.send(
+        ok(await app.adminAuth.regenerateRecoveryCodes(p.id, requestMeta(request))),
+      );
+    },
+  );
 
   // Who may call: the enrolled, MFA-verified admin; lists their own sessions only.
   r.get(`${prefix}/sessions`, { preHandler: requireAdmin }, async (request, reply) => {

@@ -1,4 +1,5 @@
 import type {
+  AdminRecoveryCode,
   AdminSession,
   AdminUser,
   PrismaClient,
@@ -84,5 +85,61 @@ export class AdminRepository {
       where: { id: sessionId },
       data: { revokedAt: now, revokedReason: reason },
     });
+  }
+
+  setPendingTotpSecret(adminId: string, encrypted: string): Promise<AdminUser> {
+    return this.prisma.adminUser.update({
+      where: { id: adminId },
+      data: { totpSecretEncrypted: encrypted },
+    });
+  }
+
+  async markEnrolled(db: Db, adminId: string, sessionId: string, now: Date): Promise<void> {
+    await db.adminUser.update({ where: { id: adminId }, data: { totpEnrolledAt: now } });
+    await db.adminSession.update({
+      where: { id: sessionId },
+      data: { mfaVerifiedAt: now, mfaFailures: 0 },
+    });
+  }
+
+  markMfaVerified(db: Db, sessionId: string, now: Date): Promise<AdminSession> {
+    return db.adminSession.update({
+      where: { id: sessionId },
+      data: { mfaVerifiedAt: now, mfaFailures: 0 },
+    });
+  }
+
+  incrementMfaFailures(sessionId: string): Promise<AdminSession> {
+    return this.prisma.adminSession.update({
+      where: { id: sessionId },
+      data: { mfaFailures: { increment: 1 } },
+    });
+  }
+
+  markReauthenticated(sessionId: string, now: Date): Promise<AdminSession> {
+    return this.prisma.adminSession.update({
+      where: { id: sessionId },
+      data: { reauthenticatedAt: now },
+    });
+  }
+
+  async replaceRecoveryCodes(db: Db, adminId: string, hashes: string[], now: Date): Promise<void> {
+    await db.adminRecoveryCode.updateMany({
+      where: { adminId, usedAt: null, revokedAt: null },
+      data: { revokedAt: now },
+    });
+    await db.adminRecoveryCode.createMany({
+      data: hashes.map((codeHash) => ({ adminId, codeHash, createdAt: now })),
+    });
+  }
+
+  findUnusedRecoveryCode(adminId: string, codeHash: string): Promise<AdminRecoveryCode | null> {
+    return this.prisma.adminRecoveryCode.findFirst({
+      where: { adminId, codeHash, usedAt: null, revokedAt: null },
+    });
+  }
+
+  markRecoveryCodeUsed(db: Db, id: string, now: Date): Promise<AdminRecoveryCode> {
+    return db.adminRecoveryCode.update({ where: { id }, data: { usedAt: now } });
   }
 }

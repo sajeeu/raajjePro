@@ -1,7 +1,10 @@
+import { generateSecret, generateURI, verify as verifyTotp } from 'otplib';
+
 import type { Config } from '../../config/env.js';
 import type { Clock } from '../../core/clock.js';
 import {
   AuthenticationError,
+  AuthorizationError,
   BusinessRuleError,
   ConflictError,
   NotFoundError,
@@ -10,12 +13,16 @@ import type { AdminPrincipal } from '../../core/principal.js';
 import type { AdminSession, AdminUser, PrismaClient } from '../../generated/prisma/client.js';
 import type { AuditService } from '../audit/service.js';
 import {
+  decryptSecret,
   DUMMY_PASSWORD_HASH,
+  encryptSecret,
   hashPassword,
   hashToken,
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
+  newRecoveryCodes,
   newSessionToken,
+  normaliseRecoveryCode,
   verifyPassword,
 } from './crypto.js';
 import { AdminRepository } from './repository.js';
@@ -44,6 +51,9 @@ export type SessionResolution =
  * transaction.
  */
 export class AdminAuthService {
+  static readonly MFA_FAILURE_LIMIT = 5;
+  static readonly TOTP_ISSUER = 'RaajjePro Admin';
+
   private readonly prisma: PrismaClient;
   private readonly audit: AuditService;
   private readonly clock: Clock;
@@ -248,6 +258,199 @@ export class AdminAuthService {
         ipAddress: meta.ip,
       });
     });
+  }
+
+  /** Who may call: an admin with a password-verified session who has not yet enrolled. */
+  async beginEnrolment(
+    adminId: string,
+    _sessionId: string,
+    _meta: RequestMeta,
+  ): Promise<{ secret: string; otpauthUri: string }> {
+    const admin = await this.mustFindAdmin(adminId);
+    if (admin.totpEnrolledAt !== null) {
+      throw new BusinessRuleError('MFA_ALREADY_ENROLLED', 'An authenticator is already enrolled');
+    }
+    const secret = generateSecret();
+    await this.repo.setPendingTotpSecret(
+      adminId,
+      encryptSecret(secret, this.config.admin.totpEncryptionKey),
+    );
+    return {
+      secret,
+      otpauthUri: generateURI({ issuer: AdminAuthService.TOTP_ISSUER, label: admin.email, secret }),
+    };
+  }
+
+  /** Who may call: same as beginEnrolment. Returns the recovery codes — the only time they are ever shown. */
+  async confirmEnrolment(
+    adminId: string,
+    sessionId: string,
+    code: string,
+    meta: RequestMeta,
+  ): Promise<{ recoveryCodes: string[] }> {
+    const admin = await this.mustFindAdmin(adminId);
+    if (admin.totpEnrolledAt !== null) {
+      throw new BusinessRuleError('MFA_ALREADY_ENROLLED', 'An authenticator is already enrolled');
+    }
+    if (admin.totpSecretEncrypted === null) {
+      throw new BusinessRuleError('INVALID_MFA_CODE', 'Start enrolment first');
+    }
+    if (!(await this.totpMatches(admin.totpSecretEncrypted, code))) {
+      throw new BusinessRuleError('INVALID_MFA_CODE', 'That code is not valid');
+    }
+    const now = this.clock();
+    const codes = newRecoveryCodes();
+    await this.prisma.$transaction(async (tx) => {
+      await this.repo.markEnrolled(tx, adminId, sessionId, now);
+      await this.repo.replaceRecoveryCodes(tx, adminId, codes.map(hashToken), now);
+      await this.audit.record(tx, {
+        actorType: 'admin',
+        actorId: adminId,
+        action: 'admin.mfa.enrolled',
+        targetType: 'admin_user',
+        targetId: adminId,
+        reason: 'user_initiated',
+        requestId: meta.requestId,
+        ipAddress: meta.ip,
+      });
+    });
+    return { recoveryCodes: codes };
+  }
+
+  /** Who may call: an enrolled admin on a session not yet MFA-verified. Five failures revoke the session. */
+  async verifyMfa(
+    adminId: string,
+    sessionId: string,
+    code: string,
+    meta: RequestMeta,
+  ): Promise<{ method: 'totp' | 'recovery_code' }> {
+    const admin = await this.mustFindAdmin(adminId);
+    if (admin.totpEnrolledAt === null || admin.totpSecretEncrypted === null) {
+      throw new AuthorizationError('MFA_ENROLMENT_REQUIRED', 'Enrol an authenticator app first');
+    }
+    const now = this.clock();
+    if (await this.totpMatches(admin.totpSecretEncrypted, code)) {
+      await this.prisma.$transaction(async (tx) => {
+        await this.repo.markMfaVerified(tx, sessionId, now);
+        await this.audit.record(tx, {
+          actorType: 'admin',
+          actorId: adminId,
+          action: 'admin.mfa.verified',
+          targetType: 'admin_session',
+          targetId: sessionId,
+          reason: 'totp',
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+      });
+      return { method: 'totp' };
+    }
+    const recovery = await this.repo.findUnusedRecoveryCode(
+      adminId,
+      hashToken(normaliseRecoveryCode(code)),
+    );
+    if (recovery !== null) {
+      await this.prisma.$transaction(async (tx) => {
+        await this.repo.markRecoveryCodeUsed(tx, recovery.id, now);
+        await this.repo.markMfaVerified(tx, sessionId, now);
+        await this.audit.record(tx, {
+          actorType: 'admin',
+          actorId: adminId,
+          action: 'admin.mfa.recovery_code_used',
+          targetType: 'admin_session',
+          targetId: sessionId,
+          reason: 'recovery_code',
+          metadata: { recoveryCodeId: recovery.id },
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+      });
+      return { method: 'recovery_code' };
+    }
+    const session = await this.repo.incrementMfaFailures(sessionId);
+    if (session.mfaFailures >= AdminAuthService.MFA_FAILURE_LIMIT) {
+      await this.prisma.$transaction(async (tx) => {
+        await this.repo.revokeSession(tx, sessionId, now, 'mfa_failures');
+        await this.audit.record(tx, {
+          actorType: 'system',
+          action: 'admin.session.revoked',
+          targetType: 'admin_session',
+          targetId: sessionId,
+          reason: 'mfa_failures',
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+      });
+    }
+    throw new BusinessRuleError('INVALID_MFA_CODE', 'That code is not valid');
+  }
+
+  /** Who may call: the enrolled, MFA-verified admin, for their own session. Password AND a fresh TOTP. */
+  async reauthenticate(
+    adminId: string,
+    sessionId: string,
+    password: string,
+    code: string,
+    meta: RequestMeta,
+  ): Promise<void> {
+    const admin = await this.mustFindAdmin(adminId);
+    const passwordOk = await verifyPassword(admin.passwordHash, password);
+    const codeOk =
+      admin.totpSecretEncrypted !== null &&
+      (await this.totpMatches(admin.totpSecretEncrypted, code));
+    if (!passwordOk || !codeOk) {
+      throw new AuthenticationError('INVALID_CREDENTIALS', 'Password or code is incorrect');
+    }
+    const now = this.clock();
+    await this.repo.markReauthenticated(sessionId, now);
+    await this.audit.record(this.prisma, {
+      actorType: 'admin',
+      actorId: adminId,
+      action: 'admin.reauthenticated',
+      targetType: 'admin_session',
+      targetId: sessionId,
+      reason: 'user_initiated',
+      requestId: meta.requestId,
+      ipAddress: meta.ip,
+    });
+  }
+
+  /** Who may call: the enrolled, MFA-verified, recently re-authenticated admin. Old unused codes are revoked. */
+  async regenerateRecoveryCodes(
+    adminId: string,
+    meta: RequestMeta,
+  ): Promise<{ recoveryCodes: string[] }> {
+    const now = this.clock();
+    const codes = newRecoveryCodes();
+    await this.prisma.$transaction(async (tx) => {
+      await this.repo.replaceRecoveryCodes(tx, adminId, codes.map(hashToken), now);
+      await this.audit.record(tx, {
+        actorType: 'admin',
+        actorId: adminId,
+        action: 'admin.mfa.recovery_codes_regenerated',
+        targetType: 'admin_user',
+        targetId: adminId,
+        reason: 'user_initiated',
+        requestId: meta.requestId,
+        ipAddress: meta.ip,
+      });
+    });
+    return { recoveryCodes: codes };
+  }
+
+  private async mustFindAdmin(adminId: string): Promise<AdminUser> {
+    const admin = await this.repo.findById(adminId);
+    if (admin?.status !== 'active') {
+      throw new AuthenticationError('UNAUTHENTICATED', 'Sign in to continue');
+    }
+    return admin;
+  }
+
+  private async totpMatches(encryptedSecret: string, code: string): Promise<boolean> {
+    if (!/^\d{6}$/.test(code.trim())) return false;
+    const secret = decryptSecret(encryptedSecret, this.config.admin.totpEncryptionKey);
+    const result = await verifyTotp({ secret, token: code.trim(), epochTolerance: 30 });
+    return result.valid;
   }
 }
 
