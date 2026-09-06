@@ -734,11 +734,13 @@ A Gold provider already submits business registration (§1e). They **may** addit
   - account deletion — App Store requirement. Anonymises all authored content: name/email/phone replaced with a placeholder, listings and reviews preserved so provider rating aggregates stay intact. Soft-delete, not purge. **ID documents (§1e) are purged, not anonymised.**
   - 🔧 **Deletion is queued, never refused — Round 9.** A deletion request is **accepted immediately** and the account is frozen (no new bookings, no new listings, hidden from search). Anonymisation executes automatically once every non-terminal booking reaches a terminal state, with a **hard 30-day backstop** after which it proceeds regardless. Refusing deletion outright while bookings are open — the earlier design — could block a user indefinitely on admin inaction, since `payment_unresolved` only clears when a human acts, and both Apple and Google require in-app deletion to actually work.
   - 🔧 **Admin internal notes (§Phase 10b) about the user are deleted with the account**, matching the anonymisation rule. Only the audit log's structured reason fields persist.
-- Frontend: Login, Register (pixel-match), OTP verification screen (propose first), account settings sub-screens (propose first)
+- Frontend: Login, Register (pixel-match), OTP verification screen, account settings sub-screens. 🔧 **No longer propose-first (2026-09-06):** all of these were designed in Sessions 8 and 9 and are committed prototypes — `Sign In`, `Register`, `Verify Email`, `Account Settings`, `Saved Preferences`, `Notifications`, `Help Support`, `Legal`. Build against the artboard, not a fresh proposal.
 
 **Done when:** full register → verify → logout → login cycle works; an unverified user browses freely but is rejected by `requireEmailVerified`; 🔧 registering with an already-used email is blocked naming the email, and with an already-used phone is blocked naming the phone, each offering login or reset; both OTP rate limits verified independently; a deleted account's reviews remain with anonymised attribution; export returns complete data; 🔧 a deletion request with an open booking is accepted and freezes the account rather than erroring, completes automatically when that booking terminates, and completes anyway at the 30-day backstop; an email confirmation link verifies and a recovery attempt without one is refused.
 
-### Phase 3b — Forgot Password Flow *(propose design first)*
+### Phase 3b — Forgot Password Flow
+
+🔧 **No longer propose-first (2026-09-06):** designed in Session 8. `Forgot Password.dc.html` covers all three steps — request, check your inbox, set a new password.
 
 Reset-token issuance, expiry, consumption; invalidates all refresh tokens on success. Three screens: request email → check-your-inbox confirmation → set new password.
 
@@ -798,7 +800,7 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - `GET /v1/users/me/profile-summary` — one call for the Profile screen
 - `PATCH /v1/users/me`
 - Frontend: Profile screen (pixel-match), five rows navigating to sub-screens
-- **Role switcher:** an explicit customer ⇄ provider mode control. Providers are the only paying users; their workspace must not be buried. Propose the switcher's placement and the resulting provider-mode IA before implementing — this is the one navigation change that departs from the original mockups.
+- **Role switcher:** an explicit customer ⇄ provider mode control. Providers are the only paying users; their workspace must not be buried. 🔧 **Proposed and designed in Session 9 (2026-09-06)** — the switcher's placement and the provider-mode IA are in `Profile.dc.html`. Build against it. This remains the one navigation change that departs from the original mockups.
 - Switching to provider mode for the first time routes into Phase 6a's onboarding flow rather than straight to the dashboard; a returning provider goes straight to My Services Dashboard.
 
 **Done when:** Profile reflects live data; every row navigates; switching to provider mode for the first time reaches the onboarding flow, and reaches My Services Dashboard directly on every subsequent switch.
@@ -895,7 +897,7 @@ No mockup exists. Propose a design before implementing — 2–3 screens reusing
 
 ### Phase 9a — Availability, Time Slots & Reservations
 
-No mockup exists. Propose the provider-side slot management UI and the customer-side slot picker before implementing.
+🔧 **No longer propose-first (2026-09-06):** designed in Sessions 4 and 11. The provider side is `Availability.dc.html` and `My Calendar.dc.html`; the customer-side picker is `Pick a Time.dc.html`.
 
 **Backend:**
 - `TimeSlot` (providerId, listingId, startsAt, endsAt, status `open`/`reserved`/`blocked`), generated from the listing's availability rules with individual override
@@ -926,7 +928,7 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 ### Phase 10a — Provider Billing UI & Admin Panel
 
-**Part 1 — Provider Billing (Flutter).** No mockups; propose first.
+**Part 1 — Provider Billing (Flutter).** 🔧 **No longer propose-first (2026-09-06):** designed in Session 13 — `Billing.dc.html`, `Pay by Bank Transfer.dc.html`, `Invoices.dc.html`.
 - Subscription status: trial countdown / next billing date / free-tier state, upgrade CTA, **"Try Premium" CTA for a provider who has never started a trial** (§0.4)
 - Payment Proof Submission: bank details, reference code, upload, submit — built once, parameterised by purpose
 - Submitted state shows "pending admin confirmation" with no implication of instant activation
@@ -1053,7 +1055,9 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 **Done when:** live data renders end-to-end; the Edit control appears only for the owner; the raw API response contains no contact or payment data under any circumstance; each booking mode routes to the correct entry point.
 
-### Phase 13 — Provider Public Profile *(propose design first)*
+### Phase 13 — Provider Public Profile
+
+🔧 **No longer propose-first (2026-09-06):** designed in Session 3 and reviewed across two rounds. `Provider Profile.dc.html`.
 
 - Backend reuses `findVisibleProviders` (§1a). Returns not-found for a provider with no published listings, even by direct id.
 - Same contact/payment exclusion as Phase 12
@@ -1065,7 +1069,7 @@ No mockup exists. Propose the provider-side slot management UI and the customer-
 
 🔧 **Round 15 extends favourites to providers, not only listings.** Customers remember a person, not a listing — and taking a provider's phone number to remember them is exactly the behaviour §1c's contact rule exists to prevent. Saving a provider is the on-platform substitute for that.
 
-Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic update and rollback, Saved Services screen (propose first).
+Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic update and rollback, Saved Services screen. 🔧 **No longer propose-first (2026-09-06):** the saved surface was designed in Session 2, in `Discovery.dc.html`.
 
 **Done when:** tapping the heart anywhere persists via API; the Saved Services screen reflects it immediately; Profile's count updates.
 
@@ -1077,14 +1081,14 @@ Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic
 - **Priority placement** for premium subscribers affects ordering *within* the genuinely relevant result set, never membership in it
 - **Any paid influence on ordering carries a visible "Sponsored" label.** No unlabelled paid placement.
 - **No visibility difference between verified and unverified providers** in baseline search. Verification affects the badge, not findability.
-- Frontend: results page (propose first), filter/sort wiring
+- Frontend: results page, filter/sort wiring. 🔧 **No longer propose-first (2026-09-06):** search and category results were designed in Session 2, in `Discovery.dc.html`.
 
 **Done when:** results are correct, paginated, and filtered; priority placement never surfaces an irrelevant listing; every boosted result is labelled; every card states its booking mode.
 
 ### Phase 16 — Home Feed
 
 - Section endpoints: popular-near-you, featured-providers (via `findVisibleProviders`), popular-this-week, nearby, recently-viewed
-- **Launch mode, mandatory:** below a catalogue-size threshold (🔧 default **50 published active listings**, tunable via config without a code change), Home collapses to **two sections plus the category grid**. The full layout unlocks above the threshold. Nine rows over twenty listings shows the same services repeatedly and reads as an abandoned product. Propose the launch-mode layout before implementing.
+- **Launch mode, mandatory:** below a catalogue-size threshold (🔧 default **50 published active listings**, tunable via config without a code change), Home collapses to **two sections plus the category grid**. The full layout unlocks above the threshold. Nine rows over twenty listings shows the same services repeatedly and reads as an abandoned product. 🔧 **Proposed and designed in Session 1 (2026-09-06)** — the launch-mode layout is in `Home.dc.html`. Build against it.
 - **Deep links / web fallback:** listings and provider profiles resolve via real URLs with universal links / app links and a minimal web fallback page. v1 justified open guest browsing partly on SEO while having no web surface to index, and shipped a Share button with nothing to share.
 - **Trust grid** — 🔧 "Verified" copy must state what it means. In the Maldives a customer may read "Verified Provider" as "has a good track record" rather than "passed an ID and trade check." Use explicit copy: *"ID and trade checked by RaajjePro."*
 - "Become a Provider" routes into the wizard, resuming an existing draft if one exists
@@ -1195,7 +1199,7 @@ Notification **content**, not delivery — Phase 3c owns delivery.
 - **Provider analytics dashboard:** per-listing views, booking counts, conversion rate, rating trend, response time
 - **Response-time metric shows "No data yet"** for a provider with zero booking-acceptance history, never a blank or a zero that reads worse than no metric at all
 - 🔧 **Accept rate — new in Round 9, and deliberately two metrics rather than one.** Response time alone flatters a provider who ignores most requests and answers only the ones they want. **Accept rate** counts *explicit responses only* — `accepted ÷ (accepted + declined)` — and a request-based **quote offered counts as an acceptance**, since the provider did commit. Auto-declines at the 24-hour or 30-minute timeout are excluded from it entirely and feed a separate, more forgiving **response rate** (`responded ÷ received`). Folding timeouts into one number would score a provider asleep during a window identically to one who actively refused, which is not the same behaviour and should not carry the same penalty.
-- Notification centre screen (propose first); live badge counts
+- Notification centre screen; live badge counts. 🔧 **No longer propose-first (2026-09-06):** designed in Session 9 — `Notifications.dc.html`.
 
 **Done when:** each event type fires through Phase 3c's sender; the digest sends on schedule to opt-in providers only; the analytics dashboard renders real data; a brand-new provider's response-time metric reads "No data yet," not "0 minutes."
 
