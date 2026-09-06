@@ -25,7 +25,20 @@ services:
       # backend/.env.example is right without editing.
       - "5435:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      # PostgreSQL 18's image stores the cluster in a major-version directory
+      # under /var/lib/postgresql and refuses to start if it finds data at
+      # /var/lib/postgresql/data — the pre-18 convention — calling it an
+      # "unused mount/volume". So the data volume mounts one level up, at
+      # /var/lib/postgresql, exactly as the image documents. The archive and
+      # backup volumes nest inside it; Docker resolves the longest path first,
+      # so each still gets its own volume.
+      #
+      # This is the second half of the Postgres 18 bump. The first was the
+      # pg_cron package version; this one hid behind it, because a container
+      # created before the bump keeps running the old image and every local
+      # check passes against a database that is still 16. CI builds from
+      # nothing every time, which is why only CI could see it.
+      - db_data:/var/lib/postgresql
       - db_wal_archive:/var/lib/postgresql/wal_archive
       - db_backups:/var/lib/postgresql/backups
     # Server configuration is passed as flags so it is reviewable here rather

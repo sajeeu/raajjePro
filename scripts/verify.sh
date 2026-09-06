@@ -41,6 +41,9 @@ echo
 echo "Instructions"
 run "locked rules"          python3 docs/design/checks/locked-rules.py
 echo
+echo "Environment"
+run "database matches the image" scripts/db/image-matches-repo.sh
+echo
 
 if [[ -f backend/package.json ]]; then
   echo "Backend"
