@@ -33,6 +33,13 @@ The second migrate is the `_test` database. The suite writes real rows and never
 
 The split that works: **code in VS Code with the Claude extension, check with one command.**
 
+**The division is firm.** Phases are built in VS Code — every one of them, including
+the ones a terminal session could technically write. The terminal session does
+follow-up, verification and bug fixes: running `scripts/verify.sh`, exercising a
+phase's Done-when criteria against a live server, auditing an imported design
+against the plan, and fixing defects that verification turns up. It does not
+build a phase, and it does not start one because the moment seems right.
+
 ```bash
 scripts/verify.sh
 ```
@@ -44,8 +51,9 @@ It runs everything that can be checked without starting the app, and exits non-z
 | `verify-dc.py` | Prototype structure, plus every locked product rule — a stale category, a claim the product cannot keep, a dead control |
 | `checks/journeys.py` | The six acceptance journeys from Round 38 §6, plus broken links and orphan screens |
 | `checks/locked-rules.py` | Instruction files stating a rule the plan has already reversed |
+| `db/image-matches-repo.sh` | A running database container older than the image the repo specifies — how the Postgres 18 bump stayed broken for ten commits while every local check passed |
 
-The backend block (typecheck, lint, tests) and the frontend block (`flutter analyze`, `flutter test`) run as well. The backend tests need the Docker database up and migrated; without `DATABASE_URL` they skip rather than fail.
+The backend block (typecheck, lint, tests) and the frontend block (`flutter analyze`, `flutter test`) run as well. The backend tests need the Docker database up and migrated. With no database configured at all they skip rather than fail; with one configured whose name does not end in `_test` they refuse to run, because they write rows and never delete them.
 
 The same three are VS Code tasks. **Ctrl/Cmd-Shift-P → Run Test Task** runs the lot; the individual ones are under **Run Task**.
 
@@ -141,7 +149,9 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 - **App Store submission outcome.** Phase 10a ships in-app bank-transfer billing as a deliberate test of guideline 3.1.1; rejection is likely and the fallback is mapped
 - **Admin load costing** at 50, 200 and 500 providers. Plan §4 Sequencing places this *before Phase 0*; Phase 0 has been built without it, so it is overdue rather than backlog
 
-**Mine, on request:** Phase 2 onward when you say go.
+**Built in VS Code:** every phase, Phase 3 onward.
+
+**Mine, on request:** verification against a phase's Done-when list, design-import audits against the plan, and the bugs those turn up — not the phases themselves.
 
 **Yours, with a phone in hand:** the Phase 1 screen-reader pass (TalkBack or VoiceOver) — thirteen steps in `docs/decisions/08-phase-1-design-system.md`. To see the gallery without a device, `flutter run -d chrome` from a copy of `frontend/` with `flutter create --platforms=web .` applied; the repo itself carries no web target.
 
