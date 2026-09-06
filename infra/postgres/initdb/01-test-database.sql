@@ -1,0 +1,17 @@
+-- The database the test suite runs against.
+--
+-- The suite writes real rows and never deletes them (invariant 8 means it
+-- cannot), so it is fenced off from the application's data by name:
+-- backend/test/setup.ts refuses to run against any database whose name does
+-- not end in `_test`.
+--
+-- Scripts in /docker-entrypoint-initdb.d run once, when the data volume is
+-- first created. On an existing volume, create it by hand:
+--   docker compose exec db createdb -U raajjepro raajjepro_test
+-- and migrate it with backend/.env's TEST_DATABASE_URL.
+--
+-- pg_cron is deliberately absent here: it can only live in the one database
+-- named by cron.database_name. This database gets the job_heartbeat table
+-- from the migration but no scheduled job, which is why the job-runner test
+-- reads CRON_DATABASE_URL instead.
+CREATE DATABASE raajjepro_test OWNER raajjepro;

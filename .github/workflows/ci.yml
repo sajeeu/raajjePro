@@ -24,6 +24,10 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://raajjepro:raajjepro@localhost:5435/raajjepro?schema=public
+      # The suite writes rows and never deletes them, so it runs against its own
+      # database — backend/test/setup.ts refuses any name not ending in `_test`.
+      # infra/postgres/initdb/ creates it when the volume is first built.
+      TEST_DATABASE_URL: postgresql://raajjepro:raajjepro@localhost:5435/raajjepro_test?schema=public
       ADMIN_TOTP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       EMAIL_FROM_ADDRESS: ci@raajjepro.local
     steps:
@@ -51,6 +55,9 @@ jobs:
 
       - name: Apply migrations
         run: npm run db:deploy
+
+      - name: Apply migrations to the test database
+        run: DATABASE_URL="$TEST_DATABASE_URL" npm run db:deploy
 
       - run: npm test
 

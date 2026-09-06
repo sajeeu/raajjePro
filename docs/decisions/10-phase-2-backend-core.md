@@ -269,3 +269,65 @@ bounce/complaint handling and suppression list that access request depends on
 are built as of this phase; Phase 3 (OTP, registration, login) is untestable
 against a sandboxed SES account, so this is the blocking step before Phase 3
 starts.
+
+## Found in verification, after the build (2026-09-06)
+
+Two things surfaced running the Done-when criteria against a live server
+rather than against the test suite alone.
+
+### The tests ran against the application's own database
+
+`test/setup.ts` was `import 'dotenv/config'` and nothing else, and
+`test/helpers/app.ts` read `process.env.DATABASE_URL` — the same variable the
+application uses. There was no `TEST_DATABASE_URL` anywhere in the repository.
+
+The suite deliberately does not clean up: it isolates by unique key (a fresh
+email per admin, `freshIp()` per rate-limit subject) rather than by
+truncating, which is what keeps "counters survive an app restart" an honest
+test. That design is fine. What was missing was the fence around it. The
+development database had accumulated **562 admin accounts, 998 sessions,
+3,367 audit entries and 218 suppressed addresses**, including rows stamped
+eleven hours in the future by tests running against a fake clock — which
+sorted above real entries and pushed a genuine login off the first page of
+the audit log.
+
+The failure mode that mattered was not the clutter. `npm test` with a staging
+`DATABASE_URL` exported would have written hundreds of admin accounts and
+audit rows into staging, and invariant 8 means none of them could ever be
+hard-deleted — into the log that exists to be the tamper-evident record of
+who did what.
+
+The rule is now the database name. `test/setup.ts` refuses to run against any
+database whose name does not end in `_test`, before a row is written, and
+points at `TEST_DATABASE_URL`. `infra/postgres/initdb/` creates
+`raajjepro_test` when the volume is first built; CI migrates it as its own
+step. Verified by pointing `TEST_DATABASE_URL` at the application database:
+the run aborts with "Tests: no tests" and the audit table is untouched.
+
+### `/v1/health` reported a reachable database as unreachable
+
+`readHeartbeat` queried `cron.job` first and let the error escape;
+`registerHealthRoutes` catches any throw from it as
+`InfrastructureError('Database unreachable')` → 503.
+
+pg_cron installs into exactly one database — the one named by the server's
+`cron.database_name`. Every other database this schema is applied to has
+`job_heartbeat` and no `cron` schema at all: the `_test` database, Prisma's
+shadow database, and a managed host that will not grant `CREATE EXTENSION`.
+The Phase 0 migration anticipates precisely this and treats it as a no-op.
+Health did not, so on any such deployment `/v1/health` would report the
+database down — on the endpoint §5 measures availability against.
+
+`readHeartbeat` now reads the heartbeat table first, because that is the
+honest reachability probe, and tolerates a missing `cron` schema as
+`job: null, firing: false`. A runner that is not installed is `not-firing`,
+which is a different fact from a database that cannot be reached. Prisma
+reports this as `P2010` with the SQLSTATE that matters two levels down in the
+driver adapter's cause, so the check reads the nested `originalCode` with the
+message as a fallback. Three tests pin it: the error shape is recognised, the
+report degrades instead of throwing, and a genuine connection failure still
+propagates.
+
+The one test that legitimately needs the application's database is the
+job-runner environment check. `test/setup.ts` carries the original URL across
+as `CRON_DATABASE_URL` for it.

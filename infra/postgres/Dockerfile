@@ -21,3 +21,7 @@ RUN apt-get update \
 # compose; creating them here makes the image usable without compose too.
 RUN mkdir -p /var/lib/postgresql/wal_archive /var/lib/postgresql/backups \
  && chown postgres:postgres /var/lib/postgresql/wal_archive /var/lib/postgresql/backups
+
+# Created on first boot of an empty data volume: the `_test` database the test
+# suite is fenced into. See the script for what to do on an existing volume.
+COPY initdb/ /docker-entrypoint-initdb.d/

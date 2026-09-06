@@ -18,11 +18,14 @@ Then the toolchain. Phase 0 is built, so a checkout needs Node 22, Docker with C
 
 ```bash
 npm install                                   # commit hooks
-docker compose up -d                          # Postgres 16 + pg_cron + WAL archiving on :5435
+docker compose up -d                          # Postgres 18 + pg_cron + WAL archiving on :5435
 (cd backend && cp .env.example .env && npm install && npm run db:migrate)
+(cd backend && DATABASE_URL="postgresql://raajjepro:raajjepro@localhost:5435/raajjepro_test?schema=public" npm run db:deploy)
 (cd frontend && flutter pub get)
 scripts/verify.sh                             # everything should be green
 ```
+
+The second migrate is the `_test` database. The suite writes real rows and never deletes them — it isolates by unique key rather than by truncating — so `backend/test/setup.ts` refuses to run against any database whose name does not end in `_test`. A fresh Docker volume creates it; the migration is yours to apply.
 
 `README.md` has the day-to-day commands and the four conventions every line of code follows.
 
@@ -63,7 +66,7 @@ None of that was visible in a design review. All of it would have been implement
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phase 0 only: boot, first migration, job runner. Fastify arrives in Phase 2 |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling |
 | `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: boots to a placeholder; the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds) |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
