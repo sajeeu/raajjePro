@@ -26,7 +26,18 @@ export function userOf(request: FastifyRequest): UserPrincipal {
 // two-argument hook to return a Promise, and a plain function returning
 // undefined on its non-throwing path hangs the request. Keep them async.
 
-/** Any signed-in user, verified or not. Browsing needs nothing; this is for "your own stuff". */
+/**
+ * Any signed-in user, verified or not. Browsing needs nothing; this is for "your own stuff".
+ *
+ * Attach this (and requireEmailVerified / requireActiveAccount, below) at
+ * `preValidation`, never `preHandler`. Fastify's request lifecycle runs body
+ * and params validation between the two
+ * (`onRequest → preParsing → preValidation → Validation → preHandler → handler`),
+ * so a route pairing a `preHandler` guard with a validated body or params
+ * lets a malformed request from an anonymous caller fail validation (400)
+ * before the guard ever runs (401) — an unauthenticated request must always
+ * see 401 first, whatever its body looks like.
+ */
 // eslint-disable-next-line @typescript-eslint/require-await -- async is load-bearing, see note above
 export async function requireAuth(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
   userOf(request);
@@ -36,6 +47,8 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
  * Stricter than requireAuth (plan §Phase 3, CLAUDE.md 1c): the guard booking,
  * enquiry and messaging endpoints carry. 422 with its own code so the app
  * can route straight to Verify Email.
+ *
+ * Same hook-stage rule as requireAuth: attach at `preValidation`, not `preHandler`.
  */
 // eslint-disable-next-line @typescript-eslint/require-await -- async is load-bearing, see note above
 export async function requireEmailVerified(
@@ -55,6 +68,8 @@ export async function requireEmailVerified(
  * A deletion request freezes the account: no new bookings, no new listings
  * (plan §Phase 3). Later phases place this on those endpoints; everything in
  * Phase 3 itself stays usable while frozen.
+ *
+ * Same hook-stage rule as requireAuth: attach at `preValidation`, not `preHandler`.
  */
 // eslint-disable-next-line @typescript-eslint/require-await -- async is load-bearing, see note above
 export async function requireActiveAccount(

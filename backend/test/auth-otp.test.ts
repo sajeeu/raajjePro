@@ -194,5 +194,15 @@ describe.skipIf(databaseUrl === undefined)(
       });
       expect(auditCount).toBe(0);
     });
+
+    it('verify-email/confirm with no token is 401 UNAUTHENTICATED even with a malformed code, not 400', async () => {
+      const res = await ctx.app.inject({
+        method: 'POST',
+        url: '/v1/auth/verify-email/confirm',
+        payload: { code: 'nope' },
+      });
+      expect(res.statusCode).toBe(401);
+      expect(res.json<Err>().error.code).toBe('UNAUTHENTICATED');
+    });
   },
 );

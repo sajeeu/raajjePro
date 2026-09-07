@@ -107,13 +107,13 @@ export function registerAuthRoutes(app: FastifyInstance): void {
   );
 
   // Who may call: the signed-in user, for their own current session.
-  r.post(`${prefix}/logout`, { preHandler: requireAuth }, async (request, reply) => {
+  r.post(`${prefix}/logout`, { preValidation: requireAuth }, async (request, reply) => {
     await app.auth.logout(userOf(request), requestMeta(request));
     return reply.send(ok({ loggedOut: true }));
   });
 
   // Who may call: the signed-in user, about themselves. Verified or not — browsing is free.
-  r.get(`${prefix}/me`, { preHandler: requireAuth }, async (request, reply) => {
+  r.get(`${prefix}/me`, { preValidation: requireAuth }, async (request, reply) => {
     const p = userOf(request);
     const user = await app.auth.repo.findById(p.id);
     if (user === null) throw new Error('principal without a user row');
@@ -121,7 +121,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
   });
 
   // Who may call: the signed-in user; their own live sessions only.
-  r.get(`${prefix}/sessions`, { preHandler: requireAuth }, async (request, reply) => {
+  r.get(`${prefix}/sessions`, { preValidation: requireAuth }, async (request, reply) => {
     const p = userOf(request);
     const sessions = await app.auth.listSessions(p.id);
     return reply.send(ok(sessions.map((s) => sessionDto(s, p.sessionId))));
@@ -130,7 +130,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
   // Who may call: the signed-in user, for one of their own sessions.
   r.delete(
     `${prefix}/sessions/:id`,
-    { schema: { params: sessionIdParams }, preHandler: requireAuth },
+    { schema: { params: sessionIdParams }, preValidation: requireAuth },
     async (request, reply) => {
       await app.auth.revokeSession(userOf(request), request.params.id, requestMeta(request));
       return reply.send(ok({ revoked: request.params.id }));
@@ -143,7 +143,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
   r.post(
     `${prefix}/verify-email/send`,
     {
-      preHandler: requireAuth,
+      preValidation: requireAuth,
       config: {
         rateLimit: { max: 10, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
       },
@@ -180,7 +180,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     `${prefix}/verify-email/confirm`,
     {
       schema: { body: otpCodeBody },
-      preHandler: requireAuth,
+      preValidation: requireAuth,
       config: { rateLimit: { max: 10, timeWindow: '5 minutes' } },
     },
     async (request, reply) => {

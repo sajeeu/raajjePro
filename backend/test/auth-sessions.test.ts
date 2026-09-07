@@ -251,4 +251,10 @@ describe.skipIf(databaseUrl === undefined)('user sessions — refresh, logout, m
     });
     expect(res.statusCode).toBe(401);
   });
+
+  it('DELETE /sessions/:id with no token is 401, not 400, even though the id is not a UUID', async () => {
+    const res = await ctx.app.inject({ method: 'DELETE', url: '/v1/auth/sessions/not-a-uuid' });
+    expect(res.statusCode).toBe(401);
+    expect(res.json<Err>().error.code).toBe('UNAUTHENTICATED');
+  });
 });
