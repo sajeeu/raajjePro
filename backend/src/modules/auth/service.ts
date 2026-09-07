@@ -7,6 +7,7 @@ import type { UserPrincipal } from '../../core/principal.js';
 import type { PrismaClient, UserSession } from '../../generated/prisma/client.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
+import type { OtpService } from './otp.js';
 import { UserRepository, type UserWithProfile } from './repository.js';
 import { hashToken, newRefreshToken, signAccessToken, verifyAccessToken } from './tokens.js';
 
@@ -46,6 +47,7 @@ export class AuthService {
       audit: AuditService;
       clock: Clock;
       config: Config;
+      otp: OtpService;
     },
   ) {
     this.repo = new UserRepository(deps.prisma);
@@ -235,6 +237,37 @@ export class AuthService {
         targetType: 'user_session',
         targetId: target.id,
         reason: 'user_initiated',
+        requestId: meta.requestId,
+        ipAddress: meta.ip,
+      });
+    });
+  }
+
+  /** Who may call: the signed-in user, with a code from their inbox. */
+  async markEmailVerified(
+    principal: UserPrincipal,
+    code: string,
+    meta: RequestMeta,
+  ): Promise<void> {
+    const { targetEmail } = await this.deps.otp.confirm({
+      userId: principal.id,
+      purpose: 'verify_email',
+      code,
+      meta,
+    });
+    const now = this.deps.clock();
+    await this.deps.prisma.$transaction(async (tx) => {
+      await tx.user.updateMany({
+        where: { id: principal.id, email: targetEmail, emailVerifiedAt: null },
+        data: { emailVerifiedAt: now },
+      });
+      await this.deps.audit.record(tx, {
+        actorType: 'user',
+        actorId: principal.id,
+        action: 'user.email.verified',
+        targetType: 'user',
+        targetId: principal.id,
+        reason: 'otp_confirmed',
         requestId: meta.requestId,
         ipAddress: meta.ip,
       });

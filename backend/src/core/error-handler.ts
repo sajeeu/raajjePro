@@ -2,7 +2,7 @@ import type { FastifyError, FastifyInstance } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 
 import { fail } from './envelope.js';
-import { AppError, RateLimitedError } from './errors.js';
+import { AppError, carriesRetryAfter } from './errors.js';
 
 /**
  * Global error handling (plan §Phase 2): every failure — ours, Fastify's own
@@ -17,7 +17,7 @@ export function registerErrorHandling(app: FastifyInstance): void {
 
   app.setErrorHandler(async (error: FastifyError | AppError, request, reply) => {
     if (error instanceof AppError) {
-      if (error instanceof RateLimitedError) {
+      if (carriesRetryAfter(error)) {
         void reply.header('retry-after', String(error.retryAfterSeconds));
       }
       return reply

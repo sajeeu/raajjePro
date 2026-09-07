@@ -1,0 +1,226 @@
+import { createHash, randomInt, randomUUID } from 'node:crypto';
+
+import type { Config } from '../../config/env.js';
+import type { Clock } from '../../core/clock.js';
+import { AppError, BusinessRuleError } from '../../core/errors.js';
+import type { OtpPurpose, PrismaClient } from '../../generated/prisma/client.js';
+import type { RequestMeta } from '../admin-auth/service.js';
+import type { Db } from '../audit/types.js';
+import type { EmailSender } from '../email/types.js';
+
+export const OTP_ADDRESS_LIMIT = 3;
+export const OTP_ADDRESS_WINDOW_MS = 15 * 60_000;
+export const OTP_ACCOUNT_LIMIT = 5;
+export const OTP_ACCOUNT_WINDOW_MS = 60 * 60_000;
+export const OTP_ATTEMPT_LIMIT = 5;
+/** What the client shows as its resend countdown. Advisory — the two limits above are the rule. */
+export const OTP_RESEND_COOLDOWN_MS = 60_000;
+
+export interface OtpSendResult {
+  status: 'sent' | 'suppressed' | 'failed';
+  expiresAt: Date;
+  resendAvailableAt: Date;
+}
+
+/** 429 with the seconds remaining, so the UI shows a real countdown (plan §Phase 3). */
+export class OtpRateLimitedError extends AppError {
+  constructor(
+    public readonly retryAfterSeconds: number,
+    limit: 'address' | 'account',
+  ) {
+    super(429, 'OTP_RATE_LIMITED', 'Too many codes requested — wait before asking for another', {
+      retryAfterSeconds,
+      limit,
+    });
+  }
+}
+
+function codeHashFor(id: string, code: string): string {
+  return createHash('sha256').update(`${id}|${code}`).digest('hex');
+}
+
+/**
+ * Emailed six-digit codes (plan §Phase 3). Both send limits are enforced here,
+ * not by the route tier — they key on the address and the account, not the
+ * IP — inside a transaction that locks the user row, so concurrent sends
+ * cannot slip a fourth one through. Every live code for a purpose stays valid
+ * until it expires; five wrong attempts invalidate all of them.
+ */
+export class OtpService {
+  constructor(
+    private readonly deps: {
+      prisma: PrismaClient;
+      email: EmailSender;
+      clock: Clock;
+      config: Config;
+    },
+  ) {}
+
+  /** Who may call: the auth and account services, for the signed-in user they are acting for. */
+  async send(input: {
+    userId: string;
+    purpose: OtpPurpose;
+    targetEmail: string;
+    meta: RequestMeta;
+  }): Promise<OtpSendResult> {
+    const now = this.deps.clock();
+    const targetEmail = input.targetEmail.trim().toLowerCase();
+    const id = randomUUID();
+    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const expiresAt = new Date(now.getTime() + this.deps.config.auth.otpExpiryMinutes * 60_000);
+
+    await this.deps.prisma.$transaction(async (tx) => {
+      // Serialise per user: the two counts below and the insert must not
+      // interleave with another send for the same account. Raw SQL because
+      // Prisma has no row lock; "app_user" is the mapped table name.
+      await tx.$queryRaw`SELECT id FROM app_user WHERE id = ${input.userId}::uuid FOR UPDATE`;
+      await this.assertUnderLimits(tx, input.userId, targetEmail, now);
+      await tx.emailOtp.create({
+        data: {
+          id,
+          userId: input.userId,
+          purpose: input.purpose,
+          targetEmail,
+          codeHash: codeHashFor(id, code),
+          expiresAt,
+          createdAt: now,
+        },
+      });
+    });
+
+    const outcome = await this.deps.email.send({
+      channel: 'otp',
+      to: targetEmail,
+      recipientUserId: input.userId,
+      subject: 'Your RaajjePro verification code',
+      text: [
+        `Your RaajjePro verification code is ${code}.`,
+        '',
+        `It expires in ${String(this.deps.config.auth.otpExpiryMinutes)} minutes.`,
+        "If you didn't ask for this code, you can ignore this email — nothing changes without it.",
+      ].join('\n'),
+    });
+    await this.deps.prisma.emailOtp.update({
+      where: { id },
+      data: { emailMessageId: outcome.messageId },
+    });
+    return {
+      status: outcome.status,
+      expiresAt,
+      resendAvailableAt: new Date(now.getTime() + OTP_RESEND_COOLDOWN_MS),
+    };
+  }
+
+  /**
+   * Who may call: the auth and account services, for the signed-in user.
+   * Returns the address the matched code was sent to — the caller decides
+   * what verifying it means (mark verified, or switch the account's email).
+   */
+  async confirm(input: {
+    userId: string;
+    purpose: OtpPurpose;
+    code: string;
+    meta: RequestMeta;
+  }): Promise<{ targetEmail: string }> {
+    const now = this.deps.clock();
+    const code = input.code.trim();
+    const live = await this.deps.prisma.emailOtp.findMany({
+      where: {
+        userId: input.userId,
+        purpose: input.purpose,
+        consumedAt: null,
+        invalidatedAt: null,
+        expiresAt: { gt: now },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (live.length === 0) {
+      throw new BusinessRuleError('OTP_EXPIRED', 'That code has expired — request a fresh one');
+    }
+    const match = live.find((row) => row.codeHash === codeHashFor(row.id, code));
+    if (match !== undefined) {
+      const consumed = await this.deps.prisma.emailOtp.updateMany({
+        where: { id: match.id, consumedAt: null },
+        data: { consumedAt: now },
+      });
+      if (consumed.count === 0) {
+        throw new BusinessRuleError(
+          'OTP_EXPIRED',
+          'That code was already used — request a fresh one',
+        );
+      }
+      return { targetEmail: match.targetEmail };
+    }
+    // Wrong: one attempt against every live code, since we cannot know which
+    // one was meant. The fifth failure invalidates them all.
+    const ids = live.map((row) => row.id);
+    await this.deps.prisma.emailOtp.updateMany({
+      where: { id: { in: ids } },
+      data: { attempts: { increment: 1 } },
+    });
+    const attempts = Math.max(...live.map((row) => row.attempts)) + 1;
+    if (attempts >= OTP_ATTEMPT_LIMIT) {
+      await this.invalidateAll(this.deps.prisma, input.userId, input.purpose, now);
+      throw new BusinessRuleError(
+        'OTP_INVALIDATED',
+        'That code has been invalidated after 5 incorrect attempts — request a fresh one',
+      );
+    }
+    throw new BusinessRuleError('OTP_INCORRECT', "That code isn't right", {
+      attemptsRemaining: OTP_ATTEMPT_LIMIT - attempts,
+    });
+  }
+
+  invalidateAll(
+    db: Db,
+    userId: string,
+    purpose: OtpPurpose,
+    now: Date,
+  ): Promise<{ count: number }> {
+    return db.emailOtp.updateMany({
+      where: { userId, purpose, consumedAt: null, invalidatedAt: null },
+      data: { invalidatedAt: now },
+    });
+  }
+
+  private async assertUnderLimits(
+    db: Db,
+    userId: string,
+    targetEmail: string,
+    now: Date,
+  ): Promise<void> {
+    const [byAddress, byAccount] = await Promise.all([
+      db.emailOtp.findMany({
+        where: { targetEmail, createdAt: { gt: new Date(now.getTime() - OTP_ADDRESS_WINDOW_MS) } },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      }),
+      db.emailOtp.findMany({
+        where: { userId, createdAt: { gt: new Date(now.getTime() - OTP_ACCOUNT_WINDOW_MS) } },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      }),
+    ]);
+    const waits: { seconds: number; limit: 'address' | 'account' }[] = [];
+    const oldestAddress = byAddress[0];
+    if (byAddress.length >= OTP_ADDRESS_LIMIT && oldestAddress !== undefined) {
+      waits.push({
+        seconds: Math.ceil(
+          (oldestAddress.createdAt.getTime() + OTP_ADDRESS_WINDOW_MS - now.getTime()) / 1000,
+        ),
+        limit: 'address',
+      });
+    }
+    const oldestAccount = byAccount[0];
+    if (byAccount.length >= OTP_ACCOUNT_LIMIT && oldestAccount !== undefined) {
+      waits.push({
+        seconds: Math.ceil(
+          (oldestAccount.createdAt.getTime() + OTP_ACCOUNT_WINDOW_MS - now.getTime()) / 1000,
+        ),
+        limit: 'account',
+      });
+    }
+    const worst = waits.sort((a, b) => b.seconds - a.seconds)[0];
+    if (worst !== undefined) throw new OtpRateLimitedError(Math.max(worst.seconds, 1), worst.limit);
+  }
+}

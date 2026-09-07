@@ -15,6 +15,7 @@ import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
+import { OtpService } from './modules/auth/otp.js';
 import { registerAuthRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { EmailService } from './modules/email/service.js';
@@ -44,6 +45,7 @@ declare module 'fastify' {
     adminAuth: AdminAuthService;
     auth: AuthService;
     email: EmailSender;
+    otp: OtpService;
   }
 }
 
@@ -72,10 +74,19 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     'adminAuth',
     new AdminAuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }),
   );
-  app.decorate('auth', new AuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }));
+  const email = new EmailService(
+    deps.prisma,
+    deps.emailTransport,
+    config.email,
+    deps.clock,
+    app.log,
+  );
+  app.decorate('email', email);
+  const otp = new OtpService({ prisma: deps.prisma, email, clock: deps.clock, config });
+  app.decorate('otp', otp);
   app.decorate(
-    'email',
-    new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock, app.log),
+    'auth',
+    new AuthService({ prisma: deps.prisma, audit, clock: deps.clock, config, otp }),
   );
 
   app.addHook('onSend', async (request, reply) => {

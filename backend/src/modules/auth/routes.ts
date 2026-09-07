@@ -2,10 +2,11 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 import { ok } from '../../core/envelope.js';
+import { BusinessRuleError } from '../../core/errors.js';
 import { requestMeta } from '../admin-auth/routes.js';
 import { sessionDto, userDto } from './dto.js';
 import { requireAuth, userOf } from './guards.js';
-import { refreshBody, sessionIdParams } from './schema.js';
+import { otpCodeBody, refreshBody, sessionIdParams } from './schema.js';
 import type { TokenPair } from './service.js';
 
 export function tokensDto(t: TokenPair) {
@@ -64,6 +65,59 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     async (request, reply) => {
       await app.auth.revokeSession(userOf(request), request.params.id, requestMeta(request));
       return reply.send(ok({ revoked: request.params.id }));
+    },
+  );
+
+  // Who may call: the signed-in user whose email is not yet verified. Domain
+  // limits are the rule (3/address/15 min, 5/account/hour); this tier only
+  // stops a misbehaving client turning them into a flood of 429s.
+  r.post(
+    `${prefix}/verify-email/send`,
+    {
+      preHandler: requireAuth,
+      config: {
+        rateLimit: { max: 10, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      const p = userOf(request);
+      const user = await app.auth.repo.findById(p.id);
+      if (user === null) throw new Error('principal without a user row');
+      if (user.emailVerifiedAt !== null) {
+        throw new BusinessRuleError(
+          'EMAIL_ALREADY_VERIFIED',
+          'This email address is already verified',
+        );
+      }
+      const result = await app.otp.send({
+        userId: p.id,
+        purpose: 'verify_email',
+        targetEmail: user.email,
+        meta: requestMeta(request),
+      });
+      return reply.send(
+        ok({
+          status: result.status,
+          expiresAt: result.expiresAt.toISOString(),
+          resendAvailableAt: result.resendAvailableAt.toISOString(),
+        }),
+      );
+    },
+  );
+
+  // Who may call: the signed-in user. Tier 10/5 min per principal — above the
+  // 5-attempt rule so the fifth failure is answered by invalidation, not 429.
+  r.post(
+    `${prefix}/verify-email/confirm`,
+    {
+      schema: { body: otpCodeBody },
+      preHandler: requireAuth,
+      config: { rateLimit: { max: 10, timeWindow: '5 minutes' } },
+    },
+    async (request, reply) => {
+      const p = userOf(request);
+      await app.auth.markEmailVerified(p, request.body.code, requestMeta(request));
+      return reply.send(ok({ emailVerified: true }));
     },
   );
 }
