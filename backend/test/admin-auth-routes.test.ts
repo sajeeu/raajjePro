@@ -141,6 +141,16 @@ describe.skipIf(databaseUrl === undefined)('admin auth routes — login and sess
     expect(expired.json<{ error: { code: string } }>().error.code).toBe('SESSION_EXPIRED');
   });
 
+  it('an anonymous call to a guarded route is 401 before param validation runs — guards attach at preValidation, not preHandler', async () => {
+    const res = await ctx.app.inject({
+      method: 'DELETE',
+      url: '/v1/admin/auth/sessions/not-a-uuid',
+      headers: csrf,
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('UNAUTHENTICATED');
+  });
+
   it('the login route carries its own stricter rate limit', async () => {
     const ip = freshIp();
     let last = 0;
