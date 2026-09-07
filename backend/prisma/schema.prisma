@@ -146,6 +146,7 @@ model AdminRecoveryCode {
 
 enum AuditActorType {
   admin
+  user
   system
 
   @@map("audit_actor_type")
@@ -212,6 +213,7 @@ model EmailMessage {
   lastEventAt       DateTime?          @map("last_event_at") @db.Timestamptz(6)
 
   events EmailEvent[]
+  otps   EmailOtp[]
 
   @@index([toAddress, createdAt])
   @@index([recipientUserId, createdAt])
@@ -258,4 +260,159 @@ model EmailSuppression {
 
   @@index([address])
   @@map("email_suppression")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — identity & authentication
+// ---------------------------------------------------------------------------
+
+enum UserStatus {
+  active
+  frozen
+  anonymised
+
+  @@map("user_status")
+}
+
+/// A customer or provider account (plan §Phase 3). `status` is the soft-delete
+/// field: `frozen` after a deletion request, `anonymised` when the job has
+/// replaced name, email and phone. `phoneE164` is deliberately NOT unique —
+/// exclusivity begins at Bronze (§0.0 item 8a) and is enforced in the service.
+model User {
+  id                  String     @id @default(uuid()) @db.Uuid
+  email               String     @unique
+  emailVerifiedAt     DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  passwordHash        String     @map("password_hash")
+  fullName            String     @map("full_name")
+  phoneE164           String?    @map("phone_e164")
+  phoneDialCode       String?    @map("phone_dial_code")
+  status              UserStatus @default(active)
+  termsAcceptedAt     DateTime   @map("terms_accepted_at") @db.Timestamptz(6)
+  deletionRequestedAt DateTime?  @map("deletion_requested_at") @db.Timestamptz(6)
+  deletionDeadlineAt  DateTime?  @map("deletion_deadline_at") @db.Timestamptz(6)
+  anonymisedAt        DateTime?  @map("anonymised_at") @db.Timestamptz(6)
+  passwordChangedAt   DateTime   @default(now()) @map("password_changed_at") @db.Timestamptz(6)
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  providerProfile ProviderProfile?
+  sessions        UserSession[]
+  otps            EmailOtp[]
+
+  @@index([phoneE164])
+  @@index([status, deletionDeadlineAt])
+  @@map("app_user")
+}
+
+enum VerificationTier {
+  none
+  bronze
+  silver
+  gold
+
+  @@map("verification_tier")
+}
+
+enum VerificationStatus {
+  unverified
+  pending
+  verified
+
+  @@map("verification_status")
+}
+
+/// The provider half of an account. Phase 3 creates it with only the columns
+/// Phase 3 reads — Business/Trade Name from the Register provider variant,
+/// and the tier the Bronze-uniqueness rule checks. Phase 5 adds the rest
+/// additively (plan §Phase 5). `verificationTier` is what the badge renders;
+/// `verificationStatus` is only the review state of a pending submission.
+model ProviderProfile {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @unique @map("user_id") @db.Uuid
+  user               User               @relation(fields: [userId], references: [id])
+  businessName       String?            @map("business_name")
+  verificationTier   VerificationTier   @default(none) @map("verification_tier")
+  verificationStatus VerificationStatus @default(unverified) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("provider_profile")
+}
+
+enum UserSessionRevokedReason {
+  logout
+  revoked_by_user
+  refresh_expired
+  refresh_reuse
+  password_change
+  email_change
+  anonymised
+
+  @@map("user_session_revoked_reason")
+}
+
+/// One per signed-in device. The credential is the RefreshToken rows below;
+/// the access JWT carries this row's id as `sid` so revocation is immediate.
+model UserSession {
+  id            String                    @id @default(uuid()) @db.Uuid
+  userId        String                    @map("user_id") @db.Uuid
+  user          User                      @relation(fields: [userId], references: [id])
+  deviceName    String                    @map("device_name")
+  ipAddress     String                    @map("ip_address")
+  userAgent     String                    @map("user_agent")
+  createdAt     DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt    DateTime                  @map("last_seen_at") @db.Timestamptz(6)
+  revokedAt     DateTime?                 @map("revoked_at") @db.Timestamptz(6)
+  revokedReason UserSessionRevokedReason? @map("revoked_reason")
+
+  refreshTokens RefreshToken[]
+
+  @@index([userId, revokedAt])
+  @@map("user_session")
+}
+
+/// One row per refresh token ever issued; the live one for a session has
+/// rotated_at NULL. Keeping rotated rows is what lets a replayed old token be
+/// told apart from garbage (spec §3).
+model RefreshToken {
+  id           String      @id @default(uuid()) @db.Uuid
+  sessionId    String      @map("session_id") @db.Uuid
+  session      UserSession @relation(fields: [sessionId], references: [id])
+  tokenHash    String      @unique @map("token_hash")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt    DateTime    @map("expires_at") @db.Timestamptz(6)
+  rotatedAt    DateTime?   @map("rotated_at") @db.Timestamptz(6)
+  replacedById String?     @map("replaced_by_id") @db.Uuid
+
+  @@index([sessionId, rotatedAt])
+  @@map("refresh_token")
+}
+
+enum OtpPurpose {
+  verify_email
+  change_email
+
+  @@map("otp_purpose")
+}
+
+/// An emailed six-digit code. Never deleted: the two indexes are the two
+/// send-limit counts (plan §Phase 3: 3/address/15 min AND 5/account/hour).
+model EmailOtp {
+  id             String        @id @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  user           User          @relation(fields: [userId], references: [id])
+  purpose        OtpPurpose
+  targetEmail    String        @map("target_email")
+  codeHash       String        @map("code_hash")
+  attempts       Int           @default(0)
+  expiresAt      DateTime      @map("expires_at") @db.Timestamptz(6)
+  consumedAt     DateTime?     @map("consumed_at") @db.Timestamptz(6)
+  invalidatedAt  DateTime?     @map("invalidated_at") @db.Timestamptz(6)
+  emailMessageId String?       @map("email_message_id") @db.Uuid
+  emailMessage   EmailMessage? @relation(fields: [emailMessageId], references: [id])
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId, purpose, createdAt])
+  @@index([targetEmail, createdAt])
+  @@map("email_otp")
 }
