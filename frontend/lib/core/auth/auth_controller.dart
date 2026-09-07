@@ -117,7 +117,10 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthGuest();
   }
 
+  /// Idempotent: the HTTP client's nested-refresh branch, its outer branch,
+  /// and [refreshUser]'s catch can all reach this for the same expiry.
   Future<void> sessionExpired() async {
+    if (state is AuthSessionExpired) return;
     await _store.clear();
     state = const AuthSessionExpired();
   }

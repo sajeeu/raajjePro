@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
@@ -179,5 +181,49 @@ void main() {
       (container.read(authControllerProvider) as AuthSignedIn).user.status,
       AccountStatus.frozen,
     );
+  });
+
+  test('composition with the real HttpApiClient: an ACCESS_TOKEN_EXPIRED me() '
+      'that fails to refresh reaches AuthSessionExpired via one refresh call', () async {
+    var refreshCalls = 0;
+    final mockHttp = MockClient((request) async {
+      if (request.method == 'POST' && request.url.path == '/v1/auth/refresh') {
+        refreshCalls++;
+        return http.Response(
+          '{"error":{"code":"SESSION_EXPIRED","message":"session expired"}}',
+          401,
+          headers: {'content-type': 'application/json'},
+        );
+      }
+      if (request.method == 'GET' && request.url.path == '/v1/auth/me') {
+        return http.Response(
+          '{"error":{"code":"ACCESS_TOKEN_EXPIRED","message":"token expired"}}',
+          401,
+          headers: {'content-type': 'application/json'},
+        );
+      }
+      return http.Response(
+        '{"error":{"code":"UNKNOWN","message":"unscripted call"}}',
+        404,
+      );
+    });
+    final realStore = InMemoryTokenStore();
+    await realStore.write(TokenPair.fromJson(tokensJson()));
+    final realContainer = ProviderContainer(
+      overrides: [
+        httpClientProvider.overrideWithValue(mockHttp),
+        tokenStoreProvider.overrideWithValue(realStore),
+      ],
+    );
+    addTearDown(realContainer.dispose);
+
+    await realContainer.read(authControllerProvider.notifier).restore();
+
+    expect(
+      realContainer.read(authControllerProvider),
+      isA<AuthSessionExpired>(),
+    );
+    expect(await realStore.read(), isNull);
+    expect(refreshCalls, 1);
   });
 }
