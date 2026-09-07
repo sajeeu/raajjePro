@@ -1,6 +1,6 @@
 # Unrelated projects used to share this working directory. They are gone as of
 # September 2026 — every one of them is now in the repository it belongs to:
-#   petty cash  →  gitlab.com/neopacific/eng1/petty-cash-management
+#   petty cash  →  a separate private GitLab repository
 #   books       →  github.com/sajeeu/books
 #
 # Fifteen of those files existed in NO repository at all, despite a comment here
