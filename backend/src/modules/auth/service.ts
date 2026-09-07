@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { Config } from '../../config/env.js';
 import type { Clock } from '../../core/clock.js';
-import { AuthenticationError, NotFoundError } from '../../core/errors.js';
+import { AuthenticationError, BusinessRuleError, NotFoundError } from '../../core/errors.js';
 import type { UserPrincipal } from '../../core/principal.js';
 import type { PrismaClient, UserSession } from '../../generated/prisma/client.js';
 import type { RequestMeta } from '../admin-auth/service.js';
@@ -257,10 +257,21 @@ export class AuthService {
     });
     const now = this.deps.clock();
     await this.deps.prisma.$transaction(async (tx) => {
-      await tx.user.updateMany({
+      const updated = await tx.user.updateMany({
         where: { id: principal.id, email: targetEmail, emailVerifiedAt: null },
         data: { emailVerifiedAt: now },
       });
+      // The code was live and correct (otp.confirm already checked that), but
+      // it was issued for an address that no longer matches the account — the
+      // email changed since, or it was already verified by another request.
+      // Neither is "confirm succeeded", so this must not write the audit row.
+      // Throwing here rolls the whole transaction back.
+      if (updated.count === 0) {
+        throw new BusinessRuleError(
+          'OTP_EXPIRED',
+          'That code was for a different address — request a fresh one',
+        );
+      }
       await this.deps.audit.record(tx, {
         actorType: 'user',
         actorId: principal.id,

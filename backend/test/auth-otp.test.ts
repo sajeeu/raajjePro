@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
-import { bearer, createUser, RecordingEmailTransport } from './helpers/users.js';
+import { bearer, createUser, freshEmail, RecordingEmailTransport } from './helpers/users.js';
 
 interface Err {
   error: {
@@ -177,6 +177,22 @@ describe.skipIf(databaseUrl === undefined)(
       const res = await send(headers);
       expect(res.statusCode).toBe(200);
       expect(res.json<{ data: { status: string } }>().data.status).toBe('suppressed');
+    });
+
+    it('a code confirmed after the account email changed is OTP_EXPIRED, not a fabricated success', async () => {
+      const { user, headers } = await signedIn();
+      await send(headers);
+      const code = mail.latestCodeFor(user.email) ?? '';
+      await ctx.prisma.user.update({ where: { id: user.id }, data: { email: freshEmail() } });
+      const res = await confirm(headers, code);
+      expect(res.statusCode).toBe(422);
+      expect(res.json<Err>().error.code).toBe('OTP_EXPIRED');
+      const me = await ctx.app.inject({ method: 'GET', url: '/v1/auth/me', headers });
+      expect(me.json<{ data: { emailVerified: boolean } }>().data.emailVerified).toBe(false);
+      const auditCount = await ctx.prisma.auditLogEntry.count({
+        where: { action: 'user.email.verified', actorId: user.id },
+      });
+      expect(auditCount).toBe(0);
     });
   },
 );
