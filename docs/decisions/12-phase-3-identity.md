@@ -171,9 +171,10 @@ Nothing in this phase reaches a real mailbox — every email-dependent flow
 row L8 records what a real inbox closes.
 
 Flutter crash reporting (`CrashReporter`, pulled forward to this phase per
-the design spec) is wired to a no-op without a `SENTRY_DSN` — nothing has
-run against a real Sentry project. `docs/deferred-verification.md` row L9
-records what that needs.
+the design spec) is specified to be a no-op without a `SENTRY_DSN` — the
+Flutter half of this phase is not yet built as of this commit, so nothing has
+run against a real Sentry project, and nothing has run against a no-op
+either. `docs/deferred-verification.md` row L9 records what closes it.
 
 ## What Phase 3b / 5 / 6 / 11 / 17 must pick up
 

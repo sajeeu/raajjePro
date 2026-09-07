@@ -69,7 +69,7 @@ None of that was visible in a design review. All of it would have been implement
 
 | | |
 |---|---|
-| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.19. Every product decision. Read §0.0 first — it is a precedence rule |
+| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.20. Every product decision. Read §0.0 first — it is a precedence rule |
 | `CLAUDE.md` | Architectural invariants Claude must never violate. Loaded automatically |
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
