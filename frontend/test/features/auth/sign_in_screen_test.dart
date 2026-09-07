@@ -85,6 +85,18 @@ void main() {
         find.byType(CircularProgressIndicator),
         findsNothing,
       ); // the button spins, not the page
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('signin-email')))
+            .enabled,
+        isFalse,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('signin-password')))
+            .enabled,
+        isFalse,
+      );
       api.gate!.complete();
       await settle(tester);
       expect(api.calls.single.path, '/v1/auth/login');
@@ -132,6 +144,53 @@ void main() {
           return text.contains('not found');
         }),
         isFalse,
+      );
+    },
+  );
+
+  testWidgets(
+    'RATE_LIMITED shows a distinct banner with the wait time and keeps both values',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/login',
+        status: 429,
+        code: 'RATE_LIMITED',
+        details: {'retryAfterSeconds': 90},
+      );
+      await pump(tester);
+      await fill(tester);
+      await tester.tap(find.widgetWithText(AppButton, 'Sign In'));
+      await settle(tester);
+      expect(find.textContaining('1:30'), findsOneWidget);
+      expect(
+        find.text(
+          "That email and password combination didn't work. Check both and try again.",
+        ),
+        findsNothing,
+      );
+      expect(find.text('aishath@example.mv'), findsOneWidget);
+      expect(find.text('seabreeze-24'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a 500-class code shows the generic banner, not the credentials banner',
+    (tester) async {
+      api.fail('POST', '/v1/auth/login', status: 500, code: 'INTERNAL_ERROR');
+      await pump(tester);
+      await fill(tester);
+      await tester.tap(find.widgetWithText(AppButton, 'Sign In'));
+      await settle(tester);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          "That email and password combination didn't work. Check both and try again.",
+        ),
+        findsNothing,
       );
     },
   );

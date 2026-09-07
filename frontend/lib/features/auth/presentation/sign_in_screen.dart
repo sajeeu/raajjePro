@@ -9,9 +9,20 @@ import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart'
 import 'package:raajjepro/features/auth/presentation/widgets/social_sign_in_row.dart';
 import 'package:raajjepro/shared/shared.dart';
 
+/// `Too many attempts. Try again in {m:ss}.` — or, when the server didn't
+/// say how long, a copy that doesn't name a duration it doesn't have.
+String _rateLimitCopy(int? secondsRemaining) {
+  if (secondsRemaining == null) return 'Try again in a moment.';
+  final minutes = secondsRemaining ~/ 60;
+  final seconds = secondsRemaining % 60;
+  return 'Too many attempts. Try again in $minutes:${seconds.toString().padLeft(2, '0')}.';
+}
+
 /// Sign In (`Sign In.dc.html`; plan §Phase 3). States: default · failed
-/// (one message, both values kept) · submitting (the button's own loading) ·
-/// offline (inline notice with retry) · a third-party notice.
+/// (one message, both values kept) · rate-limited (a distinct banner) ·
+/// a generic failure (any other `ApiException`) · submitting (the button's
+/// own loading, both fields disabled) · offline (inline notice with retry) ·
+/// a third-party notice.
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
   static const routeName = '/sign-in';
@@ -71,6 +82,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     InlineNotice.error(
                       "That email and password combination didn't work. Check both and try again.",
                     ),
+                  if (s.rateLimited)
+                    InlineNotice.error(_rateLimitCopy(s.rateLimitedSeconds)),
+                  if (s.genericError)
+                    InlineNotice.error(
+                      'Something went wrong. Please try again.',
+                    ),
                   if (s.offline) InlineNotice.offline(onRetry: _submit),
                   if (s.socialNotice != null)
                     InlineNotice.info(s.socialNotice!),
@@ -89,6 +106,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
                     hasError: borderError,
+                    enabled: !s.busy,
                     onChanged: (_) => ref
                         .read(signInControllerProvider.notifier)
                         .clearFailure(),
@@ -104,6 +122,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _submit(),
                     hasError: borderError,
+                    enabled: !s.busy,
                     onChanged: (_) => ref
                         .read(signInControllerProvider.notifier)
                         .clearFailure(),
