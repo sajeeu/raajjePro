@@ -154,6 +154,45 @@ describe.skipIf(databaseUrl === undefined)('register and login', () => {
     );
   });
 
+  it('a pre-burned OTP address window never blocks registration itself: 201 with tokens, verification reported honestly as failed', async () => {
+    // Burn the target address's send-limit window (3 per 15 min) from an
+    // unrelated account before anyone registers it — e.g. someone typo'd it
+    // into a change-email request three times. Registration must still
+    // create the account and open a session; only the OTP send is refused.
+    const target = freshEmail();
+    const burner = await registerUser(ctx.app);
+    for (let i = 0; i < 3; i += 1) {
+      const burn = await ctx.app.inject({
+        method: 'POST',
+        url: '/v1/users/me/change-email/request',
+        headers: burner.headers,
+        payload: { newEmail: target, currentPassword: burner.password },
+      });
+      expect(burn.statusCode).toBe(200);
+    }
+    const res = await post(validBody({ email: target }));
+    expect(res.statusCode).toBe(201);
+    const data = res.json<{
+      data: {
+        tokens: { accessToken: string; refreshToken: string };
+        verification: { status: string };
+      };
+    }>().data;
+    expect(data.verification.status).toBe('failed');
+    expect(data.tokens.accessToken).toBeTruthy();
+    expect(data.tokens.refreshToken).toBeTruthy();
+    expect(
+      await ctx.prisma.user.findUnique({ where: { email: target.toLowerCase() } }),
+    ).not.toBeNull();
+    // The freshly minted session works even though no code went out.
+    const me = await ctx.app.inject({
+      method: 'GET',
+      url: '/v1/auth/me',
+      headers: bearer(data.tokens.accessToken),
+    });
+    expect(me.statusCode).toBe(200);
+  });
+
   it('registration needs an Idempotency-Key and replays the original result on a retry', async () => {
     const body = validBody();
     const none = await ctx.app.inject({
