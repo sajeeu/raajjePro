@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:raajjepro/core/auth/auth_api.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/device_name.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
+import 'package:raajjepro/core/crash/crash_reporter.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((_) => SecureTokenStore());
 final httpClientProvider = Provider<http.Client>((ref) {
@@ -67,7 +69,9 @@ class AuthController extends Notifier<AuthState> {
   /// failure keeps whatever state we had — offline is not signed out.
   Future<void> refreshUser() async {
     try {
-      state = AuthSignedIn(await _api.me());
+      final user = await _api.me();
+      state = AuthSignedIn(user);
+      unawaited(ref.read(crashReporterProvider).setUserId(user.id));
     } on ApiException catch (e) {
       if (e.code == 'SESSION_EXPIRED' || e.code == 'UNAUTHENTICATED') {
         await sessionExpired();
@@ -81,6 +85,7 @@ class AuthController extends Notifier<AuthState> {
     final result = await _api.login(email, password, await _deviceName());
     await _store.write(result.tokens);
     state = AuthSignedIn(result.user);
+    unawaited(ref.read(crashReporterProvider).setUserId(result.user.id));
   }
 
   Future<VerificationOutcome> register(RegisterRequest request) async {
@@ -90,6 +95,7 @@ class AuthController extends Notifier<AuthState> {
     );
     await _store.write(result.tokens);
     state = AuthSignedIn(result.user);
+    unawaited(ref.read(crashReporterProvider).setUserId(result.user.id));
     return result.verification;
   }
 
@@ -115,6 +121,7 @@ class AuthController extends Notifier<AuthState> {
     }
     await _store.clear();
     state = const AuthGuest();
+    unawaited(ref.read(crashReporterProvider).setUserId(null));
   }
 
   /// Idempotent: the HTTP client's nested-refresh branch, its outer branch,
@@ -123,6 +130,7 @@ class AuthController extends Notifier<AuthState> {
     if (state is AuthSessionExpired) return;
     await _store.clear();
     state = const AuthSessionExpired();
+    unawaited(ref.read(crashReporterProvider).setUserId(null));
   }
 
   void continueAsGuest() => state = const AuthGuest();
@@ -130,11 +138,16 @@ class AuthController extends Notifier<AuthState> {
   void markVerified() {
     final s = state;
     if (s is AuthSignedIn) {
-      state = AuthSignedIn(s.user.copyWith(emailVerified: true));
+      final user = s.user.copyWith(emailVerified: true);
+      state = AuthSignedIn(user);
+      unawaited(ref.read(crashReporterProvider).setUserId(user.id));
     }
   }
 
-  void applyUser(UserAccount user) => state = AuthSignedIn(user);
+  void applyUser(UserAccount user) {
+    state = AuthSignedIn(user);
+    unawaited(ref.read(crashReporterProvider).setUserId(user.id));
+  }
 
   /// A UUID v4 — the client key registration's idempotency requires.
   String _idempotencyKey() {
