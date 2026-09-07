@@ -6,17 +6,9 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/sign_in_controller.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/social_sign_in_row.dart';
 import 'package:raajjepro/shared/shared.dart';
-
-/// `Too many attempts. Try again in {m:ss}.` — or, when the server didn't
-/// say how long, a copy that doesn't name a duration it doesn't have.
-String _rateLimitCopy(int? secondsRemaining) {
-  if (secondsRemaining == null) return 'Try again in a moment.';
-  final minutes = secondsRemaining ~/ 60;
-  final seconds = secondsRemaining % 60;
-  return 'Too many attempts. Try again in $minutes:${seconds.toString().padLeft(2, '0')}.';
-}
 
 /// Sign In (`Sign In.dc.html`; plan §Phase 3). States: default · failed
 /// (one message, both values kept) · rate-limited (a distinct banner) ·
@@ -83,7 +75,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       "That email and password combination didn't work. Check both and try again.",
                     ),
                   if (s.rateLimited)
-                    InlineNotice.error(_rateLimitCopy(s.rateLimitedSeconds)),
+                    InlineNotice.error(rateLimitCopy(s.rateLimitedSeconds)),
                   if (s.genericError)
                     InlineNotice.error(
                       'Something went wrong. Please try again.',

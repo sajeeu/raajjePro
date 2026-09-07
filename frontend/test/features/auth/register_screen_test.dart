@@ -235,6 +235,43 @@ void main() {
   });
 
   testWidgets(
+    'RATE_LIMITED shows a distinct banner with the wait time, no field errors, and keeps the typed email',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/register',
+        status: 429,
+        code: 'RATE_LIMITED',
+        details: {'retryAfterSeconds': 90},
+      );
+      await pump(tester);
+      await fillValid(tester);
+      await tapSubmit(tester, 'Create Account');
+      await settle(tester);
+      expect(find.textContaining('1:30'), findsOneWidget);
+      expect(find.text('aishath@example.mv'), findsOneWidget);
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-email')))
+            .errorText,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-phone')))
+            .errorText,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-password')))
+            .errorText,
+        isNull,
+      );
+    },
+  );
+
+  testWidgets(
     'submitting disables every field including the dial code and phone number',
     (tester) async {
       final gate = Completer<void>();

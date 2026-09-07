@@ -8,6 +8,7 @@ import 'package:raajjepro/features/auth/controller/register_controller.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/phone_field.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/role_toggle.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -118,6 +119,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (s.offline) InlineNotice.offline(onRetry: _submit),
+                  if (s.rateLimited)
+                    InlineNotice.error(rateLimitCopy(s.rateLimitedSeconds)),
                   if (s.fieldErrors['form'] != null)
                     InlineNotice.error(s.fieldErrors['form']!),
                   Text('I want to…', style: type.bodyStrong),
