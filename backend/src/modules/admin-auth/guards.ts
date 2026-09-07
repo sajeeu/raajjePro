@@ -9,7 +9,7 @@ import type { AdminPrincipal } from '../../core/principal.js';
  * same way, and so the narrowing is a real runtime check, not a bare cast.
  */
 export function principalOf(request: FastifyRequest): AdminPrincipal {
-  if (request.principal === undefined) {
+  if (request.principal?.kind !== 'admin') {
     throw new AuthenticationError(
       request.sessionRejection ?? 'UNAUTHENTICATED',
       'Sign in to continue',
