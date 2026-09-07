@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { ANONYMISE_JOB_NAME } from '../src/jobs/anonymise-accounts.js';
 import type { DeletionBlocker } from '../src/modules/account/anonymise.js';
 import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
 import { RecordingEmailTransport, registerUser } from './helpers/users.js';
@@ -163,6 +164,19 @@ describe.skipIf(databaseUrl === undefined)(
       });
       expect(profile.businessName).toBeNull();
       expect(profile.verificationTier).toBe('silver');
+    });
+
+    it('the registered job runs the anonymiser through the real runner path — advisory lock held, heartbeat written', async () => {
+      const u = await frozenUser();
+      const result = await ctx.app.jobs.runOnce(ANONYMISE_JOB_NAME, time.clock());
+      expect(result).toBe('ran');
+      expect((await ctx.prisma.user.findUniqueOrThrow({ where: { id: u.userId } })).status).toBe(
+        'anonymised',
+      );
+      const heartbeat = await ctx.prisma.jobHeartbeat.findUniqueOrThrow({
+        where: { jobName: ANONYMISE_JOB_NAME },
+      });
+      expect(heartbeat.firedAt.getTime()).toBe(time.clock().getTime());
     });
   },
 );
