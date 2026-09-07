@@ -1,0 +1,141 @@
+import type {
+  PrismaClient,
+  ProviderProfile,
+  RefreshToken,
+  User,
+  UserSession,
+  UserSessionRevokedReason,
+} from '../../generated/prisma/client.js';
+import type { Db } from '../audit/types.js';
+
+export type UserWithProfile = User & { providerProfile: ProviderProfile | null };
+export type SessionWithUser = UserSession & { user: UserWithProfile };
+
+/** Data access for user identity. No rules here — the services own them. */
+export class UserRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  findByEmail(email: string): Promise<UserWithProfile | null> {
+    return this.prisma.user.findUnique({ where: { email }, include: { providerProfile: true } });
+  }
+
+  findById(id: string): Promise<UserWithProfile | null> {
+    return this.prisma.user.findUnique({ where: { id }, include: { providerProfile: true } });
+  }
+
+  createSession(
+    db: Db,
+    data: { userId: string; deviceName: string; ipAddress: string; userAgent: string; now: Date },
+  ): Promise<UserSession> {
+    return db.userSession.create({
+      data: {
+        userId: data.userId,
+        deviceName: data.deviceName,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+        createdAt: data.now,
+        lastSeenAt: data.now,
+      },
+    });
+  }
+
+  createRefreshToken(
+    db: Db,
+    data: { id?: string; sessionId: string; tokenHash: string; createdAt: Date; expiresAt: Date },
+  ): Promise<RefreshToken> {
+    return db.refreshToken.create({
+      data: {
+        ...(data.id === undefined ? {} : { id: data.id }),
+        sessionId: data.sessionId,
+        tokenHash: data.tokenHash,
+        createdAt: data.createdAt,
+        expiresAt: data.expiresAt,
+      },
+    });
+  }
+
+  findSessionById(id: string): Promise<SessionWithUser | null> {
+    return this.prisma.userSession.findUnique({
+      where: { id },
+      include: { user: { include: { providerProfile: true } } },
+    });
+  }
+
+  findRefreshTokenByHash(
+    tokenHash: string,
+  ): Promise<(RefreshToken & { session: SessionWithUser }) | null> {
+    return this.prisma.refreshToken.findUnique({
+      where: { tokenHash },
+      include: { session: { include: { user: { include: { providerProfile: true } } } } },
+    });
+  }
+
+  /**
+   * The rotation is one conditional UPDATE so two racing refreshes with the
+   * same token cannot both win — `updateMany` returns the affected count and
+   * the caller treats 0 as "lost the race or not live".
+   */
+  async rotateRefreshToken(
+    db: Db,
+    tokenHash: string,
+    now: Date,
+    replacedById: string,
+  ): Promise<boolean> {
+    const result = await db.refreshToken.updateMany({
+      where: { tokenHash, rotatedAt: null, expiresAt: { gt: now } },
+      data: { rotatedAt: now, replacedById },
+    });
+    return result.count === 1;
+  }
+
+  touchSession(sessionId: string, now: Date): Promise<{ count: number }> {
+    return this.prisma.userSession.updateMany({
+      where: { id: sessionId, revokedAt: null },
+      data: { lastSeenAt: now },
+    });
+  }
+
+  revokeSession(
+    db: Db,
+    sessionId: string,
+    now: Date,
+    reason: UserSessionRevokedReason,
+  ): Promise<{ count: number }> {
+    return db.userSession.updateMany({
+      where: { id: sessionId, revokedAt: null },
+      data: { revokedAt: now, revokedReason: reason },
+    });
+  }
+
+  revokeOtherSessions(
+    db: Db,
+    userId: string,
+    keepSessionId: string,
+    now: Date,
+    reason: UserSessionRevokedReason,
+  ): Promise<{ count: number }> {
+    return db.userSession.updateMany({
+      where: { userId, revokedAt: null, id: { not: keepSessionId } },
+      data: { revokedAt: now, revokedReason: reason },
+    });
+  }
+
+  revokeAllSessions(
+    db: Db,
+    userId: string,
+    now: Date,
+    reason: UserSessionRevokedReason,
+  ): Promise<{ count: number }> {
+    return db.userSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: now, revokedReason: reason },
+    });
+  }
+
+  listLiveSessions(userId: string): Promise<UserSession[]> {
+    return this.prisma.userSession.findMany({
+      where: { userId, revokedAt: null },
+      orderBy: { lastSeenAt: 'desc' },
+    });
+  }
+}

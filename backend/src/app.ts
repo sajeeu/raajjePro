@@ -15,6 +15,8 @@ import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
+import { registerAuthRoutes } from './modules/auth/routes.js';
+import { AuthService } from './modules/auth/service.js';
 import { EmailService } from './modules/email/service.js';
 import { registerSesEventRoutes } from './modules/email/sns/routes.js';
 import type { SnsMessageValidator } from './modules/email/sns/validator.js';
@@ -23,6 +25,7 @@ import { registerHealthRoutes } from './modules/health/routes.js';
 import { registerAdminSession } from './plugins/admin-session.js';
 import { registerIdempotency } from './plugins/idempotency.js';
 import { registerRateLimit } from './plugins/rate-limit.js';
+import { registerUserAuth } from './plugins/user-auth.js';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -39,6 +42,7 @@ declare module 'fastify' {
     deps: AppDeps;
     audit: AuditService;
     adminAuth: AdminAuthService;
+    auth: AuthService;
     email: EmailSender;
   }
 }
@@ -68,6 +72,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     'adminAuth',
     new AdminAuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }),
   );
+  app.decorate('auth', new AuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }));
   app.decorate(
     'email',
     new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock, app.log),
@@ -79,11 +84,13 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
 
   registerErrorHandling(app);
   await registerAdminSession(app); // before rate limiting: counters key on the principal
+  registerUserAuth(app);
   await registerRateLimit(app);
   registerIdempotency(app);
 
   registerHealthRoutes(app);
   registerAdminAuthRoutes(app);
+  registerAuthRoutes(app);
   registerAuditRoutes(app);
   await registerSesEventRoutes(app);
 

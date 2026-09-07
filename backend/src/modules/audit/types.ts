@@ -3,7 +3,7 @@ import type { Prisma, PrismaClient } from '../../generated/prisma/client.js';
 export type Db = PrismaClient | Prisma.TransactionClient;
 
 export interface AuditEntryInput {
-  actorType: 'admin' | 'system';
+  actorType: 'admin' | 'user' | 'system';
   actorId?: string | null;
   /** Dotted, stable, e.g. `admin.session.revoked`. */
   action: string;
