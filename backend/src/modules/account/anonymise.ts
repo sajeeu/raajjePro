@@ -5,6 +5,21 @@ import { hashPassword } from '../admin-auth/crypto.js';
 import type { AuditService } from '../audit/service.js';
 import type { UserRepository } from '../auth/repository.js';
 
+/** The name the job runner and the heartbeat table know this job by (also re-exported from `jobs/anonymise-accounts.ts`, the job's own home). */
+export const ANONYMISE_JOB_NAME = 'anonymise-deleted-accounts';
+
+/**
+ * The minimal logging surface `AccountAnonymiser` needs — `app.log` (a
+ * Fastify logger) satisfies this structurally, so the domain module does not
+ * need to import Fastify's type just to accept it (same pattern as
+ * `EmailServiceLogger`).
+ */
+export interface AnonymiserLogger {
+  error(obj: Record<string, unknown>, msg: string): void;
+}
+
+const noopLogger: AnonymiserLogger = { error: () => undefined };
+
 /** Phase 17 supplies the real one; until then nothing blocks. */
 export interface DeletionBlocker {
   hasOpenBookings(userId: string): Promise<boolean>;
@@ -38,14 +53,19 @@ export class AnonymisationHooks {
 export type AnonymisationReason = 'bookings_terminal' | 'deletion_backstop';
 
 export class AccountAnonymiser {
+  private readonly log: AnonymiserLogger;
+
   constructor(
     private readonly deps: {
       prisma: PrismaClient;
       repo: UserRepository;
       audit: AuditService;
       hooks: AnonymisationHooks;
+      log?: AnonymiserLogger;
     },
-  ) {}
+  ) {
+    this.log = deps.log ?? noopLogger;
+  }
 
   /** Frozen users whose deadline has passed, or who have no open bookings. */
   async findDue(
@@ -78,8 +98,12 @@ export class AccountAnonymiser {
       try {
         await this.anonymise(userId, now, reason);
         processed += 1;
-      } catch {
+      } catch (err) {
         failed += 1;
+        // No email, phone or other PII here — job name, user id and the
+        // error only (backend/CLAUDE.md: never log a full PII value). A
+        // failing hook leaves the user frozen, to be retried on the next run.
+        this.log.error({ job: ANONYMISE_JOB_NAME, userId, err }, 'anonymisation failed for user');
       }
     }
     return { processed, failed };

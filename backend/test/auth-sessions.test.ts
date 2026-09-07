@@ -233,6 +233,16 @@ describe.skipIf(databaseUrl === undefined)('user sessions — refresh, logout, m
         })
       ).statusCode,
     ).toBe(200);
+    // The revoked session's refresh token is still unrotated and unexpired by
+    // its own columns — a revoked session must never mint a fresh pair.
+    const refreshRevoked = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/auth/refresh',
+      remoteAddress: freshIp(),
+      payload: { refreshToken: tablet.refreshToken },
+    });
+    expect(refreshRevoked.statusCode).toBe(401);
+    expect(refreshRevoked.json<Err>().error.code).toBe('SESSION_EXPIRED');
 
     const stranger = await openSession();
     const foreign = await ctx.app.inject({

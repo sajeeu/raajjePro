@@ -146,10 +146,11 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     repo: authService.repo,
     audit,
     hooks: anonymisation,
+    log: app.log,
   });
   app.decorate('anonymiser', anonymiser);
   const jobs = new JobRunner({ prisma: deps.prisma, clock: deps.clock, log: app.log });
-  jobs.register(anonymiseAccountsJob(anonymiser, deps.deletionBlocker ?? neverBlocks));
+  jobs.register(anonymiseAccountsJob(anonymiser, deps.deletionBlocker ?? neverBlocks, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import { MAX_USER_PASSWORD_LENGTH, MIN_USER_PASSWORD_LENGTH } from './service.js';
-import { SOCIAL_PROVIDERS } from './social.js';
 
 export const refreshBody = z.object({ refreshToken: z.string().min(20).max(200) });
 export const sessionIdParams = z.object({ id: z.uuid() });
@@ -53,5 +52,8 @@ export const loginBody = z.object({
   password: z.string().min(1).max(MAX_USER_PASSWORD_LENGTH),
   deviceName,
 });
-export const socialParams = z.object({ provider: z.enum(SOCIAL_PROVIDERS) });
+// Not a Zod enum: an unregistered name must reach the route as a lookup miss
+// (404 NOT_FOUND — the client contract for a provider that does not exist),
+// not fail Zod's own validation (400 VALIDATION_FAILED) — plan §4.
+export const socialParams = z.object({ provider: z.string().trim().min(1).max(40) });
 export const socialBody = z.object({ idToken: z.string().min(20).max(8192), deviceName });

@@ -43,6 +43,21 @@ export class JobRunner {
     const job = this.jobs.get(name);
     if (job === undefined) throw new Error(`no such job: ${name}`);
     try {
+      // This transaction holds one connection from the pool for its entire
+      // duration, including while `job.run(now)` executes. A job whose own
+      // work opens further transactions on `this.deps.prisma` (as
+      // `AccountAnonymiser` does, one per user) requests additional
+      // connections from that same pool while this one is still checked out
+      // — the pool must be configured with at least two connections
+      // (`connection_limit` on `DATABASE_URL`), or that request can never be
+      // satisfied and the two transactions deadlock against each other.
+      //
+      // The 60s timeout below is on this outer transaction only. If the
+      // job's inner work independently commits rows before the timeout
+      // fires but the whole call takes longer than 60s in aggregate, the
+      // real work already landed but this transaction still aborts —
+      // the `jobHeartbeat` upsert below never runs, so that run looks like
+      // it never fired even though it did the work.
       return await this.deps.prisma.$transaction(
         async (tx) => {
           const [lock] = await tx.$queryRaw<

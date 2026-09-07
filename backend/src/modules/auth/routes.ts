@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 import { ok } from '../../core/envelope.js';
-import { BusinessRuleError } from '../../core/errors.js';
 import { requestMeta } from '../admin-auth/routes.js';
 import { sessionDto, userDto } from './dto.js';
 import { requireAuth, userOf } from './guards.js';
@@ -152,12 +151,9 @@ export function registerAuthRoutes(app: FastifyInstance): void {
       const p = userOf(request);
       const user = await app.auth.repo.findById(p.id);
       if (user === null) throw new Error('principal without a user row');
-      if (user.emailVerifiedAt !== null) {
-        throw new BusinessRuleError(
-          'EMAIL_ALREADY_VERIFIED',
-          'This email address is already verified',
-        );
-      }
+      // Already-verified is checked inside OtpService.send itself, in the
+      // same locked section as the two rate-limit counts (plan §4) — not
+      // here, so it cannot race a concurrent confirm.
       const result = await app.otp.send({
         userId: p.id,
         purpose: 'verify_email',

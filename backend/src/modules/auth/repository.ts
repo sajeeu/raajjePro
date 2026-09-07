@@ -73,7 +73,10 @@ export class UserRepository {
   /**
    * The rotation is one conditional UPDATE so two racing refreshes with the
    * same token cannot both win — `updateMany` returns the affected count and
-   * the caller treats 0 as "lost the race or not live".
+   * the caller treats 0 as "lost the race or not live". The session predicate
+   * closes a TOCTOU window: without it, a refresh racing a concurrent revoke
+   * of the same session can still win the rotation and mint a fresh, live
+   * token pair for a session that is supposed to be dead.
    */
   async rotateRefreshToken(
     db: Db,
@@ -82,7 +85,7 @@ export class UserRepository {
     replacedById: string,
   ): Promise<boolean> {
     const result = await db.refreshToken.updateMany({
-      where: { tokenHash, rotatedAt: null, expiresAt: { gt: now } },
+      where: { tokenHash, rotatedAt: null, expiresAt: { gt: now }, session: { revokedAt: null } },
       data: { rotatedAt: now, replacedById },
     });
     return result.count === 1;

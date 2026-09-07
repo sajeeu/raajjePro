@@ -70,10 +70,22 @@ export class OtpService {
     const expiresAt = new Date(now.getTime() + this.deps.config.auth.otpExpiryMinutes * 60_000);
 
     await this.deps.prisma.$transaction(async (tx) => {
-      // Serialise per user: the two counts below and the insert must not
-      // interleave with another send for the same account. Raw SQL because
-      // Prisma has no row lock; "app_user" is the mapped table name.
-      await tx.$queryRaw`SELECT id FROM app_user WHERE id = ${input.userId}::uuid FOR UPDATE`;
+      // Serialise per user: the already-verified check and the two counts
+      // below and the insert must not interleave with another send for the
+      // same account. Raw SQL because Prisma has no row lock; "app_user" is
+      // the mapped table name.
+      const [locked] = await tx.$queryRaw<
+        { email_verified_at: Date | null }[]
+      >`SELECT email_verified_at FROM app_user WHERE id = ${input.userId}::uuid FOR UPDATE`;
+      // Plan §4: for verify_email specifically, an already-verified account
+      // is refused before either rate-limit count runs — checked inside the
+      // same locked section so it cannot race a concurrent confirm.
+      if (input.purpose === 'verify_email' && locked?.email_verified_at != null) {
+        throw new BusinessRuleError(
+          'EMAIL_ALREADY_VERIFIED',
+          'This email address is already verified',
+        );
+      }
       await this.assertUnderLimits(tx, input.userId, targetEmail, now);
       await tx.emailOtp.create({
         data: {

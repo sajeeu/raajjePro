@@ -1,7 +1,23 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { ExportContributors } from '../src/modules/account/export.js';
 import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
 import { RecordingEmailTransport, registerUser } from './helpers/users.js';
+
+describe('ExportContributors', () => {
+  it('refuses to register a contributor keyed to a core export section', () => {
+    const contributors = new ExportContributors();
+    for (const key of ['account', 'sessions', 'exportedAt', 'providerProfile']) {
+      expect(() => {
+        contributors.register({ key, collect: () => Promise.resolve(null) });
+      }).toThrow(/reserved/);
+    }
+    // A non-reserved key still registers normally.
+    expect(() => {
+      contributors.register({ key: 'reviews', collect: () => Promise.resolve(null) });
+    }).not.toThrow();
+  });
+});
 
 describe.skipIf(databaseUrl === undefined)('data export and deletion request', () => {
   let ctx: Awaited<ReturnType<typeof buildTestApp>>;

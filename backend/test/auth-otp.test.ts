@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
@@ -86,6 +88,28 @@ describe.skipIf(databaseUrl === undefined)(
       expect(logged?.emailMessage?.recipientUserId).toBe(user.id);
       const again = await send(headers);
       expect(again.json<Err>().error.code).toBe('EMAIL_ALREADY_VERIFIED');
+    });
+
+    it('already-verified is checked inside the locked section, ahead of both rate limits — not superseded by a pre-burned window', async () => {
+      const { user, headers } = await signedIn(true);
+      // An already-verified account could never pre-burn this itself — its
+      // very first send already answers EMAIL_ALREADY_VERIFIED — so the
+      // window is seeded directly to prove the check still wins the race
+      // against the rate-limit counts, per plan §4's ordering.
+      await ctx.prisma.emailOtp.createMany({
+        data: Array.from({ length: 3 }, () => ({
+          id: randomUUID(),
+          userId: user.id,
+          purpose: 'verify_email' as const,
+          targetEmail: user.email,
+          codeHash: 'x'.repeat(64),
+          expiresAt: new Date(time.clock().getTime() + 600_000),
+          createdAt: time.clock(),
+        })),
+      });
+      const res = await send(headers);
+      expect(res.statusCode).toBe(422);
+      expect(res.json<Err>().error.code).toBe('EMAIL_ALREADY_VERIFIED');
     });
 
     it('address limit: three sends per 15 minutes, the fourth is OTP_RATE_LIMITED with the wait and the limit named', async () => {

@@ -18,7 +18,7 @@ import {
 import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
-import type { OtpSendResult, OtpService } from './otp.js';
+import { OtpRateLimitedError, type OtpSendResult, type OtpService } from './otp.js';
 import { normalisePhone } from './phone.js';
 import { UserRepository, type UserWithProfile } from './repository.js';
 import { hashToken, newRefreshToken, signAccessToken, verifyAccessToken } from './tokens.js';
@@ -88,13 +88,18 @@ export class AuthService {
     this.repo = new UserRepository(deps.prisma);
   }
 
-  /** Who may call: the service itself, after a password or registration has been accepted. */
+  /**
+   * Who may call: the service itself, after a password or registration has
+   * been accepted. Always audits `user.login.succeeded` — opening a session
+   * is a login event whether it followed a password check or a fresh
+   * registration; `user.registered` is its own, separate audit row (written
+   * by `register`, in the same transaction as the user row).
+   */
   async openSession(
     user: UserWithProfile,
     meta: RequestMeta,
     now: Date,
     deviceName: string | undefined,
-    action: 'user.login.succeeded' | 'user.registered' = 'user.login.succeeded',
   ): Promise<TokenPair> {
     const refreshToken = newRefreshToken();
     const refreshTokenExpiresAt = this.refreshExpiry(now);
@@ -115,7 +120,7 @@ export class AuthService {
       await this.deps.audit.record(tx, {
         actorType: 'user',
         actorId: user.id,
-        action,
+        action: 'user.login.succeeded',
         targetType: 'user_session',
         targetId: created.id,
         reason: 'user_initiated',
@@ -247,7 +252,12 @@ export class AuthService {
     return this.repo.listLiveSessions(userId);
   }
 
-  /** Who may call: the signed-in user, for one of their own sessions. A foreign id is 404, never 403. */
+  /**
+   * Who may call: the signed-in user, for one of their own sessions. A
+   * foreign id is 404, never 403. Always `revoked_by_user` (plan §3), even
+   * when the caller names their own current session — the dedicated
+   * `POST /auth/logout` endpoint is the only path that records `logout`.
+   */
   async revokeSession(
     principal: UserPrincipal,
     sessionId: string,
@@ -259,12 +269,7 @@ export class AuthService {
     });
     if (target === null) throw new NotFoundError('No such session');
     await this.deps.prisma.$transaction(async (tx) => {
-      await this.repo.revokeSession(
-        tx,
-        target.id,
-        now,
-        sessionId === principal.sessionId ? 'logout' : 'revoked_by_user',
-      );
+      await this.repo.revokeSession(tx, target.id, now, 'revoked_by_user');
       await this.deps.audit.record(tx, {
         actorType: 'user',
         actorId: principal.id,
@@ -369,19 +374,29 @@ export class AuthService {
     }
     const user = await this.repo.findById(created.id);
     if (user === null) throw new Error('user vanished after create');
-    const tokens = await this.openSession(
-      user,
-      meta,
-      now,
-      input.deviceName,
-      'user.login.succeeded',
-    );
-    const verification = await this.deps.otp.send({
-      userId: user.id,
-      purpose: 'verify_email',
-      targetEmail: email,
-      meta,
-    });
+    const tokens = await this.openSession(user, meta, now, input.deviceName);
+    // The account and tokens are already committed above — an address whose
+    // send-limit window is pre-burned (e.g. by change-email requests against
+    // it) must not turn a real registration into a 429 with a dangling user
+    // and no tokens. Only the rate-limit error is swallowed here; anything
+    // else (a transport failure inside otp.send is reported as `failed` by
+    // OtpService itself, not thrown) still propagates.
+    let verification: OtpSendResult;
+    try {
+      verification = await this.deps.otp.send({
+        userId: user.id,
+        purpose: 'verify_email',
+        targetEmail: email,
+        meta,
+      });
+    } catch (error) {
+      if (!(error instanceof OtpRateLimitedError)) throw error;
+      verification = {
+        status: 'failed',
+        expiresAt: now,
+        resendAvailableAt: new Date(now.getTime() + error.retryAfterSeconds * 1000),
+      };
+    }
     return { user, tokens, verification };
   }
 
@@ -403,8 +418,11 @@ export class AuthService {
       );
     if (user === null) throw invalid();
     if (!passwordOk || user.status === 'anonymised') {
+      // The email resolved to a real account (plan §1): audit as that user,
+      // not as `system` — an unknown email never reaches this branch at all.
       await this.deps.audit.record(this.deps.prisma, {
-        actorType: 'system',
+        actorType: 'user',
+        actorId: user.id,
         action: 'user.login.failed',
         targetType: 'user',
         targetId: user.id,

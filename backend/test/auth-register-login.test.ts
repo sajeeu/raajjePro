@@ -210,6 +210,18 @@ describe.skipIf(databaseUrl === undefined)('register and login', () => {
       where: { action: 'user.login.failed', targetId: u.userId },
     });
     expect(failed?.reason).toBe('wrong_password');
+    // The email resolved to a real user, so the row is attributed to them —
+    // not to `system`, which is reserved for the unknown-email case (no row
+    // at all, per the same rule admin login follows).
+    expect(failed?.actorType).toBe('user');
+    expect(failed?.actorId).toBe(u.userId);
+    // Only the wrong-password attempt wrote a row — the unknown-email attempt
+    // (which has no user to target) never reaches the audit call at all.
+    expect(
+      await ctx.prisma.auditLogEntry.count({
+        where: { action: 'user.login.failed', targetId: u.userId },
+      }),
+    ).toBe(1);
     await ctx.prisma.user.update({ where: { id: u.userId }, data: { status: 'anonymised' } });
     expect((await login(u.email, u.password)).json<Err>().error.code).toBe('INVALID_CREDENTIALS');
   });
@@ -264,15 +276,15 @@ describe.skipIf(databaseUrl === undefined)('register and login', () => {
       expect(res.statusCode, provider).toBe(422);
       expect(res.json<Err>().error.code).toBe('SOCIAL_AUTH_UNAVAILABLE');
     }
-    expect(
-      (
-        await ctx.app.inject({
-          method: 'POST',
-          url: '/v1/auth/social/myspace',
-          remoteAddress: freshIp(),
-          payload: { idToken: 'x'.repeat(40) },
-        })
-      ).statusCode,
-    ).toBe(400);
+    // An unregistered provider name is a lookup miss, not a validation
+    // failure — the contract is fixed even for a name nobody has heard of.
+    const unknown = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/auth/social/myspace',
+      remoteAddress: freshIp(),
+      payload: { idToken: 'x'.repeat(40) },
+    });
+    expect(unknown.statusCode).toBe(404);
+    expect(unknown.json<Err>().error.code).toBe('NOT_FOUND');
   });
 });

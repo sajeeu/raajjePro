@@ -1,4 +1,4 @@
-import { BusinessRuleError } from '../../core/errors.js';
+import { BusinessRuleError, NotFoundError } from '../../core/errors.js';
 
 export const SOCIAL_PROVIDERS = ['apple', 'google', 'facebook', 'viber'] as const;
 export type SocialProviderName = (typeof SOCIAL_PROVIDERS)[number];
@@ -37,9 +37,17 @@ export class SocialAuthRegistry {
   constructor(providers: SocialAuthProvider[]) {
     this.providers = new Map(providers.map((p) => [p.name, p]));
   }
-  get(name: SocialProviderName): SocialAuthProvider {
-    const provider = this.providers.get(name);
-    if (provider === undefined) throw new Error(`no social provider registered for ${name}`);
+  /**
+   * Who may call: the social route, with whatever name the client sent — not
+   * narrowed to `SocialProviderName`, since the whole point is to tell an
+   * unregistered name apart from a known stub (plan §4: 404, not a Zod
+   * rejection).
+   */
+  get(name: string): SocialAuthProvider {
+    const provider = this.providers.get(name as SocialProviderName);
+    if (provider === undefined) {
+      throw new NotFoundError(`Sign-in with ${name} isn't supported`);
+    }
     return provider;
   }
 }

@@ -1,8 +1,19 @@
+import { Writable } from 'node:stream';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { buildApp } from '../src/app.js';
+import { createPrismaClient } from '../src/db/client.js';
 import { ANONYMISE_JOB_NAME } from '../src/jobs/anonymise-accounts.js';
 import type { DeletionBlocker } from '../src/modules/account/anonymise.js';
-import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
+import {
+  buildTestApp,
+  controllableClock,
+  databaseUrl,
+  freshIp,
+  testConfig,
+  TrustingValidator,
+} from './helpers/app.js';
 import { RecordingEmailTransport, registerUser } from './helpers/users.js';
 
 interface Err {
@@ -177,6 +188,61 @@ describe.skipIf(databaseUrl === undefined)(
         where: { jobName: ANONYMISE_JOB_NAME },
       });
       expect(heartbeat.firedAt.getTime()).toBe(time.clock().getTime());
+    });
+
+    it('a failing hook logs { job, userId, err } instead of failing silently, and the job wrapper logs the run summary', async () => {
+      // A fresh app instance: capturing every log line needs the logStream
+      // seam, which is attached at build time (see phase3-done-when.test.ts).
+      const lines: string[] = [];
+      const stream = new Writable({
+        write(chunk: Buffer, _e, cb) {
+          lines.push(chunk.toString('utf8'));
+          cb();
+        },
+      });
+      const config = { ...testConfig({ clock: time.clock }), logLevel: 'info' as const };
+      const prisma2 = createPrismaClient(config.databaseUrl);
+      const app2 = await buildApp(config, {
+        prisma: prisma2,
+        clock: time.clock,
+        emailTransport: mail,
+        snsValidator: new TrustingValidator(),
+        logStream: stream,
+      });
+      await app2.ready();
+      try {
+        const bad = await registerUser(app2);
+        await app2.inject({
+          method: 'POST',
+          url: '/v1/users/me/deletion-request',
+          headers: bad.headers,
+        });
+        app2.anonymisation.register('failing-hook-logged', (_tx, userId) =>
+          userId === bad.userId ? Promise.reject(new Error('purge failed')) : Promise.resolve(),
+        );
+        const result = await app2.jobs.runOnce(ANONYMISE_JOB_NAME, time.clock());
+        expect(result).toBe('ran'); // a failing hook never fails the run itself
+
+        const entries = lines
+          .filter((line) => line.trim().length > 0)
+          .map((line) => JSON.parse(line) as Record<string, unknown>);
+        const failure = entries.find(
+          (e) => e.msg === 'anonymisation failed for user' && e.userId === bad.userId,
+        );
+        expect(failure).toBeDefined();
+        expect(failure?.job).toBe(ANONYMISE_JOB_NAME);
+        expect(JSON.stringify(failure)).toContain('purge failed');
+        // No email or other PII in the line — job, user id and the error only.
+        expect(JSON.stringify(failure)).not.toContain(bad.email);
+
+        const summary = entries.find((e) => e.msg === 'anonymisation run complete');
+        expect(summary).toBeDefined();
+        expect(summary?.job).toBe(ANONYMISE_JOB_NAME);
+        expect(summary?.failed).toBeGreaterThanOrEqual(1);
+      } finally {
+        await app2.close();
+        await prisma2.$disconnect();
+      }
     });
   },
 );
