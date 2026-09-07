@@ -41,8 +41,8 @@ export class BusinessRuleError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(code = 'CONFLICT', message = 'Conflict') {
-    super(409, code, message);
+  constructor(code = 'CONFLICT', message = 'Conflict', details?: unknown) {
+    super(409, code, message, details);
   }
 }
 

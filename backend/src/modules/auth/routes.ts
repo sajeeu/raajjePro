@@ -6,7 +6,15 @@ import { BusinessRuleError } from '../../core/errors.js';
 import { requestMeta } from '../admin-auth/routes.js';
 import { sessionDto, userDto } from './dto.js';
 import { requireAuth, userOf } from './guards.js';
-import { otpCodeBody, refreshBody, sessionIdParams } from './schema.js';
+import {
+  loginBody,
+  otpCodeBody,
+  refreshBody,
+  registerBody,
+  sessionIdParams,
+  socialBody,
+  socialParams,
+} from './schema.js';
 import type { TokenPair } from './service.js';
 
 export function tokensDto(t: TokenPair) {
@@ -21,6 +29,67 @@ export function tokensDto(t: TokenPair) {
 export function registerAuthRoutes(app: FastifyInstance): void {
   const r = app.withTypeProvider<ZodTypeProvider>();
   const prefix = '/v1/auth';
+
+  // Who may call: anyone — an account begins here. Creation POST, so
+  // Idempotency-Key is required (subject anon:<ip> — the Phase 2 proposal,
+  // confirmed in the Phase 3 spec). Tier 5/hour per IP.
+  r.post(
+    `${prefix}/register`,
+    {
+      schema: { body: registerBody },
+      config: {
+        idempotency: { operation: 'auth.register' },
+        rateLimit: { max: 5, timeWindow: '1 hour', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      const result = await app.auth.register(request.body, requestMeta(request));
+      return reply.code(201).send(
+        ok({
+          user: userDto(result.user),
+          tokens: tokensDto(result.tokens),
+          verification: {
+            status: result.verification.status,
+            expiresAt: result.verification.expiresAt.toISOString(),
+            resendAvailableAt: result.verification.resendAvailableAt.toISOString(),
+          },
+        }),
+      );
+    },
+  );
+
+  // Who may call: anyone with credentials. Tier 10 per 15 min per IP, keyed explicitly.
+  r.post(
+    `${prefix}/login`,
+    {
+      schema: { body: loginBody },
+      config: {
+        rateLimit: { max: 10, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      const { email, password, deviceName: device } = request.body;
+      const result = await app.auth.login(email, password, device, requestMeta(request));
+      return reply.send(ok({ user: userDto(result.user), tokens: tokensDto(result.tokens) }));
+    },
+  );
+
+  // Who may call: anyone with a third-party id token. Every provider is a stub in v1.
+  r.post(
+    `${prefix}/social/:provider`,
+    {
+      schema: { params: socialParams, body: socialBody },
+      config: {
+        rateLimit: { max: 10, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      const identity = await app.social.get(request.params.provider).verify(request.body.idToken);
+      // Unreachable while every provider is a stub; when one becomes real, this
+      // is where identity → user lookup/creation is added.
+      return reply.send(ok({ identity }));
+    },
+  );
 
   // Who may call: anyone holding a refresh token. Own tier: 30/min per IP.
   r.post(

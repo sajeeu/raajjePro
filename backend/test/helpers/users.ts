@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
+import type { FastifyInstance } from 'fastify';
+
 import { hashPassword } from '../../src/modules/admin-auth/crypto.js';
 import type { EmailTransport, OutboundEmail } from '../../src/modules/email/types.js';
 import type { PrismaClient, User } from '../../src/generated/prisma/client.js';
+import { freshIp } from './app.js';
 
 export const USER_PASSWORD = 'correct horse battery';
 
@@ -56,4 +59,61 @@ export async function createUser(
 
 export function bearer(token: string): { authorization: string } {
   return { authorization: `Bearer ${token}` };
+}
+
+export interface RegisteredUser {
+  userId: string;
+  email: string;
+  phone: string;
+  password: string;
+  tokens: { accessToken: string; refreshToken: string };
+  headers: { authorization: string };
+}
+
+/** Registers through the real route, exactly as the app does. */
+export async function registerUser(
+  app: FastifyInstance,
+  overrides: Partial<{
+    role: 'customer' | 'provider';
+    email: string;
+    phone: string;
+    dialCode: string;
+    businessName: string;
+    password: string;
+  }> = {},
+): Promise<RegisteredUser> {
+  const email = overrides.email ?? freshEmail();
+  const phone = overrides.phone ?? freshPhone();
+  const password = overrides.password ?? USER_PASSWORD;
+  const role = overrides.role ?? 'customer';
+  const res = await app.inject({
+    method: 'POST',
+    url: '/v1/auth/register',
+    remoteAddress: freshIp(),
+    headers: { 'idempotency-key': randomUUID() },
+    payload: {
+      role,
+      fullName: 'Aishath Test',
+      email,
+      phone: { dialCode: overrides.dialCode ?? '+960', number: phone },
+      password,
+      ...(role === 'provider' ? { businessName: overrides.businessName ?? 'Test Trade' } : {}),
+      acceptTerms: true,
+      deviceName: 'vitest',
+    },
+  });
+  if (res.statusCode !== 201) {
+    throw new Error(`register failed: ${String(res.statusCode)} ${res.body}`);
+  }
+  const body = res.json<{
+    data: { user: { id: string }; tokens: { accessToken: string; refreshToken: string } };
+  }>().data;
+  return {
+    userId: body.user.id,
+    email,
+    phone,
+    password,
+    tokens: body.tokens,
+    headers: bearer(body.tokens.accessToken),
+  };
 }

@@ -2,16 +2,51 @@ import { randomUUID } from 'node:crypto';
 
 import type { Config } from '../../config/env.js';
 import type { Clock } from '../../core/clock.js';
-import { AuthenticationError, BusinessRuleError, NotFoundError } from '../../core/errors.js';
+import {
+  AuthenticationError,
+  BusinessRuleError,
+  ConflictError,
+  NotFoundError,
+} from '../../core/errors.js';
 import type { UserPrincipal } from '../../core/principal.js';
-import type { PrismaClient, UserSession } from '../../generated/prisma/client.js';
+import {
+  Prisma,
+  type PrismaClient,
+  type User,
+  type UserSession,
+} from '../../generated/prisma/client.js';
+import { DUMMY_PASSWORD_HASH, hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
-import type { OtpService } from './otp.js';
+import type { OtpSendResult, OtpService } from './otp.js';
+import { normalisePhone } from './phone.js';
 import { UserRepository, type UserWithProfile } from './repository.js';
 import { hashToken, newRefreshToken, signAccessToken, verifyAccessToken } from './tokens.js';
 
 export type { RequestMeta };
+
+export const MIN_USER_PASSWORD_LENGTH = 8;
+export const MAX_USER_PASSWORD_LENGTH = 512;
+
+export interface RegisterInput {
+  role: 'customer' | 'provider';
+  fullName: string;
+  email: string;
+  phone: { dialCode: string; number: string };
+  password: string;
+  businessName?: string | undefined;
+  deviceName?: string | undefined;
+}
+
+export function emailInUse(): ConflictError {
+  const message = 'This email already has a RaajjePro account.';
+  return new ConflictError('EMAIL_IN_USE', message, [{ path: 'email', message }]);
+}
+
+export function phoneInUse(): ConflictError {
+  const message = 'This number belongs to a verified provider account.';
+  return new ConflictError('PHONE_IN_USE', message, [{ path: 'phone', message }]);
+}
 
 export interface TokenPair {
   accessToken: string;
@@ -283,6 +318,104 @@ export class AuthService {
         ipAddress: meta.ip,
       });
     });
+  }
+
+  /** Who may call: anyone — this is how an account begins. Idempotency-Key required by the route. */
+  async register(
+    input: RegisterInput,
+    meta: RequestMeta,
+  ): Promise<{ user: UserWithProfile; tokens: TokenPair; verification: OtpSendResult }> {
+    const email = input.email.trim().toLowerCase();
+    const phone = normalisePhone(input.phone);
+    const now = this.deps.clock();
+
+    if ((await this.repo.findByEmail(email)) !== null) throw emailInUse();
+    if (await this.repo.phoneHeldAtBronzeOrAbove(phone.e164)) throw phoneInUse();
+
+    const passwordHash = await hashPassword(input.password);
+    let created: User;
+    try {
+      created = await this.deps.prisma.$transaction(async (tx) => {
+        const user = await this.repo.create(tx, {
+          email,
+          passwordHash,
+          fullName: input.fullName.trim(),
+          phoneE164: phone.e164,
+          phoneDialCode: phone.dialCode,
+          now,
+        });
+        if (input.role === 'provider') {
+          await this.repo.getOrCreateProviderProfile(tx, user.id, input.businessName?.trim());
+        }
+        await this.deps.audit.record(tx, {
+          actorType: 'user',
+          actorId: user.id,
+          action: 'user.registered',
+          targetType: 'user',
+          targetId: user.id,
+          reason: 'user_initiated',
+          metadata: { role: input.role },
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+        return user;
+      });
+    } catch (error) {
+      // The unique index is the last line against a concurrent duplicate.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw emailInUse();
+      }
+      throw error;
+    }
+    const user = await this.repo.findById(created.id);
+    if (user === null) throw new Error('user vanished after create');
+    const tokens = await this.openSession(
+      user,
+      meta,
+      now,
+      input.deviceName,
+      'user.login.succeeded',
+    );
+    const verification = await this.deps.otp.send({
+      userId: user.id,
+      purpose: 'verify_email',
+      targetEmail: email,
+      meta,
+    });
+    return { user, tokens, verification };
+  }
+
+  /** Who may call: anyone with an email and password. Tier: 10 per 15 min per IP (route). */
+  async login(
+    emailInput: string,
+    password: string,
+    deviceName: string | undefined,
+    meta: RequestMeta,
+  ): Promise<{ user: UserWithProfile; tokens: TokenPair }> {
+    const email = emailInput.trim().toLowerCase();
+    const user = await this.repo.findByEmail(email);
+    // One argon2 verification whatever happens, so timing does not reveal existence.
+    const passwordOk = await verifyPassword(user?.passwordHash ?? DUMMY_PASSWORD_HASH, password);
+    const invalid = () =>
+      new AuthenticationError(
+        'INVALID_CREDENTIALS',
+        "That email and password combination didn't work",
+      );
+    if (user === null) throw invalid();
+    if (!passwordOk || user.status === 'anonymised') {
+      await this.deps.audit.record(this.deps.prisma, {
+        actorType: 'system',
+        action: 'user.login.failed',
+        targetType: 'user',
+        targetId: user.id,
+        reason: user.status === 'anonymised' ? 'account_anonymised' : 'wrong_password',
+        requestId: meta.requestId,
+        ipAddress: meta.ip,
+      });
+      throw invalid();
+    }
+    const tokens = await this.openSession(user, meta, this.deps.clock(), deviceName);
+    return { user, tokens };
   }
 
   private async revokeBySystem(

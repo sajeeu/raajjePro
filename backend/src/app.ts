@@ -18,6 +18,7 @@ import { AuditService } from './modules/audit/service.js';
 import { OtpService } from './modules/auth/otp.js';
 import { registerAuthRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
+import { SocialAuthRegistry, stubProviders } from './modules/auth/social.js';
 import { EmailService } from './modules/email/service.js';
 import { registerSesEventRoutes } from './modules/email/sns/routes.js';
 import type { SnsMessageValidator } from './modules/email/sns/validator.js';
@@ -46,6 +47,7 @@ declare module 'fastify' {
     auth: AuthService;
     email: EmailSender;
     otp: OtpService;
+    social: SocialAuthRegistry;
   }
 }
 
@@ -88,6 +90,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     'auth',
     new AuthService({ prisma: deps.prisma, audit, clock: deps.clock, config, otp }),
   );
+  app.decorate('social', new SocialAuthRegistry(stubProviders()));
 
   app.addHook('onSend', async (request, reply) => {
     void reply.header('x-request-id', request.id);
