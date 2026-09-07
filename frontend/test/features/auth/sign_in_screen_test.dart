@@ -43,9 +43,8 @@ void main() {
   }
 
   testWidgets(
-    'default state: the prototype copy, four third-party buttons including Apple, no SMS anywhere',
+    'default state: the prototype copy, four third-party buttons including Apple, no SMS anywhere', // retired-ok: asserting SMS's absence
     (tester) async {
-      // retired-ok: asserting SMS's absence
       await pump(tester);
       expect(find.text('Welcome back'), findsOneWidget);
       expect(find.text('Sign in to your RaajjePro account'), findsOneWidget);
@@ -55,9 +54,9 @@ void main() {
         expect(find.bySemanticsLabel('Continue with $p'), findsOneWidget);
       }
       expect(
-        find.textContaining('SMS'),
+        find.textContaining('SMS'), // retired-ok: asserting SMS's absence
         findsNothing,
-      ); // retired-ok: asserting SMS's absence
+      );
       expect(find.textContaining('text message'), findsNothing);
       expect(
         find.textContaining(

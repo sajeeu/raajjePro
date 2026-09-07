@@ -151,8 +151,9 @@ class _AppTextFieldState extends State<AppTextField> {
 
     final spoken = StringBuffer(widget.label);
     if (hasMessage) spoken.write(', ${widget.errorText}');
-    if (!hasMessage && widget.helper != null)
+    if (!hasMessage && widget.helper != null) {
       spoken.write(', ${widget.helper}');
+    }
     if (widget.readOnly) spoken.write(', read only');
 
     final field = TextField(

@@ -36,8 +36,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final ok = await ref
         .read(signInControllerProvider.notifier)
         .submit(_email.text, _password.text);
-    if (ok && mounted)
+    if (ok && mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+    }
   }
 
   @override
