@@ -153,7 +153,14 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 
 **Mine, on request:** verification against a phase's Done-when list, design-import audits against the plan, and the bugs those turn up — not the phases themselves.
 
-**Yours, with a phone in hand:** the Phase 1 screen-reader pass (TalkBack or VoiceOver) — thirteen steps in `docs/decisions/08-phase-1-design-system.md`. To see the gallery without a device, `flutter run -d chrome` from a copy of `frontend/` with `flutter create --platforms=web .` applied; the repo itself carries no web target.
+**Yours, with sound on:** finishing the Phase 1 screen-reader pass. Steps 1–5 were run on 2026-09-07; **step 1 fails** (section headings are not announced as headings) and 2–5 pass. Steps 6–13 remain. No device is needed any more — an Android 15 Play Store emulator is installed with TalkBack enabled and the app on it:
+
+```bash
+export ANDROID_HOME=$HOME/Android
+$HOME/Android/emulator/emulator -avd raajjepro_a11y -no-boot-anim &
+```
+
+Start it from your own terminal, not from a Claude session — one started by a session dies with it. The checklist, the result so far and the step 1 defect are in `docs/decisions/08-phase-1-design-system.md`. The gallery has its own RTL, 200% text and reduced-motion toggles, so step 13 needs no OS settings.
 
 ## One rule that overrides everything
 

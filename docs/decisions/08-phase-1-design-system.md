@@ -86,7 +86,47 @@ Two further changes of the same kind:
 
 Tests run in the real Inter face and Material Icons (`test/flutter_test_config.dart`); the framework's default test font draws every glyph as a square and would make the layout assertions meaningless.
 
-**Not yet done, and only a device can do it:** the screen-reader pass with TalkBack or VoiceOver. This machine has no emulator or attached phone. The semantics tree is asserted structurally, which is necessary but not the same as hearing it. The checklist for that pass:
+**Partly done as of 2026-09-07 — steps 1–5 run, step 1 fails.** The
+environment now exists: an Android 15 Play Store emulator (`raajjepro_a11y`,
+Pixel 7 profile) with TalkBack enabled and the debug APK installed. TalkBack
+only ships on Play Store system images, not AOSP ones, which is why the image
+choice matters. To resume:
+
+```bash
+export ANDROID_HOME=$HOME/Android
+$HOME/Android/emulator/emulator -avd raajjepro_a11y -no-boot-anim &
+```
+
+The app and TalkBack's enabled state persist in the AVD's data partition, so
+only the emulator needs restarting.
+
+**Result so far:**
+
+| Steps | Outcome |
+|---|---|
+| 1 | **FAILS** — see below |
+| 2–5 | Pass. Buttons, text input, toggle and chips all announce exactly what they declare. |
+| 6–13 | Not yet run. |
+
+🔧 **Step 1 fails: section headings are not announced as headings.** The
+gallery renders them as `Text(title, style: type.sectionHeading)` — a plain
+text widget. `header: true` appears in exactly four places in the codebase:
+`empty_state.dart`, `app_bottom_sheet.dart`, and twice in `app_header.dart`.
+Nothing marks a section heading inside a scrolling page.
+
+The cost is navigational, and it is the reason this criterion exists: a
+screen-reader user cannot jump between sections and must swipe through every
+element — on the gallery, through twenty-odd colour swatches — to reach the
+next one. It is invisible to `flutter test`, which asserts the semantics tree
+structurally and cannot hear that a node lacks a heading role.
+
+**Not yet fixed, because the fix is a small design decision rather than a
+one-liner:** whether the heading role belongs to the gallery's own section
+widget, or to a shared widget every phase's screens use. Phase 1 owns the
+design system, so the second is probably right, but it is scope for whoever
+picks it up rather than something to patch in the gallery alone.
+
+The remaining checklist, unchanged:
 
 1. Home → Component gallery. Every section heading announced as a heading.
 2. Buttons: variant and state read as "button"; the loading one adds "loading"; disabled ones read as dimmed/unavailable and do not activate.
