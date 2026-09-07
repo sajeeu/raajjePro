@@ -54,7 +54,9 @@ describe('loadConfig', () => {
   });
 
   it('requires AUTH_JWT_SECRET and rejects one that is not 32 bytes', () => {
-    const { AUTH_JWT_SECRET: _omit, ...withoutSecret } = minimal;
+    const withoutSecret = Object.fromEntries(
+      Object.entries(minimal).filter(([k]) => k !== 'AUTH_JWT_SECRET'),
+    );
     expect(() => loadConfig(withoutSecret)).toThrow(/AUTH_JWT_SECRET/);
     expect(() =>
       loadConfig({ ...minimal, AUTH_JWT_SECRET: Buffer.alloc(16).toString('base64') }),
