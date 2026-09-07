@@ -16,12 +16,14 @@ class PhoneField extends StatelessWidget {
     this.errorText,
     this.errorWidget,
     this.onChanged,
+    this.enabled = true,
   });
   final TextEditingController dialCode;
   final TextEditingController number;
   final String? errorText;
   final Widget? errorWidget;
   final VoidCallback? onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +58,7 @@ class PhoneField extends StatelessWidget {
                 keyboardType: TextInputType.phone,
                 prefixIcon: foreign ? Icons.public : null,
                 hint: '+960',
+                enabled: enabled,
                 onChanged: (_) => onChanged?.call(),
               ),
             ),
@@ -72,6 +75,7 @@ class PhoneField extends StatelessWidget {
                 helper: foreign
                     ? 'Foreign numbers welcome — 6 to 15 digits.'
                     : null,
+                enabled: enabled,
                 onChanged: (_) => onChanged?.call(),
               ),
             ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
@@ -152,16 +154,16 @@ void main() {
   testWidgets(
     'EMAIL_IN_USE renders under the email field with Sign in and Reset password routes',
     (tester) async {
+      // The server message deliberately carries none of the screen's own
+      // copy — routing to the duplicate-email UI must be on `code` alone,
+      // never on a substring of `message`.
       api.fail(
         'POST',
         '/v1/auth/register',
         status: 409,
         code: 'EMAIL_IN_USE',
         details: [
-          {
-            'path': 'email',
-            'message': 'This email already has a RaajjePro account.',
-          },
+          {'path': 'email', 'message': 'duplicate record on file'},
         ],
       );
       await pump(tester);
@@ -185,16 +187,16 @@ void main() {
   testWidgets(
     'PHONE_IN_USE renders under the phone field with the verified-provider copy; no check mark anywhere',
     (tester) async {
+      // Same deliberate mismatch: the server message names neither
+      // "verified" nor "provider" — the routing to the rich phone copy
+      // must come from `code`, not from matching the message text.
       api.fail(
         'POST',
         '/v1/auth/register',
         status: 409,
         code: 'PHONE_IN_USE',
         details: [
-          {
-            'path': 'phone',
-            'message': 'This number belongs to a verified provider account.',
-          },
+          {'path': 'phone', 'message': 'duplicate record on file'},
         ],
       );
       await pump(tester);
@@ -231,6 +233,79 @@ void main() {
     expect(find.text('Too short'), findsOneWidget);
     expect(find.text('Phone number must be 6 to 15 digits'), findsOneWidget);
   });
+
+  testWidgets(
+    'submitting disables every field including the dial code and phone number',
+    (tester) async {
+      final gate = Completer<void>();
+      api.gate = gate;
+      api.on(
+        'POST',
+        '/v1/auth/register',
+        (_) => {
+          'user': userJson(),
+          'tokens': tokensJson(),
+          'verification': sent,
+        },
+      );
+      await pump(tester);
+      await fillValid(tester);
+      await tapSubmit(tester, 'Create Account');
+      await tester.pump();
+      expect(
+        tester.widget<AppTextField>(find.byKey(const Key('reg-dial'))).enabled,
+        isFalse,
+      );
+      expect(
+        tester.widget<AppTextField>(find.byKey(const Key('reg-phone'))).enabled,
+        isFalse,
+      );
+      gate.complete();
+      await settle(tester);
+    },
+  );
+
+  testWidgets(
+    'an unexpected code shows the generic banner and no field errors',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/register',
+        status: 500,
+        code: 'INTERNAL_ERROR',
+      );
+      await pump(tester);
+      await fillValid(tester);
+      await tapSubmit(tester, 'Create Account');
+      await settle(tester);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('This email already has a RaajjePro account.'),
+        findsNothing,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-email')))
+            .errorText,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-phone')))
+            .errorText,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<AppTextField>(find.byKey(const Key('reg-password')))
+            .errorText,
+        isNull,
+      );
+    },
+  );
 
   testWidgets(
     'a foreign dial code shows the welcome hint; offline shows the inline notice',

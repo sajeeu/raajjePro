@@ -156,8 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     enabled: !s.busy,
                     onChanged: (_) => ctrl.clear('email'),
                   ),
-                  if (s.fieldErrors['email'] != null &&
-                      s.fieldErrors['email']!.contains('already'))
+                  if (s.emailInUse)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(
                         top: AppSpacing.xs,
@@ -192,18 +191,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   PhoneField(
                     dialCode: _dial,
                     number: _phone,
-                    errorText:
-                        s.fieldErrors['phone'] != null &&
-                            !s.fieldErrors['phone']!.contains(
-                              'verified provider',
-                            )
-                        ? s.fieldErrors['phone']
-                        : null,
-                    errorWidget:
-                        s.fieldErrors['phone'] != null &&
-                            s.fieldErrors['phone']!.contains(
-                              'verified provider',
-                            )
+                    enabled: !s.busy,
+                    errorText: s.phoneInUse ? null : s.fieldErrors['phone'],
+                    errorWidget: s.phoneInUse
                         ? Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
@@ -293,7 +283,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           height: AppSizes.checkbox,
                           decoration: BoxDecoration(
                             color: _terms ? colors.primary : colors.surface,
-                            borderRadius: AppRadius.circular(AppRadius.xs),
+                            borderRadius: AppRadius.circular(AppRadius.pill),
                             border: Border.all(
                               color: _terms
                                   ? colors.primary
