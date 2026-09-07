@@ -11,6 +11,12 @@ import { registerErrorHandling } from './core/error-handler.js';
 import { genReqId, loggerOptions } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
+import {
+  AccountAnonymiser,
+  AnonymisationHooks,
+  neverBlocks,
+  type DeletionBlocker,
+} from './modules/account/anonymise.js';
 import { ExportContributors } from './modules/account/export.js';
 import { registerAccountRoutes } from './modules/account/routes.js';
 import { AccountService } from './modules/account/service.js';
@@ -27,6 +33,8 @@ import { registerSesEventRoutes } from './modules/email/sns/routes.js';
 import type { SnsMessageValidator } from './modules/email/sns/validator.js';
 import type { EmailSender, EmailTransport } from './modules/email/types.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
+import { anonymiseAccountsJob } from './jobs/anonymise-accounts.js';
+import { JobRunner } from './jobs/runner.js';
 import { registerAdminSession } from './plugins/admin-session.js';
 import { registerIdempotency } from './plugins/idempotency.js';
 import { registerRateLimit } from './plugins/rate-limit.js';
@@ -39,6 +47,8 @@ export interface AppDeps {
   snsValidator: SnsMessageValidator;
   /** GETs an SNS SubscribeURL to confirm a subscription. Optional so production can default to a real fetch while tests observe the call. */
   confirmSubscription?: (url: string) => Promise<void>;
+  /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
+  deletionBlocker?: DeletionBlocker;
 }
 
 declare module 'fastify' {
@@ -53,6 +63,9 @@ declare module 'fastify' {
     email: EmailSender;
     otp: OtpService;
     social: SocialAuthRegistry;
+    anonymisation: AnonymisationHooks;
+    anonymiser: AccountAnonymiser;
+    jobs: JobRunner;
   }
 }
 
@@ -113,6 +126,19 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     }),
   );
   app.decorate('social', new SocialAuthRegistry(stubProviders()));
+
+  const anonymisation = new AnonymisationHooks();
+  app.decorate('anonymisation', anonymisation);
+  const anonymiser = new AccountAnonymiser({
+    prisma: deps.prisma,
+    repo: authService.repo,
+    audit,
+    hooks: anonymisation,
+  });
+  app.decorate('anonymiser', anonymiser);
+  const jobs = new JobRunner({ prisma: deps.prisma, clock: deps.clock, log: app.log });
+  jobs.register(anonymiseAccountsJob(anonymiser, deps.deletionBlocker ?? neverBlocks));
+  app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
     void reply.header('x-request-id', request.id);
