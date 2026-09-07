@@ -69,8 +69,9 @@ class AuthController extends Notifier<AuthState> {
     try {
       state = AuthSignedIn(await _api.me());
     } on ApiException catch (e) {
-      if (e.code == 'SESSION_EXPIRED' || e.code == 'UNAUTHENTICATED')
+      if (e.code == 'SESSION_EXPIRED' || e.code == 'UNAUTHENTICATED') {
         await sessionExpired();
+      }
     } on ApiNetworkException {
       if (state is AuthUnknown) state = const AuthGuest();
     }
@@ -125,8 +126,9 @@ class AuthController extends Notifier<AuthState> {
 
   void markVerified() {
     final s = state;
-    if (s is AuthSignedIn)
+    if (s is AuthSignedIn) {
       state = AuthSignedIn(s.user.copyWith(emailVerified: true));
+    }
   }
 
   void applyUser(UserAccount user) => state = AuthSignedIn(user);
