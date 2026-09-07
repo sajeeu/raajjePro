@@ -5,10 +5,15 @@ import { Prisma, type PrismaClient } from '../../generated/prisma/client.js';
 import { hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
+import { userDto } from '../auth/dto.js';
 import type { OtpSendResult, OtpService } from '../auth/otp.js';
 import { normalisePhone } from '../auth/phone.js';
 import type { UserRepository, UserWithProfile } from '../auth/repository.js';
 import { emailInUse, phoneInUse } from '../auth/service.js';
+import type { ExportContributors } from './export.js';
+
+/** Queued-deletion backstop (plan §Phase 3, Round 9): anonymisation runs at this many days regardless of open bookings. */
+export const DELETION_BACKSTOP_DAYS = 30;
 
 /**
  * Email is the recovery channel (plan §Phase 3, Round 11), and only a verified
@@ -34,6 +39,7 @@ export class AccountService {
       otp: OtpService;
       audit: AuditService;
       clock: Clock;
+      exportContributors: ExportContributors;
     },
   ) {}
 
@@ -180,5 +186,79 @@ export class AccountService {
       });
     });
     return this.loadOrThrow(principal.id);
+  }
+
+  /** Who may call: the signed-in user, for their own data. Own data — so the phone is present; nothing about anyone else ever is. */
+  async exportData(userId: string): Promise<Record<string, unknown>> {
+    const user = await this.loadOrThrow(userId);
+    const sessions = await this.deps.repo.listLiveSessions(userId);
+    const dto = userDto(user);
+    return {
+      exportedAt: this.deps.clock().toISOString(),
+      account: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+        phone: dto.phone,
+        status: user.status,
+        createdAt: user.createdAt.toISOString(),
+        termsAcceptedAt: user.termsAcceptedAt.toISOString(),
+      },
+      providerProfile:
+        user.providerProfile === null
+          ? null
+          : {
+              businessName: user.providerProfile.businessName,
+              verificationTier: user.providerProfile.verificationTier,
+            },
+      sessions: sessions.map((s) => ({
+        deviceName: s.deviceName,
+        createdAt: s.createdAt.toISOString(),
+        lastSeenAt: s.lastSeenAt.toISOString(),
+      })),
+      ...(await this.deps.exportContributors.collectAll(userId)),
+    };
+  }
+
+  /**
+   * Who may call: the signed-in user. Queued, never refused (plan §Phase 3,
+   * Round 9): accepted immediately, frozen at once, anonymised by the job when
+   * open bookings terminate or at the 30-day backstop. A repeat returns the
+   * original dates. Sessions stay live — open bookings still need chat.
+   */
+  async requestDeletion(
+    principal: UserPrincipal,
+    meta: RequestMeta,
+  ): Promise<{ status: 'frozen'; deletionRequestedAt: Date; deletionDeadlineAt: Date }> {
+    const now = this.deps.clock();
+    const deadline = new Date(now.getTime() + DELETION_BACKSTOP_DAYS * 86_400_000);
+    const result = await this.deps.prisma.$transaction(async (tx) => {
+      const frozen = await tx.user.updateMany({
+        where: { id: principal.id, status: 'active' },
+        data: { status: 'frozen', deletionRequestedAt: now, deletionDeadlineAt: deadline },
+      });
+      if (frozen.count === 1) {
+        await this.deps.audit.record(tx, {
+          actorType: 'user',
+          actorId: principal.id,
+          action: 'user.deletion.requested',
+          targetType: 'user',
+          targetId: principal.id,
+          reason: 'user_initiated',
+          requestId: meta.requestId,
+          ipAddress: meta.ip,
+        });
+      }
+      return tx.user.findUniqueOrThrow({ where: { id: principal.id } });
+    });
+    if (result.deletionRequestedAt === null || result.deletionDeadlineAt === null) {
+      throw new Error('frozen user without deletion dates');
+    }
+    return {
+      status: 'frozen',
+      deletionRequestedAt: result.deletionRequestedAt,
+      deletionDeadlineAt: result.deletionDeadlineAt,
+    };
   }
 }

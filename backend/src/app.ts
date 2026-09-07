@@ -11,6 +11,7 @@ import { registerErrorHandling } from './core/error-handler.js';
 import { genReqId, loggerOptions } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
+import { ExportContributors } from './modules/account/export.js';
 import { registerAccountRoutes } from './modules/account/routes.js';
 import { AccountService } from './modules/account/service.js';
 import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
@@ -46,6 +47,7 @@ declare module 'fastify' {
     deps: AppDeps;
     account: AccountService;
     audit: AuditService;
+    exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
     auth: AuthService;
     email: EmailSender;
@@ -97,6 +99,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     otp,
   });
   app.decorate('auth', authService);
+  const exportContributors = new ExportContributors();
+  app.decorate('exportContributors', exportContributors);
   app.decorate(
     'account',
     new AccountService({
@@ -105,6 +109,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
       otp,
       audit,
       clock: deps.clock,
+      exportContributors,
     }),
   );
   app.decorate('social', new SocialAuthRegistry(stubProviders()));

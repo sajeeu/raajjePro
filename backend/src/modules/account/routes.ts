@@ -94,4 +94,35 @@ export function registerAccountRoutes(app: FastifyInstance): void {
       return reply.send(ok(userDto(user)));
     },
   );
+
+  // Who may call: the signed-in user, for their own data. Synchronous JSON as plan §Phase 3 specifies.
+  r.get(
+    `${prefix}/data-export`,
+    { preValidation: requireAuth, config: perPrincipal(10, '1 hour') },
+    async (request, reply) => {
+      const data = await app.account.exportData(userOf(request).id);
+      const date = app.deps.clock().toISOString().slice(0, 10);
+      void reply.header(
+        'content-disposition',
+        `attachment; filename="raajjepro-export-${date}.json"`,
+      );
+      return reply.send(ok(data));
+    },
+  );
+
+  // Who may call: the signed-in user. 202: queued, never refused. Tier 5/hour per principal.
+  r.post(
+    `${prefix}/deletion-request`,
+    { preValidation: requireAuth, config: perPrincipal(5, '1 hour') },
+    async (request, reply) => {
+      const result = await app.account.requestDeletion(userOf(request), requestMeta(request));
+      return reply.code(202).send(
+        ok({
+          status: result.status,
+          deletionRequestedAt: result.deletionRequestedAt.toISOString(),
+          deletionDeadlineAt: result.deletionDeadlineAt.toISOString(),
+        }),
+      );
+    },
+  );
 }
