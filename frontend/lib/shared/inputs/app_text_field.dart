@@ -22,6 +22,7 @@ class AppTextField extends StatefulWidget {
     this.hint,
     this.helper,
     this.errorText,
+    this.hasError = false,
     this.enabled = true,
     this.readOnly = false,
     this.obscureText = false,
@@ -49,6 +50,12 @@ class AppTextField extends StatefulWidget {
 
   /// Sets the error state. Belongs under its field, inline.
   final String? errorText;
+
+  /// Forces the error visual (red border, no glow) with no message under the
+  /// field — for a screen whose single failure banner already carries the
+  /// text, so a per-field repeat would be redundant (`Sign In.dc.html`: the
+  /// email and password borders both go red, with no text under either).
+  final bool hasError;
   final bool enabled;
   final bool readOnly;
   final bool obscureText;
@@ -116,7 +123,8 @@ class _AppTextFieldState extends State<AppTextField> {
     final type = context.type;
     final motion = context.motion;
 
-    final hasError = widget.errorText != null;
+    final hasMessage = widget.errorText != null;
+    final hasError = hasMessage || widget.hasError;
     final focused = _focus.hasFocus;
     final interactive = widget.enabled && !widget.readOnly;
 
@@ -142,8 +150,9 @@ class _AppTextFieldState extends State<AppTextField> {
     );
 
     final spoken = StringBuffer(widget.label);
-    if (hasError) spoken.write(', ${widget.errorText}');
-    if (!hasError && widget.helper != null) spoken.write(', ${widget.helper}');
+    if (hasMessage) spoken.write(', ${widget.errorText}');
+    if (!hasMessage && widget.helper != null)
+      spoken.write(', ${widget.helper}');
     if (widget.readOnly) spoken.write(', read only');
 
     final field = TextField(
@@ -258,7 +267,7 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
           ),
         ),
-        if (hasError || widget.helper != null || widget.maxLength != null)
+        if (hasMessage || widget.helper != null || widget.maxLength != null)
           Padding(
             padding: const EdgeInsetsDirectional.only(top: AppSpacing.sm),
             child: Row(
@@ -266,7 +275,7 @@ class _AppTextFieldState extends State<AppTextField> {
               children: [
                 Expanded(
                   child: ExcludeSemantics(
-                    child: hasError
+                    child: hasMessage
                         ? Text(
                             widget.errorText!,
                             style: type.helper.copyWith(color: colors.error),

@@ -156,8 +156,12 @@ void main() {
           final lines = file.readAsLinesSync();
           for (var i = 0; i < lines.length; i++) {
             // A comment may quote a retired rule to say it is retired; a
-            // string in a widget may not.
+            // string in a widget may not. `// retired-ok:` is the same
+            // escape hatch for a test asserting the retired copy's ABSENCE
+            // (`findsNothing` on it) — the mirror image of rendering it —
+            // which the regex alone cannot tell apart from a live use.
             if (lines[i].trimLeft().startsWith('//') ||
+                lines[i].contains('// retired-ok:') ||
                 RegExp(r'Round \d+').hasMatch(lines[i])) {
               continue;
             }
