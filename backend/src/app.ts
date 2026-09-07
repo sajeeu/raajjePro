@@ -11,6 +11,8 @@ import { registerErrorHandling } from './core/error-handler.js';
 import { genReqId, loggerOptions } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
+import { registerAccountRoutes } from './modules/account/routes.js';
+import { AccountService } from './modules/account/service.js';
 import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
@@ -42,6 +44,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     config: Config;
     deps: AppDeps;
+    account: AccountService;
     audit: AuditService;
     adminAuth: AdminAuthService;
     auth: AuthService;
@@ -86,9 +89,23 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   app.decorate('email', email);
   const otp = new OtpService({ prisma: deps.prisma, email, clock: deps.clock, config });
   app.decorate('otp', otp);
+  const authService = new AuthService({
+    prisma: deps.prisma,
+    audit,
+    clock: deps.clock,
+    config,
+    otp,
+  });
+  app.decorate('auth', authService);
   app.decorate(
-    'auth',
-    new AuthService({ prisma: deps.prisma, audit, clock: deps.clock, config, otp }),
+    'account',
+    new AccountService({
+      prisma: deps.prisma,
+      repo: authService.repo,
+      otp,
+      audit,
+      clock: deps.clock,
+    }),
   );
   app.decorate('social', new SocialAuthRegistry(stubProviders()));
 
@@ -105,6 +122,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerHealthRoutes(app);
   registerAdminAuthRoutes(app);
   registerAuthRoutes(app);
+  registerAccountRoutes(app);
   registerAuditRoutes(app);
   await registerSesEventRoutes(app);
 
