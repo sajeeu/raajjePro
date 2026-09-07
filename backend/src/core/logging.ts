@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
+import type { Writable } from 'node:stream';
 
 import type { FastifyServerOptions } from 'fastify';
 
@@ -22,7 +23,24 @@ export function genReqId(req: IncomingMessage): string {
  * match an exact depth — `*.email` catches `{ user: { email } }` but not a
  * top-level `{ email }` — so each key is repeated at every depth we redact.
  */
-const SENSITIVE_KEYS = ['password', 'email', 'phone', 'code', 'token', 'secret', 'recoveryCodes'];
+const SENSITIVE_KEYS = [
+  'password',
+  'currentPassword',
+  'newPassword',
+  'email',
+  'newEmail',
+  'phone',
+  'phoneE164',
+  'number',
+  'fullName',
+  'code',
+  'token',
+  'accessToken',
+  'refreshToken',
+  'idToken',
+  'secret',
+  'recoveryCodes',
+];
 
 /** Depths 0 (bare key) through 3 (three levels of nesting). */
 const REDACTED_DEPTH = 3;
@@ -71,4 +89,25 @@ export function loggerOptions(config: Config): NonNullable<FastifyServerOptions[
       },
     },
   };
+}
+
+/**
+ * `loggerOptions` returns Fastify's own logger-option union, which also allows
+ * a bare `boolean` — a case this function never produces, but one the type
+ * checker must be shown isn't happening before the result can be spread.
+ *
+ * This is a test seam: it lets a test capture every log line a real run
+ * produces (by handing pino its own `Writable`) without reaching into pino's
+ * internals. `buildApp` uses it via `AppDeps.logStream`; `test/logging.test.ts`
+ * calls it directly against a bare Fastify instance.
+ */
+export function loggerOptionsForStream(
+  config: Config,
+  stream: Writable,
+): FastifyServerOptions['logger'] & object {
+  const options = loggerOptions(config);
+  if (typeof options === 'boolean') {
+    throw new Error('unreachable: loggerOptions never returns a boolean');
+  }
+  return { ...options, stream };
 }

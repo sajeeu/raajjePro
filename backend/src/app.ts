@@ -1,3 +1,5 @@
+import type { Writable } from 'node:stream';
+
 import Fastify, { type FastifyInstance } from 'fastify';
 import {
   serializerCompiler,
@@ -8,7 +10,7 @@ import {
 import type { Config } from './config/env.js';
 import type { Clock } from './core/clock.js';
 import { registerErrorHandling } from './core/error-handler.js';
-import { genReqId, loggerOptions } from './core/logging.js';
+import { genReqId, loggerOptions, loggerOptionsForStream } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import {
@@ -49,6 +51,13 @@ export interface AppDeps {
   confirmSubscription?: (url: string) => Promise<void>;
   /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
   deletionBlocker?: DeletionBlocker;
+  /**
+   * Test seam: when present, pino writes to this stream instead of stdout, so
+   * a test can capture every log line a real run produces (the §Phase 3
+   * Done-when no-PII assertion needs this — there is no supported way to
+   * attach a stream to an already-built Fastify logger).
+   */
+  logStream?: Writable;
 }
 
 declare module 'fastify' {
@@ -77,7 +86,10 @@ declare module 'fastify' {
  */
 export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: loggerOptions(config),
+    logger:
+      deps.logStream !== undefined
+        ? loggerOptionsForStream(config, deps.logStream)
+        : loggerOptions(config),
     genReqId,
     requestIdHeader: false,
     trustProxy: config.trustProxy,

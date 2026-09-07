@@ -29,6 +29,7 @@ jobs:
       # infra/postgres/initdb/ creates it when the volume is first built.
       TEST_DATABASE_URL: postgresql://raajjepro:raajjepro@localhost:5435/raajjepro_test?schema=public
       ADMIN_TOTP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      AUTH_JWT_SECRET: AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=
       EMAIL_FROM_ADDRESS: ci@raajjepro.local
     steps:
       - uses: actions/checkout@v7
@@ -67,6 +68,7 @@ jobs:
       - name: Boot the server, check /v1/health, confirm the job runner fires
         env:
           ADMIN_TOTP_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          AUTH_JWT_SECRET: AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=
           EMAIL_FROM_ADDRESS: ci@raajjepro.local
           PORT: 3000
         run: |

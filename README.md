@@ -3,7 +3,7 @@
 Planning and specification for RaajjePro, a local services marketplace for the Maldives.
 Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-Phases 0, 1 and 2 are built: both apps boot, lint is clean, the job runner fires, the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place, and the backend now has its core infrastructure (envelope/errors/logging, rate limiting, idempotency, admin identity with TOTP MFA, the queryable audit log, and SES bounce/complaint handling with the suppression list). Everything from Phase 3 onward is still specification. See **Running locally** below.
+Phases 0, 1, 2 and the Phase 3 backend are built: both apps boot, lint is clean, the job runner fires, the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place, the backend has its core infrastructure (envelope/errors/logging, rate limiting, idempotency, admin identity with TOTP MFA, the queryable audit log, and SES bounce/complaint handling with the suppression list), and identity is built end to end: register/login, JWT access + refresh rotation, email OTP, account settings, data export, the deletion pipeline and the anonymisation job. Everything else from Phase 3 onward (including Phase 3's own Flutter screens) is still specification. See **Running locally** below.
 
 ## The source of truth
 
@@ -37,8 +37,15 @@ npm run dev                          # boots a server on :3000 (Phase 2 onward �
 curl localhost:3000/v1/health        # { "data": { "status": "ok", ... } }
 npm run admin:create -- --email you@example.com   # creates the first admin; password is prompted, never a flag
 npm run jobs:status                  # is the scheduled no-op job firing? (exit 0 = yes)
+
+# Phase 3 onward: register a user and read the OTP back out of the file transport
+curl -X POST localhost:3000/v1/auth/register -H 'Content-Type: application/json' \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"role":"customer","fullName":"Test User","email":"you@example.test","phone":{"dialCode":"+960","number":"7771234"},"password":"correct horse battery","acceptTerms":true,"deviceName":"curl"}'
 cd ../frontend && flutter pub get && flutter run
 ```
+
+With `EMAIL_TRANSPORT=file` (the default outside production), the six-digit verification code is in the newest JSON file under `backend/.mail/`.
 
 > **Upgrading from the Postgres 16 volume.** Dependabot moved the base image from
 > 16 to 18. PostgreSQL refuses to start on a data directory written by a different
