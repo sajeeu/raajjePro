@@ -16,6 +16,15 @@ Then open Claude Code in the workspace. It reads `CLAUDE.md` at the root automat
 
 Then the toolchain. Phase 0 is built, so a checkout needs Node 22, Docker with Compose, and Flutter 3.47 stable on your `PATH` (`export PATH="$HOME/flutter/bin:$PATH"` in your shell rc — the pre-commit hook runs `dart format` and `scripts/verify.sh` runs `flutter analyze`, and both need it).
 
+🔧 **One Android SDK quirk, if the app will not build locally.** `frontend/android/app/build.gradle.kts` pins `compileSdk = 37`, which `flutter_secure_storage` 11 requires. The SDK publishes that platform as **`platforms;android-37.0`** — minor API levels are a 2025 change — but AGP 9.1 looks for a directory named `android-37`. On this machine the two are bridged by copying the installed `android-37.0` directory to `android-37`; the copy says so in its own `source.properties`. **CI needs none of this** — a fresh runner resolves the platform on its own, verified on the Phase 3 merge, which built `app-debug.apk` in 220 seconds. So this is a local-machine fix, not a project dependency:
+
+```bash
+sdkmanager "platforms;android-37.0"
+cp -r "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
+```
+
+Note that `scripts/verify.sh` runs `flutter analyze` and `flutter test` but **does not build the APK**, so a broken Android build passes local verification and fails only in CI.
+
 ```bash
 npm install                                   # commit hooks
 docker compose up -d                          # Postgres 18 + pg_cron + WAL archiving on :5435
