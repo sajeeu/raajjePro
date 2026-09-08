@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
+import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
+import 'package:raajjepro/features/account/presentation/active_sessions_screen.dart';
+import 'package:raajjepro/features/account/presentation/delete_account_screen.dart';
+import 'package:raajjepro/features/account/presentation/download_data_screen.dart';
 import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/session_expired_screen.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
@@ -13,10 +17,10 @@ import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.d
 import 'package:raajjepro/shared/shared.dart';
 
 /// Root widget. Routing is a plain named-route table; the root route is the
-/// AuthGate, which switches on the one auth state. Account routes are added
-/// by Tasks 8–9 (import `account_settings_screen.dart` once it exists; that
-/// file does not exist yet, so `/account` stays an unregistered route the
-/// signed-in home links to — same gap Task 6 left at `/account/change-email`).
+/// AuthGate, which switches on the one auth state. Task 8 adds `/account`,
+/// `/account/sessions`, `/account/download` and `/account/delete`.
+/// `/account/password`, `/account/change-email` and `/account/phone` are
+/// Task 9's — same gap Task 6 left at `/account/change-email`.
 class RaajjeProApp extends ConsumerStatefulWidget {
   const RaajjeProApp({super.key});
   @override
@@ -47,7 +51,10 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         '/legal/privacy': (_) =>
             const LegalPlaceholderScreen(title: 'Privacy Policy'),
         GalleryScreen.routeName: (_) => const GalleryScreen(),
-        // Task 8 adds: AccountSettingsScreen.routeName and its sub-screens.
+        AccountSettingsScreen.routeName: (_) => const AccountSettingsScreen(),
+        ActiveSessionsScreen.routeName: (_) => const ActiveSessionsScreen(),
+        DownloadDataScreen.routeName: (_) => const DownloadDataScreen(),
+        DeleteAccountScreen.routeName: (_) => const DeleteAccountScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == VerifyEmailScreen.routeName) {
