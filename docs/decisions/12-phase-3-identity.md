@@ -278,7 +278,10 @@ resolved either way, per root CLAUDE.md's scope-discipline rule.
   within a day" — the plan specifies a synchronous
   `GET /v1/users/me/data-export` (backend decision above), so there is
   nothing to email; flagged for a later design-copy correction, not built
-  against.
+  against. The export is written to the app's own temporary directory via
+  `path_provider`'s `getTemporaryDirectory()`, not `Directory.systemTemp` —
+  on Android that directory is shared with other apps, not app-private
+  (final review #5).
 - **Session rows omit the prototype's `· Malé` location suffix** — no
   mechanism in this build geolocates a session; the client sends only a
   `deviceName` string (same finding as the backend section above, extended

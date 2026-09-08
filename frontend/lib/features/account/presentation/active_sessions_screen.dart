@@ -124,13 +124,27 @@ class _SessionRow extends ConsumerWidget {
       ),
     );
     if (confirmed != true) return;
-    final name = await ref
-        .read(sessionActionControllerProvider.notifier)
-        .revoke(session.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$name signed out — only that device')),
-      );
+    try {
+      final name = await ref
+          .read(sessionActionControllerProvider.notifier)
+          .revoke(session.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$name signed out — only that device')),
+        );
+      }
+    } on Object {
+      // ApiException, ApiNetworkException, or the StateError a stale id
+      // (already revoked elsewhere, or the list refreshed under us) raises
+      // from `firstWhere` — every one of them left this row silently stuck
+      // with no feedback at all before final review #6.
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Couldn't revoke that device. Try again."),
+          ),
+        );
+      }
     }
   }
 

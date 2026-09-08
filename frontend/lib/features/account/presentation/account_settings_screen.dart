@@ -4,6 +4,12 @@ import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/format/relative_time.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/controller/account_controller.dart';
+import 'package:raajjepro/features/account/presentation/active_sessions_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_email_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_password_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_phone_screen.dart';
+import 'package:raajjepro/features/account/presentation/delete_account_screen.dart';
+import 'package:raajjepro/features/account/presentation/download_data_screen.dart';
 import 'package:raajjepro/features/account/presentation/widgets/settings_row.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -96,7 +102,8 @@ class AccountSettingsScreen extends ConsumerWidget {
                       title: 'Change password',
                       subtitle: 'Current password required',
                       onTap: () =>
-                          Navigator.of(context).pushNamed('/account/password'),
+                          Navigator.of(context)
+                              .pushNamed(ChangePasswordScreen.routeName),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SettingsRow(
@@ -105,7 +112,7 @@ class AccountSettingsScreen extends ConsumerWidget {
                       subtitle: 'A code goes to the new address first',
                       onTap: () =>
                           Navigator.of(context)
-                              .pushNamed('/account/change-email'),
+                              .pushNamed(ChangeEmailScreen.routeName),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SettingsRow(
@@ -113,7 +120,8 @@ class AccountSettingsScreen extends ConsumerWidget {
                       title: 'Change phone',
                       subtitle: 'Shown as you enter it, like registration',
                       onTap: () =>
-                          Navigator.of(context).pushNamed('/account/phone'),
+                          Navigator.of(context)
+                              .pushNamed(ChangePhoneScreen.routeName),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SettingsRow(
@@ -123,7 +131,8 @@ class AccountSettingsScreen extends ConsumerWidget {
                           ? "Everywhere you're signed in"
                           : '$count ${count == 1 ? 'device' : 'devices'} signed in',
                       onTap: () =>
-                          Navigator.of(context).pushNamed('/account/sessions'),
+                          Navigator.of(context)
+                              .pushNamed(ActiveSessionsScreen.routeName),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SettingsRow(
@@ -131,7 +140,8 @@ class AccountSettingsScreen extends ConsumerWidget {
                       title: 'Download my data',
                       subtitle: 'Profile, bookings, reviews, messages',
                       onTap: () =>
-                          Navigator.of(context).pushNamed('/account/download'),
+                          Navigator.of(context)
+                              .pushNamed(DownloadDataScreen.routeName),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SettingsRow(
@@ -142,7 +152,8 @@ class AccountSettingsScreen extends ConsumerWidget {
                           : 'Accepted immediately, completes within 30 days',
                       destructive: true,
                       onTap: () =>
-                          Navigator.of(context).pushNamed('/account/delete'),
+                          Navigator.of(context)
+                              .pushNamed(DeleteAccountScreen.routeName),
                     ),
                   ],
                 );

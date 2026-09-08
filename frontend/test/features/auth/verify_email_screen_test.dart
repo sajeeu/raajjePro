@@ -339,4 +339,52 @@ void main() {
       expect(find.text('HOME'), findsOneWidget);
     },
   );
+
+  group('VerifyEmailArgs.fromRouteArguments (final review #14)', () {
+    test('passes a typed VerifyEmailArgs straight through', () {
+      const args = VerifyEmailArgs(
+        email: 'aishath@example.mv',
+        purpose: OtpPurpose.verifyEmail,
+      );
+      expect(VerifyEmailArgs.fromRouteArguments(args), same(args));
+    });
+
+    test('accepts the legacy untyped map', () {
+      final args = VerifyEmailArgs.fromRouteArguments(const {
+        'email': 'aishath@example.mv',
+        'status': 'sent',
+        'resendAvailableAt': '2026-09-06T10:00:47.000Z',
+      });
+      expect(args.email, 'aishath@example.mv');
+      expect(args.purpose, OtpPurpose.verifyEmail);
+      expect(args.initialStatus, VerificationStatus.sent);
+      expect(
+        args.resendAvailableAt,
+        DateTime.parse('2026-09-06T10:00:47.000Z'),
+      );
+    });
+
+    test(
+      'null arguments raise a clear ArgumentError, not a bare cast failure',
+      () {
+        expect(
+          () => VerifyEmailArgs.fromRouteArguments(null),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.toString(),
+              'message',
+              contains('VerifyEmailScreen.routeName'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('a map missing email also raises ArgumentError', () {
+      expect(
+        () => VerifyEmailArgs.fromRouteArguments(const {'status': 'sent'}),
+        throwsArgumentError,
+      );
+    });
+  });
 }

@@ -149,6 +149,46 @@ void main() {
     },
   );
 
+  testWidgets(
+    'a failed revoke (offline) shows a failure notice and leaves the row in place (final review #6)',
+    (tester) async {
+      api.on(
+        'GET',
+        '/v1/auth/sessions',
+        (_) => {
+          '_list': [
+            sessionJson(
+              id: 'a',
+              deviceName: 'iPhone 14',
+              lastSeenAt: '2026-09-06T10:00:00.000Z',
+              current: true,
+            ),
+            sessionJson(
+              id: 'b',
+              deviceName: 'Pixel 7',
+              lastSeenAt: '2026-09-03T10:00:00.000Z',
+              current: false,
+            ),
+          ],
+        },
+      );
+      await pump(tester);
+
+      await tester.tap(find.widgetWithText(AppButton, 'Revoke'));
+      await settle(tester);
+      api.offline('DELETE', '/v1/auth/sessions/b');
+      await tester.tap(find.byKey(const Key('confirm-revoke')));
+      await settle(tester);
+
+      expect(
+        find.text("Couldn't revoke that device. Try again."),
+        findsOneWidget,
+      );
+      // Nothing was actually revoked — the row is still there.
+      expect(find.text('Pixel 7'), findsOneWidget);
+    },
+  );
+
   testWidgets('empty: names what to do next, not just that nothing is there', (
     tester,
   ) async {

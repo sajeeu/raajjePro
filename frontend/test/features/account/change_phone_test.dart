@@ -80,6 +80,28 @@ void main() {
     );
   });
 
+  testWidgets(
+    'an unmapped code shows the shared generic banner, never the raw server message (final review #8)',
+    (tester) async {
+      api.fail(
+        'PATCH',
+        '/v1/users/me/phone',
+        status: 500,
+        code: 'INTERNAL_ERROR',
+        message: 'oh no',
+      );
+      await pump(tester);
+      await tester.enterText(find.byKey(const Key('reg-phone')), '7779999');
+      await tester.tap(find.text('Save number'));
+      await settle(tester);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('oh no'), findsNothing);
+    },
+  );
+
   testWidgets('VALIDATION_FAILED for phone renders as errorText', (
     tester,
   ) async {

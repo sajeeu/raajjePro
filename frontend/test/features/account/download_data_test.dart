@@ -151,6 +151,11 @@ void main() {
         shareProvider.overrideWithValue((file) async {
           shared.add(file);
         }),
+        // getTemporaryDirectory() crosses a real platform channel — never
+        // available in a plain `test`. `Directory.systemTemp` is a fine
+        // stand-in for "some writable temp dir" here; only production code
+        // needs the app-private guarantee path_provider gives on Android.
+        tempDirProvider.overrideWithValue(() async => Directory.systemTemp),
       ],
     );
     addTearDown(container.dispose);
@@ -186,5 +191,39 @@ void main() {
     // never right after sharing (a share target may still be reading it).
     expect(await staleFile.exists(), isFalse);
     expect(await freshFile.exists(), isTrue);
+  });
+
+  test('a FileSystemException from the write leaves failed, not fetching forever (final review #7)', () async {
+    final realApi = FakeApiClient();
+    realApi.on(
+      'GET',
+      '/v1/users/me/data-export',
+      (_) => {
+        'profile': {'fullName': 'Aishath Naeema'},
+      },
+    );
+    final container = ProviderContainer(
+      overrides: [
+        apiClientProvider.overrideWithValue(realApi),
+        tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+        clockProvider.overrideWithValue(() => DateTime.utc(2026, 9, 6)),
+        shareProvider.overrideWithValue((_) async {}),
+        // Neither ApiException nor ApiNetworkException — a filesystem
+        // failure surfacing from the seam `request()` actually calls.
+        // Before final review #7 this had no catch clause of its own and
+        // left `fetching: true` forever.
+        tempDirProvider.overrideWithValue(
+          () async =>
+              throw const FileSystemException('No space left on device'),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(downloadControllerProvider.notifier).request();
+
+    final state = container.read(downloadControllerProvider);
+    expect(state.failed, isTrue);
+    expect(state.fetching, isFalse);
   });
 }

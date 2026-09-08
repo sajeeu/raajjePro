@@ -32,19 +32,31 @@ const _tickIcons = [
 ];
 final _phoneLike = RegExp(r'\+\d[\d ]{5,}');
 
+/// A `Text`'s plain content, whether it was built with `data` or as a
+/// `Text.rich`/`Text.textSpan` tree — a tick or the word "verified" hidden
+/// inside a `TextSpan` is just as much a defect as one in `data`.
+String? _plainText(Text widget) =>
+    widget.data ?? widget.textSpan?.toPlainText();
+
 /// (a) no tick icon shares a `Row` with a `Text` that looks like a phone
 /// number; (b) no single `Text` both looks like a phone number and also
-/// contains the word "verified".
+/// contains the word "verified". Both walk the Row's whole subtree — not
+/// just its immediate children — so a tick or a phone number one or more
+/// `Padding`/`Expanded`/`SizedBox` layers deep is still caught.
 void _assertNoVerifiedPhone(WidgetTester tester) {
   for (final rowElement in find.byType(Row).evaluate()) {
-    final row = rowElement.widget as Row;
-    final hasPhoneText = row.children.any(
-      (c) => c is Text && c.data != null && _phoneLike.hasMatch(c.data!),
-    );
+    final rowFinder = find.byWidget(rowElement.widget);
+    final texts = find
+        .descendant(of: rowFinder, matching: find.byType(Text))
+        .evaluate()
+        .map((e) => _plainText(e.widget as Text));
+    final hasPhoneText = texts.any((t) => t != null && _phoneLike.hasMatch(t));
     if (!hasPhoneText) continue;
-    final hasTick = row.children.any(
-      (c) => c is Icon && _tickIcons.contains(c.icon),
-    );
+    final hasTick = find
+        .descendant(of: rowFinder, matching: find.byType(Icon))
+        .evaluate()
+        .map((e) => (e.widget as Icon).icon)
+        .any(_tickIcons.contains);
     expect(
       hasTick,
       isFalse,
@@ -53,7 +65,7 @@ void _assertNoVerifiedPhone(WidgetTester tester) {
   }
 
   for (final element in find.byType(Text).evaluate()) {
-    final text = (element.widget as Text).data;
+    final text = _plainText(element.widget as Text);
     if (text == null || !_phoneLike.hasMatch(text)) continue;
     expect(
       text.toLowerCase().contains('verified'),
@@ -179,4 +191,29 @@ void main() {
     );
     _assertNoVerifiedPhone(tester);
   });
+
+  testWidgets(
+    'negative fixture: a tick wrapped in Padding inside the Row is still caught',
+    (tester) async {
+      // Proves the helper recurses the Row's subtree rather than only its
+      // immediate children (final review #4) — an icon or phone-shaped Text
+      // one `Padding` layer deep must still fail both assertions.
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Row(
+              children: [
+                Text('+960 7771234'),
+                Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.verified),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(() => _assertNoVerifiedPhone(tester), throwsA(isA<TestFailure>()));
+    },
+  );
 }

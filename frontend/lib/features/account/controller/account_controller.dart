@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
@@ -109,6 +110,16 @@ final shareProvider = Provider<Future<void> Function(XFile file)>(
   },
 );
 
+/// Where the export is written before being handed to the share sheet.
+/// `getTemporaryDirectory()` (path_provider), never `Directory.systemTemp` —
+/// on Android that is a directory other apps can read, not app-private
+/// (final review #5). Injectable so tests never cross a real platform
+/// channel; overridden with a plain `Directory.systemTemp` getter in tests,
+/// which is a perfectly good stand-in for "some writable temp dir" there.
+final tempDirProvider = Provider<Future<Directory> Function()>(
+  (_) => getTemporaryDirectory,
+);
+
 class DownloadState {
   const DownloadState({
     this.fetching = false,
@@ -149,7 +160,7 @@ class DownloadController extends Notifier<DownloadState> {
       final bytes = utf8.encode(
         const JsonEncoder.withIndent('  ').convert(data),
       );
-      final dir = Directory.systemTemp;
+      final dir = await ref.read(tempDirProvider)();
       // Clear out any earlier export before writing this one — never right
       // after sharing, since the share target (another app) may still be
       // reading that file asynchronously at that point.
@@ -163,6 +174,12 @@ class DownloadController extends Notifier<DownloadState> {
     } on ApiNetworkException {
       state = const DownloadState(offline: true);
     } on ApiException {
+      state = const DownloadState(failed: true);
+    } on Object {
+      // A FileSystemException (disk full, sandbox denial) or a
+      // PlatformException from the share channel itself — neither is an API
+      // failure, but the button must still leave its loading state rather
+      // than spin forever (final review #7).
       state = const DownloadState(failed: true);
     }
   }

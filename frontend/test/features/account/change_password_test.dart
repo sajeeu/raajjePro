@@ -87,6 +87,34 @@ void main() {
   });
 
   testWidgets(
+    'an unmapped code shows the shared generic banner, never the raw server message (final review #8)',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/users/me/change-password',
+        status: 500,
+        code: 'INTERNAL_ERROR',
+        message: 'oh no',
+      );
+      await pump(tester);
+      await tester.enterText(find.byKey(const Key('cp-current')), 'oldpass1');
+      await tester.enterText(find.byKey(const Key('cp-new')), 'newpassword');
+      await tester.enterText(
+        find.byKey(const Key('cp-confirm')),
+        'newpassword',
+      );
+      await tester.tap(find.widgetWithText(AppButton, 'Change password'));
+      await settle(tester);
+
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('oh no'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'success calls the change-password endpoint, shows the snackbar and pops back to the previous screen',
     (tester) async {
       api.on('POST', '/v1/users/me/change-password', (body) {

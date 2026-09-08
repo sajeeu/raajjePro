@@ -267,7 +267,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       AppButton.destructive(
                         label: 'Send a fresh code',
                         size: AppButtonSize.compact,
-                        onPressed: ctrl.resend,
+                        loading: s.sending,
+                        onPressed: s.sending ? null : ctrl.resend,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ],
@@ -280,9 +281,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                         "We couldn't send a code to this address. Check it's right, or try again in a moment.",
                       ),
                     if (s.mode == VerifyMode.genericError)
-                      InlineNotice.error(
-                        'Something went wrong. Please try again.',
-                      ),
+                      InlineNotice.error(genericErrorCopy),
                     if (s.mode == VerifyMode.offline)
                       InlineNotice.offline(
                         onRetry: () => _code.length == 6
@@ -307,7 +306,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                           ? AppButton.text(
                               label: 'Resend code',
                               size: AppButtonSize.compact,
-                              onPressed: ctrl.resend,
+                              loading: s.sending,
+                              onPressed: s.sending ? null : ctrl.resend,
                             )
                           : CountdownText(
                               key: ValueKey(s.resendAvailableAt),

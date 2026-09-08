@@ -102,6 +102,26 @@ void main() {
   });
 
   testWidgets(
+    'an unmapped code shows the shared generic banner, never the raw server message (final review #8)',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/users/me/change-email/request',
+        status: 500,
+        code: 'INTERNAL_ERROR',
+        message: 'oh no',
+      );
+      await pump(tester);
+      await fillAndSubmit(tester);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('oh no'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'success calls change-email/request with the new address and current password, and navigates to Verify Email showing the new address and "Verify your new email"',
     (tester) async {
       api.on('POST', '/v1/users/me/change-email/request', (body) {

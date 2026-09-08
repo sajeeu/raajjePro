@@ -39,20 +39,30 @@ class VerifyEmailArgs {
   /// without this screen needing to know which purpose it is.
   final Future<VerificationOutcome> Function()? resendOverride;
 
-  /// Accepts the typed args or the map Register pushed before this class existed.
+  /// Accepts the typed args, or the untyped `{'email': ...}` map an older
+  /// caller might still push. Guards rather than lets a bare `as Map` throw
+  /// an unhelpful `TypeError` — pushing [VerifyEmailScreen.routeName] with
+  /// no arguments at all (`a == null`) or a shape missing `email` is a
+  /// caller bug, and the message here should say so directly (final review
+  /// #14) rather than surface as a cast failure with no context.
   static VerifyEmailArgs fromRouteArguments(Object? a) {
     if (a is VerifyEmailArgs) return a;
-    final m = a as Map<String, dynamic>;
-    return VerifyEmailArgs(
-      email: m['email'] as String,
-      purpose: m['purpose'] == 'changeEmail'
-          ? OtpPurpose.changeEmail
-          : OtpPurpose.verifyEmail,
-      initialStatus: VerificationStatus.values
-          .asNameMap()[m['status'] as String?],
-      resendAvailableAt: m['resendAvailableAt'] is String
-          ? DateTime.parse(m['resendAvailableAt'] as String)
-          : null,
+    if (a is Map<String, dynamic> && a['email'] is String) {
+      return VerifyEmailArgs(
+        email: a['email'] as String,
+        purpose: a['purpose'] == 'changeEmail'
+            ? OtpPurpose.changeEmail
+            : OtpPurpose.verifyEmail,
+        initialStatus: VerificationStatus.values
+            .asNameMap()[a['status'] as String?],
+        resendAvailableAt: a['resendAvailableAt'] is String
+            ? DateTime.parse(a['resendAvailableAt'] as String)
+            : null,
+      );
+    }
+    throw ArgumentError(
+      'VerifyEmailScreen.routeName needs a VerifyEmailArgs (or a legacy '
+      "{'email': ...} map) as its route arguments; got ${a.runtimeType}.",
     );
   }
 
@@ -80,6 +90,7 @@ class VerifyEmailState {
   const VerifyEmailState({
     required this.mode,
     this.checking = false,
+    this.sending = false,
     this.attemptsRemaining,
     required this.resendAvailableAt,
     this.rateLimitedUntil,
@@ -87,6 +98,12 @@ class VerifyEmailState {
   });
   final VerifyMode mode;
   final bool checking;
+
+  /// True for the round trip a resend ("Resend code" / "Send a fresh code")
+  /// is in flight — its own button loading state, never a page-level
+  /// spinner, and set specifically so a second tap can't fire a second OTP
+  /// before the first request lands.
+  final bool sending;
   final int? attemptsRemaining;
   final DateTime resendAvailableAt;
   final DateTime? rateLimitedUntil;
@@ -98,6 +115,7 @@ class VerifyEmailState {
   VerifyEmailState copyWith({
     VerifyMode? mode,
     bool? checking,
+    bool? sending,
     int? attemptsRemaining,
     bool clearAttemptsRemaining = false,
     DateTime? resendAvailableAt,
@@ -106,6 +124,7 @@ class VerifyEmailState {
   }) => VerifyEmailState(
     mode: mode ?? this.mode,
     checking: checking ?? this.checking,
+    sending: sending ?? this.sending,
     attemptsRemaining: clearAttemptsRemaining
         ? null
         : (attemptsRemaining ?? this.attemptsRemaining),
@@ -225,7 +244,9 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
   }
 
   Future<void> resend() async {
+    if (state.sending) return;
     final now = ref.read(clockProvider)();
+    state = state.copyWith(sending: true);
     try {
       final send =
           args.resendOverride ??
@@ -239,6 +260,7 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
         mode: outcome.status == VerificationStatus.sent
             ? VerifyMode.resent
             : VerifyMode.sendFailed,
+        sending: false,
         resendAvailableAt: outcome.resendAvailableAt,
         clearAttemptsRemaining: true,
         clearToken: state.clearToken + 1,
@@ -247,18 +269,19 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
       if (e.code == 'OTP_RATE_LIMITED') {
         state = state.copyWith(
           mode: VerifyMode.rateLimited,
+          sending: false,
           rateLimitedUntil: now.add(
             Duration(seconds: e.retryAfterSeconds ?? 60),
           ),
         );
       } else if (e.code == 'EMAIL_ALREADY_VERIFIED') {
         ref.read(authControllerProvider.notifier).markVerified();
-        state = state.copyWith(mode: VerifyMode.success);
+        state = state.copyWith(mode: VerifyMode.success, sending: false);
       } else {
-        state = state.copyWith(mode: VerifyMode.sendFailed);
+        state = state.copyWith(mode: VerifyMode.sendFailed, sending: false);
       }
     } on ApiNetworkException {
-      state = state.copyWith(mode: VerifyMode.offline);
+      state = state.copyWith(mode: VerifyMode.offline, sending: false);
     }
   }
 }

@@ -187,7 +187,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         label: 'Create Account',
                         size: AppButtonSize.compact,
                         onPressed: () =>
-                            Navigator.of(context).pushNamed('/register'),
+                            Navigator.of(context)
+                                .pushNamed(RegisterScreen.routeName),
                       ),
                     ],
                   ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
 
 /// The prototype's exact copy for a duplicate email — set here, once, never
 /// derived from the server's `message` (routing is on `ApiException.code`).
@@ -139,9 +140,7 @@ class RegisterController extends Notifier<RegisterState> {
           }
           state = state.copyWith(
             busy: false,
-            fieldErrors: errors.isEmpty
-                ? {'form': 'Something went wrong. Please try again.'}
-                : errors,
+            fieldErrors: errors.isEmpty ? {'form': genericErrorCopy} : errors,
           );
         case 'RATE_LIMITED':
           state = state.copyWith(
@@ -155,7 +154,7 @@ class RegisterController extends Notifier<RegisterState> {
           // `message`, which is not vetted for display.
           state = state.copyWith(
             busy: false,
-            fieldErrors: {'form': 'Something went wrong. Please try again.'},
+            fieldErrors: {'form': genericErrorCopy},
           );
       }
     } on ApiNetworkException {

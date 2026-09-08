@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
+import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// `App States.dc.html` → Session expired. One action and one promise, which
@@ -55,9 +56,11 @@ class SessionExpiredScreen extends StatelessWidget {
                 AppButton.primary(
                   label: 'Sign In Again',
                   expand: true,
-                  onPressed: () =>
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil('/sign-in', (_) => false),
+                  onPressed: () => Navigator.of(context)
+                      .pushNamedAndRemoveUntil(
+                        SignInScreen.routeName,
+                        (_) => false,
+                      ),
                 ),
               ],
             ),

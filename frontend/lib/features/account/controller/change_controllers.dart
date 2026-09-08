@@ -3,6 +3,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/form_draft_store.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
 
 class ChangeFormState {
   const ChangeFormState({
@@ -57,7 +58,7 @@ abstract class ChangeFormController extends Notifier<ChangeFormState> {
       state = state.copyWith(
         busy: false,
         fieldErrors: errors.isEmpty
-            ? (mapError?.call(e) ?? {'form': e.message})
+            ? (mapError?.call(e) ?? {'form': genericErrorCopy})
             : errors,
       );
     } on ApiNetworkException {
@@ -105,7 +106,7 @@ class ChangePasswordController extends ChangeFormController {
       draft: const {},
       mapError: (e) => e.code == 'INVALID_CREDENTIALS'
           ? {'currentPassword': 'Your current password is not right'}
-          : {'form': e.message},
+          : {'form': genericErrorCopy},
     );
     return ok ?? false;
   }
@@ -140,7 +141,7 @@ class ChangeEmailController extends ChangeFormController {
         'form':
             'Too many codes requested — wait ${e.retryAfterSeconds ?? 60} seconds and try again',
       },
-      _ => {'form': e.message},
+      _ => {'form': genericErrorCopy},
     },
   );
 }
@@ -161,7 +162,7 @@ class ChangePhoneController extends ChangeFormController {
       draft: {'dialCode': dialCode, 'number': number},
       mapError: (e) => e.code == 'PHONE_IN_USE'
           ? {'phone': 'This number belongs to a verified provider account.'}
-          : {'form': e.message},
+          : {'form': genericErrorCopy},
     );
     if (user != null) ref.read(authControllerProvider.notifier).applyUser(user);
     return user;
