@@ -105,7 +105,12 @@ class _OtpCodeEntryState extends State<OtpCodeEntry> {
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: type.stat.copyWith(color: colors.ink),
+                    // 22 px in `Verify Email.dc.html`. `type.stat` is 18,
+                    // and 22 is not on the type scale, so it stands as the
+                    // prototype's measured value — the box is 48x58 and was
+                    // drawn around a 22 px digit. This is the one glyph a
+                    // user stares at while copying a code out of an inbox.
+                    style: type.stat.copyWith(color: colors.ink, fontSize: 22),
                     onChanged: (v) => _changed(i, v),
                     decoration: InputDecoration(
                       counterText: '',

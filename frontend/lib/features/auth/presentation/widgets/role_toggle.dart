@@ -11,6 +11,10 @@ class RoleToggle extends StatelessWidget {
   final AccountRole value;
   final ValueChanged<AccountRole> onChanged;
 
+  /// `height: 124px` in `Register.dc.html`. Not on the size scale, so it
+  /// stands as the prototype's measured value.
+  static const _cardHeight = 124.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -22,12 +26,29 @@ class RoleToggle extends StatelessWidget {
           semanticLabel: '$title, $sub${selected ? ', selected' : ''}',
           onTap: () => onChanged(role),
           selected: selected,
+          // `width: double.infinity` and the explicit height are both
+          // load-bearing. `Expanded` does give each card an equal 176 dp
+          // slot, but `Pressable` centres its child in that slot and passes
+          // loose constraints, so the card sized to its own text instead:
+          // 146 dp for "Book local providers" against 128 dp for "List my
+          // services", each centred, leaving two different cards with
+          // uneven gaps. The prototype's are identical, and it sets
+          // `height: 124px` explicitly rather than letting content decide.
           builder: (context, state) => AnimatedContainer(
             duration: context.motion.fast,
-            padding: const EdgeInsetsDirectional.all(AppSpacing.md),
+            width: double.infinity,
+            height: _cardHeight,
+            // `padding: 18px 12px` in the prototype. 18 is not on the
+            // spacing scale (…12, 16, 20…), so it stands as a measured
+            // value; the horizontal 12 is `AppSpacing.md`.
+            padding: const EdgeInsetsDirectional.symmetric(
+              vertical: 18,
+              horizontal: AppSpacing.md,
+            ),
             decoration: BoxDecoration(
               color: selected ? colors.accentTint : colors.surface,
-              borderRadius: AppRadius.circular(AppRadius.card),
+              // `border-radius: 18px` — `AppRadius.tile`, not `card` (16).
+              borderRadius: AppRadius.circular(AppRadius.tile),
               border: Border.all(
                 color: selected ? colors.primary : colors.border,
                 width: selected
@@ -35,8 +56,11 @@ class RoleToggle extends StatelessWidget {
                     : AppSizes.inputStroke,
               ),
             ),
+            // `align-items: center` in the prototype: icon, title and
+            // subtitle are centred in the card, not ranged left.
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   icon,
@@ -53,6 +77,7 @@ class RoleToggle extends StatelessWidget {
                 Text(
                   sub,
                   style: type.caption.copyWith(color: colors.textSecondary),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
