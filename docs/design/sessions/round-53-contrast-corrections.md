@@ -21,6 +21,56 @@ has the full table and the reasoning; this is the change list.
 
 ---
 
+## Status — read this first
+
+🔧 **Authored 2026-09-07 and never run.** Rounds 51, 52 and 54 have been
+applied to this project; 53 has not. Meanwhile the Flutter app *has* taken
+these values (`docs/decisions/08-phase-1-design-system.md` records the seven),
+so **the app and the prototypes now disagree on all seven colours.** Every
+screen built "to match the prototype" from here reintroduces a value that
+fails the bar §Phase 1 makes non-negotiable. This round closes a divergence
+rather than opening one.
+
+Two of them were caught the hard way, in built screens: `Sign In`'s footer
+caption and `Forgot Password`'s resend countdown and security footer all use
+`#8296B3` at 2.78:1 on the page. The app renders them compliant, the artboards
+do not, and the build session had to be told to ignore the artboard.
+
+## The inventory, so this is a sweep and not a spot-fix
+
+Measured across the 61 artboards on 2026-09-08. **These are search spaces,
+not defect counts** — see the caveat below.
+
+| Value | `color:` uses | `stroke`/`fill`/`background` | Files |
+|---|---|---|---|
+| `#9AA9C0` | 106, plus 17 `::placeholder` rules | 38 | 42 |
+| `#8296B3` | 143 | 24 | 42 |
+| `#D97706` | 8 | 27 | 25 |
+| `#16A34A` | 7 | 9 | 22 |
+
+⚠ **`color:` does not reliably mean text here.** Several controls set `color:`
+on a button so a child `<svg stroke="currentColor">` inherits it — the eye
+toggles in `Forgot Password` and `Sign In` do exactly that. Those are icons
+and they keep their value. So do not sweep by search-and-replace.
+
+**The test is what the colour lands on**, and each section below states it:
+a glyph the user reads as words moves; an icon, a dot, a star or a genuinely
+disabled control does not. Where a case is ambiguous, leave it and say so in
+the reply rather than guessing — a wrong darkening is easier to spot than a
+missed one, but a silent judgement call is worse than either.
+
+**The three sections that name only examples — 1, 4 and 7 — are the ones to
+sweep across all 42 files**, not just the artboards they mention. Section 4 in
+particular was written with three examples against 143 occurrences.
+
+## What will be checked on import
+
+`#9AA9C0` should survive only as `stroke`/`fill` on decorative icons and on
+`color:` where an SVG inherits it; the 17 `::placeholder` rules should all
+read `#627187`. `#8296B3` should survive only on disabled controls. Any
+remaining instance will be asked about, so it is worth listing the ones you
+kept and why.
+
 ## 1. Placeholder text — `#9AA9C0` → `#627187`
 
 2.38:1 on white. Every input's placeholder, everywhere: `Components`, `Sign In`,
