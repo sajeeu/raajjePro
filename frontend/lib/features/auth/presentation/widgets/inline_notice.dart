@@ -4,14 +4,17 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// The inline notices this screen family uses: error (red tint), offline
-/// (with retry) and info (accent tint). Shared by Sign In, Register and
-/// Verify Email — never a toast, always inline and actionable.
+/// (with retry), info (accent tint) and success (green tint). Shared by
+/// Sign In, Register and Verify Email — never a toast, always inline and
+/// actionable.
 class InlineNotice extends StatelessWidget {
   const InlineNotice._(this.text, this._kind, this.onRetry);
   factory InlineNotice.error(String text) =>
       InlineNotice._(text, _NoticeKind.error, null);
   factory InlineNotice.info(String text) =>
       InlineNotice._(text, _NoticeKind.info, null);
+  factory InlineNotice.success(String text) =>
+      InlineNotice._(text, _NoticeKind.success, null);
   factory InlineNotice.offline({required VoidCallback onRetry}) =>
       InlineNotice._('No internet connection.', _NoticeKind.offline, onRetry);
 
@@ -38,6 +41,11 @@ class InlineNotice extends StatelessWidget {
         colors.warningTint,
         colors.warningBorder,
         colors.warningText,
+      ),
+      _NoticeKind.success => (
+        colors.successTint,
+        colors.successBorder,
+        colors.successText,
       ),
     };
     return Padding(
@@ -70,4 +78,4 @@ class InlineNotice extends StatelessWidget {
   }
 }
 
-enum _NoticeKind { error, info, offline }
+enum _NoticeKind { error, info, offline, success }
