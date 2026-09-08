@@ -105,7 +105,7 @@ button{font-family:inherit}button:focus{outline:none}
                 <span style="flex:1;border-radius:5px 5px 2px 2px;background:{{ b.c }};height:{{ b.h }}"></span>
               </sc-for>
             </div>
-            <span style="font-size:11px;font-weight:600;color:#8296B3">Weekly, oldest to newest</span>
+            <span style="font-size:11px;font-weight:600;color:#5B6B84">Weekly, oldest to newest</span>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -113,7 +113,7 @@ button{font-family:inherit}button:focus{outline:none}
               <div style="background:#fff;border:1px solid #E9EFF7;border-radius:18px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:3px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
                 <span style="font-size:{{ st.vSize }};font-weight:800;letter-spacing:-.02em;color:{{ st.vFg }}">{{ st.v }}</span>
                 <span style="font-size:11.5px;font-weight:700;color:#5B6B84">{{ st.label }}</span>
-                <sc-if value="{{ st.noteHas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;line-height:1.45;font-weight:600;color:#8296B3">{{ st.note }}</span></sc-if>
+                <sc-if value="{{ st.noteHas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;line-height:1.45;font-weight:600;color:#5B6B84">{{ st.note }}</span></sc-if>
               </div>
             </sc-for>
           </div>
@@ -132,9 +132,9 @@ button{font-family:inherit}button:focus{outline:none}
                   </span>
                 </sc-for>
               </div>
-              <span style="font-size:11px;font-weight:600;color:#8296B3">Average per month, oldest to newest</span>
+              <span style="font-size:11px;font-weight:600;color:#5B6B84">Average per month, oldest to newest</span>
             </sc-if>
-            <sc-if value="{{ ratingNone }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;font-weight:600;color:#8296B3">No data yet — no ratings in this window.</span></sc-if>
+            <sc-if value="{{ ratingNone }}" hint-placeholder-val="{{ false }}"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">No data yet — no ratings in this window.</span></sc-if>
           </div>
         </sc-if>
 
@@ -175,11 +175,11 @@ class Component extends DCLogic {
     const viewBars=(svc.viewBars||[]).map((h,i,arr)=>({ h:Math.round(h/100*barMax)+'px'||'2px', c:i===arr.length-1?'#2563EB':'#CDDDFB' }));
     const ratingBars=svc.rating?svc.rating.bars.map((v,i,arr)=>({
       v:v.toFixed(1), h:Math.round((v-4)/1*34+6)+'px',
-      c:i===arr.length-1?'#2563EB':'#CDDDFB', fg:i===arr.length-1?'#1D4ED8':'#8296B3' })):[];
+      c:i===arr.length-1?'#2563EB':'#CDDDFB', fg:i===arr.length-1?'#1D4ED8':'#5B6B84' })):[];
     const statCards=isDraft?[]:[
       { v:svc.bookings, label:'bookings', vFg:'#0F1B2D', vSize:'22px' },
       { v:svc.conv, label:'views → confirmed bookings', vFg:'#0F1B2D', vSize:'22px' },
-      { v:svc.resp||'No data yet', label:'usually responds in', vFg:svc.resp?'#0F1B2D':'#8296B3', vSize:svc.resp?'22px':'14px', noteHas:true, note:svc.respNote },
+      { v:svc.resp||'No data yet', label:'usually responds in', vFg:svc.resp?'#0F1B2D':'#5B6B84', vSize:svc.resp?'22px':'14px', noteHas:true, note:svc.respNote },
       { v:svc.rating?svc.rating.bars[svc.rating.bars.length-1].toFixed(1):'No data yet', label:'rating · last 90 days', vFg:'#0F1B2D', vSize:'22px' } ];
     return {
       isLoading:scenario==='loading', isError:scenario==='error', isNormal:scenario==='normal',

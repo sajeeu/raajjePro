@@ -42,7 +42,7 @@ button,input{font-family:inherit}button:focus,input:focus{outline:none}
           <span style="font-size:12.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">You're fully visible and bookable without one. Verification adds a badge customers see next to your name.</span>
         </div>
       </sc-if>
-      <span style="font-size:11.5px;line-height:1.55;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">Your badge is a safety check, not a subscription. It doesn't depend on Premium, never lapses if a subscription does, never expires, and there's no annual recheck.</span>
+      <span style="font-size:11.5px;line-height:1.55;color:#5B6B84;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">Your badge is a safety check, not a subscription. It doesn't depend on Premium, never lapses if a subscription does, never expires, and there's no annual recheck.</span>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -58,7 +58,7 @@ button,input{font-family:inherit}button:focus,input:focus{outline:none}
             <span style="font-size:11.5px;line-height:1.5;color:#166534;background:#E5F6EC;border:1px solid #A7DDBB;border-radius:12px;padding:9px 12px;text-wrap:pretty">The 5-bookings route is <b>automatic</b> — no submission, no review, no waiting. Silver simply appears when the fifth booking completes with no unresolved dispute.</span>
           </sc-if>
           <div style="border-top:1px solid #EEF3FA;padding-top:9px"><dc-import name="VerificationBadge" tier="{{ rg.tier }}" size="full" hint-size="100%,54px"></dc-import></div>
-          <span style="font-size:10.5px;font-weight:600;color:#8296B3">What customers see, word for word</span>
+          <span style="font-size:10.5px;font-weight:600;color:#5B6B84">What customers see, word for word</span>
         </div>
       </sc-for>
     </div>
@@ -80,7 +80,7 @@ button,input{font-family:inherit}button:focus,input:focus{outline:none}
             </sc-for>
           </div>
           <button onClick="{{ startUpload }}" style="height:50px;border:1.5px dashed #C9D7EA;border-radius:14px;background:#F7FAFE;color:#1D4ED8;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"></path></svg>Upload a photo of the document</button>
-          <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">Documents are seen only by the admin who reviews them and are <b>deleted 90 days after the decision</b>.</span>
+          <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">Documents are seen only by the admin who reviews them and are <b>deleted 90 days after the decision</b>.</span>
         </sc-if>
 
         <sc-if value="{{ stUploading }}" hint-placeholder-val="{{ false }}">
@@ -180,7 +180,7 @@ class Component extends DCLogic {
         bd:current?'#2563EB':'#E9EFF7',
         stLabel:done?(current?'Your tier':'Achieved'):(isNext?'Next for you':'Later'),
         stBg:done?'#E5F6EC':(isNext?'#E8F0FE':'#EEF3FA'),
-        stFg:done?'#166534':(isNext?'#1D4ED8':'#8296B3'),
+        stFg:done?'#166534':(isNext?'#1D4ED8':'#5B6B84'),
         autoNote:t==='Silver' && !done };
     });
     const docs=sub?sub.docs.map(d=>({ label:d.label, sub:d.sub, sel:s.doc===d.k,
