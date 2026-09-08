@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 </style>
 <link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
@@ -92,7 +92,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       </button>
 
       <div style="display:flex;justify-content:center">
-        <sc-if value="{{ resendWaiting }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">Resend code in {{ resendClock }}</span></sc-if>
+        <sc-if value="{{ resendWaiting }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">Resend code in {{ resendClock }}</span></sc-if>
         <sc-if value="{{ resendReady }}"><button onClick="{{ resend }}" style="border:none;background:none;color:#2563EB;font-size:13.5px;font-weight:800;cursor:pointer;padding:6px 10px" style-hover="color:#1D4ED8">Resend code</button></sc-if>
       </div>
     </div>
@@ -103,13 +103,13 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <div style="width:64px;height:64px;border-radius:50%;background:#E5F6EC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></div>
       <div style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Email verified</div>
       <div style="font-size:13.5px;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">You're all set — booking, enquiries and messaging are now open to you.</div>
-      <a href="./Home.dc.html" style="margin-top:4px;height:48px;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;padding:0 26px;display:inline-flex;align-items:center;text-decoration:none;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)">Continue</a>
+      <a href="./Home.dc.html" style="margin-top:4px;height:48px;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;padding:0 26px;display:inline-flex;align-items:center;text-decoration:none;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)">Continue</a>
     </div>
   </sc-if>
 
   <sc-if value="{{ footerOn }}" hint-placeholder-val="{{ true }}">
     <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:2px;text-align:center">
-      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#8296B3;max-width:300px;text-wrap:pretty">Booking, enquiring and messaging need a verified email. Browsing doesn't — you can finish this any time.</div>
+      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#5B6B84;max-width:300px;text-wrap:pretty">Booking, enquiring and messaging need a verified email. Browsing doesn't — you can finish this any time.</div>
       <a href="./Home.dc.html" style="font-size:13px;font-weight:700;color:#5B6B84;text-decoration:none" style-hover="color:#41526B">I'll do this later</a>
     </div>
   </sc-if>
@@ -178,7 +178,7 @@ class Component extends DCLogic {
       resentOn: m === 'resent',
       checking: s.checking,
       verifyOff: !full || s.checking || m === 'invalidated',
-      verifyBg: (!full || m === 'invalidated') ? '#A9C6F5' : 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)',
+      verifyBg: (!full || m === 'invalidated') ? '#A9C6F5' : 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)',
       verifyShadow: (!full || m === 'invalidated') ? 'none' : '0 8px 18px rgba(37,99,235,.28)',
       verifyCur: (!full || m === 'invalidated') ? 'default' : 'pointer',
       verifyLabel: s.checking ? 'Checking…' : 'Verify Email',

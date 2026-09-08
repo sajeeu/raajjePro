@@ -66,7 +66,7 @@ button:focus{outline:none}
 <div data-screen-label="My bookings" style="animation:fadeUp var(--m-page) var(--e-out) both;flex:1;display:flex;flex-direction:column;min-height:0">
   <div style="flex:none;padding:18px 20px 12px;display:flex;align-items:baseline;gap:10px">
     <span style="font-size:24px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">Your bookings</span>
-    <span style="font-size:12px;font-weight:700;color:#8296B3;font-variant-numeric:tabular-nums">{{ countLabel }}</span>
+    <span style="font-size:12px;font-weight:700;color:#5B6B84;font-variant-numeric:tabular-nums">{{ countLabel }}</span>
   </div>
   <div class="hscroll" style="flex:none;padding:0 20px 14px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none">
     <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
@@ -111,7 +111,7 @@ button:focus{outline:none}
           <span style="font-size:12px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ b.when }}</span>
           <span style="flex:1"></span>
           <span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ b.amount }}</span>
-          <span style="font-size:11px;font-weight:700;color:#8296B3">{{ b.label }}</span>
+          <span style="font-size:11px;font-weight:700;color:#5B6B84">{{ b.label }}</span>
         </span>
       </a>
     </sc-for>

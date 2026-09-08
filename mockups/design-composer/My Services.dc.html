@@ -41,7 +41,7 @@ button{font-family:inherit}button:focus{outline:none}
           <span style="font-size:13px;font-weight:700;color:#41526B">Ibrahim Rasheed</span>
           <dc-import name="VerificationBadge" tier="{{ tierVal }}" size="chip" hint-size="64px,20px"></dc-import>
         </div>
-        <span style="font-size:11.5px;line-height:1.45;color:#8296B3;text-wrap:pretty">Your badge reflects verification checks, not payment — it stays with you even if a subscription lapses.</span>
+        <span style="font-size:11.5px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Your badge reflects verification checks, not payment — it stays with you even if a subscription lapses.</span>
       </div>
       <a href="Create Service.dc.html" style="flex:none;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:999px;background:#2563EB;color:#fff;font-size:13.5px;font-weight:700;box-shadow:0 4px 12px rgba(37,99,235,.28)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New Service</a>
     </div>
@@ -152,7 +152,7 @@ button{font-family:inherit}button:focus{outline:none}
                 </div>
                 <sc-if value="{{ c.showFoot }}" hint-placeholder-val="{{ true }}">
                   <div style="display:flex;align-items:center;gap:10px;border-top:1px solid #EEF3FA;padding-top:9px;margin-top:1px">
-                    <span style="flex:1;font-size:11.5px;font-weight:600;color:#8296B3">Updated {{ c.updated }}</span>
+                    <span style="flex:1;font-size:11.5px;font-weight:600;color:#5B6B84">Updated {{ c.updated }}</span>
                     <sc-if value="{{ c.showToggle }}" hint-placeholder-val="{{ true }}">
                       <span style="display:inline-flex;align-items:center;gap:7px"><span style="font-size:11.5px;font-weight:700;color:{{ c.liveFg }}">{{ c.liveLabel }}</span><button onClick="{{ c.toggle }}" aria-label="Toggle live" style="width:44px;height:26px;border-radius:999px;border:none;background:{{ c.togBg }};position:relative;cursor:pointer;transition:background var(--m-fast)"><span style="position:absolute;top:3px;left:{{ c.knobL }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,27,45,.25);transition:left var(--m-base)"></span></button></span>
                     </sc-if>
@@ -278,7 +278,7 @@ class Component extends DCLogic {
       ratingHas: !!x.rating, rating: x.rating || '',
       price: x.price, unit: x.unit, views: String(x.views), bookings: String(x.bookings), updated: x.updated,
       showFoot: !isHidden, showToggle: !isDraft && !isHidden, showFinish: isDraft, showHidden: isHidden,
-      liveLabel: live ? 'Live' : 'Off', liveFg: live ? '#1D4ED8' : '#8296B3',
+      liveLabel: live ? 'Live' : 'Off', liveFg: live ? '#1D4ED8' : '#5B6B84',
       togBg: live ? '#2563EB' : '#DCE4EF', knobL: live ? '21px' : '3px',
       toggle: () => {
         this.setState(st => ({ liveOv: { ...st.liveOv, [x.id]: !live } }));
@@ -351,8 +351,8 @@ class Component extends DCLogic {
       fAll: () => this.setState({ filter: 'All' }), fPub: () => this.setState({ filter: 'Published' }), fDraft: () => this.setState({ filter: 'Draft' }),
       isList: s.view === 'list' && !emptyFilter, isGrid: s.view === 'grid' && !emptyFilter,
       toList: () => this.setState({ view: 'list' }), toGrid: () => this.setState({ view: 'grid' }),
-      listBtnBg: s.view === 'list' ? '#E8F0FE' : 'transparent', listBtnFg: s.view === 'list' ? '#1D4ED8' : '#8296B3',
-      gridBtnBg: s.view === 'grid' ? '#E8F0FE' : 'transparent', gridBtnFg: s.view === 'grid' ? '#1D4ED8' : '#8296B3',
+      listBtnBg: s.view === 'list' ? '#E8F0FE' : 'transparent', listBtnFg: s.view === 'list' ? '#1D4ED8' : '#5B6B84',
+      gridBtnBg: s.view === 'grid' ? '#E8F0FE' : 'transparent', gridBtnFg: s.view === 'grid' ? '#1D4ED8' : '#5B6B84',
       cards,
       emptyFilter, notEmptyFilter: !emptyFilter,
       efTitle: efPub ? 'Nothing published yet' : 'No drafts',

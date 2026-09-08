@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button{font-family:inherit}
 input:focus,textarea:focus,button:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 </style>
 <link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
@@ -285,24 +285,24 @@ input:focus,textarea:focus,button:focus{outline:none}
             <div style="padding:26px 8px;text-align:center;font-size:13.5px;font-weight:600;color:#5B6B84">{{ islandNoMatch }}</div>
           </sc-if>
         </div>
-        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
+        <div style="font-size:11.5px;font-weight:600;color:#5B6B84;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
       </div>
     </sc-if>
   </div>
 
   <div style="flex:none;padding:14px 20px 22px;background:#F2F6FB;border-top:1px solid rgba(15,27,45,.05);display:flex;flex-direction:column;gap:10px">
     <sc-if value="{{ s1 }}" hint-placeholder-val="{{ true }}">
-      <button onClick="{{ continue1 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);transition:transform var(--m-fast)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Continue</button>
+      <button onClick="{{ continue1 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);transition:transform var(--m-fast)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Continue</button>
       <button onClick="{{ notNow }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Not right now</button>
     </sc-if>
     <sc-if value="{{ s2 }}">
-      <button onClick="{{ continue2 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform var(--m-fast)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+      <button onClick="{{ continue2 }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform var(--m-fast)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
         <sc-if value="{{ loading }}"><span style="width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span><span>Setting up your profile…</span></sc-if>
         <sc-if value="{{ notLoading }}" hint-placeholder-val="{{ true }}"><span>Continue</span></sc-if>
       </button>
     </sc-if>
     <sc-if value="{{ s3 }}">
-      <sc-if value="{{ hasSel }}"><div style="text-align:center;font-size:13px;font-weight:700;color:#16A34A;animation:fadeUp var(--m-page) var(--e-out) both">{{ selLabel }}</div></sc-if>
+      <sc-if value="{{ hasSel }}"><div style="text-align:center;font-size:13px;font-weight:700;color:#166534;animation:fadeUp var(--m-page) var(--e-out) both">{{ selLabel }}</div></sc-if>
       <button onClick="{{ create3 }}" disabled="{{ noSel }}" style="width:100%;height:54px;border:none;border-radius:16px;background:{{ cta3Bg }};color:{{ cta3Fg }};font-size:16px;font-weight:700;cursor:{{ cta3Cur }};box-shadow:{{ cta3Sh }};transition:transform var(--m-fast),background var(--m-fast)" style-active="transform:scale(.98)">Create Your First Service</button>
     </sc-if>
   </div>
@@ -310,10 +310,10 @@ input:focus,textarea:focus,button:focus{outline:none}
   <sc-if value="{{ done }}">
     <div style="position:absolute;inset:0;z-index:40;background:rgba(10,20,40,.5);animation:{{ dimAnim }};display:flex;flex-direction:column;justify-content:flex-end" onClick="{{ closeDone }}">
       <div onClick="{{ stopProp }}" style="background:#fff;border-radius:28px 28px 0 0;padding:30px 24px 26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;animation:{{ sheetAnim }}">
-        <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.35);margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
+        <div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.35);margin-bottom:6px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 8"></path></svg></div>
         <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">{{ doneTitle }}</div>
         <div style="font-size:14.5px;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ doneSub }}</div>
-        <button onClick="{{ startCreate }}" style="width:100%;height:54px;margin-top:12px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Start My First Service</button>
+        <button onClick="{{ startCreate }}" style="width:100%;height:54px;margin-top:12px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Start My First Service</button>
         <button onClick="{{ closeDone }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Back to service area</button>
       </div>
     </div>
@@ -396,7 +396,7 @@ class Component extends DCLogic {
   renderVals() {
     const S = this.state, P = this.props;
     const blue = '#2563EB', line = '#E3EAF3', errC = '#DC2626';
-    const grad = 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)';
+    const grad = 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)';
     const requirePhone = P.requirePhone ?? true;
     const pool = S.atoll === 'All' ? this.ISLANDS : this.ISLANDS.filter(i => i.a === S.atoll);
     const filtered = this.searchIslands(S.query, pool);
@@ -453,7 +453,7 @@ class Component extends DCLogic {
       acctBd: S.errors.acct ? errC : line, acctErr: S.errors.acct || '', hasAcctErr: !!S.errors.acct, noAcctErr: !S.errors.acct,
       bank: S.bank, setBank: e => this.setField('bank', e.target.value),
       banks: this.BANKS.map(v => ({ v })),
-      bankBd: S.errors.bank ? errC : line, bankFg: S.bank ? '#0F1B2D' : '#9AA9C0',
+      bankBd: S.errors.bank ? errC : line, bankFg: S.bank ? '#0F1B2D' : '#627187',
       bankErr: S.errors.bank || '', hasBankErr: !!S.errors.bank,
       accepting: S.accepting,
       toggleAccepting: () => this.setState({ accepting: !S.accepting }),
