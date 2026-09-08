@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 </style>
 <link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
@@ -83,7 +83,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 
     <sc-if value="{{ showSocial }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;align-items:center;gap:12px"><span style="flex:1;height:1px;background:#E1EAF5"></span><span style="font-size:12.5px;font-weight:600;color:#8296B3;white-space:nowrap">or continue with</span><span style="flex:1;height:1px;background:#E1EAF5"></span></div>
+        <div style="display:flex;align-items:center;gap:12px"><span style="flex:1;height:1px;background:#E1EAF5"></span><span style="font-size:12.5px;font-weight:600;color:#5B6B84;white-space:nowrap">or continue with</span><span style="flex:1;height:1px;background:#E1EAF5"></span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <sc-for list="{{ socials }}" as="s" hint-placeholder-count="4">
             <button onClick="{{ s.tap }}" title="Icon placeholder — replace with the official uploaded asset" style="height:50px;border:1px solid #E3EAF3;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;box-shadow:0 1px 3px rgba(15,27,45,.04)" style-hover="background:#F7FAFD" style-active="transform:scale(.98)">
@@ -98,7 +98,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
     <div style="display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:4px;text-align:center">
       <div style="font-size:13.5px;font-weight:600;color:#5B6B84">Don't have an account? <a href="./Register.dc.html" style="font-weight:800;text-decoration:none">Create Account</a></div>
       <a href="./Home.dc.html" style="font-size:13.5px;font-weight:700;color:#5B6B84;text-decoration:none;display:inline-flex;align-items:center;gap:6px" style-hover="color:#41526B">Continue as Guest <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></a>
-      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#8296B3;max-width:290px;text-wrap:pretty">Browsing, searching and viewing providers need no account. Sign in when you want to save, book or message.</div>
+      <div style="font-size:11.5px;line-height:1.55;font-weight:500;color:#5B6B84;max-width:290px;text-wrap:pretty">Browsing, searching and viewing providers need no account. Sign in when you want to save, book or message.</div>
     </div>
   </div>
 
