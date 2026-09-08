@@ -51,9 +51,22 @@ const schema = z.object({
   SES_CONFIGURATION_SET_NOTIFICATION: z.string().min(1).optional(),
   SES_CONFIGURATION_SET_MARKETING: z.string().min(1).optional(),
   SES_EVENTS_TOPIC_ARN: z.string().min(1).optional(),
+
+  // Phase 3c. `file` writes every push as JSON into backend/.push/, the same
+  // posture EMAIL_TRANSPORT=file takes. `fcm_apns` is the shape the real
+  // vendors will plug into and is refused below until they exist.
+  PUSH_TRANSPORT: z.enum(['file', 'fcm_apns']).default('file'),
 });
 
 export type EmailChannel = 'otp' | 'notification' | 'marketing';
+
+export interface FilePushConfig {
+  transport: 'file';
+  /** Directory the file transport writes into. Gitignored, like .mail/. */
+  directory: string;
+}
+
+export type PushConfig = FilePushConfig;
 
 export interface SesEmailConfig {
   transport: 'ses';
@@ -98,6 +111,7 @@ export interface Config {
     passwordResetExpiryMinutes: number;
   };
   email: SesEmailConfig | FileEmailConfig;
+  push: PushConfig;
 }
 
 export class ConfigError extends Error {
@@ -140,6 +154,19 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   ) {
     issues.push('AUTH_JWT_SECRET: must differ from ADMIN_TOTP_ENCRYPTION_KEY');
   }
+  // There is deliberately NO "must be fcm_apns in production" rule to match
+  // email's. The FCM and APNs transports are not built — no Firebase project
+  // and no Apple developer account exist (docs/decisions/15-phase-3c-push.md)
+  // — so requiring them in production would make production unbootable rather
+  // than safe. What we can do honestly is refuse the value outright, so a
+  // deployment that sets it learns immediately instead of believing pushes are
+  // going out.
+  if (cleaned.PUSH_TRANSPORT === 'fcm_apns') {
+    issues.push(
+      'PUSH_TRANSPORT: "fcm_apns" is not available yet — the FCM and APNs transports arrive with their vendor accounts (docs/deferred-verification.md L11, L12)',
+    );
+  }
+
   if (emailTransport === 'ses') {
     const required: [string, string | undefined][] = [
       ['AWS_REGION', cleaned.AWS_REGION],
@@ -211,5 +238,6 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       passwordResetExpiryMinutes: v.AUTH_PASSWORD_RESET_EXPIRY_MINUTES,
     },
     email,
+    push: { transport: 'file', directory: '.push' },
   };
 }

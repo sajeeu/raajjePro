@@ -10,6 +10,7 @@ import { systemClock } from './core/clock.js';
 import { createPrismaClient } from './db/client.js';
 import { SnsValidatorAdapter } from './modules/email/sns/validator.js';
 import { createEmailTransport } from './modules/email/transports/index.js';
+import { createPushTransport } from './modules/push/transports/index.js';
 
 let config: Config;
 try {
@@ -28,6 +29,7 @@ const app = await buildApp(config, {
   prisma,
   clock: systemClock,
   emailTransport,
+  pushTransport: createPushTransport(config.push),
   snsValidator: new SnsValidatorAdapter(),
 });
 

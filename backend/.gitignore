@@ -3,6 +3,8 @@ dist/
 coverage/
 # File-transport email output (EMAIL_TRANSPORT=file), development/test only.
 .mail/
+# File-transport push output (PUSH_TRANSPORT=file), development/test only.
+.push/
 # Prisma client is generated on install (npm run postinstall); never committed.
 src/generated/
 # Real environment values live only on the machine that uses them.

@@ -9,6 +9,7 @@ export 'package:raajjepro/shared/cards/app_card.dart';
 export 'package:raajjepro/shared/cards/stat_mini_card.dart';
 export 'package:raajjepro/shared/chips/app_chip.dart';
 export 'package:raajjepro/shared/feedback/app_spinner.dart';
+export 'package:raajjepro/shared/feedback/notice_banner.dart';
 export 'package:raajjepro/shared/headers/app_header.dart';
 export 'package:raajjepro/shared/inputs/app_text_field.dart';
 export 'package:raajjepro/shared/motion/pressable.dart';

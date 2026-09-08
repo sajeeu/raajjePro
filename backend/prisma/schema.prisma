@@ -212,8 +212,9 @@ model EmailMessage {
   sentAt            DateTime?          @map("sent_at") @db.Timestamptz(6)
   lastEventAt       DateTime?          @map("last_event_at") @db.Timestamptz(6)
 
-  events EmailEvent[]
-  otps   EmailOtp[]
+  events         EmailEvent[]
+  otps           EmailOtp[]
+  pushDispatches PushDispatch[]
 
   @@index([toAddress, createdAt])
   @@index([recipientUserId, createdAt])
@@ -295,9 +296,18 @@ model User {
   createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  /// Phase 3c. The OS-level answer, reported by the app. Account-level rather
+  /// than per-device: the fallback question is "can a push reach this person
+  /// at all", and one device saying no while another says yes is answered by
+  /// the live device registrations, not by this field.
+  pushPermission          PushPermission @default(unknown) @map("push_permission")
+  pushPermissionUpdatedAt DateTime?      @map("push_permission_updated_at") @db.Timestamptz(6)
+
   providerProfile ProviderProfile?
   sessions        UserSession[]
   otps            EmailOtp[]
+  deviceTokens    DeviceToken[]
+  pushDispatches  PushDispatch[]
 
   @@index([phoneE164])
   @@index([status, deletionDeadlineAt])
@@ -419,4 +429,175 @@ model EmailOtp {
   @@index([userId, purpose, createdAt])
   @@index([targetEmail, createdAt])
   @@map("email_otp")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3c — push notification infrastructure
+// ---------------------------------------------------------------------------
+
+enum PushPlatform {
+  android
+  ios
+
+  @@map("push_platform")
+}
+
+/// What the OS last told the app. `unknown` is the honest default and is not
+/// the same as `denied`: a user who has never been asked has not refused.
+/// Only `denied` triggers the immediate-email rung (plan §Phase 3c).
+enum PushPermission {
+  unknown
+  granted
+  denied
+
+  @@map("push_permission")
+}
+
+enum DeviceTokenRevokedReason {
+  signed_out
+  /// The vendor reported the token no longer exists — app uninstalled or data cleared.
+  unregistered
+  /// The same raw token turned up registered to a different account (device handover).
+  claimed_by_another_account
+  account_anonymised
+
+  @@map("device_token_revoked_reason")
+}
+
+/// One row per (user, app installation). A token *refresh* updates `token` in
+/// place — the install is the identity, the token is a rotating credential, so
+/// rotation is an update and not a new row. Revocation is soft, like everything
+/// else. A partial unique index on `token WHERE revoked_at IS NULL` is added by
+/// hand in the migration: one live registration per raw token, across all users.
+model DeviceToken {
+  id             String                    @id @default(uuid()) @db.Uuid
+  userId         String                    @map("user_id") @db.Uuid
+  user           User                      @relation(fields: [userId], references: [id])
+  installationId String                    @map("installation_id")
+  platform       PushPlatform
+  token          String
+  deviceName     String                    @map("device_name")
+  createdAt      DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastSeenAt     DateTime                  @map("last_seen_at") @db.Timestamptz(6)
+  revokedAt      DateTime?                 @map("revoked_at") @db.Timestamptz(6)
+  revokedReason  DeviceTokenRevokedReason? @map("revoked_reason")
+
+  deliveries PushDelivery[]
+
+  @@unique([userId, installationId])
+  @@index([userId, revokedAt])
+  @@map("device_token")
+}
+
+/// The notification kinds this phase delivers. §Phase 3c specifies the
+/// load-bearing provider-accept prompt and the emergency prompt; Phase 19 adds
+/// its own kinds additively, and must not repurpose these.
+enum NotificationKind {
+  booking_accept_prompt
+  emergency_dispatch
+
+  @@map("notification_kind")
+}
+
+/// `emergency` is not a severity label — it selects the no-ladder path. An
+/// emergency window is 30 minutes, which leaves no room to wait for a push to
+/// go unconfirmed, so push and email go out together (plan §Phase 3c).
+enum NotificationUrgency {
+  standard
+  emergency
+
+  @@map("notification_urgency")
+}
+
+/// Why the email went. Every rung has its own value so the 5% alert can tell a
+/// push-integration regression from users who turned notifications off.
+enum EmailFallbackReason {
+  /// The OS permission is known denied — email immediately, do not wait.
+  permission_denied
+  /// The user has no live device registration at all; push cannot arrive.
+  no_registered_device
+  /// Emergency: push and email in parallel, always.
+  emergency_parallel
+  /// Push went out, nothing confirmed it within the fallback window.
+  unconfirmed_after_window
+
+  @@map("email_fallback_reason")
+}
+
+/// One logical notification to one user — the unit the fallback chain reasons
+/// about, and the unit Phase 10b looks up when asked "did this provider
+/// actually get the emergency alert?". Never deleted.
+model PushDispatch {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  user      User                @relation(fields: [userId], references: [id])
+  kind      NotificationKind
+  urgency   NotificationUrgency
+  /// The booking (or other subject) this is about. Deliberately not a foreign
+  /// key: Phase 17 owns bookings and does not exist yet.
+  subjectId String?             @map("subject_id") @db.Uuid
+
+  /// What the copy is built from — booking type, customer first name, island —
+  /// held because the 30-minute rung sends its email from a job, long after
+  /// the caller has gone. Storing the rendered mail instead would freeze copy
+  /// at dispatch time and put the same text in two places. No email address,
+  /// no phone number and no amount is ever in here (root CLAUDE.md 1d); the
+  /// recipient is reached through `userId`.
+  context Json
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  /// Set by the device that received the push. A vendor accepting a message is
+  /// not delivery — only the app saying "it arrived" is.
+  confirmedAt DateTime? @map("confirmed_at") @db.Timestamptz(6)
+
+  /// When the sweep job should send the fallback email. Null when the email
+  /// already went out at dispatch time, or when it has already been sent.
+  fallbackDueAt DateTime? @map("fallback_due_at") @db.Timestamptz(6)
+
+  emailSentAt    DateTime?            @map("email_sent_at") @db.Timestamptz(6)
+  emailReason    EmailFallbackReason? @map("email_reason")
+  emailMessageId String?              @map("email_message_id") @db.Uuid
+  emailMessage   EmailMessage?        @relation(fields: [emailMessageId], references: [id])
+
+  deliveries PushDelivery[]
+
+  @@index([fallbackDueAt])
+  @@index([userId, createdAt])
+  @@index([kind, createdAt])
+  @@map("push_dispatch")
+}
+
+enum PushDeliveryStatus {
+  /// The vendor accepted the message.
+  sent
+  /// The vendor refused it.
+  failed
+  /// Never attempted — the user has no live registration on that platform.
+  skipped
+  /// The app on that device reported the push arrived.
+  confirmed
+
+  @@map("push_delivery_status")
+}
+
+/// One row per device a dispatch was fanned out to. Multi-device means N of
+/// these per dispatch; a single confirmation is enough to satisfy the dispatch.
+model PushDelivery {
+  id                String             @id @default(uuid()) @db.Uuid
+  dispatchId        String             @map("dispatch_id") @db.Uuid
+  dispatch          PushDispatch       @relation(fields: [dispatchId], references: [id])
+  deviceTokenId     String             @map("device_token_id") @db.Uuid
+  deviceToken       DeviceToken        @relation(fields: [deviceTokenId], references: [id])
+  status            PushDeliveryStatus
+  /// The vendor's own id, when it gave one. Null for the file transport.
+  providerMessageId String?            @map("provider_message_id")
+  /// The error class name only — a vendor message can echo the token.
+  failureReason     String?            @map("failure_reason")
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  confirmedAt       DateTime?          @map("confirmed_at") @db.Timestamptz(6)
+
+  @@index([dispatchId])
+  @@map("push_delivery")
 }

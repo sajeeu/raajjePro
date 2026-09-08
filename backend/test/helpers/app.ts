@@ -10,11 +10,48 @@ import type { Clock } from '../../src/core/clock.js';
 import { createPrismaClient } from '../../src/db/client.js';
 import type { SnsMessage, SnsMessageValidator } from '../../src/modules/email/sns/validator.js';
 import { FileEmailTransport } from '../../src/modules/email/transports/file.js';
+import {
+  UnregisteredTokenError,
+  type PushMessage,
+  type PushTarget,
+  type PushTransport,
+} from '../../src/modules/push/types.js';
 
 /** Accepts anything shaped like an SNS message; the signature itself is sns-validator's job — used wherever a test needs the webhook route without real SNS. */
 export class TrustingValidator implements SnsMessageValidator {
   validate(raw: string): Promise<SnsMessage> {
     return Promise.resolve(JSON.parse(raw) as SnsMessage);
+  }
+}
+
+/**
+ * The push vendor stand-in. No Firebase project and no Apple developer account
+ * exist and neither is procured by Phase 3c
+ * (docs/decisions/15-phase-3c-push.md), so what the tests assert is what the
+ * sender was ASKED to do: which tokens it addressed, with what copy, in what
+ * order relative to the email.
+ *
+ * `failFor` makes a token fail; `unregisterFor` makes the vendor report it
+ * dead, which is the only way to exercise token cleanup without an uninstall.
+ */
+export class RecordingPushTransport implements PushTransport {
+  readonly sent: { message: PushMessage; target: PushTarget }[] = [];
+  readonly failFor = new Set<string>();
+  readonly unregisterFor = new Set<string>();
+
+  deliver(message: PushMessage, target: PushTarget): Promise<{ providerMessageId: string }> {
+    if (this.unregisterFor.has(target.token)) {
+      return Promise.reject(new UnregisteredTokenError());
+    }
+    if (this.failFor.has(target.token)) {
+      return Promise.reject(new Error('vendor said no'));
+    }
+    this.sent.push({ message, target });
+    return Promise.resolve({ providerMessageId: `test-${String(this.sent.length)}` });
+  }
+
+  tokens(): string[] {
+    return this.sent.map((s) => s.target.token);
   }
 }
 
@@ -108,6 +145,7 @@ export async function buildTestApp(options: TestAppOptions = {}) {
     clock: options.clock ?? (() => new Date()),
     emailTransport:
       options.deps?.emailTransport ?? new FileEmailTransport(join(tmpdir(), 'raajjepro-test-mail')),
+    pushTransport: options.deps?.pushTransport ?? new RecordingPushTransport(),
     snsValidator: options.deps?.snsValidator ?? new TrustingValidator(),
     ...options.deps,
   });

@@ -10,6 +10,7 @@ import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/device_name.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/crash/crash_reporter.dart';
+import 'package:raajjepro/core/push/push_controller.dart';
 
 final tokenStoreProvider = Provider<TokenStore>((_) => SecureTokenStore());
 final httpClientProvider = Provider<http.Client>((ref) {
@@ -72,6 +73,7 @@ class AuthController extends Notifier<AuthState> {
       final user = await _api.me();
       state = AuthSignedIn(user);
       unawaited(ref.read(crashReporterProvider).setUserId(user.id));
+      unawaited(_startPush());
     } on ApiException catch (e) {
       if (e.code == 'SESSION_EXPIRED' || e.code == 'UNAUTHENTICATED') {
         await sessionExpired();
@@ -102,6 +104,7 @@ class AuthController extends Notifier<AuthState> {
     await _store.write(result.tokens);
     state = AuthSignedIn(result.user);
     unawaited(ref.read(crashReporterProvider).setUserId(result.user.id));
+    unawaited(_startPush());
     return result.verification;
   }
 
@@ -120,6 +123,10 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Before the token is cleared: unregistering the device is an
+    // authenticated call, and a device left registered keeps receiving the
+    // previous account's booking notifications.
+    await _stopPush();
     try {
       await _api.logout();
     } on Object {
@@ -147,6 +154,25 @@ class AuthController extends Notifier<AuthState> {
       final user = s.user.copyWith(emailVerified: true);
       state = AuthSignedIn(user);
       unawaited(ref.read(crashReporterProvider).setUserId(user.id));
+    }
+  }
+
+  /// Push registration is best-effort and must never fail a sign-in — the
+  /// server's email fallback is what makes a notification reliable, and a
+  /// user with no registration gets email immediately (§Phase 3c).
+  Future<void> _startPush() async {
+    try {
+      await ref.read(pushControllerProvider.notifier).start();
+    } on Object {
+      // Deliberately swallowed. See above.
+    }
+  }
+
+  Future<void> _stopPush() async {
+    try {
+      await ref.read(pushControllerProvider.notifier).stop();
+    } on Object {
+      // Deliberately swallowed. See above.
     }
   }
 

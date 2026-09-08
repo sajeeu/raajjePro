@@ -24,6 +24,7 @@ describe('loadConfig', () => {
     expect(config.rateLimit.anonPerMinute).toBe(60);
     expect(config.rateLimit.authPerMinute).toBe(300);
     expect(config.email.transport).toBe('file');
+    expect(config.push.transport).toBe('file');
     expect(config.admin.totpEncryptionKey).toEqual(Buffer.alloc(32, 7));
     expect(config.auth.accessTokenMinutes).toBe(15);
     expect(config.auth.refreshTokenDays).toBe(30);
@@ -84,6 +85,34 @@ describe('loadConfig', () => {
         SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:1:t',
       }),
     ).toThrow(/ADMIN_ORIGIN/);
+  });
+
+  it('refuses PUSH_TRANSPORT=fcm_apns, because neither transport is built', () => {
+    // No Firebase project and no Apple developer account exist and Phase 3c
+    // procures neither (docs/decisions/15-phase-3c-push.md). Refusing the
+    // value outright is honest; the alternative is a deployment that believes
+    // pushes are going out when nothing is sending them.
+    expect(() => loadConfig({ ...minimal, PUSH_TRANSPORT: 'fcm_apns' })).toThrow(
+      /PUSH_TRANSPORT: "fcm_apns" is not available yet/,
+    );
+  });
+
+  it('does NOT force a push transport in production, unlike email', () => {
+    // Deliberate asymmetry. Requiring a transport that is not built would make
+    // production unbootable rather than safe; the email fallback is what
+    // carries a notification when push does not (§Phase 3c).
+    const production = {
+      ...minimal,
+      NODE_ENV: 'production',
+      ADMIN_ORIGIN: 'https://admin.raajjepro.mv',
+      EMAIL_TRANSPORT: 'ses',
+      AWS_REGION: 'ap-south-1',
+      SES_CONFIGURATION_SET_OTP: 'otp',
+      SES_CONFIGURATION_SET_NOTIFICATION: 'n',
+      SES_CONFIGURATION_SET_MARKETING: 'm',
+      SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:1:t',
+    };
+    expect(loadConfig(production).push.transport).toBe('file');
   });
 
   it('requires the SES variables only when the transport is ses', () => {

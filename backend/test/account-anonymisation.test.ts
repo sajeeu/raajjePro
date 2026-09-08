@@ -11,6 +11,7 @@ import {
   controllableClock,
   databaseUrl,
   freshIp,
+  RecordingPushTransport,
   testConfig,
   TrustingValidator,
 } from './helpers/app.js';
@@ -206,6 +207,7 @@ describe.skipIf(databaseUrl === undefined)(
         prisma: prisma2,
         clock: time.clock,
         emailTransport: mail,
+        pushTransport: new RecordingPushTransport(),
         snsValidator: new TrustingValidator(),
         logStream: stream,
       });

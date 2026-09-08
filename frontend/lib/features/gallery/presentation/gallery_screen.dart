@@ -1135,6 +1135,21 @@ class _StatesSection extends StatelessWidget {
           'Skeleton — generic rows',
           child: SkeletonLoader.rows(count: 2),
         ),
+        const _Specimen(
+          'Notice — warning, no action',
+          child: NoticeBanner(
+            message: 'Stay reachable — if the customer picks you, the job starts right away.',
+          ),
+        ),
+        _Specimen(
+          'Notice — with an action',
+          child: NoticeBanner(
+            message: 'You may miss booking requests — enable notifications.',
+            icon: Icons.notifications_off_outlined,
+            actionLabel: 'Open settings',
+            onAction: () {},
+          ),
+        ),
       ],
     );
   }

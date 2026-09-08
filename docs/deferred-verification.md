@@ -44,6 +44,25 @@ to work through is `docs/ops/ses-production-access.md`.
 | L9 | A Flutter exception reaching Sentry. The Phase 3 `CrashReporter` interface and its no-op-without-`SENTRY_DSN` implementation are built and tested (`frontend/lib/core/crash/`), matching Phase 2's backend posture, but nothing has run against a real Sentry project — this build has no real DSN. | A forced test exception in a build with a real DSN appears in the Sentry project within minutes. |
 | L10 | The password-reset mail reaching a real inbox with its six-digit code readable, and its subject rendering as intended. Phase 3b verified the whole request → verify → confirm → sign-in cycle against `EMAIL_TRANSPORT=file`, reading the code out of the written message. | After L1, request a reset for an address you control; the code from that inbox sets a new password. |
 
+## Open — closed by a push vendor
+
+Separate from the AWS rows above because they close on different accounts, at
+different moments, and neither is AWS. §Phase 3c's first Done-when clause — "a
+test push arrives on a real device within seconds" — is recorded as met
+**against the fake**: the interface, registration, refresh, multi-device
+fan-out, token cleanup, the OS-denied state and every rung of the fallback
+chain are all built and tested, asserting what the sender was asked to do. A
+real device is the one thing a fake cannot prove.
+
+Deferred by the owner on 2026-09-08, before the phase started;
+`docs/decisions/15-phase-3c-push.md` explains it. `PUSH_TRANSPORT=fcm_apns` is
+refused at config load until these close.
+
+| # | What is unverified | Closed by |
+|---|---|---|
+| L11 | **A real push arriving on a real Android device via FCM.** Phase 3c built `PushSender`, the transport boundary, device registration/refresh/multi-device, the OS-permission-denied state and every rung of the fallback chain against a fake (`RecordingPushTransport`), asserting what the sender was *asked* to do. No Firebase project exists and Phase 3c deliberately procured none (`docs/decisions/15-phase-3c-push.md`). | Create a Firebase project, build the FCM transport behind the existing `PushTransport` interface, register a real device, and see a test push arrive on it within seconds — then its ack land at `POST /v1/push/dispatches/:id/ack` and the 30-minute fallback email NOT go out. |
+| L12 | **A real push arriving on a real iOS device via APNs.** Same build, same fake; a separate row because an Apple developer account carries a fee and a lead time a Firebase project does not, so this will close later than L11. | An APNs key on a paid Apple developer account, the APNs transport behind the same interface, and a test push arriving on a real iPhone within seconds, with the same ack assertion as L11. |
+
 ## Open — closed by a later phase
 
 | # | What is unverified | Closed by |
