@@ -31,8 +31,11 @@ const app = await buildApp(config, {
   snsValidator: new SnsValidatorAdapter(),
 });
 
+app.jobs.start();
+
 const shutdown = async (signal: string) => {
   app.log.info({ signal }, 'shutting down');
+  app.jobs.stop();
   await app.close();
   await prisma.$disconnect();
   process.exit(0);

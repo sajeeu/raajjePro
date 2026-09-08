@@ -7,6 +7,7 @@ const minimal = {
   DATABASE_URL: 'postgresql://u:p@localhost:5435/db',
   ADMIN_TOTP_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
   EMAIL_FROM_ADDRESS: 'no-reply@example.test',
+  AUTH_JWT_SECRET: Buffer.alloc(32, 9).toString('base64'),
 };
 
 describe('loadConfig', () => {
@@ -24,6 +25,10 @@ describe('loadConfig', () => {
     expect(config.rateLimit.authPerMinute).toBe(300);
     expect(config.email.transport).toBe('file');
     expect(config.admin.totpEncryptionKey).toEqual(Buffer.alloc(32, 7));
+    expect(config.auth.accessTokenMinutes).toBe(15);
+    expect(config.auth.refreshTokenDays).toBe(30);
+    expect(config.auth.otpExpiryMinutes).toBe(10);
+    expect(config.auth.jwtSecret).toEqual(Buffer.alloc(32, 9));
   });
 
   it('names every missing or malformed variable in one error', () => {
@@ -39,12 +44,30 @@ describe('loadConfig', () => {
     expect(issues).toContain('ADMIN_TOTP_ENCRYPTION_KEY');
     expect(issues).toContain('EMAIL_FROM_ADDRESS');
     expect(issues).toContain('PORT');
+    expect(issues).toContain('AUTH_JWT_SECRET');
   });
 
   it('rejects an encryption key that is not 32 bytes', () => {
     expect(() =>
       loadConfig({ ...minimal, ADMIN_TOTP_ENCRYPTION_KEY: Buffer.alloc(16).toString('base64') }),
     ).toThrow(/ADMIN_TOTP_ENCRYPTION_KEY/);
+  });
+
+  it('requires AUTH_JWT_SECRET and rejects one that is not 32 bytes', () => {
+    const withoutSecret = Object.fromEntries(
+      Object.entries(minimal).filter(([k]) => k !== 'AUTH_JWT_SECRET'),
+    );
+    expect(() => loadConfig(withoutSecret)).toThrow(/AUTH_JWT_SECRET/);
+    expect(() =>
+      loadConfig({ ...minimal, AUTH_JWT_SECRET: Buffer.alloc(16).toString('base64') }),
+    ).toThrow(/AUTH_JWT_SECRET/);
+  });
+
+  it('refuses a JWT secret equal to the TOTP encryption key', () => {
+    const same = Buffer.alloc(32, 7).toString('base64');
+    expect(() =>
+      loadConfig({ ...minimal, ADMIN_TOTP_ENCRYPTION_KEY: same, AUTH_JWT_SECRET: same }),
+    ).toThrow(/AUTH_JWT_SECRET: must differ/);
   });
 
   it('refuses the file transport and a plain-http admin origin in production', () => {

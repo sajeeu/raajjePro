@@ -4,6 +4,7 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 
 - Feature-based structure: `lib/features/<feature>/` with presentation, controller (Riverpod), and data layers. Shared widgets live in `lib/shared/`, cross-cutting concerns in `lib/core/`.
 - Riverpod for all state. No `setState` for anything that outlives a single widget's local interaction.
+- An `AsyncNotifierProvider` that renders its own error state must pass `retry: null` (or the shared no-retry function) — Riverpod 3's default retries a failed `build()` silently, with exponential backoff, for up to ~30s before the error UI ever shows.
 - EVERY screen implements loading, empty, error and populated states. This is part of the screen's own definition of done, not a later QA pass. An empty state names what the user should do next; it never merely reports that nothing is there.
 - Network failures degrade gracefully. Where a flow is marked offline-resilient — the service wizard, the provider accept prompt, chat sends — queue locally on failure, show a pending indicator, and replay on reconnect. Never silently discard user input.
 - Optimistic updates roll back visibly on failure.

@@ -38,6 +38,11 @@ const schema = z.object({
   RATE_LIMIT_ANON_PER_MINUTE: int(60),
   RATE_LIMIT_AUTH_PER_MINUTE: int(300),
 
+  AUTH_JWT_SECRET: base32Key,
+  AUTH_ACCESS_TOKEN_MINUTES: int(15),
+  AUTH_REFRESH_TOKEN_DAYS: int(30),
+  AUTH_OTP_EXPIRY_MINUTES: int(10),
+
   EMAIL_TRANSPORT: z.enum(['file', 'ses']).default('file'),
   EMAIL_FROM_ADDRESS: z.string().min(3),
   AWS_REGION: z.string().min(1).optional(),
@@ -82,6 +87,13 @@ export interface Config {
     cookieSecure: boolean;
   };
   rateLimit: { anonPerMinute: number; authPerMinute: number };
+  auth: {
+    /** HS256 key for user access tokens. 32 bytes; must differ from the TOTP key. */
+    jwtSecret: Buffer;
+    accessTokenMinutes: number;
+    refreshTokenDays: number;
+    otpExpiryMinutes: number;
+  };
   email: SesEmailConfig | FileEmailConfig;
 }
 
@@ -118,6 +130,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   }
   if (production && !adminOrigin.startsWith('https://')) {
     issues.push('ADMIN_ORIGIN: must be an https:// origin in production');
+  }
+  if (
+    cleaned.AUTH_JWT_SECRET !== undefined &&
+    cleaned.AUTH_JWT_SECRET === cleaned.ADMIN_TOTP_ENCRYPTION_KEY
+  ) {
+    issues.push('AUTH_JWT_SECRET: must differ from ADMIN_TOTP_ENCRYPTION_KEY');
   }
   if (emailTransport === 'ses') {
     const required: [string, string | undefined][] = [
@@ -181,6 +199,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     rateLimit: {
       anonPerMinute: v.RATE_LIMIT_ANON_PER_MINUTE,
       authPerMinute: v.RATE_LIMIT_AUTH_PER_MINUTE,
+    },
+    auth: {
+      jwtSecret: v.AUTH_JWT_SECRET,
+      accessTokenMinutes: v.AUTH_ACCESS_TOKEN_MINUTES,
+      refreshTokenDays: v.AUTH_REFRESH_TOKEN_DAYS,
+      otpExpiryMinutes: v.AUTH_OTP_EXPIRY_MINUTES,
     },
     email,
   };

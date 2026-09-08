@@ -41,6 +41,9 @@ export interface TestAppOptions {
   sessionIdleMinutes?: number;
   sessionAbsoluteHours?: number;
   reauthMinutes?: number;
+  accessTokenMinutes?: number;
+  refreshTokenDays?: number;
+  otpExpiryMinutes?: number;
   deps?: Partial<AppDeps>;
   /** Extra routes registered after the app's own — for testing middleware in isolation. */
   routes?: (app: FastifyInstance) => void;
@@ -53,6 +56,7 @@ export function testConfig(options: TestAppOptions = {}): Config {
     LOG_LEVEL: 'silent',
     ADMIN_TOTP_ENCRYPTION_KEY:
       process.env.ADMIN_TOTP_ENCRYPTION_KEY ?? Buffer.alloc(32, 1).toString('base64'),
+    AUTH_JWT_SECRET: process.env.AUTH_JWT_SECRET ?? Buffer.alloc(32, 2).toString('base64'),
     EMAIL_FROM_ADDRESS: 'test@raajjepro.local',
     EMAIL_TRANSPORT: 'file',
     SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:123456789012:raajjepro-ses-events',
@@ -68,6 +72,12 @@ export function testConfig(options: TestAppOptions = {}): Config {
     rateLimit: {
       anonPerMinute: options.anonPerMinute ?? 1000,
       authPerMinute: options.authPerMinute ?? 1000,
+    },
+    auth: {
+      ...base.auth,
+      accessTokenMinutes: options.accessTokenMinutes ?? base.auth.accessTokenMinutes,
+      refreshTokenDays: options.refreshTokenDays ?? base.auth.refreshTokenDays,
+      otpExpiryMinutes: options.otpExpiryMinutes ?? base.auth.otpExpiryMinutes,
     },
   };
 }

@@ -69,6 +69,9 @@ abstract final class AppSizes {
   static const double avatarMedium = 36;
   static const double avatarSmall = 22;
 
+  /// The icon disc atop a settings/confirmation card (`Account Settings.dc.html`).
+  static const double iconDisc = 46;
+
   static const double dividerStroke = 1;
   static const double inputStroke = 1.5;
   static const double selectedStroke = 2;

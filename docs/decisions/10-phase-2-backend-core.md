@@ -253,14 +253,24 @@ needs to sign in to the panel UI.
   idempotency key is `(userId, operation, clientKey)`; there is no user yet at
   registration. This spec's `anon:<ip>` fallback is a proposal for that gap,
   not a plan-mandated answer — Phase 3 either confirms it or replaces it.
+  **Resolved:** `anon:<ip>` confirmed — `AuthService.register` runs behind
+  the idempotency operation `auth.register`, keyed on the registering IP
+  since there is no user yet to key on (`docs/superpowers/specs/2026-09-06-phase-3-identity-design.md`,
+  decision row 10).
 - **`recipientUserId` on `OutboundEmail`.** The field exists on the interface
   and the `email_message` table now, nullable, unfilled by anything in Phase
   2. Phase 3 is the first caller with an actual user id to put there.
+  **Resolved:** filled by `OtpService.send`, which passes `recipientUserId:
+  input.userId` on every OTP email it sends (`backend/src/modules/auth/otp.ts`).
 - **`requireEmailVerified` as a `BusinessRuleError`.** Root `CLAUDE.md`
   requires email verification, stricter than plain auth, enforced
   server-side on every relevant endpoint. Phase 2 defines the `BusinessRuleError`
   class (422) that this is expected to use, but no `requireEmailVerified` guard
   exists yet — Phase 3 is where it is built and where its error code is fixed.
+  **Resolved:** `requireEmailVerified` (`backend/src/modules/auth/guards.ts`)
+  throws `BusinessRuleError('EMAIL_NOT_VERIFIED', ...)`, answering 422, and
+  is attached at `preValidation` (never `preHandler`) on every route that
+  needs it, so an unauthenticated call is always 401 before body validation.
 
 ## Next step for the owner
 

@@ -9,6 +9,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.4.3
+  http: ^1.6.0
+  flutter_secure_storage: ^11.0.0
+  device_info_plus: ^13.2.0
+  share_plus: ^13.3.0
+  # Pinned to the version share_plus already pulls in transitively
+  # (pubspec.lock) — promoted to direct because DownloadController now calls
+  # getTemporaryDirectory() itself rather than Directory.systemTemp, which on
+  # Android is a directory shared with other apps (final review #5).
+  path_provider: 2.1.6
+  sentry_flutter: 9.29.0
 
 dev_dependencies:
   flutter_test:

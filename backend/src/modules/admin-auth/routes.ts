@@ -70,7 +70,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   );
 
   // Who may call: the enrolled, MFA-verified admin, about themselves.
-  r.get(`${prefix}/me`, { preHandler: requireAdmin }, async (request, reply) => {
+  r.get(`${prefix}/me`, { preValidation: requireAdmin }, async (request, reply) => {
     const p = principalOf(request);
     const admin = await app.deps.prisma.adminUser.findUniqueOrThrow({ where: { id: p.id } });
     return reply.send(
@@ -85,7 +85,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   });
 
   // Who may call: the enrolled, MFA-verified admin, for their own session.
-  r.post(`${prefix}/logout`, { preHandler: requireAdmin }, async (request, reply) => {
+  r.post(`${prefix}/logout`, { preValidation: requireAdmin }, async (request, reply) => {
     const p = principalOf(request);
     await app.adminAuth.logout(p.sessionId, p.id, requestMeta(request));
     void reply.clearCookie(ADMIN_COOKIE, cookieOptions(app.config));
@@ -93,12 +93,16 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   });
 
   // Who may call: a password-verified session that has not enrolled yet.
-  r.post(`${prefix}/mfa/enrol`, { preHandler: requirePasswordSession }, async (request, reply) => {
-    const p = principalOf(request);
-    return reply.send(
-      ok(await app.adminAuth.beginEnrolment(p.id, p.sessionId, requestMeta(request))),
-    );
-  });
+  r.post(
+    `${prefix}/mfa/enrol`,
+    { preValidation: requirePasswordSession },
+    async (request, reply) => {
+      const p = principalOf(request);
+      return reply.send(
+        ok(await app.adminAuth.beginEnrolment(p.id, p.sessionId, requestMeta(request))),
+      );
+    },
+  );
 
   // Who may call: same. Recovery codes come back once, here, and never again.
   // Own tier: 6 per 5 min per principal — a code-guessing surface exactly like
@@ -109,7 +113,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
     `${prefix}/mfa/enrol/confirm`,
     {
       schema: { body: mfaCodeBody },
-      preHandler: requirePasswordSession,
+      preValidation: requirePasswordSession,
       config: { rateLimit: { max: 6, timeWindow: '5 minutes' } },
     },
     async (request, reply) => {
@@ -140,7 +144,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
     `${prefix}/mfa/verify`,
     {
       schema: { body: mfaCodeBody },
-      preHandler: requirePasswordSession,
+      preValidation: requirePasswordSession,
       config: { rateLimit: { max: 6, timeWindow: '5 minutes' } },
     },
     async (request, reply) => {
@@ -160,7 +164,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
     `${prefix}/reauth`,
     {
       schema: { body: reauthBody },
-      preHandler: requireAdmin,
+      preValidation: requireAdmin,
       config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
     },
     async (request, reply) => {
@@ -179,7 +183,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   // Who may call: the enrolled, MFA-verified admin who re-authenticated within ADMIN_REAUTH_MINUTES.
   r.post(
     `${prefix}/mfa/recovery-codes/regenerate`,
-    { preHandler: requireRecentReauth },
+    { preValidation: requireRecentReauth },
     async (request, reply) => {
       const p = principalOf(request);
       return reply.send(
@@ -189,7 +193,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   );
 
   // Who may call: the enrolled, MFA-verified admin; lists their own sessions only.
-  r.get(`${prefix}/sessions`, { preHandler: requireAdmin }, async (request, reply) => {
+  r.get(`${prefix}/sessions`, { preValidation: requireAdmin }, async (request, reply) => {
     const p = principalOf(request);
     const sessions = await app.adminAuth.listSessions(p.id);
     return reply.send(ok(sessions.map((s) => sessionDto(s, p.sessionId))));
@@ -198,7 +202,7 @@ export function registerAdminAuthRoutes(app: FastifyInstance): void {
   // Who may call: the enrolled, MFA-verified admin, for one of their own sessions. Reason required (audit).
   r.delete(
     `${prefix}/sessions/:id`,
-    { schema: { params: sessionIdParams, body: revokeSessionBody }, preHandler: requireAdmin },
+    { schema: { params: sessionIdParams, body: revokeSessionBody }, preValidation: requireAdmin },
     async (request, reply) => {
       const p = principalOf(request);
       await app.adminAuth.revokeSession(

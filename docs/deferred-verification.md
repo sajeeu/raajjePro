@@ -40,16 +40,16 @@ to work through is `docs/ops/ses-production-access.md`.
 | L5 | Suppression on a real complaint. | Send to `complaint@simulator.amazonses.com`; same check. |
 | L6 | Domain deliverability — SPF, DKIM, DMARC alignment and the custom MAIL FROM. | The receiving mailbox's headers show all three passing. |
 | L7 | That the three configuration sets keep their reputation metrics apart. | Three sends, one per channel, each landing under its own set in the SES console. |
+| L8 | The OTP mail reaching a real inbox with the six-digit code readable, and the sender/subject rendering as intended. Phase 3 verified the whole register → verify → login cycle against `EMAIL_TRANSPORT=file`. | Register with an address you control after L1; the code from that inbox verifies the account. |
+| L9 | A Flutter exception reaching Sentry. The Phase 3 `CrashReporter` interface and its no-op-without-`SENTRY_DSN` implementation are built and tested (`frontend/lib/core/crash/`), matching Phase 2's backend posture, but nothing has run against a real Sentry project — this build has no real DSN. | A forced test exception in a build with a real DSN appears in the Sentry project within minutes. |
 
 ## Open — closed by a later phase
 
-Empty. Phase 3 is expected to add rows here: its Done-when lines for
-anonymised review attribution (Phase 11 owns reviews), for a deletion request
-completing once an open booking terminates (Phase 17 owns bookings), and for
-crash reporting against a real vendor DSN if that is wired behind an
-interface. **One of the three needs checking before it is deferred at all** —
-"a recovery attempt without a verified email is refused" may be a guard that
-is testable in Phase 3 rather than a Phase 3b flow. Test it if it is.
+| # | What is unverified | Closed by |
+|---|---|---|
+| P1 | A deleted account's reviews remain with anonymised attribution. Phase 3 built `AnonymisationHooks` and tested that a registered hook runs in the anonymisation transaction. | Phase 11 registers the review hook and its test asserts a review survives with the author anonymised. |
+| P2 | A deletion request with an open booking completes automatically when that booking terminates. Phase 3 built the `DeletionBlocker` seam and tested it with an injected blocker. | Phase 17 supplies the real blocker; its test creates a booking, requests deletion, terminates the booking and sees anonymisation on the next run. |
+| P3 | A password-reset attempt for an unverified email is refused without revealing existence. Phase 3 built and tested `assertRecoverableByEmail`. | Phase 3b's reset flow calls it and its test asserts an identical response with no mail sent for an unverified address. |
 
 ## Closed
 

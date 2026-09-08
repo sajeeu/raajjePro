@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "mv.raajjepro.raajjepro"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage 11.0.0 requires compileSdk 37 or later; AGP
+    // 9.1's "max recommended compileSdk is 36" warning is expected here.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

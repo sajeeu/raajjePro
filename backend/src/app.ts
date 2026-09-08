@@ -1,3 +1,5 @@
+import type { Writable } from 'node:stream';
+
 import Fastify, { type FastifyInstance } from 'fastify';
 import {
   serializerCompiler,
@@ -8,21 +10,37 @@ import {
 import type { Config } from './config/env.js';
 import type { Clock } from './core/clock.js';
 import { registerErrorHandling } from './core/error-handler.js';
-import { genReqId, loggerOptions } from './core/logging.js';
+import { genReqId, loggerOptions, loggerOptionsForStream } from './core/logging.js';
 import './core/principal.js';
 import type { PrismaClient } from './generated/prisma/client.js';
+import {
+  AccountAnonymiser,
+  AnonymisationHooks,
+  neverBlocks,
+  type DeletionBlocker,
+} from './modules/account/anonymise.js';
+import { ExportContributors } from './modules/account/export.js';
+import { registerAccountRoutes } from './modules/account/routes.js';
+import { AccountService } from './modules/account/service.js';
 import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
+import { OtpService } from './modules/auth/otp.js';
+import { registerAuthRoutes } from './modules/auth/routes.js';
+import { AuthService } from './modules/auth/service.js';
+import { SocialAuthRegistry, stubProviders } from './modules/auth/social.js';
 import { EmailService } from './modules/email/service.js';
 import { registerSesEventRoutes } from './modules/email/sns/routes.js';
 import type { SnsMessageValidator } from './modules/email/sns/validator.js';
 import type { EmailSender, EmailTransport } from './modules/email/types.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
+import { anonymiseAccountsJob } from './jobs/anonymise-accounts.js';
+import { JobRunner } from './jobs/runner.js';
 import { registerAdminSession } from './plugins/admin-session.js';
 import { registerIdempotency } from './plugins/idempotency.js';
 import { registerRateLimit } from './plugins/rate-limit.js';
+import { registerUserAuth } from './plugins/user-auth.js';
 
 export interface AppDeps {
   prisma: PrismaClient;
@@ -31,15 +49,32 @@ export interface AppDeps {
   snsValidator: SnsMessageValidator;
   /** GETs an SNS SubscribeURL to confirm a subscription. Optional so production can default to a real fetch while tests observe the call. */
   confirmSubscription?: (url: string) => Promise<void>;
+  /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
+  deletionBlocker?: DeletionBlocker;
+  /**
+   * Test seam: when present, pino writes to this stream instead of stdout, so
+   * a test can capture every log line a real run produces (the §Phase 3
+   * Done-when no-PII assertion needs this — there is no supported way to
+   * attach a stream to an already-built Fastify logger).
+   */
+  logStream?: Writable;
 }
 
 declare module 'fastify' {
   interface FastifyInstance {
     config: Config;
     deps: AppDeps;
+    account: AccountService;
     audit: AuditService;
+    exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
+    auth: AuthService;
     email: EmailSender;
+    otp: OtpService;
+    social: SocialAuthRegistry;
+    anonymisation: AnonymisationHooks;
+    anonymiser: AccountAnonymiser;
+    jobs: JobRunner;
   }
 }
 
@@ -51,7 +86,10 @@ declare module 'fastify' {
  */
 export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: loggerOptions(config),
+    logger:
+      deps.logStream !== undefined
+        ? loggerOptionsForStream(config, deps.logStream)
+        : loggerOptions(config),
     genReqId,
     requestIdHeader: false,
     trustProxy: config.trustProxy,
@@ -68,10 +106,52 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     'adminAuth',
     new AdminAuthService({ prisma: deps.prisma, audit, clock: deps.clock, config }),
   );
-  app.decorate(
-    'email',
-    new EmailService(deps.prisma, deps.emailTransport, config.email, deps.clock, app.log),
+  const email = new EmailService(
+    deps.prisma,
+    deps.emailTransport,
+    config.email,
+    deps.clock,
+    app.log,
   );
+  app.decorate('email', email);
+  const otp = new OtpService({ prisma: deps.prisma, email, clock: deps.clock, config });
+  app.decorate('otp', otp);
+  const authService = new AuthService({
+    prisma: deps.prisma,
+    audit,
+    clock: deps.clock,
+    config,
+    otp,
+  });
+  app.decorate('auth', authService);
+  const exportContributors = new ExportContributors();
+  app.decorate('exportContributors', exportContributors);
+  app.decorate(
+    'account',
+    new AccountService({
+      prisma: deps.prisma,
+      repo: authService.repo,
+      otp,
+      audit,
+      clock: deps.clock,
+      exportContributors,
+    }),
+  );
+  app.decorate('social', new SocialAuthRegistry(stubProviders()));
+
+  const anonymisation = new AnonymisationHooks();
+  app.decorate('anonymisation', anonymisation);
+  const anonymiser = new AccountAnonymiser({
+    prisma: deps.prisma,
+    repo: authService.repo,
+    audit,
+    hooks: anonymisation,
+    log: app.log,
+  });
+  app.decorate('anonymiser', anonymiser);
+  const jobs = new JobRunner({ prisma: deps.prisma, clock: deps.clock, log: app.log });
+  jobs.register(anonymiseAccountsJob(anonymiser, deps.deletionBlocker ?? neverBlocks, app.log));
+  app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
     void reply.header('x-request-id', request.id);
@@ -79,11 +159,14 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
 
   registerErrorHandling(app);
   await registerAdminSession(app); // before rate limiting: counters key on the principal
+  registerUserAuth(app);
   await registerRateLimit(app);
   registerIdempotency(app);
 
   registerHealthRoutes(app);
   registerAdminAuthRoutes(app);
+  registerAuthRoutes(app);
+  registerAccountRoutes(app);
   registerAuditRoutes(app);
   await registerSesEventRoutes(app);
 
