@@ -69,6 +69,16 @@ void main() {
     expect(await store.read(), isNull);
   });
 
+  test('restore() with tokens; any other ApiException (500, 429, …) on a cold '
+      'start reads as guest instead of stranding AuthUnknown, and keeps the tokens', () async {
+    await store.write(TokenPair.fromJson(tokensJson()));
+    api.fail('GET', '/v1/auth/me', status: 500, code: 'INTERNAL_ERROR');
+    expect(container.read(authControllerProvider), isA<AuthUnknown>());
+    await container.read(authControllerProvider.notifier).restore();
+    expect(container.read(authControllerProvider), isA<AuthGuest>());
+    expect(await store.read(), isNotNull);
+  });
+
   test('signIn stores tokens with the device name and becomes signed in; a wrong password rethrows and stays guest', () async {
     api.on('POST', '/v1/auth/login', (body) {
       expect((body as Map)['deviceName'], 'Test phone');

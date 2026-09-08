@@ -75,6 +75,12 @@ class AuthController extends Notifier<AuthState> {
     } on ApiException catch (e) {
       if (e.code == 'SESSION_EXPIRED' || e.code == 'UNAUTHENTICATED') {
         await sessionExpired();
+      } else if (state is AuthUnknown) {
+        // A cold start with tokens on file that hits any other failure
+        // (500, 429, …) is neither a dead session nor a network drop — but
+        // leaving it AuthUnknown strands AuthGate on its skeleton forever.
+        // Read guest, same as the network branch below; the tokens stay put.
+        state = const AuthGuest();
       }
     } on ApiNetworkException {
       if (state is AuthUnknown) state = const AuthGuest();

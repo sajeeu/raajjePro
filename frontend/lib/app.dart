@@ -28,6 +28,14 @@ import 'package:raajjepro/shared/shared.dart';
 /// pushed those names.
 class RaajjeProApp extends ConsumerStatefulWidget {
   const RaajjeProApp({super.key});
+
+  /// Shared with the Navigator so [_RaajjeProAppState] can pop back to root
+  /// from outside the widget tree that pushed the open route — the only way
+  /// a session expiring under a pushed screen (`/account/phone`, say) can
+  /// reach [AuthGate] and show [SessionExpiredScreen] instead of leaving that
+  /// screen on top forever.
+  static final navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   ConsumerState<RaajjeProApp> createState() => _RaajjeProAppState();
 }
@@ -41,8 +49,14 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      if (next is AuthSessionExpired) {
+        RaajjeProApp.navigatorKey.currentState?.popUntil((r) => r.isFirst);
+      }
+    });
     return MaterialApp(
       title: 'RaajjePro',
+      navigatorKey: RaajjeProApp.navigatorKey,
       theme: AppTheme.light(),
       debugShowCheckedModeBanner: false,
       routes: {
@@ -96,6 +110,12 @@ class AuthGate extends ConsumerStatefulWidget {
 class _AuthGateState extends ConsumerState<AuthGate> {
   late final AppLifecycleListener _lifecycleListener;
 
+  /// Guards against two quick resumes overlapping: without it, a resume
+  /// while a previous `restore()` is still in flight fires a second `me`
+  /// call before the first returns. Idempotent either way, but there is no
+  /// reason to make two calls for one resume.
+  bool _restoring = false;
+
   @override
   void initState() {
     super.initState();
@@ -103,10 +123,21 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   }
 
   Future<void> _retryIfStillGuest() async {
+    if (_restoring) return;
     if (ref.read(authControllerProvider) is! AuthGuest) return;
-    final tokens = await ref.read(tokenStoreProvider).read();
-    if (tokens == null) return;
-    await ref.read(authControllerProvider.notifier).restore();
+    // Set before the first `await`: two resumes fired back to back (no
+    // intervening event-loop turn) both pass the checks above before either
+    // yields, so the flag has to be claimed synchronously here for the
+    // second call to see it — setting it after the token read would still
+    // let both through.
+    _restoring = true;
+    try {
+      final tokens = await ref.read(tokenStoreProvider).read();
+      if (tokens == null) return;
+      await ref.read(authControllerProvider.notifier).restore();
+    } finally {
+      _restoring = false;
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,10 @@ Future<void> main() async {
     unawaited(
       reporter.recordError(details.exception, details.stack, fatal: true),
     );
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    unawaited(reporter.recordError(error, stack, fatal: true));
+    return true;
   };
   runZonedGuarded(
     () => runApp(

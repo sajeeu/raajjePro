@@ -128,7 +128,12 @@ class HttpApiClient implements ApiClient {
     Map<String, String>? extraHeaders,
     bool retried = false,
   }) async {
-    final token = await readAccessToken();
+    // `/v1/auth/refresh` needs no access token — and attaching a bearer here
+    // is worse than useless: if that endpoint itself ever answered
+    // `ACCESS_TOKEN_EXPIRED`, the branch below would call `_refreshOnce()`
+    // from inside the very refresh call it is nested under and await its own
+    // in-flight future forever.
+    final token = path == '/v1/auth/refresh' ? null : await readAccessToken();
     final request = http.Request(method, Uri.parse('$baseUrl$path'))
       ..headers['accept'] = 'application/json'
       ..headers.addAll(extraHeaders ?? const {});

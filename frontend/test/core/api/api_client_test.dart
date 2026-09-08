@@ -172,6 +172,19 @@ void main() {
     },
   );
 
+  test('the refresh endpoint never carries a bearer token, even when one is on file', () async {
+    late http.Request seen;
+    final c = client(
+      MockClient((r) async {
+        seen = r;
+        return ok({'tokens': <String, dynamic>{}});
+      }),
+      token: 't1',
+    );
+    await c.post('/v1/auth/refresh', body: {'refreshToken': 'r1'});
+    expect(seen.headers.containsKey('authorization'), isFalse);
+  });
+
   test('a list payload is wrapped so callers always get a map', () async {
     final c = client(
       scripted([
