@@ -132,7 +132,7 @@ button:focus{outline:none}
       <div style="font-size:15.5px;font-weight:750;letter-spacing:-.01em;color:#0F1B2D">From the provider</div>
       <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B"><span style="color:#5B6B84">Provider states:</span> {{ stated1 }}</div>
       <div style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;border-top:1px solid #EEF3FA;padding-top:10px"><span style="color:#5B6B84">Provider states:</span> {{ stated2 }}</div>
-      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">These are the provider's own statements. RaajjePro has not checked them.</div>
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">These are the provider's own statements. RaajjePro has not checked them.</div>
     </div>
 
     <sc-if value="{{ cbOn }}" hint-placeholder-val="{{ false }}">
@@ -171,7 +171,7 @@ button:focus{outline:none}
           <div style="display:flex;align-items:center;gap:9px">
             <span style="width:10px;font-size:11.5px;font-weight:700;color:#5B6B84;font-variant-numeric:tabular-nums;text-align:right">{{ b.s }}</span>
             <span style="flex:1;height:7px;border-radius:4px;background:#EEF3FA;overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ b.w }};border-radius:4px;background:#D97706"></span></span>
-            <span style="width:18px;font-size:11.5px;font-weight:600;color:#9AA9C0;font-variant-numeric:tabular-nums">{{ b.n }}</span>
+            <span style="width:18px;font-size:11.5px;font-weight:600;color:#627187;font-variant-numeric:tabular-nums">{{ b.n }}</span>
           </div>
         </sc-for>
       </div>
@@ -186,7 +186,7 @@ button:focus{outline:none}
             <span style="width:32px;height:32px;border-radius:50%;background:#EEF3FA;color:#41526B;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none">{{ r.ini }}</span>
             <span style="display:flex;flex-direction:column;gap:0px">
               <span style="font-size:12.5px;font-weight:700;color:#0F1B2D">{{ r.name }}</span>
-              <span style="font-size:11px;font-weight:600;color:#9AA9C0">{{ r.when }}</span>
+              <span style="font-size:11px;font-weight:600;color:#627187">{{ r.when }}</span>
             </span>
             <span style="flex:1"></span>
             <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#41526B"><svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>{{ r.stars }}</span>
@@ -207,7 +207,7 @@ button:focus{outline:none}
   </span>
   <span style="flex:1"></span>
   <button onClick="{{ message }}" aria-label="{{ msgAria }}" style="width:54px;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="background:#F7FAFD"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg></button>
-  <button onClick="{{ book }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:0 26px;box-shadow:0 8px 18px rgba(37,99,235,.28);flex:none" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
+  <button onClick="{{ book }}" style="height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;padding:0 26px;box-shadow:0 8px 18px rgba(37,99,235,.28);flex:none" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">{{ ctaLabel }}</button>
 </div>
 </sc-if>
 

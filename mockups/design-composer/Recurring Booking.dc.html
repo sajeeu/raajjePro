@@ -71,13 +71,13 @@ button:focus{outline:none}
           <dc-import name="StatusPill" status="completed" hint-size="100px,28px"></dc-import>
         </div>
         <div style="border-top:1px solid #EEF3FA;padding-top:12px;display:flex;flex-direction:column;gap:3px">
-          <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Next Tuesday</span>
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Next Tuesday</span>
           <span style="font-size:19px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums">Tue 1 Sep · 14:00 · MVR 450</span>
           <span style="font-size:11.5px;font-weight:600;color:#5B6B84">Same address, same notes — nothing to re-enter.</span>
         </div>
       </div>
-      <button onClick="{{ ask }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Ask Mariyam for next Tuesday</button>
-      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:0 8px">This starts a weekly ask, not a subscription — every week is a fresh request that Mariyam accepts or declines. You can stop any time.</span>
+      <button onClick="{{ ask }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Ask Mariyam for next Tuesday</button>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#627187;text-align:center;text-wrap:pretty;padding:0 8px">This starts a weekly ask, not a subscription — every week is a fresh request that Mariyam accepts or declines. You can stop any time.</span>
     </sc-if>
 
     <sc-if value="{{ asked }}" hint-placeholder-val="{{ false }}">
@@ -109,7 +109,7 @@ button:focus{outline:none}
       <span style="font-size:14px;font-weight:800;letter-spacing:-.01em;color:#A15C00">Series paused — three weeks weren't confirmed</span>
       <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#8A6A2E;text-wrap:pretty">Mariyam didn't confirm 18 Aug, 25 Aug or 1 Sep, so the weekly ask has stopped going out. Keep asking, or end the series — nothing is charged either way.</span>
       <div style="display:flex;gap:9px">
-        <button onClick="{{ resume }}" style="flex:1;height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(37,99,235,.24)">Keep asking weekly</button>
+        <button onClick="{{ resume }}" style="flex:1;height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(37,99,235,.24)">Keep asking weekly</button>
         <button onClick="{{ endAsk }}" style="flex:1;height:48px;border:1.5px solid #F5C6C6;border-radius:13px;background:#fff;color:#B91C1C;font-size:13px;font-weight:800;cursor:pointer">End the series</button>
       </div>
     </div>
@@ -136,7 +136,7 @@ button:focus{outline:none}
         </div>
       </sc-for>
     </div>
-    <span style="flex:none;font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty;padding:0 4px">Skipping frees one week and tells Mariyam — the series continues. Ending the series stops the weekly ask for good; past bookings keep their records.</span>
+    <span style="flex:none;font-size:11px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty;padding:0 4px">Skipping frees one week and tells Mariyam — the series continues. Ending the series stops the weekly ask for good; past bookings keep their records.</span>
 
     <sc-if value="{{ notPaused }}" hint-placeholder-val="{{ true }}">
       <sc-if value="{{ endIdle }}" hint-placeholder-val="{{ true }}">
@@ -203,7 +203,7 @@ class Component extends DCLogic {
       return {
         date:w.date, sub: skippedByYou ? 'You freed this week — Mariyam has been told. The series continues.' : w.sub,
         dateColor: (w.st==='missed'||skippedByYou) ? '#5B6B84' : '#0F1B2D',
-        subColor: w.st==='missed' ? '#5B6B84' : '#9AA9C0',
+        subColor: w.st==='missed' ? '#5B6B84' : '#627187',
         hasPill: !canSkip, pill:P.pill, pillBg:P.bg, pillFg:P.fg, pillBd:P.bd,
         canSkip, skip:() => this.setState(st2 => ({ skipped:{ ...st2.skipped, [i]:true } })),
         line: i < rows.length-1 ? '#EEF3FA' : 'transparent' };

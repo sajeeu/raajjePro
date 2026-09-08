@@ -96,13 +96,13 @@ button:focus{outline:none}
         </sc-for>
       </div>
       <input onChange="{{ onWindowText }}" placeholder="Or say exactly when — “Thursday after 16:00”" style="height:46px;border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:0 14px;font-size:13px;font-weight:600;color:#0F1B2D;outline:none">
-      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">This is a preference, not a slot — Ibrahim replies with a concrete time.</div>
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">This is a preference, not a slot — Ibrahim replies with a concrete time.</div>
     </div>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
       <div style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">What's the job?</div>
       <textarea onChange="{{ onDesc }}" rows="3" placeholder="What's wrong and what needs doing — e.g. steady leak under the kitchen sink, cupboard base is wet" style="border:1.5px solid #E3EAF3;border-radius:13px;background:#F7FAFD;padding:11px 14px;font-size:13px;font-weight:600;line-height:1.5;color:#0F1B2D;outline:none;resize:none"></textarea>
-      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Photos</span><span style="font-size:11px;font-weight:600;color:#9AA9C0">optional — they help Ibrahim quote accurately</span></div>
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Photos</span><span style="font-size:11px;font-weight:600;color:#627187">optional — they help Ibrahim quote accurately</span></div>
       <div style="display:flex;gap:9px">
         <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="request-photo-1" shape="rounded" radius="14" placeholder="photo of the problem"></image-slot></span>
         <span style="width:84px;height:84px;flex:none;display:block"><image-slot id="request-photo-2" shape="rounded" radius="14" placeholder="another angle"></image-slot></span>
@@ -136,7 +136,7 @@ button:focus{outline:none}
           <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#41526B;text-wrap:pretty">{{ st.text }}</span>
         </div>
       </sc-for>
-      <div style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ windowsNote }}</div>
+      <div style="font-size:11px;font-weight:600;line-height:1.5;color:#627187;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ windowsNote }}</div>
     </div>
   </div>
 
@@ -174,7 +174,7 @@ button:focus{outline:none}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B6B84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>
       <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-wrap:pretty">{{ sentChatNote }}</span>
     </div>
-    <a href="My%20Bookings.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
+    <a href="My%20Bookings.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">View my bookings</a>
     <button onClick="{{ cancelSent }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:4px">Cancel this request</button>
   </div>
 </div>
@@ -222,7 +222,7 @@ class Component extends DCLogic {
       windowsNote: 'These windows are set by the ' + this.CAT.name + ' category. Chat with Ibrahim opens the moment his quote arrives.',
       footSub: unverified ? 'Verify your email first' : 'final price quoted first',
       ctaLabel: unverified ? 'Verify email to send' : (isSending ? 'Sending…' : (canSend ? 'Send request' : 'Add a window and the job')),
-      ctaBg: (canSend || isSending) ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C7D4E8',
+      ctaBg: (canSend || isSending) ? 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)' : '#C7D4E8',
       ctaCursor: canSend ? 'pointer' : 'default',
       ctaShadow: (canSend || isSending) ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
       send: () => { if (!canSend) return;
