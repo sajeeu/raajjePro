@@ -41,8 +41,8 @@ class SettingsRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: AppSizes.iconDisc,
+            height: AppSizes.iconDisc,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: destructive ? colors.errorTint : colors.accentTint,

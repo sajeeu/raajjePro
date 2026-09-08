@@ -63,6 +63,43 @@ class SessionsController extends AsyncNotifier<List<SessionInfo>> {
       ref.read(authControllerProvider.notifier).signOut();
 }
 
+/// Which per-row session action is in flight, so `Sign out` and `Revoke`
+/// show their own loading state (frontend/CLAUDE.md) rather than a
+/// page-level spinner or a frozen screen.
+class SessionActionState {
+  const SessionActionState({this.signingOut = false, this.revokingId});
+  final bool signingOut;
+  final String? revokingId;
+}
+
+final sessionActionControllerProvider =
+    NotifierProvider<SessionActionController, SessionActionState>(
+      SessionActionController.new,
+    );
+
+class SessionActionController extends Notifier<SessionActionState> {
+  @override
+  SessionActionState build() => const SessionActionState();
+
+  Future<void> signOutThisDevice() async {
+    state = const SessionActionState(signingOut: true);
+    try {
+      await ref.read(sessionsControllerProvider.notifier).signOutThisDevice();
+    } finally {
+      state = const SessionActionState();
+    }
+  }
+
+  Future<String> revoke(String id) async {
+    state = SessionActionState(revokingId: id);
+    try {
+      return await ref.read(sessionsControllerProvider.notifier).revoke(id);
+    } finally {
+      state = const SessionActionState();
+    }
+  }
+}
+
 /// Injectable so tests never open a real share sheet.
 final shareProvider = Provider<Future<void> Function(XFile file)>(
   (_) => (file) async {
@@ -112,9 +149,12 @@ class DownloadController extends Notifier<DownloadState> {
       final bytes = utf8.encode(
         const JsonEncoder.withIndent('  ').convert(data),
       );
-      final file = File(
-        '${Directory.systemTemp.path}${Platform.pathSeparator}$name',
-      );
+      final dir = Directory.systemTemp;
+      // Clear out any earlier export before writing this one — never right
+      // after sharing, since the share target (another app) may still be
+      // reading that file asynchronously at that point.
+      await _deleteStaleExports(dir);
+      final file = File('${dir.path}${Platform.pathSeparator}$name');
       await file.writeAsBytes(bytes);
       await ref.read(shareProvider)(
         XFile(file.path, mimeType: 'application/json'),
@@ -125,6 +165,29 @@ class DownloadController extends Notifier<DownloadState> {
     } on ApiException {
       state = const DownloadState(failed: true);
     }
+  }
+}
+
+/// Removes any earlier `raajjepro-export-*.json` left in [dir] by a
+/// previous [DownloadController.request]. Best-effort: a listing or delete
+/// failure (a locked file still being read by an old share target, a
+/// sandboxed platform) must never block the export in progress.
+Future<void> _deleteStaleExports(Directory dir) async {
+  try {
+    await for (final entity in dir.list()) {
+      if (entity is! File) continue;
+      final base = entity.path.split(Platform.pathSeparator).last;
+      if (!base.startsWith('raajjepro-export-') || !base.endsWith('.json')) {
+        continue;
+      }
+      try {
+        await entity.delete();
+      } on FileSystemException {
+        // Left for next time.
+      }
+    }
+  } on FileSystemException {
+    // Left for next time.
   }
 }
 

@@ -158,6 +158,30 @@ void main() {
     },
   );
 
+  testWidgets(
+    'offline: the offline notice renders, and the account is not shown as frozen',
+    (tester) async {
+      api.offline('POST', '/v1/users/me/deletion-request');
+      await pump(tester, user: _activeUser());
+      await tester.enterText(find.byKey(const Key('delete-confirm')), 'DELETE');
+      await tester.pump();
+      await tester.tap(find.text('Delete my account'));
+      await settle(tester);
+
+      expect(find.text('No internet connection.'), findsOneWidget);
+      // Still the confirm card — never the frozen one.
+      expect(find.text('Delete your account'), findsOneWidget);
+      expect(find.text('Your deletion request is in'), findsNothing);
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DeleteAccountScreen)),
+      );
+      final auth = container.read(authControllerProvider);
+      expect(auth, isA<AuthSignedIn>());
+      expect((auth as AuthSignedIn).user.status, AccountStatus.active);
+    },
+  );
+
   testWidgets('a Done tap goes home', (tester) async {
     api.on(
       'POST',

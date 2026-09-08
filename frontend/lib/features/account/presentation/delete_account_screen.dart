@@ -7,10 +7,9 @@ import 'package:raajjepro/features/account/controller/account_controller.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/shared/shared.dart';
 
-/// Delete account (`Account Settings.dc.html`; `App States.dc.html` for the
-/// frozen card; plan §Phase 3). The request is accepted immediately —
-/// deletion is queued, never refused, and no branch here renders a
-/// rejection.
+/// Delete account (`Account Settings.dc.html`, including the frozen card;
+/// plan §Phase 3). The request is accepted immediately — deletion is
+/// queued, never refused, and no branch here renders a rejection.
 class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
   static const routeName = '/account/delete';
@@ -120,8 +119,8 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: AppSizes.iconDisc,
+                height: AppSizes.iconDisc,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: colors.errorTint,
@@ -217,8 +216,8 @@ class _FrozenCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: AppSizes.iconDisc,
+                height: AppSizes.iconDisc,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: colors.accentTint,

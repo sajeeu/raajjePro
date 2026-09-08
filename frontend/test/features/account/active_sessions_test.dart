@@ -94,7 +94,7 @@ void main() {
   );
 
   testWidgets(
-    'tapping Revoke opens a confirming sheet; confirming revokes only that device',
+    'tapping Revoke opens a confirming sheet; confirming shows the button\'s own loading, then revokes only that device',
     (tester) async {
       api.on(
         'GET',
@@ -116,14 +116,22 @@ void main() {
           ],
         },
       );
-      api.on('DELETE', '/v1/auth/sessions/b', (_) => {'value': null});
       await pump(tester);
 
       await tester.tap(find.widgetWithText(AppButton, 'Revoke'));
       await settle(tester);
       expect(find.text('Sign out Pixel 7?'), findsOneWidget);
 
+      // Gate only the revoke call itself, after the confirmation is open,
+      // so the loading assertion below is about the revoke request, not
+      // the initial `GET /v1/auth/sessions`.
+      api.gate = Completer<void>();
+      api.on('DELETE', '/v1/auth/sessions/b', (_) => {'value': null});
       await tester.tap(find.byKey(const Key('confirm-revoke')));
+      await tester.pump();
+      expect(find.byType(AppSpinner), findsOneWidget);
+
+      api.gate!.complete();
       await settle(tester);
 
       expect(
@@ -140,6 +148,22 @@ void main() {
       );
     },
   );
+
+  testWidgets('empty: names what to do next, not just that nothing is there', (
+    tester,
+  ) async {
+    api.on(
+      'GET',
+      '/v1/auth/sessions',
+      (_) => {'_list': <Map<String, dynamic>>[]},
+    );
+    await pump(tester);
+    expect(find.text('No devices signed in'), findsOneWidget);
+    expect(
+      find.text('Sign in again on a device to see it here.'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('error shows EmptyState with retry', (tester) async {
     api.offline('GET', '/v1/auth/sessions');

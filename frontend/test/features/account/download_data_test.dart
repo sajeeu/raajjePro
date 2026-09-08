@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -132,7 +133,7 @@ void main() {
     );
   });
 
-  test('request() fetches the export, names the file for the date, and hands it to the share sheet', () async {
+  test('request() fetches the export, names the file for the date, hands it to the share sheet, and clears a stale export left by an earlier run', () async {
     final realApi = FakeApiClient();
     realApi.on(
       'GET',
@@ -154,7 +155,24 @@ void main() {
     );
     addTearDown(container.dispose);
 
+    // A stale export from an earlier run, sitting in the same temp
+    // directory `request()` writes to.
+    final staleFile = File(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}raajjepro-export-2020-01-01.json',
+    );
+    await staleFile.writeAsBytes(utf8.encode('{}'));
+    addTearDown(() async {
+      if (await staleFile.exists()) await staleFile.delete();
+    });
+
     await container.read(downloadControllerProvider.notifier).request();
+
+    final freshFile = File(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}raajjepro-export-2026-09-06.json',
+    );
+    addTearDown(() async {
+      if (await freshFile.exists()) await freshFile.delete();
+    });
 
     expect(container.read(downloadControllerProvider).shared, isTrue);
     expect(shared, hasLength(1));
@@ -163,5 +181,10 @@ void main() {
     expect(jsonDecode(utf8.decode(bytes)), {
       'profile': {'fullName': 'Aishath Naeema'},
     });
+
+    // The stale export is gone — cleared before the new one was written,
+    // never right after sharing (a share target may still be reading it).
+    expect(await staleFile.exists(), isFalse);
+    expect(await freshFile.exists(), isTrue);
   });
 }

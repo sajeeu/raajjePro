@@ -48,8 +48,8 @@ class DownloadDataScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 46,
-                        height: 46,
+                        width: AppSizes.iconDisc,
+                        height: AppSizes.iconDisc,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: colors.accentTint,

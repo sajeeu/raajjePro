@@ -83,7 +83,9 @@ class _SessionRow extends ConsumerWidget {
   final DateTime now;
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    await ref.read(sessionsControllerProvider.notifier).signOutThisDevice();
+    await ref
+        .read(sessionActionControllerProvider.notifier)
+        .signOutThisDevice();
     if (context.mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     }
@@ -123,7 +125,7 @@ class _SessionRow extends ConsumerWidget {
     );
     if (confirmed != true) return;
     final name = await ref
-        .read(sessionsControllerProvider.notifier)
+        .read(sessionActionControllerProvider.notifier)
         .revoke(session.id);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -136,6 +138,7 @@ class _SessionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final type = context.type;
+    final action = ref.watch(sessionActionControllerProvider);
     final ageText = session.current
         ? 'active now'
         : 'Last used ${relativeAge(session.lastSeenAt, now)}';
@@ -204,13 +207,19 @@ class _SessionRow extends ConsumerWidget {
             AppButton.text(
               label: 'Sign out',
               size: AppButtonSize.compact,
-              onPressed: () => _signOut(context, ref),
+              loading: action.signingOut,
+              onPressed: action.signingOut
+                  ? null
+                  : () => _signOut(context, ref),
             )
           else
             AppButton.secondary(
               label: 'Revoke',
               size: AppButtonSize.compact,
-              onPressed: () => _revoke(context, ref),
+              loading: action.revokingId == session.id,
+              onPressed: action.revokingId != null
+                  ? null
+                  : () => _revoke(context, ref),
             ),
         ],
       ),
