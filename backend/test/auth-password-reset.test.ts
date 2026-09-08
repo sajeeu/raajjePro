@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { OTP_ADDRESS_LIMIT } from '../src/modules/auth/otp.js';
 import { buildTestApp, controllableClock, databaseUrl, freshIp } from './helpers/app.js';
 import { createUser, freshEmail, RecordingEmailTransport } from './helpers/users.js';
 
@@ -8,6 +9,10 @@ interface Err {
 }
 interface RequestData {
   data: { expiresAt: string; resendAvailableAt: string };
+}
+interface Injected {
+  statusCode: number;
+  body: string;
 }
 
 describe.skipIf(databaseUrl === undefined)('forgot password (plan §Phase 3b)', () => {
@@ -44,6 +49,23 @@ describe.skipIf(databaseUrl === undefined)('forgot password (plan §Phase 3b)', 
   async function verifiedUser() {
     const user = await createUser(ctx.prisma, { emailVerified: true });
     return user;
+  }
+
+  /**
+   * Two `request` responses a caller must not be able to tell apart. Compares
+   * the raw body rather than the parsed one — what defeats enumeration is the
+   * bytes on the wire being the same, and they can be: the envelope is a bare
+   * `{ data }` with no request id, and the clock only moves when a test moves
+   * it, so two silent responses in one test render identically.
+   */
+  function expectIndistinguishable(actual: Injected, reference: Injected) {
+    expect(actual.statusCode).toBe(reference.statusCode);
+    expect(actual.body).toBe(reference.body);
+  }
+
+  /** Messages this transport has delivered to `to`, across the whole file. */
+  function mailCountFor(to: string) {
+    return mail.sent.filter((m) => m.to === to.toLowerCase()).length;
   }
 
   it('the full cycle: request → verify → confirm, and the new password signs in', async () => {
@@ -172,12 +194,33 @@ describe.skipIf(databaseUrl === undefined)('forgot password (plan §Phase 3b)', 
     const unknown = freshEmail();
     const nobody = await post('request', { email: unknown });
 
-    expect(nobody.statusCode).toBe(real.statusCode);
-    expect(Object.keys(nobody.json<RequestData>().data).sort()).toEqual(
-      Object.keys(real.json<RequestData>().data).sort(),
-    );
-    expect(nobody.json<RequestData>().data).toEqual(real.json<RequestData>().data);
+    expectIndistinguishable(nobody, real);
     expect(mail.latestCodeFor(unknown)).toBeNull();
+  });
+
+  it('a rate-limited address gets that same body, never the 429 that would out it', async () => {
+    const user = await verifiedUser();
+    // Only a real account can accumulate the rows the send limits count, so a
+    // 429 escaping here would be an existence oracle on its own. Fill the
+    // per-address limit, then ask once more and measure the refusal against an
+    // address that has no account at all.
+    for (let i = 0; i < OTP_ADDRESS_LIMIT; i++) {
+      const filling = await post('request', { email: user.email });
+      expect(filling.statusCode).toBe(200);
+    }
+    expect(mailCountFor(user.email)).toBe(OTP_ADDRESS_LIMIT);
+
+    const overLimit = await post('request', { email: user.email });
+    const nobody = await post('request', { email: freshEmail() });
+
+    expect(overLimit.statusCode).toBe(200);
+    expectIndistinguishable(overLimit, nobody);
+    // And the swallowed request really did send nothing — the limit throws
+    // inside the transaction, before the row and the mail.
+    expect(mailCountFor(user.email)).toBe(OTP_ADDRESS_LIMIT);
+    expect(
+      await ctx.prisma.emailOtp.count({ where: { userId: user.id, purpose: 'password_reset' } }),
+    ).toBe(OTP_ADDRESS_LIMIT);
   });
 
   it('an unverified address gets the same body and no mail', async () => {
