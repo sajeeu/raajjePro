@@ -16,6 +16,7 @@ enum VerifyMode {
   success,
   sendFailed,
   offline,
+  genericError,
 }
 
 class VerifyEmailArgs {
@@ -53,6 +54,25 @@ class VerifyEmailArgs {
           : null,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is VerifyEmailArgs &&
+          other.email == email &&
+          other.purpose == purpose &&
+          other.initialStatus == initialStatus &&
+          other.resendAvailableAt == resendAvailableAt &&
+          other.resendOverride == resendOverride;
+
+  @override
+  int get hashCode => Object.hash(
+    email,
+    purpose,
+    initialStatus,
+    resendAvailableAt,
+    resendOverride,
+  );
 }
 
 class VerifyEmailState {
@@ -128,7 +148,8 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
   void codeChanged() {
     if (state.mode == VerifyMode.wrong ||
         state.mode == VerifyMode.resent ||
-        state.mode == VerifyMode.offline) {
+        state.mode == VerifyMode.offline ||
+        state.mode == VerifyMode.genericError) {
       state = state.copyWith(mode: VerifyMode.entry);
     }
   }
@@ -153,21 +174,40 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
       }
       state = state.copyWith(checking: false, mode: VerifyMode.success);
     } on ApiException catch (e) {
+      // A code that's already verified isn't a failure to react to — it's
+      // the outcome we wanted, just reached from a stale client. Same path
+      // as a correct code: mark verified, land on success.
+      if (e.code == 'EMAIL_ALREADY_VERIFIED') {
+        ref.read(authControllerProvider.notifier).markVerified();
+        state = state.copyWith(checking: false, mode: VerifyMode.success);
+        return;
+      }
       // Routed on `e.code` alone (backend/CLAUDE.md: codes are the contract).
-      // The confirm endpoint's documented set is exactly these three; an
-      // unrecognised code still needs *a* rendering, so it falls back to the
-      // wrong-code banner rather than being silently swallowed.
-      final next = switch (e.code) {
-        'OTP_INVALIDATED' => VerifyMode.invalidated,
-        'OTP_EXPIRED' => VerifyMode.invalidated,
-        _ => VerifyMode.wrong,
-      };
-      state = state.copyWith(
-        checking: false,
-        mode: next,
-        attemptsRemaining: e.attemptsRemaining,
-        clearToken: state.clearToken + 1,
-      );
+      // An unrecognised code falls to the same generic banner Task 4/5 use
+      // for their own unexpected codes — a server-side failure is not "you
+      // typed it wrong", so it must not land on the wrong-code state.
+      switch (e.code) {
+        case 'OTP_INVALIDATED':
+        case 'OTP_EXPIRED':
+          state = state.copyWith(
+            checking: false,
+            mode: VerifyMode.invalidated,
+            attemptsRemaining: e.attemptsRemaining,
+            clearToken: state.clearToken + 1,
+          );
+        case 'OTP_INCORRECT':
+          state = state.copyWith(
+            checking: false,
+            mode: VerifyMode.wrong,
+            attemptsRemaining: e.attemptsRemaining,
+            clearToken: state.clearToken + 1,
+          );
+        default:
+          state = state.copyWith(
+            checking: false,
+            mode: VerifyMode.genericError,
+          );
+      }
     } on ApiNetworkException {
       state = state.copyWith(checking: false, mode: VerifyMode.offline);
     }

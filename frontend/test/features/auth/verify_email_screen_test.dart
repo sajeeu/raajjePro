@@ -203,6 +203,82 @@ void main() {
     },
   );
 
+  testWidgets(
+    'EMAIL_ALREADY_VERIFIED on confirm takes the same success path as a correct code',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/verify-email/confirm',
+        status: 422,
+        code: 'EMAIL_ALREADY_VERIFIED',
+      );
+      await pump(tester);
+      await typeCode(tester, '482913');
+      await tester.tap(find.widgetWithText(AppButton, 'Verify Email'));
+      await settle(tester);
+      expect(find.text('Email verified'), findsOneWidget);
+      expect(
+        find.textContaining('booking, enquiries and messaging are now open'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Continue'));
+      await settle(tester);
+      expect(find.text('HOME'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'an unexpected code on confirm shows the generic banner, not the wrong-code state',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/verify-email/confirm',
+        status: 500,
+        code: 'INTERNAL_ERROR',
+      );
+      await pump(tester);
+      await typeCode(tester, '482913');
+      await tester.tap(find.widgetWithText(AppButton, 'Verify Email'));
+      await settle(tester);
+      expect(
+        find.text('Something went wrong. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('attempt'), findsNothing);
+      for (var i = 0; i < 6; i++) {
+        expect(
+          tester.widget<TextField>(find.byKey(Key('otp-$i'))).controller!.text,
+          '482913'[i],
+        );
+      }
+    },
+  );
+
+  testWidgets(
+    'OTP_EXPIRED on confirm clears the boxes and shows the same invalidated copy as OTP_INVALIDATED',
+    (tester) async {
+      api.fail(
+        'POST',
+        '/v1/auth/verify-email/confirm',
+        status: 422,
+        code: 'OTP_EXPIRED',
+      );
+      await pump(tester);
+      await typeCode(tester, '482913');
+      await tester.tap(find.widgetWithText(AppButton, 'Verify Email'));
+      await settle(tester);
+      expect(
+        find.textContaining('invalidated after 5 incorrect attempts'),
+        findsOneWidget,
+      );
+      expect(find.text('Send a fresh code'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(find.byKey(const Key('otp-0'))).enabled,
+        isFalse,
+      );
+    },
+  );
+
   testWidgets('a suppressed or failed send is shown honestly, never as sent', (
     tester,
   ) async {

@@ -259,6 +259,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       InlineNotice.error(
                         "We couldn't send a code to this address. Check it's right, or try again in a moment.",
                       ),
+                    if (s.mode == VerifyMode.genericError)
+                      InlineNotice.error(
+                        'Something went wrong. Please try again.',
+                      ),
                     if (s.mode == VerifyMode.offline)
                       InlineNotice.offline(
                         onRetry: () => _code.length == 6
