@@ -41,7 +41,7 @@ to work through is `docs/ops/ses-production-access.md`.
 | L6 | Domain deliverability — SPF, DKIM, DMARC alignment and the custom MAIL FROM. | The receiving mailbox's headers show all three passing. |
 | L7 | That the three configuration sets keep their reputation metrics apart. | Three sends, one per channel, each landing under its own set in the SES console. |
 | L8 | The OTP mail reaching a real inbox with the six-digit code readable, and the sender/subject rendering as intended. Phase 3 verified the whole register → verify → login cycle against `EMAIL_TRANSPORT=file`. | Register with an address you control after L1; the code from that inbox verifies the account. |
-| L9 | A Flutter exception reaching Sentry. The Phase 3 frontend plan calls for a `CrashReporter` interface that is a no-op without `SENTRY_DSN`, matching Phase 2's backend posture — as of this commit the Flutter half is not yet built. | A forced test exception in a build with a real DSN appears in the Sentry project within minutes. |
+| L9 | A Flutter exception reaching Sentry. The Phase 3 `CrashReporter` interface and its no-op-without-`SENTRY_DSN` implementation are built and tested (`frontend/lib/core/crash/`), matching Phase 2's backend posture, but nothing has run against a real Sentry project — this build has no real DSN. | A forced test exception in a build with a real DSN appears in the Sentry project within minutes. |
 
 ## Open — closed by a later phase
 

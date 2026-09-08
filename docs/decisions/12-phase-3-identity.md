@@ -171,10 +171,11 @@ Nothing in this phase reaches a real mailbox — every email-dependent flow
 row L8 records what a real inbox closes.
 
 Flutter crash reporting (`CrashReporter`, pulled forward to this phase per
-the design spec) is specified to be a no-op without a `SENTRY_DSN` — the
-Flutter half of this phase is not yet built as of this commit, so nothing has
-run against a real Sentry project, and nothing has run against a no-op
-either. `docs/deferred-verification.md` row L9 records what closes it.
+the design spec) is built: the interface and a no-op implementation active
+only without a `SENTRY_DSN` (`frontend/lib/core/crash/`), exercised by
+`test/core/crash/crash_reporter_test.dart`. Nothing has run against a real
+Sentry project — that needs a real DSN, which this build does not have.
+`docs/deferred-verification.md` row L9 records what closes it.
 
 ## What Phase 3b / 5 / 6 / 11 / 17 must pick up
 
@@ -204,3 +205,156 @@ either. `docs/deferred-verification.md` row L9 records what closes it.
   and exported in this phase but not yet attached to any route; later phases
   place it on booking- and listing-creation endpoints, per the plan's freeze
   rule.
+
+## Frontend
+
+Nine tasks (`.superpowers/sdd/2026-09-06-phase-3-identity-frontend/`) built
+the Flutter half against `01_Development_Plan_v5.md` §Phase 3 and §1e:
+`core/api`, `core/auth`, `core/crash`, Sign In, Register, Verify Email
+(email OTP, shared with change-email), Session expired, `AuthGate` and the
+route table, Account Settings and its sessions/download/delete sub-screens,
+and — this task — Change password, Change email and Change phone. Per-file
+detail is in `frontend/lib/README.md`; this section carries only what
+changed once code met the design and the plan, and what a later phase must
+know.
+
+### Done-when, frontend clause
+
+Plan §Phase 3's line — "Frontend: Login, Register (pixel-match), OTP
+verification screen, account settings sub-screens" — clause by clause:
+
+- **Login** — Sign In (`frontend/lib/features/auth/presentation/sign_in_screen.dart`),
+  every listed state tested in `test/features/auth/sign_in_screen_test.dart`.
+- **Register (pixel-match)** — `register_screen.dart` against
+  `Register.dc.html`, `EMAIL_IN_USE`/`PHONE_IN_USE` field renderings and the
+  provider variant's Business/Trade Name field, tested in
+  `test/features/auth/register_screen_test.dart`.
+- **OTP verification screen** — `verify_email_screen.dart`, one screen
+  serving two purposes (`OtpPurpose.verifyEmail` / `.changeEmail`), all
+  eight modes and both clocks tested in
+  `test/features/auth/verify_email_screen_test.dart`.
+- **Account settings sub-screens** — `account_settings_screen.dart`,
+  `active_sessions_screen.dart`, `download_data_screen.dart`,
+  `delete_account_screen.dart` (Task 8), and this task's
+  `change_password_screen.dart`, `change_email_screen.dart`,
+  `change_phone_screen.dart`, each with its own controller
+  (`account_controller.dart`, `change_controllers.dart`) and test file under
+  `test/features/account/`. `test/features/auth/phone_never_verified_test.dart`
+  is the cross-screen design-rule test (root CLAUDE.md §0.0 item 6): no tick
+  icon beside a phone-shaped `Text`, no `Text` combining a phone number with
+  the word "verified", checked across Register (after `PHONE_IN_USE`),
+  Change phone (before and after success) and Account Settings populated.
+
+### Prototype divergences and non-prototype copy
+
+Every one-line item below is copy or layout the prototypes do not specify
+(`Account Settings.dc.html`'s three change rows only carry a `toastMsg`
+placeholder — "Opens change password", "Opens change email — verify
+pattern", "Opens change phone" — with no sub-screen drawn) or a deliberate
+departure from what they do specify. Each is flagged here, not silently
+resolved either way, per root CLAUDE.md's scope-discipline rule.
+
+- **Sign In omits the prototype's icon badge beside the wordmark** and
+  renders `Continue as Guest` as a secondary button, not the prototype's
+  inline link — the plan's own sample screen shows a button there.
+- **The generic error banner `Something went wrong. Please try again.`**
+  (Sign In, Register, Verify Email, and this task's three change screens)
+  is not prototype copy — `App States.dc.html` has no generic-error state
+  drawn; it is one fixed string reused everywhere a server code is
+  unrecognised, per the routing-on-`code` rule.
+- **The expired-code copy `That code has expired. Send a fresh one.`**
+  (Verify Email) is not prototype copy — `OTP_EXPIRED` is its own mode,
+  distinct from the 5-wrong-attempts `OTP_INVALIDATED` copy the prototype
+  does carry.
+- **The frozen-account row subtitle `No new bookings or listings until it
+  completes`** (Account Settings) is not prototype copy.
+- **Data export goes to the OS share sheet**, not the prototype's "emailed
+  within a day" — the plan specifies a synchronous
+  `GET /v1/users/me/data-export` (backend decision above), so there is
+  nothing to email; flagged for a later design-copy correction, not built
+  against.
+- **Session rows omit the prototype's `· Malé` location suffix** — no
+  mechanism in this build geolocates a session; the client sends only a
+  `deviceName` string (same finding as the backend section above, extended
+  to the row that renders it).
+- **The Register email hint is `you@example.mv`**, not the fixture's sample
+  address `aishath@example.mv` — a hint whose text exactly matches typed
+  content stays mounted at opacity 0 rather than leaving the tree, which
+  would be a second match for any `find.text` on that value. The same hint
+  is reused on Sign In and this task's Change email.
+
+### This task (9): Change password, email, phone
+
+- **The Session Expired promise is backed here, for the first time, by a
+  test.** `FormDraftStore` existed since Task 2 and Register (Task 5) saves
+  a draft on the same path, but this task is where a screen actually
+  restores one on the next build after sign-in and a test asserts the round
+  trip. `ChangeFormController.run` saves the caller-supplied `draft` map
+  under the screen's route name whenever a submit answers `SESSION_EXPIRED`;
+  each screen's `initState` calls `FormDraftStore.take` for its own key.
+  Change password's draft is always `const {}` — every one of its three
+  fields is a password, and a password is never written to the draft store
+  — so its round-trip test asserts the save-and-restore path runs without
+  crashing and prefills nothing, which is the correct behaviour for a
+  screen with no non-secret field to keep.
+- **Brief-vs-toolchain: `ChangeFormController.run<T>` under Dart 3.13.** The
+  brief's `ChangePasswordController.submit` passed `changePassword` (which
+  returns `Future<void>`) straight into `run<T>` and compared the result
+  with `!= null`; with `T` inferred as `void`, that comparison does not
+  analyze under Dart 3.13 (a bare `void` excludes `null`). Fixed minimally:
+  the action wraps the `void` API call and resolves `true`, so `run` carries
+  a real `bool`.
+- **Brief-vs-backend: `changePhoneBody` is the bare `{dialCode, number}`
+  shape** (`backend/src/modules/auth/schema.ts`'s `phoneField`, reused
+  as-is for `PATCH /v1/users/me/phone`), not a `phone`-nested body, so a
+  `VALIDATION_FAILED` field path is `dialCode` or `number`, never `phone` —
+  only the client's own `PHONE_IN_USE` mapping uses the `phone` key.
+  `change_phone_screen.dart` renders whichever of the three keys the server
+  used under the one field the screen shows.
+- **Change phone's `PHONE_IN_USE` copy is shorter than Register's own**:
+  "This number belongs to a verified provider account." with no inline
+  sign-in link — Register's longer copy offers a route to sign in because
+  the visitor may not yet have an account open; Change phone's visitor is
+  already signed in, so that link has nothing to add.
+- **Build-configuration note: `frontend/android/app/build.gradle.kts`
+  now pins `compileSdk = 37`**, replacing `compileSdk =
+  flutter.compileSdkVersion` (which resolved to 36). Surfaced only during
+  this task's manual emulator run, not by any earlier `flutter analyze` or
+  `flutter test` gate: `flutter_secure_storage` 11.0.0 (already a Task 1/2
+  dependency, for `TokenStore`) requires `compileSdk` 37 or later, and the
+  Gradle build fails outright (`checkDebugAarMetadata`) below it. AGP
+  9.1's own "the maximum recommended compileSdk is 36" warning is expected
+  and not a regression — it is AGP being one release behind the plugin's
+  floor, not a real ceiling. `minSdk` and `targetSdk` are untouched. No
+  other Android config changed.
+
+### Flagged, not done
+
+- **A shared checkbox widget under `lib/shared/`.** Register's terms
+  checkbox (`register_screen.dart`) is bespoke, built once and not
+  generalised; a second caller should trigger extracting it, not this task
+  inventing a shared widget nobody else needs yet.
+- **Folding `SettingsRow` onto `AppCard.row`.** `SettingsRow`
+  (`features/account/presentation/widgets/settings_row.dart`) already
+  builds on `AppCard`'s built-in `Pressable` path rather than double-wrapping
+  it (documented in that file); collapsing the two into one shared
+  `AppCard.row` constructor is a `shared/` change out of scope for this
+  phase and is left for whoever next needs the same row shape outside
+  `features/account/`.
+
+### Riverpod 3 note
+
+`frontend/CLAUDE.md` now states the rule this phase's controllers
+(`account_controller.dart`, and by the same reasoning every
+`AsyncNotifierProvider` that renders its own error state) apply: pass
+`retry: null` so a failed `build()` does not silently retry with
+exponential backoff for up to ~30s before the screen's own error branch
+ever shows.
+
+### Dev-server walkthrough
+
+See the report for this task
+(`.superpowers/sdd/2026-09-06-phase-3-identity-frontend/task-9-report.md`)
+for the emulator run's step-by-step outcome — screens reached, and the OTP
+code read back out of `backend/.mail/` under the file transport
+(§0.0 item 17).

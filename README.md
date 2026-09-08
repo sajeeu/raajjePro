@@ -3,7 +3,7 @@
 Planning and specification for RaajjePro, a local services marketplace for the Maldives.
 Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-Phases 0, 1, 2 and the Phase 3 backend are built: both apps boot, lint is clean, the job runner fires, the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place, the backend has its core infrastructure (envelope/errors/logging, rate limiting, idempotency, admin identity with TOTP MFA, the queryable audit log, and SES bounce/complaint handling with the suppression list), and identity is built end to end: register/login, JWT access + refresh rotation, email OTP, account settings, data export, the deletion pipeline and the anonymisation job. Everything else from Phase 3 onward (including Phase 3's own Flutter screens) is still specification. See **Running locally** below.
+Phases 0, 1, 2 and Phase 3 (both halves) are built: both apps boot, lint is clean, the job runner fires, the Flutter design system — tokens, shared widgets, motion, a component gallery — is in place, the backend has its core infrastructure (envelope/errors/logging, rate limiting, idempotency, admin identity with TOTP MFA, the queryable audit log, and SES bounce/complaint handling with the suppression list), identity is built end to end on the backend (register/login, JWT access + refresh rotation, email OTP, account settings, data export, the deletion pipeline and the anonymisation job), and the matching Flutter screens are built (Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens including change password/email/phone). Everything from Phase 3b onward is still specification. See **Running locally** below.
 
 ## The source of truth
 
@@ -42,7 +42,8 @@ npm run jobs:status                  # is the scheduled no-op job firing? (exit 
 curl -X POST localhost:3000/v1/auth/register -H 'Content-Type: application/json' \
   -H "Idempotency-Key: $(uuidgen)" \
   -d '{"role":"customer","fullName":"Test User","email":"you@example.test","phone":{"dialCode":"+960","number":"7771234"},"password":"correct horse battery","acceptTerms":true,"deviceName":"curl"}'
-cd ../frontend && flutter pub get && flutter run
+cd ../frontend && flutter pub get
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000   # Android emulator; use localhost:3000 on desktop/iOS simulator
 ```
 
 With `EMAIL_TRANSPORT=file` (the default outside production), the six-digit verification code is in the newest JSON file under `backend/.mail/`.
