@@ -88,13 +88,13 @@ textarea:focus{outline:none;border-color:#CDDDFB}
     </div>
 
     <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Anything that helps</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Anything that helps</span><span style="font-size:11px;font-weight:700;color:#627187">optional</span></span>
       <textarea value="{{ desc }}" onChange="{{ setDesc }}" placeholder="A sentence is plenty — the moderator sees the content itself too." rows="3" style="border:1.5px solid #E3EAF3;border-radius:13px;padding:12px;font-size:13px;font-weight:500;color:#0F1B2D;line-height:1.5;resize:vertical;background:#fff;width:100%"></textarea>
     </div>
   </div>
   <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px">
     <button onClick="{{ submit }}" style="height:52px;border:none;border-radius:16px;background:{{ btnBg }};color:#fff;font-size:14px;font-weight:700;cursor:{{ btnCursor }}" style-active="transform:scale(.98)">{{ btnLabel }}</button>
-    <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">Reports are reviewed by a person. {{ T.owner }} isn't told who reported.</span>
+    <span style="font-size:11px;font-weight:600;color:#627187;text-align:center;text-wrap:pretty">Reports are reviewed by a person. {{ T.owner }} isn't told who reported.</span>
   </div>
 </div>
 </sc-if>
@@ -111,7 +111,7 @@ textarea:focus{outline:none;border-color:#CDDDFB}
       <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Reported — a moderator will check it</span>
       <span style="font-size:12.5px;font-weight:600;line-height:1.6;color:#5B6B84;max-width:300px;text-wrap:pretty">Recorded as “{{ doneReason }}”. Content that breaks the rules is hidden — never deleted — and {{ T.ownerLower }} is told the reason and can appeal.</span>
     </div>
-    <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:0 10px">Reporting doesn't change any booking. If something went wrong with a booking itself, raise a dispute from its page.</span>
+    <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#627187;text-align:center;text-wrap:pretty;padding:0 10px">Reporting doesn't change any booking. If something went wrong with a booking itself, raise a dispute from its page.</span>
     <a href="Booking%20Detail.dc.html" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Done</a>
   </div>
 </div>

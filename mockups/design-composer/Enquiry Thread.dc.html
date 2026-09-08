@@ -77,12 +77,12 @@ button:focus,input:focus{outline:none}
 
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 18px;display:flex;flex-direction:column;gap:10px">
     <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="5">
-      <sc-if value="{{ m.div }}"><div style="display:flex;justify-content:center;padding:5px 0"><span style="font-size:10.5px;font-weight:700;color:#8296B3;background:#E8EEF6;border-radius:999px;padding:4px 11px">{{ m.label }}</span></div></sc-if>
+      <sc-if value="{{ m.div }}"><div style="display:flex;justify-content:center;padding:5px 0"><span style="font-size:10.5px;font-weight:700;color:#5B6B84;background:#E8EEF6;border-radius:999px;padding:4px 11px">{{ m.label }}</span></div></sc-if>
       <sc-if value="{{ m.isMsg }}">
         <div style="display:flex;flex-direction:column;align-items:{{ m.align }};gap:3px">
           <sc-if value="{{ m.isText }}"><div style="max-width:78%;background:{{ m.bg }};color:{{ m.fg }};border:1px solid {{ m.bd }};border-radius:{{ m.rad }};padding:9px 13px;font-size:13.5px;font-weight:500;line-height:1.5;text-wrap:pretty">{{ m.text }}</div></sc-if>
           <sc-if value="{{ m.isPhoto }}"><span style="width:200px;height:150px;border-radius:18px;overflow:hidden;border:1px solid #E3EAF3;display:block;background:#E8EEF6"><image-slot id="{{ m.photoId }}" shape="rect" placeholder="{{ m.photoPh }}"></image-slot></span></sc-if>
-          <span style="font-size:10px;font-weight:600;color:#9AA9C0;padding:0 4px;font-variant-numeric:tabular-nums">{{ m.time }}</span>
+          <span style="font-size:10px;font-weight:600;color:#627187;padding:0 4px;font-variant-numeric:tabular-nums">{{ m.time }}</span>
         </div>
       </sc-if>
     </sc-for>

@@ -91,11 +91,11 @@ button:focus{outline:none}
       </div>
       <div style="padding:14px 16px;display:flex;flex-direction:column;gap:11px">
         <div style="display:flex;gap:12px">
-          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">When</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
-          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">When</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
+          <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
-        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Your notes</span><span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">{{ D.notes }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
+        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Your notes</span><span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">{{ D.notes }}</span></div>
       </div>
     </div>
 
@@ -106,7 +106,7 @@ button:focus{outline:none}
         <span style="background:#FEF3DC;color:#A15C00;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">Awaiting you</span>
       </span>
       <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Sent 22 Aug 09:32 &mdash; &ldquo;Replace joint, reseal line &mdash; parts included.&rdquo; Nothing is booked until you accept.</span>
-      <a href="Quote%20Received.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review the quote</a>
+      <a href="Quote%20Received.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review the quote</a>
     </div>
     </sc-if>
 
@@ -175,12 +175,12 @@ button:focus{outline:none}
       <div style="display:flex;flex-direction:column">
         <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #EEF3FA">
           <span style="font-size:12.5px;font-weight:600;color:#5B6B84">Price</span>
-          <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.agPrice }}</span><sc-if value="{{ hasPriceWas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:600;color:#9AA9C0">{{ D.agPriceWas }}</span></sc-if></span>
+          <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.agPrice }}</span><sc-if value="{{ hasPriceWas }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:600;color:#627187">{{ D.agPriceWas }}</span></sc-if></span>
         </div>
         <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Date &amp; time</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></div>
         <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Scope</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D;text-align:right;max-width:200px">{{ D.scope }}</span></div>
       </div>
-      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ D.lockNote }} Neither of you can change it alone — a change takes an amendment you both approve. RaajjePro records the agreement and holds no money.</div>
+      <div style="font-size:11.5px;font-weight:600;line-height:1.5;color:#627187;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">{{ D.lockNote }} Neither of you can change it alone — a change takes an amendment you both approve. RaajjePro records the agreement and holds no money.</div>
     </div>
 
     <sc-if value="{{ hasAmendment }}" hint-placeholder-val="{{ false }}">
@@ -190,20 +190,20 @@ button:focus{outline:none}
         <span style="background:{{ amChipBg }};color:{{ amChipFg }};border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800">{{ amChip }}</span>
       </span>
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original</span><span style="font-size:14.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
+        <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Original</span><span style="font-size:14.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
         <span style="flex:1;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8">Proposed</span><span style="font-size:14.5px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">MVR 600</span></span>
       </div>
       <span style="font-size:12px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">Proposed by Mariyam Shifa · Today 09:20 — “Two extra rooms added on the day.”</span>
       <sc-if value="{{ amPending }}" hint-placeholder-val="{{ false }}">
-      <a href="Propose%20Amendment.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review and decide</a>
-      <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">Nothing changes until you accept. The original stays on the record either way.</span>
+      <a href="Propose%20Amendment.dc.html" style="height:48px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Review and decide</a>
+      <span style="font-size:11px;font-weight:600;color:#627187;text-align:center;text-wrap:pretty">Nothing changes until you accept. The original stays on the record either way.</span>
       </sc-if>
     </div>
     </sc-if>
 
     <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">History</span><span style="font-size:11px;font-weight:600;color:#9AA9C0">Every change, who made it, and when — this is the booking's record.</span></span>
+      <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">History</span><span style="font-size:11px;font-weight:600;color:#627187">Every change, who made it, and when — this is the booking's record.</span></span>
       <div style="display:flex;flex-direction:column">
         <sc-for list="{{ timeline }}" as="e" hint-placeholder-count="4">
           <div style="display:flex;gap:11px">
@@ -220,7 +220,7 @@ button:focus{outline:none}
         <div style="display:flex;gap:11px;align-items:center">
           <span style="width:10px;display:flex;justify-content:center;flex:none"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;box-shadow:0 0 0 3px #E8F0FE"></span></span>
           <dc-import name="StatusPill" status="{{ statusKey }}" hint-size="130px,28px"></dc-import>
-          <span style="font-size:11px;font-weight:600;color:#9AA9C0">now</span>
+          <span style="font-size:11px;font-weight:600;color:#627187">now</span>
         </div>
       </div>
     </div>
@@ -256,7 +256,7 @@ button:focus{outline:none}
       </div>
       <span style="font-size:12px;font-weight:600;line-height:1.5;color:#5B6B84;text-align:center;max-width:290px;text-wrap:pretty">{{ rateHint }}</span>
       <sc-if value="{{ rated }}" hint-placeholder-val="{{ false }}">
-      <button onClick="{{ rateDone }}" style="width:100%;height:50px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Post rating</button>
+      <button onClick="{{ rateDone }}" style="width:100%;height:50px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Post rating</button>
       </sc-if>
     </div>
   </div>
@@ -336,7 +336,7 @@ class Component extends DCLogic {
     const timeline = tl.map((e,i) => ({ t:e[0], who:e[1], when:e[2],
       dot: i===tl.length-1 ? '#5B8DF6' : '#C6D4EA', line:'#E8EEF6' }));
     const chat = { label:'Message '+D.first, tap:() => { window.location='Booking%20Thread.dc.html'; } };
-    const primary = { border:'none', bg:'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)', fg:'#fff', shadow:'0 8px 18px rgba(37,99,235,.28)' };
+    const primary = { border:'none', bg:'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)', fg:'#fff', shadow:'0 8px 18px rgba(37,99,235,.28)' };
     const outline = { border:'1.5px solid #E3EAF3', bg:'#fff', fg:'#41526B', shadow:'none' };
     let foots;
     if (sc==='awaiting_payment' || withdrawn)
