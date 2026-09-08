@@ -84,6 +84,17 @@ void main() {
   );
 
   testWidgets(
+    'the header is a bare back control, not AppHeader.page (final review #18)',
+    (tester) async {
+      await pump(tester);
+      // `Verify Email.dc.html` line ~29: a bare circular back button, no
+      // title bar above the centered "Verify your email" in the body.
+      expect(find.bySemanticsLabel('Back'), findsOneWidget);
+      expect(find.text('Verify email'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'the countdown reaches zero and becomes a Resend button; resend shows the resent banner',
     (tester) async {
       api.on(

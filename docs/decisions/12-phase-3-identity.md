@@ -254,9 +254,15 @@ pattern", "Opens change phone" — with no sub-screen drawn) or a deliberate
 departure from what they do specify. Each is flagged here, not silently
 resolved either way, per root CLAUDE.md's scope-discipline rule.
 
-- **Sign In omits the prototype's icon badge beside the wordmark** and
-  renders `Continue as Guest` as a secondary button, not the prototype's
-  inline link — the plan's own sample screen shows a button there.
+- **Headers now match the prototypes on Sign In, Register and Verify
+  Email** (final review #3/#18) — Sign In's hero carries the 42 dp circular
+  icon badge beside the wordmark, the tagline and the wave overlap exactly
+  as `Sign In.dc.html` draws them; Register and Verify Email drop the hero
+  entirely for a bare 44 dp circular back button above a dark-ink title, per
+  `Register.dc.html` and `Verify Email.dc.html`. `Continue as Guest` stays a
+  secondary button, not the prototype's inline link — the plan's own sample
+  screen shows a button there, so that one divergence is a deliberate copy
+  choice, not a layout miss.
 - **The generic error banner `Something went wrong. Please try again.`**
   (Sign In, Register, Verify Email, and this task's three change screens)
   is not prototype copy — `App States.dc.html` has no generic-error state

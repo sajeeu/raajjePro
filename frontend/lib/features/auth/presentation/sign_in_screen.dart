@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/sign_in_controller.dart';
+import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/auth_hero.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/social_sign_in_row.dart';
@@ -56,10 +58,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const AuthHero(
-              title: 'Welcome back',
-              subtitle: 'Sign in to your RaajjePro account',
-            ),
+            const AuthHero(),
             Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(
                 AppSpacing.xxl,
@@ -70,16 +69,20 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text('Welcome back', style: type.screenTitle),
+                  const SizedBox(height: AppSpacing.xxs + 1),
+                  Text(
+                    'Sign in to your RaajjePro account',
+                    style: type.body.copyWith(color: colors.textSecondary),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   if (s.failed)
                     InlineNotice.error(
                       "That email and password combination didn't work. Check both and try again.",
                     ),
                   if (s.rateLimited)
                     InlineNotice.error(rateLimitCopy(s.rateLimitedSeconds)),
-                  if (s.genericError)
-                    InlineNotice.error(
-                      'Something went wrong. Please try again.',
-                    ),
+                  if (s.genericError) InlineNotice.error(genericErrorCopy),
                   if (s.offline) InlineNotice.offline(onRetry: _submit),
                   if (s.socialNotice != null)
                     InlineNotice.info(s.socialNotice!),

@@ -76,6 +76,25 @@ void main() {
   };
 
   testWidgets(
+    'the header is the bare 44dp back control, not a hero — no icon badge, no gradient (final review #3)',
+    (tester) async {
+      await pump(tester);
+      // `Register.dc.html` line 29: a bare circular back button above the
+      // dark-ink title — no `AuthHero` gradient or icon badge here at all.
+      expect(find.text('Create account'), findsOneWidget);
+      expect(find.bySemanticsLabel('Back to sign in'), findsOneWidget);
+      expect(find.byIcon(Icons.location_on_rounded), findsNothing);
+
+      // Tapping it must not crash even with nothing to pop to (Register is
+      // this test's root route) — `Pressable`'s 48dp hit floor still wraps
+      // the 44dp visual, and the control stays a plain `maybePop`.
+      await tester.tap(find.bySemanticsLabel('Back to sign in'));
+      await tester.pump();
+      expect(find.text('Create account'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'customer variant: no business field; submitting sends the role, +960 phone and acceptTerms, then goes to Verify Email',
     (tester) async {
       api.on(

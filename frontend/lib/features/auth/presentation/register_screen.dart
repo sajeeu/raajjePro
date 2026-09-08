@@ -5,7 +5,9 @@ import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/device_name.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/register_controller.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/auth_hero.dart';
+import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
+import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
+import 'package:raajjepro/features/auth/presentation/widgets/circle_back_button.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/phone_field.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
@@ -71,12 +73,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .submit(request, acceptedTerms: _terms, confirmPassword: _confirm.text);
     if (outcome != null && mounted) {
       Navigator.of(context).pushReplacementNamed(
-        '/verify-email',
-        arguments: {
-          'email': _email.text.trim(),
-          'status': outcome.status.name,
-          'resendAvailableAt': outcome.resendAvailableAt.toIso8601String(),
-        },
+        VerifyEmailScreen.routeName,
+        arguments: VerifyEmailArgs(
+          email: _email.text.trim(),
+          purpose: OtpPurpose.verifyEmail,
+          initialStatus: outcome.status,
+          resendAvailableAt: outcome.resendAvailableAt,
+        ),
       );
     }
   }
@@ -101,278 +104,273 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const AuthHero(
-              title: 'Create account',
-              subtitle: 'Join RaajjePro — it only takes a minute',
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpacing.xxl,
-                AppSpacing.xxl,
-                AppSpacing.xxl,
-                AppSpacing.xxxl,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            AppSpacing.xxl,
+            AppSpacing.xxl,
+            AppSpacing.xxl,
+            AppSpacing.xxxl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: CircleBackButton(
+                  semanticLabel: 'Back to sign in',
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (s.offline) InlineNotice.offline(onRetry: _submit),
-                  if (s.rateLimited)
-                    InlineNotice.error(rateLimitCopy(s.rateLimitedSeconds)),
-                  if (s.fieldErrors['form'] != null)
-                    InlineNotice.error(s.fieldErrors['form']!),
-                  Text('I want to…', style: type.bodyStrong),
-                  const SizedBox(height: AppSpacing.sm),
-                  RoleToggle(
-                    value: _role,
-                    onChanged: (r) => setState(() => _role = r),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  AppTextField(
-                    key: const Key('reg-name'),
-                    label: 'Full Name',
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    autofillHints: const [AutofillHints.name],
-                    errorText: s.fieldErrors['fullName'],
-                    enabled: !s.busy,
-                    onChanged: (_) => ctrl.clear('fullName'),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppTextField(
-                    key: const Key('reg-email'),
-                    label: 'Email Address',
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    autofillHints: const [AutofillHints.email],
-                    // Not the fixture's sample email (`aishath@example.mv`,
-                    // used by the fixtures and widget tests) — Task 4's
-                    // `sign_in_screen.dart` documents why: a hint whose text
-                    // exactly matches typed content stays mounted at opacity
-                    // 0 rather than leaving the tree, and would be a second
-                    // match for any `find.text` on that value.
-                    hint: 'you@example.mv',
-                    errorText: s.fieldErrors['email'],
-                    enabled: !s.busy,
-                    onChanged: (_) => ctrl.clear('email'),
-                  ),
-                  if (s.emailInUse)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        top: AppSpacing.xs,
+              const SizedBox(height: AppSpacing.xl),
+              Text('Create account', style: type.screenTitle),
+              const SizedBox(height: AppSpacing.xxs + 1),
+              Text(
+                'Join RaajjePro — it only takes a minute',
+                style: type.body.copyWith(color: colors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              if (s.offline) InlineNotice.offline(onRetry: _submit),
+              if (s.rateLimited)
+                InlineNotice.error(rateLimitCopy(s.rateLimitedSeconds)),
+              if (s.fieldErrors['form'] != null)
+                InlineNotice.error(s.fieldErrors['form']!),
+              Text('I want to…', style: type.bodyStrong),
+              const SizedBox(height: AppSpacing.sm),
+              RoleToggle(
+                value: _role,
+                onChanged: (r) => setState(() => _role = r),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              AppTextField(
+                key: const Key('reg-name'),
+                label: 'Full Name',
+                controller: _name,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.name],
+                errorText: s.fieldErrors['fullName'],
+                enabled: !s.busy,
+                onChanged: (_) => ctrl.clear('fullName'),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AppTextField(
+                key: const Key('reg-email'),
+                label: 'Email Address',
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                autofillHints: const [AutofillHints.email],
+                // Not the fixture's sample email (`aishath@example.mv`,
+                // used by the fixtures and widget tests) — Task 4's
+                // `sign_in_screen.dart` documents why: a hint whose text
+                // exactly matches typed content stays mounted at opacity
+                // 0 rather than leaving the tree, and would be a second
+                // match for any `find.text` on that value.
+                hint: 'you@example.mv',
+                errorText: s.fieldErrors['email'],
+                enabled: !s.busy,
+                onChanged: (_) => ctrl.clear('email'),
+              ),
+              if (s.emailInUse)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: AppSpacing.xs),
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      AppButton.text(
+                        label: 'Sign in',
+                        size: AppButtonSize.compact,
+                        onPressed: () =>
+                            Navigator.of(context)
+                                .pushReplacementNamed(SignInScreen.routeName),
                       ),
+                      Text(
+                        '·',
+                        style: type.caption.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      AppButton.text(
+                        label: 'Reset password',
+                        size: AppButtonSize.compact,
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/forgot-password'),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.lg),
+              PhoneField(
+                dialCode: _dial,
+                number: _phone,
+                enabled: !s.busy,
+                errorText: s.phoneInUse ? null : s.fieldErrors['phone'],
+                errorWidget: s.phoneInUse
+                    ? Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          const Text(
+                            "This number belongs to a verified provider account. If it's yours, ",
+                          ),
+                          AppButton.text(
+                            label: 'sign in',
+                            size: AppButtonSize.compact,
+                            onPressed: () => Navigator.of(context)
+                                .pushReplacementNamed(SignInScreen.routeName),
+                          ),
+                          const Text(' instead — or use a different number.'),
+                        ],
+                      )
+                    : null,
+                onChanged: () {
+                  ctrl.clear('phone');
+                  setState(() {});
+                },
+              ),
+              if (isProvider) ...[
+                const SizedBox(height: AppSpacing.lg),
+                AppTextField(
+                  key: const Key('reg-business'),
+                  label: 'Business / Trade Name',
+                  controller: _business,
+                  helper: 'The name customers will see on your listings',
+                  textCapitalization: TextCapitalization.words,
+                  errorText: s.fieldErrors['businessName'],
+                  enabled: !s.busy,
+                  onChanged: (_) => ctrl.clear('businessName'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                InlineNotice.info(
+                  "This creates your account only — you'll list services through Become a Provider after signing up.",
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              AppTextField(
+                key: const Key('reg-password'),
+                label: 'Password',
+                controller: _password,
+                obscureText: !_reveal1,
+                autofillHints: const [AutofillHints.newPassword],
+                helper: 'At least 8 characters',
+                errorText: s.fieldErrors['password'],
+                enabled: !s.busy,
+                onChanged: (_) => ctrl.clear('password'),
+                suffix: reveal(
+                  _reveal1,
+                  () => setState(() => _reveal1 = !_reveal1),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AppTextField(
+                key: const Key('reg-confirm'),
+                label: 'Confirm Password',
+                controller: _confirm,
+                obscureText: !_reveal2,
+                errorText: s.fieldErrors['confirmPassword'],
+                enabled: !s.busy,
+                onChanged: (_) => ctrl.clear('confirmPassword'),
+                suffix: reveal(
+                  _reveal2,
+                  () => setState(() => _reveal2 = !_reveal2),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Pressable(
+                key: const Key('reg-terms'),
+                semanticLabel:
+                    'I agree to the Terms of Service and Privacy Policy${_terms ? ', checked' : ', not checked'}',
+                onTap: () {
+                  setState(() => _terms = !_terms);
+                  ctrl.clear('acceptTerms');
+                },
+                toggled: _terms,
+                builder: (context, state) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: AppSizes.checkbox,
+                      height: AppSizes.checkbox,
+                      decoration: BoxDecoration(
+                        color: _terms ? colors.primary : colors.surface,
+                        borderRadius: AppRadius.circular(AppRadius.pill),
+                        border: Border.all(
+                          color: _terms ? colors.primary : colors.neutralBorder,
+                          width: AppSizes.inputStroke,
+                        ),
+                      ),
+                      child: _terms
+                          ? Icon(
+                              Icons.check_rounded,
+                              size: AppSizes.iconMd,
+                              color: colors.onPrimary,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          AppButton.text(
-                            label: 'Sign in',
-                            size: AppButtonSize.compact,
-                            onPressed: () =>
-                                Navigator.of(context)
-                                    .pushReplacementNamed('/sign-in'),
-                          ),
                           Text(
-                            '·',
-                            style: type.caption.copyWith(
-                              color: colors.textSecondary,
-                            ),
+                            "I agree to RaajjePro's ",
+                            style: type.secondary,
                           ),
                           AppButton.text(
-                            label: 'Reset password',
+                            label: 'Terms of Service',
+                            size: AppButtonSize.compact,
+                            onPressed: () =>
+                                Navigator.of(context).pushNamed('/legal/terms'),
+                          ),
+                          Text(' and ', style: type.secondary),
+                          AppButton.text(
+                            label: 'Privacy Policy',
                             size: AppButtonSize.compact,
                             onPressed: () =>
                                 Navigator.of(context)
-                                    .pushNamed('/forgot-password'),
+                                    .pushNamed('/legal/privacy'),
                           ),
                         ],
                       ),
                     ),
-                  const SizedBox(height: AppSpacing.lg),
-                  PhoneField(
-                    dialCode: _dial,
-                    number: _phone,
-                    enabled: !s.busy,
-                    errorText: s.phoneInUse ? null : s.fieldErrors['phone'],
-                    errorWidget: s.phoneInUse
-                        ? Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              const Text(
-                                "This number belongs to a verified provider account. If it's yours, ",
-                              ),
-                              AppButton.text(
-                                label: 'sign in',
-                                size: AppButtonSize.compact,
-                                onPressed: () =>
-                                    Navigator.of(context)
-                                        .pushReplacementNamed('/sign-in'),
-                              ),
-                              const Text(
-                                ' instead — or use a different number.',
-                              ),
-                            ],
-                          )
-                        : null,
-                    onChanged: () {
-                      ctrl.clear('phone');
-                      setState(() {});
-                    },
-                  ),
-                  if (isProvider) ...[
-                    const SizedBox(height: AppSpacing.lg),
-                    AppTextField(
-                      key: const Key('reg-business'),
-                      label: 'Business / Trade Name',
-                      controller: _business,
-                      helper: 'The name customers will see on your listings',
-                      textCapitalization: TextCapitalization.words,
-                      errorText: s.fieldErrors['businessName'],
-                      enabled: !s.busy,
-                      onChanged: (_) => ctrl.clear('businessName'),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    InlineNotice.info(
-                      "This creates your account only — you'll list services through Become a Provider after signing up.",
-                    ),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-                  AppTextField(
-                    key: const Key('reg-password'),
-                    label: 'Password',
-                    controller: _password,
-                    obscureText: !_reveal1,
-                    autofillHints: const [AutofillHints.newPassword],
-                    helper: 'At least 8 characters',
-                    errorText: s.fieldErrors['password'],
-                    enabled: !s.busy,
-                    onChanged: (_) => ctrl.clear('password'),
-                    suffix: reveal(
-                      _reveal1,
-                      () => setState(() => _reveal1 = !_reveal1),
-                    ),
+                ),
+              ),
+              if (s.fieldErrors['acceptTerms'] != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: AppSpacing.xs),
+                  child: Text(
+                    s.fieldErrors['acceptTerms']!,
+                    style: type.caption.copyWith(color: colors.errorText),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppTextField(
-                    key: const Key('reg-confirm'),
-                    label: 'Confirm Password',
-                    controller: _confirm,
-                    obscureText: !_reveal2,
-                    errorText: s.fieldErrors['confirmPassword'],
-                    enabled: !s.busy,
-                    onChanged: (_) => ctrl.clear('confirmPassword'),
-                    suffix: reveal(
-                      _reveal2,
-                      () => setState(() => _reveal2 = !_reveal2),
-                    ),
+                ),
+              const SizedBox(height: AppSpacing.xl),
+              AppButton.primary(
+                label: isProvider
+                    ? 'Create Provider Account'
+                    : 'Create Account',
+                loading: s.busy,
+                expand: true,
+                onPressed: s.busy ? null : _submit,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account? ',
+                    style: type.body.copyWith(color: colors.textSecondary),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Pressable(
-                    key: const Key('reg-terms'),
-                    semanticLabel:
-                        'I agree to the Terms of Service and Privacy Policy${_terms ? ', checked' : ', not checked'}',
-                    onTap: () {
-                      setState(() => _terms = !_terms);
-                      ctrl.clear('acceptTerms');
-                    },
-                    toggled: _terms,
-                    builder: (context, state) => Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: AppSizes.checkbox,
-                          height: AppSizes.checkbox,
-                          decoration: BoxDecoration(
-                            color: _terms ? colors.primary : colors.surface,
-                            borderRadius: AppRadius.circular(AppRadius.pill),
-                            border: Border.all(
-                              color: _terms
-                                  ? colors.primary
-                                  : colors.neutralBorder,
-                              width: AppSizes.inputStroke,
-                            ),
-                          ),
-                          child: _terms
-                              ? Icon(
-                                  Icons.check_rounded,
-                                  size: AppSizes.iconMd,
-                                  color: colors.onPrimary,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                "I agree to RaajjePro's ",
-                                style: type.secondary,
-                              ),
-                              AppButton.text(
-                                label: 'Terms of Service',
-                                size: AppButtonSize.compact,
-                                onPressed: () =>
-                                    Navigator.of(context)
-                                        .pushNamed('/legal/terms'),
-                              ),
-                              Text(' and ', style: type.secondary),
-                              AppButton.text(
-                                label: 'Privacy Policy',
-                                size: AppButtonSize.compact,
-                                onPressed: () =>
-                                    Navigator.of(context)
-                                        .pushNamed('/legal/privacy'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (s.fieldErrors['acceptTerms'] != null)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        top: AppSpacing.xs,
-                      ),
-                      child: Text(
-                        s.fieldErrors['acceptTerms']!,
-                        style: type.caption.copyWith(color: colors.errorText),
-                      ),
-                    ),
-                  const SizedBox(height: AppSpacing.xl),
-                  AppButton.primary(
-                    label: isProvider
-                        ? 'Create Provider Account'
-                        : 'Create Account',
-                    loading: s.busy,
-                    expand: true,
-                    onPressed: s.busy ? null : _submit,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account? ',
-                        style: type.body.copyWith(color: colors.textSecondary),
-                      ),
-                      AppButton.text(
-                        label: 'Sign In',
-                        size: AppButtonSize.compact,
-                        onPressed: () =>
-                            Navigator.of(context)
-                                .pushReplacementNamed('/sign-in'),
-                      ),
-                    ],
+                  AppButton.text(
+                    label: 'Sign In',
+                    size: AppButtonSize.compact,
+                    onPressed: () =>
+                        Navigator.of(context)
+                            .pushReplacementNamed(SignInScreen.routeName),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

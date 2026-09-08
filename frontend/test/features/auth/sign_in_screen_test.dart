@@ -68,6 +68,18 @@ void main() {
   );
 
   testWidgets(
+    'the hero carries the 42dp icon badge beside the wordmark, prototype-matched (final review #3)',
+    (tester) async {
+      await pump(tester);
+      // `Sign In.dc.html` lines 28-40: the icon badge sits inside the
+      // gradient hero, above `Welcome back` — which is its own Text in the
+      // body now, not an AuthHero title/subtitle param.
+      expect(find.byIcon(Icons.location_on_rounded), findsOneWidget);
+      expect(find.text('Welcome back'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'submitting shows the button\'s own loading state, then success signs in',
     (tester) async {
       api.gate = Completer<void>();
