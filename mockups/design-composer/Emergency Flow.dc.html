@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 @keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.2}}
 </style>
 <link rel="stylesheet" href="./motion.css">
@@ -64,7 +64,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 18px">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Last 24 hours</span><span style="font-size:14px;font-weight:800;color:#DC2626;font-variant-numeric:tabular-nums">3 of 3 used</span></div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:14px;font-weight:600;color:#41526B">Last 7 days</span><span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">7 of 10 used</span></div>
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0"><span style="font-size:14px;font-weight:600;color:#41526B">Next request available</span><span style="font-size:14px;font-weight:800;color:#16A34A">in about 6 hours</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0"><span style="font-size:14px;font-weight:600;color:#41526B">Next request available</span><span style="font-size:14px;font-weight:800;color:#166534">in about 6 hours</span></div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:16px;padding:14px 16px">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><rect x="4" y="5.5" width="16" height="15" rx="2.5"></rect><path d="M4 10.5h16M8.5 3.5v4M15.5 3.5v4"></path></svg>
@@ -208,7 +208,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="font-size:13px;font-weight:600;color:#5B6B84">holding for more offers</div>
             <div style="width:100%;height:8px;border-radius:999px;background:#E7F2EB;overflow:hidden;margin-top:6px" aria-hidden="true"><div style="height:100%;border-radius:999px;background:linear-gradient(90deg,#34C77B,#16A34A);width:{{ collectPct }}%;transition:width var(--m-base) linear"></div></div>
             <div style="font-size:12.5px;line-height:1.55;color:#41526B;max-width:300px;text-wrap:pretty;margin-top:6px">Offers are gathered for <b>90 seconds</b> so you choose between providers — instead of taking the first and only answer.</div>
-            <div style="font-size:12px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">{{ winTxt }} left on the overall window</div>
+            <div style="font-size:12px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ winTxt }} left on the overall window</div>
           </div>
         </sc-if>
 
@@ -234,7 +234,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
             <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F3F7FC;animation:fadeUp var(--m-page) var(--e-out) both">
               <span style="width:8px;height:8px;border-radius:50%;background:{{ f.dot }};flex:none;margin-top:5px"></span>
               <span style="flex:1;font-size:13px;line-height:1.45;color:#41526B;font-weight:600">{{ f.t }}</span>
-              <span style="font-size:12px;color:#8296B3;font-weight:600;font-variant-numeric:tabular-nums;flex:none">{{ f.at }}</span>
+              <span style="font-size:12px;color:#5B6B84;font-weight:600;font-variant-numeric:tabular-nums;flex:none">{{ f.at }}</span>
             </div>
           </sc-for>
         </div>
@@ -275,12 +275,12 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                       </span>
                       <span style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
                         <span style="font-size:14px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.etaTxt }}</span>
-                        <span style="font-size:11px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.dist }}</span>
+                        <span style="font-size:11px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.dist }}</span>
                         <sc-if value="{{ s.hasEtaChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.etaChip }}</span></sc-if>
                       </span>
                       <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;text-align:right">
                         <span style="font-size:15.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.feeTxt }}</span>
-                        <span style="font-size:10.5px;font-weight:600;color:#8296B3;white-space:nowrap">callout fee</span>
+                        <span style="font-size:10.5px;font-weight:600;color:#5B6B84;white-space:nowrap">callout fee</span>
                         <sc-if value="{{ s.hasFeeChip }}"><span style="background:#EEF3FA;border:1px solid #E1EAF5;color:#41526B;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:700;white-space:nowrap">{{ s.feeChip }}</span></sc-if>
                       </span>
                     </div>
@@ -308,7 +308,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                 <sc-if value="{{ s.ghost }}">
                   <div style="border:1.5px dashed #C7D5E8;border-radius:18px;min-height:96px;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(90deg,#EDF3FA 25%,#F7FBFE 50%,#EDF3FA 75%);background-size:200% 100%;animation:shimmer 1.8s linear infinite" aria-hidden="true">
                     <span style="width:8px;height:8px;border-radius:50%;background:#8FA9CC;animation:blinkDot 1.2s ease infinite"></span>
-                    <span style="font-size:13px;font-weight:700;color:#8296B3">still listening</span>
+                    <span style="font-size:13px;font-weight:700;color:#5B6B84">still listening</span>
                   </div>
                 </sc-if>
               </div>
@@ -380,13 +380,13 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         <button onClick="{{ bookNormal }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Not urgent? Book normally</button>
       </sc-if>
       <sc-if value="{{ limitOn }}">
-        <button onClick="{{ bookNormal }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Make a normal booking instead</button>
+        <button onClick="{{ bookNormal }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Make a normal booking instead</button>
         <button onClick="{{ goHome }}" style="width:100%;height:44px;border:none;background:none;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer;border-radius:12px" style-hover="color:#0F1B2D;background:rgba(15,27,45,.04)">Back to Home</button>
       </sc-if>
     </sc-if>
     <sc-if value="{{ fWaiting }}">
       <button onClick="{{ cancelReq }}" style="width:100%;height:52px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#DC2626;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#FEF6F6;border-color:#F5C6C6" style-active="transform:scale(.98)">Cancel request</button>
-      <div style="text-align:center;font-size:12px;font-weight:600;color:#8296B3">Nothing has been charged</div>
+      <div style="text-align:center;font-size:12px;font-weight:600;color:#5B6B84">Nothing has been charged</div>
     </sc-if>
     <sc-if value="{{ fOffers }}">
       <button onClick="{{ confirmAccept }}" style="width:100%;height:54px;border:none;border-radius:16px;background:{{ ctaBg }};color:#fff;font-size:16px;font-weight:700;cursor:{{ ctaCur }};box-shadow:{{ ctaSh }};display:flex;align-items:center;justify-content:center;gap:10px;transition:background var(--m-fast)" style-active="transform:scale(.98)">
@@ -400,7 +400,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <button onClick="{{ scheduleNormal }}" style="width:100%;height:52px;border:1.5px solid #CDDDFB;border-radius:16px;background:#E8F0FE;color:#1D4ED8;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:#D8E6FD" style-active="transform:scale(.98)">Turn into a scheduled request</button>
     </sc-if>
     <sc-if value="{{ fDispatched }}">
-      <button onClick="{{ openChat }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
+      <button onClick="{{ openChat }}" style="width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.32);display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L4 21l1.6-4.4A8.5 8.5 0 1 1 21 12z"></path></svg>
         Chat with {{ aFirst }}
       </button>
@@ -430,7 +430,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               </sc-for>
             </div>
             <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
-        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
+        <div style="font-size:11.5px;font-weight:600;color:#5B6B84;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
           </div>
         </sc-if>
 
@@ -654,7 +654,7 @@ class Component extends DCLogic {
       rejectAll: () => { if (S.confirming) return; this.setState({ sheet: { type: 'reject' } }); },
       confirming: S.confirming, notConfirming: !S.confirming,
       ctaTxt: S.sel != null ? 'Confirm ' + this.OFFERS[S.sel].name + ' — MVR ' + this.OFFERS[S.sel].fee : 'Select a provider to continue',
-      ctaBg: S.sel != null ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C2D0E4',
+      ctaBg: S.sel != null ? 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)' : '#C2D0E4',
       ctaSh: S.sel != null ? '0 10px 24px rgba(37,99,235,.32)' : 'none',
       ctaCur: S.sel != null ? 'pointer' : 'default',
       confirmAccept: () => { if (this.state.sel == null || this.state.confirming) return; this.setState({ confirming: true }); setTimeout(() => this.setState({ confirming: false, accepted: this.state.sel, sel: null, screen: 'dispatched' }), 1100); },

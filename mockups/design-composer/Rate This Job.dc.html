@@ -82,23 +82,23 @@ textarea:focus{outline:none;border-color:#CDDDFB}
     </div>
 
     <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Add a word or two</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Add a word or two</span><span style="font-size:11px;font-weight:700;color:#627187">optional</span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <sc-for list="{{ tags }}" as="tg" hint-placeholder-count="8">
           <dc-import name="Chip" label="{{ tg.label }}" kind="filter" selected="{{ tg.on }}" on-tap="{{ tg.tap }}" hint-size="100px,38px"></dc-import>
         </sc-for>
       </div>
-      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">A tag appears on Mariyam's profile only after three different customers have applied it — one review brands nobody.</span>
+      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">A tag appears on Mariyam's profile only after three different customers have applied it — one review brands nobody.</span>
     </div>
 
     <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Written review</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional</span></span>
+      <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Written review</span><span style="font-size:11px;font-weight:700;color:#627187">optional</span></span>
       <textarea value="{{ review }}" onChange="{{ setReview }}" placeholder="What should the next customer know?" rows="4" style="border:1.5px solid #E3EAF3;border-radius:13px;padding:12px;font-size:13px;font-weight:500;color:#0F1B2D;line-height:1.5;resize:vertical;background:#fff;width:100%"></textarea>
     </div>
   </div>
   <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:8px">
     <button onClick="{{ submit }}" style="height:52px;border:none;border-radius:16px;background:{{ btnBg }};color:#fff;font-size:14px;font-weight:700;cursor:{{ btnCursor }};box-shadow:{{ btnShadow }}" style-active="transform:scale(.98)">{{ btnLabel }}</button>
-    <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">One review per booking. Stars and your words are public on Mariyam's profile.</span>
+    <span style="font-size:11px;font-weight:600;color:#627187;text-align:center;text-wrap:pretty">One review per booking. Stars and your words are public on Mariyam's profile.</span>
   </div>
 </div>
 </sc-if>
@@ -128,7 +128,7 @@ textarea:focus{outline:none;border-color:#CDDDFB}
       </sc-if>
       <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">It's public on Mariyam's profile, alongside her job count. This was this booking's one review.</span>
     </div>
-    <a href="Book%20Again.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Book Mariyam again</a>
+    <a href="Book%20Again.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Book Mariyam again</a>
     <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
   </div>
 </div>
@@ -152,16 +152,16 @@ class Component extends DCLogic {
       isLoading, isError,
       isForm: !isLoading && !isError && !done,
       isDone: !isLoading && !isError && done,
-      stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#D99A1E' : '#C6D4EA', tap:() => this.setState({ rating:n }) })),
+      stars: [1,2,3,4,5].map(n => ({ label:n+' star'+(n>1?'s':''), fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#B45309' : '#8296B3', tap:() => this.setState({ rating:n }) })),
       starHint: rated ? 'The only required part — everything below is up to you.' : 'Stars are the only required part. Two taps finishes this: stars, then post.',
       tags: this.TAGS.map((t,i) => ({ label:t, on: !!s.picked[i], tap:() => this.setState(st => ({ picked:{ ...st.picked, [i]: !st.picked[i] } })) })),
       review: s.review, setReview: (e) => this.setState({ review:e.target.value }),
-      btnBg: rated ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C6D4EA',
+      btnBg: rated ? 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)' : '#C6D4EA',
       btnShadow: rated ? '0 8px 18px rgba(37,99,235,.28)' : 'none',
       btnCursor: rated ? 'pointer' : 'default',
       btnLabel: rated ? 'Post review' : 'Tap the stars to post',
       submit: () => { if (this.state.rating > 0) this.setState({ done:true }); },
-      doneStars: [1,2,3,4,5].map(n => ({ fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#D99A1E' : '#C6D4EA' })),
+      doneStars: [1,2,3,4,5].map(n => ({ fill: n<=rating ? '#F3B23E' : 'none', stroke: n<=rating ? '#B45309' : '#8296B3' })),
       doneTags: pickedLabels, hasDoneTags: pickedLabels.length > 0,
       retry: () => this.setState({ scnOverride: 'unrated' })
     };

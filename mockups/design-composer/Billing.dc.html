@@ -41,7 +41,7 @@ button{font-family:inherit}button:focus{outline:none}
       <sc-if value="{{ showPauseBar }}" hint-placeholder-val="{{ false }}">
         <div style="display:flex;flex-direction:column;gap:6px">
           <div style="height:8px;border-radius:999px;background:#E3EAF3;overflow:hidden"><span style="display:block;height:100%;width:60%;border-radius:999px;background:#D97706"></span></div>
-          <span style="font-size:11.5px;font-weight:600;color:#8296B3">6 of 10 pause days used · resumes by itself when they run out</span>
+          <span style="font-size:11.5px;font-weight:600;color:#5B6B84">6 of 10 pause days used · resumes by itself when they run out</span>
         </div>
       </sc-if>
       <sc-if value="{{ showPriceBlock }}" hint-placeholder-val="{{ true }}">
@@ -51,7 +51,7 @@ button{font-family:inherit}button:focus{outline:none}
             <span style="font-size:12px;font-weight:700;color:#5B6B84">per 30-day period</span>
             <span style="height:20px;border-radius:999px;background:#E5F6EC;color:#166534;display:inline-flex;align-items:center;padding:0 8px;font-size:10px;font-weight:800">YOUR RATE</span>
           </div>
-          <span style="font-size:11.5px;line-height:1.55;color:#8296B3;text-wrap:pretty">Introductory rate for the first 100 providers, held for 12 months from your billing anchor — until <b>8 Mar 2027</b>, then MVR 150 with 30 days' notice. Prices are set per provider; another provider may see a different number.</span>
+          <span style="font-size:11.5px;line-height:1.55;color:#5B6B84;text-wrap:pretty">Introductory rate for the first 100 providers, held for 12 months from your billing anchor — until <b>8 Mar 2027</b>, then MVR 150 with 30 days' notice. Prices are set per provider; another provider may see a different number.</span>
         </div>
       </sc-if>
       <sc-if value="{{ showPayCta }}" hint-placeholder-val="{{ false }}">
@@ -59,7 +59,7 @@ button{font-family:inherit}button:focus{outline:none}
       </sc-if>
       <sc-if value="{{ showTrialCta }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ startTrial }}" style="height:50px;border:none;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.28)">Try Premium free for 30 days</button>
-        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-align:center;text-wrap:pretty">No payment to start. When the trial ends, nothing changes for 7 more days.</span>
+        <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-align:center;text-wrap:pretty">No payment to start. When the trial ends, nothing changes for 7 more days.</span>
       </sc-if>
       <sc-if value="{{ showResume }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ resume }}" style="height:50px;border:none;border-radius:999px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Resume now — keep the 4 unused days</button>
@@ -75,7 +75,7 @@ button{font-family:inherit}button:focus{outline:none}
       <span style="font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">What each plan includes</span>
       <div style="display:grid;grid-template-columns:1fr 84px 84px;gap:0 8px;align-items:center">
         <span></span>
-        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#8296B3;text-align:center;padding-bottom:8px">FREE</span>
+        <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#5B6B84;text-align:center;padding-bottom:8px">FREE</span>
         <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:#1D4ED8;text-align:center;padding-bottom:8px">PREMIUM</span>
         <sc-for list="{{ planRows }}" as="pr" hint-placeholder-count="5">
           <span style="font-size:12.5px;font-weight:700;color:#0F1B2D;padding:9px 0;border-top:1px solid #EEF3FA">{{ pr.t }}</span>
@@ -83,7 +83,7 @@ button{font-family:inherit}button:focus{outline:none}
           <span style="font-size:12px;font-weight:700;color:#1D4ED8;text-align:center;padding:9px 0;border-top:1px solid #EEF3FA">{{ pr.prem }}</span>
         </sc-for>
       </div>
-      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">The verification badge is on neither list — it can't be bought on any plan.</span>
+      <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;border-top:1px solid #EEF3FA;padding-top:10px;text-wrap:pretty">The verification badge is on neither list — it can't be bought on any plan.</span>
     </div>
 
     <sc-if value="{{ showPauseCard }}" hint-placeholder-val="{{ false }}">
@@ -128,7 +128,7 @@ button{font-family:inherit}button:focus{outline:none}
             </div>
           </sc-for>
         </div>
-        <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-wrap:pretty">The kept listing is your best-performing by confirmed bookings over 90 days — you can override which one.</span>
+        <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">The kept listing is your best-performing by confirmed bookings over 90 days — you can override which one.</span>
       </sc-if>
     </div>
 
@@ -141,7 +141,7 @@ button{font-family:inherit}button:focus{outline:none}
         </span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8296B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 6l6 6-6 6"></path></svg>
       </a>
-      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-align:center;text-wrap:pretty">Payment is by manual bank transfer, confirmed by an admin within 48 hours. We'll remind you 7 days before a trial or period ends; after expiry nothing changes for 7 days.</span>
+      <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-align:center;text-wrap:pretty">Payment is by manual bank transfer, confirmed by an admin within 48 hours. We'll remind you 7 days before a trial or period ends; after expiry nothing changes for 7 days.</span>
     </div>
   </div>
 

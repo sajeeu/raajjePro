@@ -46,7 +46,7 @@ class Component extends DCLogic {
     const onTap = this.props.onTap;
     return { navTabs: tabs.map(t => ({ n:t.n, d:t.d,
       pBg: t.n === active ? '#E8F0FE' : 'transparent',
-      fg: t.n === active ? '#1D4ED8' : '#8296B3',
+      fg: t.n === active ? '#1D4ED8' : '#5B6B84',
       tap: () => { if (onTap) onTap(t.n); if (t.n !== active) window.location.href = t.h; } })) };
   }
 }
