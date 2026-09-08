@@ -42,6 +42,7 @@ const schema = z.object({
   AUTH_ACCESS_TOKEN_MINUTES: int(15),
   AUTH_REFRESH_TOKEN_DAYS: int(30),
   AUTH_OTP_EXPIRY_MINUTES: int(10),
+  AUTH_PASSWORD_RESET_EXPIRY_MINUTES: int(30),
 
   EMAIL_TRANSPORT: z.enum(['file', 'ses']).default('file'),
   EMAIL_FROM_ADDRESS: z.string().min(3),
@@ -93,6 +94,8 @@ export interface Config {
     accessTokenMinutes: number;
     refreshTokenDays: number;
     otpExpiryMinutes: number;
+    /** Longer than an OTP's: the reset code is read from a mailbox the user may have to go and open (Forgot Password.dc.html says 30 minutes). */
+    passwordResetExpiryMinutes: number;
   };
   email: SesEmailConfig | FileEmailConfig;
 }
@@ -205,6 +208,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       accessTokenMinutes: v.AUTH_ACCESS_TOKEN_MINUTES,
       refreshTokenDays: v.AUTH_REFRESH_TOKEN_DAYS,
       otpExpiryMinutes: v.AUTH_OTP_EXPIRY_MINUTES,
+      passwordResetExpiryMinutes: v.AUTH_PASSWORD_RESET_EXPIRY_MINUTES,
     },
     email,
   };

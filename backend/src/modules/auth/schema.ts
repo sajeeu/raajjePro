@@ -5,12 +5,11 @@ import { MAX_USER_PASSWORD_LENGTH, MIN_USER_PASSWORD_LENGTH } from './service.js
 export const refreshBody = z.object({ refreshToken: z.string().min(20).max(200) });
 export const sessionIdParams = z.object({ id: z.uuid() });
 export const deviceName = z.string().trim().max(80).optional();
-export const otpCodeBody = z.object({
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, 'Enter the 6-digit code'),
-});
+export const otpCodeField = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, 'Enter the 6-digit code');
+export const otpCodeBody = z.object({ code: otpCodeField });
 
 export const emailField = z.string().trim().pipe(z.email()).pipe(z.string().max(320));
 export const passwordField = z.string().min(MIN_USER_PASSWORD_LENGTH).max(MAX_USER_PASSWORD_LENGTH);
@@ -57,3 +56,14 @@ export const loginBody = z.object({
 // not fail Zod's own validation (400 VALIDATION_FAILED) — plan §4.
 export const socialParams = z.object({ provider: z.string().trim().min(1).max(40) });
 export const socialBody = z.object({ idToken: z.string().min(20).max(8192), deviceName });
+
+// Forgot password (plan §Phase 3b). Three steps, three bodies. The email is
+// carried on every one because none of them is authenticated — someone who
+// cannot sign in has no session to identify them by.
+export const passwordResetRequestBody = z.object({ email: emailField });
+export const passwordResetVerifyBody = z.object({ email: emailField, code: otpCodeField });
+export const passwordResetConfirmBody = z.object({
+  email: emailField,
+  code: otpCodeField,
+  newPassword: passwordField,
+});

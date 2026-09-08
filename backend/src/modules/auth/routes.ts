@@ -8,6 +8,9 @@ import { requireAuth, userOf } from './guards.js';
 import {
   loginBody,
   otpCodeBody,
+  passwordResetConfirmBody,
+  passwordResetRequestBody,
+  passwordResetVerifyBody,
   refreshBody,
   registerBody,
   sessionIdParams,
@@ -183,6 +186,74 @@ export function registerAuthRoutes(app: FastifyInstance): void {
       const p = userOf(request);
       await app.auth.markEmailVerified(p, request.body.code, requestMeta(request));
       return reply.send(ok({ emailVerified: true }));
+    },
+  );
+
+  // --- Forgot password (plan §Phase 3b) ------------------------------------
+  // All three are unauthenticated: someone who cannot sign in has no session.
+  // The IP tiers below are the only limit that applies to an address with no
+  // account, since the domain limits count rows only a real account creates.
+
+  // Who may call: anyone. The response is identical whether or not the address
+  // is registered — the service sends nothing for an unknown, unverified,
+  // frozen or anonymised one and returns the same body.
+  r.post(
+    `${prefix}/password-reset/request`,
+    {
+      schema: { body: passwordResetRequestBody },
+      config: {
+        rateLimit: { max: 10, timeWindow: '1 hour', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      const result = await app.passwordReset.request(request.body.email, requestMeta(request));
+      return reply.send(
+        ok({
+          expiresAt: result.expiresAt.toISOString(),
+          resendAvailableAt: result.resendAvailableAt.toISOString(),
+        }),
+      );
+    },
+  );
+
+  // Who may call: anyone holding a code. Checks it without spending it, so the
+  // set-a-new-password step opens on a code already known to be good. Tier
+  // 20/15 min per IP — above the 5-attempt rule, so the fifth wrong code is
+  // answered by OTP_INVALIDATED rather than a 429 that hides it.
+  r.post(
+    `${prefix}/password-reset/verify`,
+    {
+      schema: { body: passwordResetVerifyBody },
+      config: {
+        rateLimit: { max: 20, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      await app.passwordReset.verify(request.body.email, request.body.code);
+      return reply.send(ok({ codeValid: true }));
+    },
+  );
+
+  // Who may call: anyone holding a code. Spends it, sets the password and
+  // revokes every session. Deliberately returns no tokens: the flow ends at
+  // Sign In, so a reset prompted by a stolen session signs that session out
+  // rather than handing the flow a fresh one.
+  r.post(
+    `${prefix}/password-reset/confirm`,
+    {
+      schema: { body: passwordResetConfirmBody },
+      config: {
+        rateLimit: { max: 20, timeWindow: '15 minutes', keyGenerator: (req) => `ip:${req.ip}` },
+      },
+    },
+    async (request, reply) => {
+      await app.passwordReset.confirm(
+        request.body.email,
+        request.body.code,
+        request.body.newPassword,
+        requestMeta(request),
+      );
+      return reply.send(ok({ passwordReset: true }));
     },
   );
 }

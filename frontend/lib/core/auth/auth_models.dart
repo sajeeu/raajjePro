@@ -134,6 +134,24 @@ class VerificationOutcome {
       );
 }
 
+/// What `POST /v1/auth/password-reset/request` answers with — the same body
+/// whether or not the address has an account (plan §Phase 3b), so nothing
+/// here can be read as confirmation that one does.
+class PasswordResetRequestOutcome {
+  const PasswordResetRequestOutcome({
+    required this.expiresAt,
+    required this.resendAvailableAt,
+  });
+  final DateTime expiresAt;
+  final DateTime resendAvailableAt;
+
+  factory PasswordResetRequestOutcome.fromJson(Map<String, dynamic> j) =>
+      PasswordResetRequestOutcome(
+        expiresAt: _date(j['expiresAt'])!,
+        resendAvailableAt: _date(j['resendAvailableAt'])!,
+      );
+}
+
 class SessionInfo {
   const SessionInfo({
     required this.id,

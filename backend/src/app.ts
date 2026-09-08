@@ -27,6 +27,7 @@ import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { AuditService } from './modules/audit/service.js';
 import { OtpService } from './modules/auth/otp.js';
+import { PasswordResetService } from './modules/auth/password-reset.js';
 import { registerAuthRoutes } from './modules/auth/routes.js';
 import { AuthService } from './modules/auth/service.js';
 import { SocialAuthRegistry, stubProviders } from './modules/auth/social.js';
@@ -71,6 +72,7 @@ declare module 'fastify' {
     auth: AuthService;
     email: EmailSender;
     otp: OtpService;
+    passwordReset: PasswordResetService;
     social: SocialAuthRegistry;
     anonymisation: AnonymisationHooks;
     anonymiser: AccountAnonymiser;
@@ -124,6 +126,16 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     otp,
   });
   app.decorate('auth', authService);
+  app.decorate(
+    'passwordReset',
+    new PasswordResetService({
+      prisma: deps.prisma,
+      repo: authService.repo,
+      otp,
+      audit,
+      clock: deps.clock,
+    }),
+  );
   const exportContributors = new ExportContributors();
   app.decorate('exportContributors', exportContributors);
   app.decorate(

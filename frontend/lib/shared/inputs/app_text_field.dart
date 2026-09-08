@@ -233,10 +233,18 @@ class _AppTextFieldState extends State<AppTextField> {
                           stroke: AppSizes.inputStroke,
                         )
                       : null,
+                  // The vertical padding belongs to the TEXT, not to the row.
+                  // Put it on the row and a trailing control taller than the
+                  // text adds its whole height to the field: a `Pressable`
+                  // suffix carries `minSize` 48, which made a password field
+                  // 79 dp against a plain field's 52 and — worse — pinned it
+                  // there, so at 200% text scale it was the one field in the
+                  // app that did not grow. Padding the text instead lets a
+                  // 48 dp control sit inside the field's own height while the
+                  // text still drives it (docs/decisions/14-…).
                   child: Padding(
                     padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md + 2,
                     ),
                     child: Row(
                       crossAxisAlignment: widget.maxLines == 1
@@ -251,7 +259,14 @@ class _AppTextFieldState extends State<AppTextField> {
                           ),
                           const SizedBox(width: AppSpacing.sm + 2),
                         ],
-                        Expanded(child: field),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.symmetric(
+                              vertical: AppSpacing.md + 2,
+                            ),
+                            child: field,
+                          ),
+                        ),
                         if (widget.readOnly)
                           Icon(
                             Icons.lock_outline_rounded,

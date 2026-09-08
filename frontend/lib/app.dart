@@ -11,6 +11,7 @@ import 'package:raajjepro/features/account/presentation/change_password_screen.d
 import 'package:raajjepro/features/account/presentation/change_phone_screen.dart';
 import 'package:raajjepro/features/account/presentation/delete_account_screen.dart';
 import 'package:raajjepro/features/account/presentation/download_data_screen.dart';
+import 'package:raajjepro/features/auth/presentation/forgot_password_screen.dart';
 import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/session_expired_screen.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
@@ -63,8 +64,7 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         '/': (_) => const AuthGate(),
         SignInScreen.routeName: (_) => const SignInScreen(),
         RegisterScreen.routeName: (_) => const RegisterScreen(),
-        '/forgot-password': (_) =>
-            const _ComingSoon(title: 'Forgot password', phase: '3b'),
+        ForgotPasswordScreen.routeName: (_) => const ForgotPasswordScreen(),
         '/legal/terms': (_) =>
             const LegalPlaceholderScreen(title: 'Terms of Service'),
         '/legal/privacy': (_) =>
@@ -226,35 +226,4 @@ class _PlaceholderHome extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon({required this.title, required this.phase});
-  final String title;
-  final String phase;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Column(
-      children: [
-        AppHeader.page(
-          title: title,
-          onBack: () => Navigator.of(context).maybePop(),
-        ),
-        Expanded(
-          child: Center(
-            child: Padding(
-              padding: AppSpacing.screenInsets,
-              child: EmptyState(
-                icon: Icons.construction_outlined,
-                title: 'Not built yet',
-                body: 'This flow arrives in Phase $phase.',
-                actionLabel: 'Back',
-                onAction: () => Navigator.of(context).maybePop(),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
 }

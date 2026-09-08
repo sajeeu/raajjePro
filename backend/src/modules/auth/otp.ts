@@ -40,6 +40,41 @@ function codeHashFor(id: string, code: string): string {
 }
 
 /**
+ * The email itself. A reset code is not a verification code — it opens the
+ * account rather than confirming an address — so it says so, and it tells a
+ * recipient who did not ask for it what to do (plan §Phase 3b).
+ */
+function copyFor(
+  purpose: OtpPurpose,
+  code: string,
+  expiryMinutes: number,
+): { subject: string; text: string } {
+  if (purpose === 'password_reset') {
+    return {
+      subject: 'Your RaajjePro password reset code',
+      text: [
+        `Your RaajjePro password reset code is ${code}.`,
+        '',
+        `It expires in ${String(expiryMinutes)} minutes, and it can only be used once.`,
+        'Entering it lets you set a new password, which signs you out on every device.',
+        '',
+        "If you didn't ask to reset your password, you can ignore this email — your",
+        'password stays as it is and nothing changes without this code.',
+      ].join('\n'),
+    };
+  }
+  return {
+    subject: 'Your RaajjePro verification code',
+    text: [
+      `Your RaajjePro verification code is ${code}.`,
+      '',
+      `It expires in ${String(expiryMinutes)} minutes.`,
+      "If you didn't ask for this code, you can ignore this email — nothing changes without it.",
+    ].join('\n'),
+  };
+}
+
+/**
  * Emailed six-digit codes (plan §Phase 3). Both send limits are enforced here,
  * not by the route tier — they key on the address and the account, not the
  * IP — inside a transaction that locks the user row, so concurrent sends
@@ -67,7 +102,8 @@ export class OtpService {
     const targetEmail = input.targetEmail.trim().toLowerCase();
     const id = randomUUID();
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    const expiresAt = new Date(now.getTime() + this.deps.config.auth.otpExpiryMinutes * 60_000);
+    const expiryMinutes = this.expiryMinutesFor(input.purpose);
+    const expiresAt = new Date(now.getTime() + expiryMinutes * 60_000);
 
     await this.deps.prisma.$transaction(async (tx) => {
       // Serialise per user: the already-verified check and the two counts
@@ -104,13 +140,7 @@ export class OtpService {
       channel: 'otp',
       to: targetEmail,
       recipientUserId: input.userId,
-      subject: 'Your RaajjePro verification code',
-      text: [
-        `Your RaajjePro verification code is ${code}.`,
-        '',
-        `It expires in ${String(this.deps.config.auth.otpExpiryMinutes)} minutes.`,
-        "If you didn't ask for this code, you can ignore this email — nothing changes without it.",
-      ].join('\n'),
+      ...copyFor(input.purpose, code, expiryMinutes),
     });
     await this.deps.prisma.emailOtp.update({
       where: { id },
@@ -135,11 +165,44 @@ export class OtpService {
     meta: RequestMeta;
   }): Promise<{ targetEmail: string }> {
     const now = this.deps.clock();
-    const code = input.code.trim();
+    const match = await this.match(input.userId, input.purpose, input.code, now);
+    const consumed = await this.deps.prisma.emailOtp.updateMany({
+      where: { id: match.id, consumedAt: null },
+      data: { consumedAt: now },
+    });
+    if (consumed.count === 0) {
+      throw new BusinessRuleError(
+        'OTP_EXPIRED',
+        'That code was already used — request a fresh one',
+      );
+    }
+    return { targetEmail: match.targetEmail };
+  }
+
+  /**
+   * Who may call: Phase 3b's reset flow, before it opens the set-a-new-password
+   * step. Identical to `confirm` except that a hit is **not** consumed — the
+   * code is spent by the confirm that follows, so a user who reaches the
+   * password screen and abandons it can come back with the same code. A miss
+   * costs an attempt exactly as `confirm` does, so five wrong guesses still
+   * invalidate every live code whichever call made them.
+   */
+  async check(input: { userId: string; purpose: OtpPurpose; code: string }): Promise<void> {
+    await this.match(input.userId, input.purpose, input.code, this.deps.clock());
+  }
+
+  /** The shared matcher. Throws the OTP_* business errors; never returns a miss. */
+  private async match(
+    userId: string,
+    purpose: OtpPurpose,
+    codeInput: string,
+    now: Date,
+  ): Promise<{ id: string; targetEmail: string }> {
+    const code = codeInput.trim();
     const live = await this.deps.prisma.emailOtp.findMany({
       where: {
-        userId: input.userId,
-        purpose: input.purpose,
+        userId,
+        purpose,
         consumedAt: null,
         invalidatedAt: null,
         expiresAt: { gt: now },
@@ -150,19 +213,7 @@ export class OtpService {
       throw new BusinessRuleError('OTP_EXPIRED', 'That code has expired — request a fresh one');
     }
     const match = live.find((row) => row.codeHash === codeHashFor(row.id, code));
-    if (match !== undefined) {
-      const consumed = await this.deps.prisma.emailOtp.updateMany({
-        where: { id: match.id, consumedAt: null },
-        data: { consumedAt: now },
-      });
-      if (consumed.count === 0) {
-        throw new BusinessRuleError(
-          'OTP_EXPIRED',
-          'That code was already used — request a fresh one',
-        );
-      }
-      return { targetEmail: match.targetEmail };
-    }
+    if (match !== undefined) return { id: match.id, targetEmail: match.targetEmail };
     // Wrong: one attempt against every live code, since we cannot know which
     // one was meant. The fifth failure invalidates them all.
     const ids = live.map((row) => row.id);
@@ -172,7 +223,7 @@ export class OtpService {
     });
     const attempts = Math.max(...live.map((row) => row.attempts)) + 1;
     if (attempts >= OTP_ATTEMPT_LIMIT) {
-      await this.invalidateAll(this.deps.prisma, input.userId, input.purpose, now);
+      await this.invalidateAll(this.deps.prisma, userId, purpose, now);
       throw new BusinessRuleError(
         'OTP_INVALIDATED',
         'That code has been invalidated after 5 incorrect attempts — request a fresh one',
@@ -181,6 +232,13 @@ export class OtpService {
     throw new BusinessRuleError('OTP_INCORRECT', "That code isn't right", {
       attemptsRemaining: OTP_ATTEMPT_LIMIT - attempts,
     });
+  }
+
+  /** The reset code runs on its own, longer clock (plan §Phase 3b; `Forgot Password.dc.html` says 30 minutes). */
+  expiryMinutesFor(purpose: OtpPurpose): number {
+    return purpose === 'password_reset'
+      ? this.deps.config.auth.passwordResetExpiryMinutes
+      : this.deps.config.auth.otpExpiryMinutes;
   }
 
   invalidateAll(

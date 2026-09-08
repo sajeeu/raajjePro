@@ -71,6 +71,26 @@ class AuthApi {
         body: {'idToken': idToken, 'deviceName': deviceName},
       );
 
+  /// Forgot password (plan §Phase 3b). All three are unauthenticated, so the
+  /// address travels in the body — there is no session to identify by.
+  Future<PasswordResetRequestOutcome> requestPasswordReset(
+    String email,
+  ) async => PasswordResetRequestOutcome.fromJson(
+    await _api.post('/v1/auth/password-reset/request', body: {'email': email}),
+  );
+  Future<void> verifyPasswordResetCode(String email, String code) => _api.post(
+    '/v1/auth/password-reset/verify',
+    body: {'email': email, 'code': code},
+  );
+  Future<void> confirmPasswordReset(
+    String email,
+    String code,
+    String newPassword,
+  ) => _api.post(
+    '/v1/auth/password-reset/confirm',
+    body: {'email': email, 'code': code, 'newPassword': newPassword},
+  );
+
   Future<void> changePassword(String currentPassword, String newPassword) =>
       _api.post(
         '/v1/users/me/change-password',

@@ -345,6 +345,8 @@ enum UserSessionRevokedReason {
   refresh_expired
   refresh_reuse
   password_change
+  // Phase 3b: a reset revokes every session, including the one that asked.
+  password_reset
   email_change
   anonymised
 
@@ -391,6 +393,8 @@ model RefreshToken {
 enum OtpPurpose {
   verify_email
   change_email
+  // Phase 3b's forgot-password code. Same six digits, same limits, longer expiry.
+  password_reset
 
   @@map("otp_purpose")
 }

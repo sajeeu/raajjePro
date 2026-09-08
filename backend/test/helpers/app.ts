@@ -44,6 +44,7 @@ export interface TestAppOptions {
   accessTokenMinutes?: number;
   refreshTokenDays?: number;
   otpExpiryMinutes?: number;
+  passwordResetExpiryMinutes?: number;
   deps?: Partial<AppDeps>;
   /** Extra routes registered after the app's own — for testing middleware in isolation. */
   routes?: (app: FastifyInstance) => void;
@@ -78,6 +79,8 @@ export function testConfig(options: TestAppOptions = {}): Config {
       accessTokenMinutes: options.accessTokenMinutes ?? base.auth.accessTokenMinutes,
       refreshTokenDays: options.refreshTokenDays ?? base.auth.refreshTokenDays,
       otpExpiryMinutes: options.otpExpiryMinutes ?? base.auth.otpExpiryMinutes,
+      passwordResetExpiryMinutes:
+        options.passwordResetExpiryMinutes ?? base.auth.passwordResetExpiryMinutes,
     },
   };
 }

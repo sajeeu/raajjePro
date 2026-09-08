@@ -42,6 +42,7 @@ to work through is `docs/ops/ses-production-access.md`.
 | L7 | That the three configuration sets keep their reputation metrics apart. | Three sends, one per channel, each landing under its own set in the SES console. |
 | L8 | The OTP mail reaching a real inbox with the six-digit code readable, and the sender/subject rendering as intended. Phase 3 verified the whole register → verify → login cycle against `EMAIL_TRANSPORT=file`. | Register with an address you control after L1; the code from that inbox verifies the account. |
 | L9 | A Flutter exception reaching Sentry. The Phase 3 `CrashReporter` interface and its no-op-without-`SENTRY_DSN` implementation are built and tested (`frontend/lib/core/crash/`), matching Phase 2's backend posture, but nothing has run against a real Sentry project — this build has no real DSN. | A forced test exception in a build with a real DSN appears in the Sentry project within minutes. |
+| L10 | The password-reset mail reaching a real inbox with its six-digit code readable, and its subject rendering as intended. Phase 3b verified the whole request → verify → confirm → sign-in cycle against `EMAIL_TRANSPORT=file`, reading the code out of the written message. | After L1, request a reset for an address you control; the code from that inbox sets a new password. |
 
 ## Open — closed by a later phase
 
@@ -49,12 +50,12 @@ to work through is `docs/ops/ses-production-access.md`.
 |---|---|---|
 | P1 | A deleted account's reviews remain with anonymised attribution. Phase 3 built `AnonymisationHooks` and tested that a registered hook runs in the anonymisation transaction. | Phase 11 registers the review hook and its test asserts a review survives with the author anonymised. |
 | P2 | A deletion request with an open booking completes automatically when that booking terminates. Phase 3 built the `DeletionBlocker` seam and tested it with an injected blocker. | Phase 17 supplies the real blocker; its test creates a booking, requests deletion, terminates the booking and sees anonymisation on the next run. |
-| P3 | A password-reset attempt for an unverified email is refused without revealing existence. Phase 3 built and tested `assertRecoverableByEmail`. | Phase 3b's reset flow calls it and its test asserts an identical response with no mail sent for an unverified address. |
 
 ## Closed
 
-Nothing yet. Rows move here with what was actually seen, so the ledger reads
-as a record afterwards rather than an empty promise.
+Rows move here with what was actually seen, so the ledger reads as a record
+afterwards rather than an empty promise.
 
 | # | What was unverified | Closed by | Closed on | What was seen |
 |---|---|---|---|---|
+| P3 | A password-reset attempt for an unverified email is refused without revealing existence. | Phase 3b | 2026-09-08 | `PasswordResetService` calls `assertRecoverableByEmail` and turns the throw into a silent non-send. `backend/test/auth-password-reset.test.ts` asserts it three ways: an unregistered address and a live one return byte-identical bodies with the same status; an unverified address returns that same body, receives no mail and creates no `email_otp` row; and an unknown address fails `verify` with the same `OTP_EXPIRED` a stale code gets. A frozen account is covered by the same path. |
