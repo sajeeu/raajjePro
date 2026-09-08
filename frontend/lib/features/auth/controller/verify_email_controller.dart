@@ -12,6 +12,7 @@ enum VerifyMode {
   resent,
   wrong,
   invalidated,
+  expired,
   rateLimited,
   success,
   sendFailed,
@@ -188,10 +189,20 @@ class VerifyEmailController extends Notifier<VerifyEmailState> {
       // typed it wrong", so it must not land on the wrong-code state.
       switch (e.code) {
         case 'OTP_INVALIDATED':
-        case 'OTP_EXPIRED':
           state = state.copyWith(
             checking: false,
             mode: VerifyMode.invalidated,
+            attemptsRemaining: e.attemptsRemaining,
+            clearToken: state.clearToken + 1,
+          );
+        case 'OTP_EXPIRED':
+          // Its own mode, not `invalidated`: an expired code is not the
+          // 5-wrong-attempts case, and telling the user it was "invalidated
+          // after 5 incorrect attempts" would be false — they may not have
+          // gotten a single attempt wrong.
+          state = state.copyWith(
+            checking: false,
+            mode: VerifyMode.expired,
             attemptsRemaining: e.attemptsRemaining,
             clearToken: state.clearToken + 1,
           );

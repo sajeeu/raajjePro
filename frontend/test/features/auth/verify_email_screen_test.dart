@@ -255,7 +255,7 @@ void main() {
   );
 
   testWidgets(
-    'OTP_EXPIRED on confirm clears the boxes and shows the same invalidated copy as OTP_INVALIDATED',
+    'OTP_EXPIRED on confirm clears the boxes and shows its own expired copy, not the invalidated one',
     (tester) async {
       api.fail(
         'POST',
@@ -268,8 +268,12 @@ void main() {
       await tester.tap(find.widgetWithText(AppButton, 'Verify Email'));
       await settle(tester);
       expect(
-        find.textContaining('invalidated after 5 incorrect attempts'),
+        find.text('That code has expired. Send a fresh one.'),
         findsOneWidget,
+      );
+      expect(
+        find.textContaining('invalidated after 5 incorrect attempts'),
+        findsNothing,
       );
       expect(find.text('Send a fresh code'), findsOneWidget);
       expect(

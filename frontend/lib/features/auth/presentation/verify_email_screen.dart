@@ -224,10 +224,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     ),
                   ] else ...[
                     OtpCodeEntry(
-                      enabled: s.mode != VerifyMode.invalidated && !s.checking,
+                      enabled:
+                          s.mode != VerifyMode.invalidated &&
+                          s.mode != VerifyMode.expired &&
+                          !s.checking,
                       error:
                           s.mode == VerifyMode.wrong ||
-                          s.mode == VerifyMode.invalidated,
+                          s.mode == VerifyMode.invalidated ||
+                          s.mode == VerifyMode.expired,
                       clearToken: s.clearToken,
                       onChanged: (c) {
                         setState(() => _code = c);
@@ -240,9 +244,12 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       InlineNotice.error(
                         "That code isn't right — ${s.attemptsRemaining ?? 0} ${s.attemptsRemaining == 1 ? 'attempt' : 'attempts'} left before it needs a fresh send.",
                       ),
-                    if (s.mode == VerifyMode.invalidated) ...[
+                    if (s.mode == VerifyMode.invalidated ||
+                        s.mode == VerifyMode.expired) ...[
                       InlineNotice.error(
-                        'That code has been invalidated after 5 incorrect attempts. Request a fresh one to continue.',
+                        s.mode == VerifyMode.expired
+                            ? 'That code has expired. Send a fresh one.'
+                            : 'That code has been invalidated after 5 incorrect attempts. Request a fresh one to continue.',
                       ),
                       AppButton.destructive(
                         label: 'Send a fresh code',
@@ -276,7 +283,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       onPressed:
                           _code.length == 6 &&
                               !s.checking &&
-                              s.mode != VerifyMode.invalidated
+                              s.mode != VerifyMode.invalidated &&
+                              s.mode != VerifyMode.expired
                           ? () => ctrl.verify(_code)
                           : null,
                     ),
