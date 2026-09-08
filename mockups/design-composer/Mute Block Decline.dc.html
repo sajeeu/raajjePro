@@ -49,7 +49,7 @@ button:focus{outline:none}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:12px"><path d="M9 6l6 6-6 6"></path></svg>
         </button>
       </sc-for>
-      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-align:center;padding:2px 10px 6px;text-wrap:pretty">A live booking's chat survives all of these — coordination never gets cut off mid-job.</span>
+      <span style="font-size:11px;font-weight:600;line-height:1.5;color:#627187;text-align:center;padding:2px 10px 6px;text-wrap:pretty">A live booking's chat survives all of these — coordination never gets cut off mid-job.</span>
       <a href="Booking%20Thread.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Cancel</a>
     </sc-if>
 
@@ -82,7 +82,7 @@ button:focus{outline:none}
         <span style="width:58px;height:58px;border-radius:50%;background:{{ cIBg }};color:{{ cIFg }};display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
         <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ dTitle }}</span>
         <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">{{ dBody }}</span>
-        <a href="Booking%20Thread.dc.html" style="height:50px;border-radius:15px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28);align-self:stretch;margin-top:6px">Back to chat</a>
+        <a href="Booking%20Thread.dc.html" style="height:50px;border-radius:15px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28);align-self:stretch;margin-top:6px">Back to chat</a>
         <button onClick="{{ backMenu }}" style="border:none;background:none;color:#5B6B84;font-size:12.5px;font-weight:700;cursor:pointer;padding:2px 4px 6px">{{ dUndo }}</button>
       </div>
     </sc-if>
@@ -97,7 +97,7 @@ class Component extends DCLogic {
   defs(other, isProvider) {
     const A = {
       mute: { title: 'Mute this conversation', iD: 'M18 17H4s2-2 2-8a6 6 0 1 1 12 0c0 6 2 8 2 8zM10 21h4M4 4l16 16',
-        iBg: '#EEF3FA', iFg: '#41526B', btnBg: 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)', btnShadow: '0 8px 18px rgba(37,99,235,.28)',
+        iBg: '#EEF3FA', iFg: '#41526B', btnBg: 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)', btnShadow: '0 8px 18px rgba(37,99,235,.28)',
         sum: 'No pings from this chat. ' + other + ' can still message you, and nothing changes on their side.',
         stops: 'Notifications from this conversation. Nothing else.',
         keeps: other + '’s messages still arrive, and bookings are untouched. Unmute any time.',

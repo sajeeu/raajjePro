@@ -69,7 +69,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
           </sc-for>
         </div>
         <div style="display:flex;align-items:stretch;gap:10px">
-          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;justify-content:center"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original — stays on record</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;line-height:1.35">{{ origValue }}</span></span>
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;justify-content:center"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Original — stays on record</span><span style="font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums;line-height:1.35">{{ origValue }}</span></span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;align-self:center"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
           <span style="flex:1;display:flex;flex-direction:column;gap:2px">
             <input value="{{ propValue }}" onChange="{{ setProp }}" placeholder="{{ propPlaceholder }}" aria-label="Proposed value" style="width:100%;height:100%;min-height:58px;border:1.5px solid #CDDDFB;border-radius:13px;background:#fff;padding:10px 12px;font-size:13.5px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">
@@ -78,7 +78,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         <div style="display:flex;flex-direction:column;gap:6px">
           <span style="font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5B6B84">Why — {{ otherFirst }} sees this</span>
           <textarea value="{{ reason }}" onChange="{{ setReason }}" placeholder="e.g. Two extra rooms added on the day" rows="3" style="width:100%;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;padding:12px 13px;font-size:13px;font-weight:600;color:#0F1B2D;line-height:1.5;resize:none"></textarea>
-          <span style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:right;font-variant-numeric:tabular-nums">{{ reasonCount }}/200</span>
+          <span style="font-size:10.5px;font-weight:600;color:#627187;text-align:right;font-variant-numeric:tabular-nums">{{ reasonCount }}/200</span>
         </div>
       </div>
 
@@ -102,12 +102,12 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
           <span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Mariyam proposes a new price</span><span style="font-size:11px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">Today 09:20 · everything else stays the same</span></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Original</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
+          <span style="flex:1;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Original</span><span style="font-size:15px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 450</span></span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
           <span style="flex:1;background:#E8F0FE;border:1px solid #CDDDFB;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8">Proposed</span><span style="font-size:15px;font-weight:800;color:#1D4ED8;font-variant-numeric:tabular-nums">MVR 600</span></span>
         </div>
         <div style="background:#F7FAFD;border:1px solid #EEF3FA;border-radius:13px;padding:10px 12px;display:flex;flex-direction:column;gap:3px">
-          <span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Mariyam's reason</span>
+          <span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Mariyam's reason</span>
           <span style="font-size:13px;font-weight:600;line-height:1.5;color:#41526B;text-wrap:pretty">“Two extra rooms added on the day.”</span>
         </div>
       </div>
@@ -122,9 +122,9 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:300px;text-wrap:pretty">The agreement hasn't changed — {{ sentSummary }} takes effect only if {{ otherFirst }} accepts. You'll be notified either way.</span>
       </div>
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-        <span style="font-size:11px;font-weight:600;color:#9AA9C0">Your proposal · on the record</span>
+        <span style="font-size:11px;font-weight:600;color:#627187">Your proposal · on the record</span>
         <span style="font-size:13px;font-weight:700;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ sentLine }}</span>
-        <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">{{ sentReason }}</span>
+        <span style="font-size:11.5px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">{{ sentReason }}</span>
       </div>
       <a href="Booking%20Detail.dc.html" style="height:50px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
     </sc-if>
@@ -136,11 +136,11 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">Both of you agreed, so the agreement changed. The original — MVR 450 — stays visible on the booking's record, next to what replaced it.</span>
       </div>
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:6px 16px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Agreed price</span><span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 600</span><span style="font-size:10.5px;font-weight:600;color:#9AA9C0">was MVR 450</span></span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Agreed price</span><span style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">MVR 600</span><span style="font-size:10.5px;font-weight:600;color:#627187">was MVR 450</span></span></div>
         <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Proposed by</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D">Mariyam Shifa · Today 09:20</span></div>
         <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0"><span style="font-size:12.5px;font-weight:600;color:#5B6B84">Accepted by</span><span style="font-size:12.5px;font-weight:700;color:#0F1B2D">you · just now</span></div>
       </div>
-      <a href="Booking%20Detail.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Back to the booking</a>
+      <a href="Booking%20Detail.dc.html" style="height:52px;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Back to the booking</a>
     </sc-if>
 
     <sc-if value="{{ isClosed }}" hint-placeholder-val="{{ false }}">
@@ -152,7 +152,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
       </div>
       <div style="display:flex;gap:10px">
         <a href="Raise%20Dispute.dc.html" style="flex:1;height:52px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center" style-hover="color:#41526B;border-color:#CBD8E8">Report a problem</a>
-        <a href="Book%20Again.dc.html" style="flex:1;height:52px;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="color:#fff;filter:brightness(1.05)">Book Again</a>
+        <a href="Book%20Again.dc.html" style="flex:1;height:52px;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="color:#fff;filter:brightness(1.05)">Book Again</a>
       </div>
     </sc-if>
 
@@ -162,7 +162,7 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
         <span style="font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D">The original terms stand</span>
         <span style="font-size:13px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:310px;text-wrap:pretty">MVR 450 stays the agreed price. The proposal — and your decision — stay on the booking's record. If the day's work really did grow, chat is the place to sort it out.</span>
       </div>
-      <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Mariyam</button>
+      <button onClick="{{ goChat }}" style="height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)">Message Mariyam</button>
       <a href="Booking%20Detail.dc.html" style="height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:13px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Back to the booking</a>
     </sc-if>
   </div>
@@ -170,13 +170,13 @@ input:focus,textarea:focus{outline:none;border-color:#2563EB !important}
   <sc-if value="{{ isCompose }}" hint-placeholder-val="{{ true }}">
   <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;flex-direction:column;gap:7px">
     <button onClick="{{ send }}" style="height:54px;border:none;border-radius:16px;background:{{ sendBg }};color:{{ sendFg }};font-size:14.5px;font-weight:700;cursor:{{ sendCursor }};box-shadow:{{ sendShadow }}" style-active="transform:scale(.98)">Send to {{ otherFirst }}</button>
-    <span style="font-size:10.5px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">{{ otherFirst }} must accept before anything changes. Recorded either way.</span>
+    <span style="font-size:10.5px;font-weight:600;color:#627187;text-align:center;text-wrap:pretty">{{ otherFirst }} must accept before anything changes. Recorded either way.</span>
   </div>
   </sc-if>
   <sc-if value="{{ isReceiving }}" hint-placeholder-val="{{ false }}">
   <div style="flex:none;border-top:1px solid #E3EAF3;background:#fff;padding:12px 20px 14px;display:flex;gap:10px">
     <button onClick="{{ reject }}" style="flex:1;height:52px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Reject</button>
-    <button onClick="{{ accept }}" style="flex:1;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Accept MVR 600</button>
+    <button onClick="{{ accept }}" style="flex:1;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Accept MVR 600</button>
   </div>
   </sc-if>
 </div>
@@ -224,7 +224,7 @@ class Component extends DCLogic {
       setProp: (e) => this.setState({ propVal:e.target.value, pFedited:true }),
       reason, reasonCount: reason.length,
       setReason: (e) => this.setState({ reason:e.target.value.slice(0,200), pFedited:true }),
-      sendBg: canSend ? 'linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8)' : '#C6D4EA',
+      sendBg: canSend ? 'linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8)' : '#C6D4EA',
       sendFg: canSend ? '#fff' : '#8296B3',
       sendCursor: canSend ? 'pointer' : 'default',
       sendShadow: canSend ? '0 8px 18px rgba(37,99,235,.28)' : 'none',

@@ -74,15 +74,15 @@ button:focus{outline:none}
         </div>
         <div style="padding:13px 16px;display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;gap:12px">
-            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Booked for</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
-            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Booked for</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.when }}</span></span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">{{ D.amountLabel }}</span><span style="font-size:13px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ D.amount }}</span></span>
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9AA9C0">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#627187">Address</span><span style="font-size:12.5px;font-weight:600;color:#41526B">{{ D.address }}</span></div>
         </div>
       </div>
-      <button onClick="{{ sayYes }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Yes — the job was done</button>
+      <button onClick="{{ sayYes }}" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-active="transform:scale(.98)">Yes — the job was done</button>
       <button onClick="{{ sayNo }}" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#F7FAFD" style-active="transform:scale(.98)">No — it didn't happen</button>
-      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:2px 8px 0">{{ D.silence }}</span>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#627187;text-align:center;text-wrap:pretty;padding:2px 8px 0">{{ D.silence }}</span>
     </sc-if>
 
     <sc-if value="{{ isYes }}" hint-placeholder-val="{{ false }}">
@@ -92,7 +92,7 @@ button:focus{outline:none}
         <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:280px;text-wrap:pretty">{{ D.yesBody }}</span>
         <dc-import name="StatusPill" status="completed" hint-size="110px,28px"></dc-import>
       </div>
-      <a href="Rate%20This%20Job.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Rate this job</a>
+      <a href="Rate%20This%20Job.dc.html" style="flex:none;height:54px;border:none;border-radius:16px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(37,99,235,.28)">Rate this job</a>
       <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
     </sc-if>
 
@@ -103,7 +103,7 @@ button:focus{outline:none}
         <span style="font-size:12.5px;font-weight:600;line-height:1.55;color:#5B6B84;max-width:290px;text-wrap:pretty">{{ D.noBody }}</span>
         <dc-import name="StatusPill" status="disputed" hint-size="100px,28px"></dc-import>
       </div>
-      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#9AA9C0;text-align:center;text-wrap:pretty;padding:0 8px">Repeated no-shows count against a provider across all their bookings — your answer matters beyond this one.</span>
+      <span style="flex:none;font-size:11.5px;font-weight:600;line-height:1.55;color:#627187;text-align:center;text-wrap:pretty;padding:0 8px">Repeated no-shows count against a provider across all their bookings — your answer matters beyond this one.</span>
       <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Back to booking</a>
     </sc-if>
   </div>

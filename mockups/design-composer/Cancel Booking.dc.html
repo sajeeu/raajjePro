@@ -73,13 +73,13 @@ button:focus{outline:none}
         </div>
       </div>
       <div style="flex:none;background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:15px 16px;display:flex;flex-direction:column;gap:11px;box-shadow:0 1px 3px rgba(15,27,45,.05)">
-        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Why are you cancelling?</span><span style="font-size:11px;font-weight:700;color:#9AA9C0">optional — skip it if you like</span></span>
+        <span style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13.5px;font-weight:800;color:#0F1B2D">Why are you cancelling?</span><span style="font-size:11px;font-weight:700;color:#627187">optional — skip it if you like</span></span>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
             <dc-import name="Chip" label="{{ r.label }}" kind="filter" selected="{{ r.on }}" on-tap="{{ r.tap }}" hint-size="110px,38px"></dc-import>
           </sc-for>
         </div>
-        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">Only RaajjePro sees this — it never appears on your or Mariyam's profile.</span>
+        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">Only RaajjePro sees this — it never appears on your or Mariyam's profile.</span>
       </div>
       <button onClick="{{ doCancel }}" style="flex:none;height:54px;border:none;border-radius:16px;background:#0F1B2D;color:#fff;font-size:14.5px;font-weight:700;cursor:pointer" style-hover="background:#1C2B44" style-active="transform:scale(.98)">Cancel booking</button>
       <a href="Booking%20Detail.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#5B6B84;text-decoration:none;padding:6px">Keep this booking</a>
@@ -128,8 +128,8 @@ button:focus{outline:none}
           <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #EEF3FA"><span style="font-size:12px;font-weight:600;color:#5B6B84">Preferred time</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right">Tuesday afternoons</span></div>
           <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0"><span style="font-size:12px;font-weight:600;color:#5B6B84">Your notes</span><span style="font-size:12px;font-weight:700;color:#0F1B2D;text-align:right;max-width:210px">Two bedrooms and kitchen — keys with the caretaker</span></div>
         </div>
-        <a href="Pick%20a%20Time.dc.html" style="height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Pick a new time</a>
-        <span style="font-size:11px;font-weight:600;color:#9AA9C0;text-align:center;text-wrap:pretty">This goes only to Mariyam's calendar — it isn't sent out to other providers.</span>
+        <a href="Pick%20a%20Time.dc.html" style="height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(37,99,235,.24)">Pick a new time</a>
+        <span style="font-size:11px;font-weight:600;color:#627187;text-align:center;text-wrap:pretty">This goes only to Mariyam's calendar — it isn't sent out to other providers.</span>
       </div>
       <a href="Discovery.dc.html" style="flex:none;text-align:center;font-size:12.5px;font-weight:700;color:#2563EB;text-decoration:none;padding:6px">Find a different cleaner instead</a>
     </sc-if>
@@ -142,7 +142,7 @@ button:focus{outline:none}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
           <span style="font-size:12px;font-weight:700;line-height:1.5;color:#166534;text-wrap:pretty">No second dispatch fee. Your MVR 200 covers this dispatch — re-sends included.</span>
         </div>
-        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#9AA9C0;text-wrap:pretty">As plumbers accept you'll get their offers together — callout fee and arrival estimate — and you choose, exactly like the first time.</span>
+        <span style="font-size:11px;font-weight:600;line-height:1.5;color:#627187;text-wrap:pretty">As plumbers accept you'll get their offers together — callout fee and arrival estimate — and you choose, exactly like the first time.</span>
       </div>
       <a href="Booking%20Detail.dc.html" style="flex:none;height:54px;border:1.5px solid #E3EAF3;border-radius:16px;background:#fff;color:#41526B;font-size:14px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center">Watch the booking</a>
     </sc-if>

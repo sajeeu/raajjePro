@@ -104,8 +104,8 @@ class Component extends DCLogic {
       skels: [1, 2, 3, 4],
       threads: raw.map(t => { const k = KIND[t.kind]; return { ...t,
         kind: k.label, kBg: k.bg, kFg: k.fg, kBd: k.bd,
-        ageFg: t.unread ? '#1D4ED8' : '#9AA9C0',
-        lastFg: t.unread ? '#0F1B2D' : '#8296B3',
+        ageFg: t.unread ? '#1D4ED8' : '#627187',
+        lastFg: t.unread ? '#0F1B2D' : '#5B6B84',
         lastW: t.unread ? '700' : '600' }; }),
       goExplore: () => { window.location = 'Discovery.dc.html'; },
       retry: () => this.setState({ scnOverride: 'populated' })
