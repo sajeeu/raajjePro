@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 .hscroll::-webkit-scrollbar{display:none}
 </style>
 <link rel="stylesheet" href="./motion.css">
@@ -27,7 +27,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
 <div style="width:100%;max-width:412px;height:100dvh;background:#F2F6FB;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(15,27,45,.14)">
 
   <div style="flex:none;padding:14px 20px 10px;display:flex;align-items:center;gap:10px;background:#F2F6FB">
-    <span style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
+    <span style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
     <span style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#0F1B2D;flex:none">Raajje<span style="color:#2563EB">Pro</span></span>
     <span style="flex:1"></span>
     <button onClick="{{ openIsland }}" style="height:36px;border:1px solid #CDDDFB;border-radius:999px;background:#E8F0FE;color:#1D4ED8;display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12.5px;font-weight:700;cursor:pointer;max-width:130px" style-hover="background:#DDEAFE">
@@ -53,7 +53,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E3EAF3;border-radius:16px;height:52px;padding:0 8px 0 16px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA9C0" stroke-width="2.1" stroke-linecap="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
           <input value="{{ q }}" onChange="{{ setQ }}" placeholder="What service do you need?" style="flex:1;border:none;background:none;font-size:14px;font-weight:600;color:#0F1B2D;min-width:0;height:100%">
-          <button onClick="{{ searchTap }}" aria-label="Search" style="width:38px;height:38px;border:none;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 6px 14px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.95)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
+          <button onClick="{{ searchTap }}" aria-label="Search" style="width:38px;height:38px;border:none;border-radius:50%;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 6px 14px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.95)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"></path></svg></button>
         </div>
         <div class="hscroll" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
           <sc-for list="{{ quickChips }}" as="ch" hint-placeholder-count="3">
@@ -101,7 +101,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
               </span>
               <div style="font-size:16px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Where are you browsing from?</div>
               <div style="font-size:13px;line-height:1.55;color:#5B6B84;max-width:270px;text-wrap:pretty">Pick your island to see providers who actually work near you.</div>
-              <button onClick="{{ openIsland }}" style="margin-top:4px;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;padding:0 24px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Choose your island</button>
+              <button onClick="{{ openIsland }}" style="margin-top:4px;height:48px;border:none;border-radius:14px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;padding:0 24px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Choose your island</button>
             </div>
           </sc-if>
 
@@ -184,7 +184,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                   </div>
                   <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
                     <span style="display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums"><svg width="13" height="13" viewBox="0 0 24 24" fill="#D97706" stroke="none"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.4 6.6 19.3l1.2-5.9L3.4 9.3l6-.7z"></path></svg>{{ f.rating }}</span>
-                    <span style="font-size:11px;font-weight:600;color:#8296B3;font-variant-numeric:tabular-nums">{{ f.reviews }} reviews</span>
+                    <span style="font-size:11px;font-weight:600;color:#5B6B84;font-variant-numeric:tabular-nums">{{ f.reviews }} reviews</span>
                   </div>
                 </div>
               </sc-for>
@@ -220,7 +220,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
                   <span style="width:48px;height:48px;border-radius:50%;background:#E8F0FE;color:#2563EB;display:flex;align-items:center;justify-content:center"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path><circle cx="12" cy="10" r="2.4"></circle></svg></span>
                   <div style="font-size:14.5px;font-weight:700;color:#0F1B2D">Enable precise location</div>
                   <div style="font-size:12.5px;line-height:1.5;color:#5B6B84;max-width:260px;text-wrap:pretty">Allow location access to see the services closest to you on {{ islandLbl }}.</div>
-                  <button onClick="{{ enableLoc }}" style="margin-top:2px;height:44px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 60%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Enable location</button>
+                  <button onClick="{{ enableLoc }}" style="margin-top:2px;height:44px;border:none;border-radius:13px;background:linear-gradient(135deg,#5B8DF6,#2563EB 40%,#1D4ED8);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;padding:0 22px;box-shadow:0 8px 18px rgba(37,99,235,.28)" style-hover="filter:brightness(1.06)" style-active="transform:scale(.98)">Enable location</button>
                 </div>
               </div>
 
@@ -287,7 +287,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
         </sc-for>
         </div>
         <sc-if value="{{ islandNone }}"><div style="font-size:13.5px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0 6px">{{ islandNoMatch }}</div></sc-if>
-        <div style="font-size:11.5px;font-weight:600;color:#8296B3;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
+        <div style="font-size:11.5px;font-weight:600;color:#5B6B84;text-align:center;padding-top:6px">Sample list — the live app has every inhabited island</div>
       </div>
     </div>
   </sc-if>
@@ -314,7 +314,7 @@ class Component extends DCLogic {
     { n: 'Appliance Repair', bg: '#F0F9FF', fg: '#0284C7', d: 'M6 4h12v16H6zM6 8.5h12M12 17.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z' },
     { n: 'Moving', bg: '#FFF7ED', fg: '#C2410C', d: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10' },
     { n: 'Fitness', bg: '#F5F3FF', fg: '#7C3AED', d: 'M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11' },
-    { n: 'Home Repairs', bg: '#FEFCE8', fg: '#CA8A04', d: 'M3.5 4.5h13v5h-13zM16.5 7H20v4h-8v3M12 14v6' },
+    { n: 'Home Repairs', bg: '#FEFCE8', fg: '#A16207', d: 'M3.5 4.5h13v5h-13zM16.5 7H20v4h-8v3M12 14v6' },
     { n: 'Boat Charter', bg: '#ECFEFF', fg: '#0891B2', d: 'M3 16h18l-2.5 4h-13zM12 4v9M12 4l6 8H6z' }];
   BADGE = { Gold: { bg: '#FEF3C7', fg: '#B45309', bd: '#FCD34D' }, Silver: { bg: '#F1F5F9', fg: '#475569', bd: '#CBD5E1' }, Bronze: { bg: '#FBEDE3', fg: '#9A5B2D', bd: '#E8C4A0' } };
   SVCS = [

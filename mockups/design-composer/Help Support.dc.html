@@ -16,7 +16,7 @@ body{margin:0;background:#DEE7F3}
 a{color:#2563EB}a:hover{color:#1D4ED8}
 input,textarea,button,select{font-family:inherit}
 input:focus,textarea:focus,button:focus,select:focus{outline:none}
-::placeholder{color:#9AA9C0}
+::placeholder{color:#627187}
 </style>
 <link rel="stylesheet" href="./motion.css">
 <script src="./session.js"></script>
@@ -56,7 +56,7 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       </sc-for>
     </div>
     </sc-if>
-    <sc-if value="{{ noFaqs }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#8296B3;text-align:center;padding:14px 0">No matches — try the contact form below.</div></sc-if>
+    <sc-if value="{{ noFaqs }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;font-weight:600;color:#5B6B84;text-align:center;padding:14px 0">No matches — try the contact form below.</div></sc-if>
   </div>
 
   <div style="display:flex;flex-direction:column;gap:10px">
@@ -101,8 +101,8 @@ input:focus,textarea:focus,button:focus,select:focus{outline:none}
       <div style="font-size:13px;font-weight:600;line-height:1.6;color:#5B6B84;text-wrap:pretty">{{ doneBody }}</div>
     </div>
     <sc-if value="{{ wasSupport }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex;align-items:center;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:16px;padding:13px 18px"><span style="font-size:12px;font-weight:700;color:#8296B3">Your case</span><span style="font-family:ui-monospace,monospace;font-size:16px;font-weight:800;color:#0F1B2D;letter-spacing:.04em">RP-20481</span></div>
-      <div style="font-size:12px;font-weight:600;color:#8296B3;text-wrap:pretty">Track it with this reference — updates come here and to aishath@example.mv.</div>
+      <div style="display:flex;align-items:center;gap:10px;background:#F7FAFD;border:1px solid #EEF3FA;border-radius:16px;padding:13px 18px"><span style="font-size:12px;font-weight:700;color:#5B6B84">Your case</span><span style="font-family:ui-monospace,monospace;font-size:16px;font-weight:800;color:#0F1B2D;letter-spacing:.04em">RP-20481</span></div>
+      <div style="font-size:12px;font-weight:600;color:#5B6B84;text-wrap:pretty">Track it with this reference — updates come here and to aishath@example.mv.</div>
     </sc-if>
     <button onClick="{{ backToHelp }}" style="height:50px;width:100%;border:none;border-radius:16px;background:#2563EB;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(37,99,235,.25)" style-hover="background:#1D4ED8">Done</button>
   </div>

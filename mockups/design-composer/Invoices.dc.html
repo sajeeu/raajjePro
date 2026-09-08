@@ -72,7 +72,7 @@ button{font-family:inherit}button:focus{outline:none}
             <button onClick="{{ inv.toggle }}" aria-label="Invoice {{ inv.ref }}" style="display:flex;align-items:center;gap:12px;border:none;background:{{ inv.rowBg }};padding:14px 16px;cursor:pointer;text-align:left" style-hover="background:#F7FAFE">
               <span style="width:40px;height:40px;border-radius:13px;background:#EEF3FA;color:#41526B;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;gap:0">
                 <span style="font-size:13px;font-weight:800;line-height:1;color:#0F1B2D">{{ inv.dayN }}</span>
-                <span style="font-size:8.5px;font-weight:800;letter-spacing:.05em;line-height:1.3;color:#8296B3">{{ inv.monN }}</span>
+                <span style="font-size:8.5px;font-weight:800;letter-spacing:.05em;line-height:1.3;color:#5B6B84">{{ inv.monN }}</span>
               </span>
               <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
                 <span style="font-size:13.5px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ inv.date }}</span>
@@ -97,7 +97,7 @@ button{font-family:inherit}button:focus{outline:none}
                 </div>
                 <div style="display:flex;align-items:center;gap:9px">
                   <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
-                    <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#8296B3">REFERENCE</span>
+                    <span style="font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#5B6B84">REFERENCE</span>
                     <span style="font-size:12.5px;font-weight:800;color:#0F1B2D;font-variant-numeric:tabular-nums">{{ inv.ref }}</span>
                   </span>
                   <button onClick="{{ inv.copyRef }}" aria-label="Copy reference" style="width:38px;height:38px;border:1px solid #E3EAF3;border-radius:11px;background:#fff;color:#1D4ED8;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h12v12H8zM8 8V4h12v12h-4"></path></svg></button>
@@ -109,7 +109,7 @@ button{font-family:inherit}button:focus{outline:none}
         </sc-for>
       </div>
 
-      <span style="font-size:11.5px;line-height:1.5;color:#8296B3;text-align:center;text-wrap:pretty">Amounts are what you actually paid at the time — your rate, not a list price.</span>
+      <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-align:center;text-wrap:pretty">Amounts are what you actually paid at the time — your rate, not a list price.</span>
     </sc-if>
   </div>
 
