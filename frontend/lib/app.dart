@@ -6,6 +6,9 @@ import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
 import 'package:raajjepro/features/account/presentation/active_sessions_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_email_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_password_screen.dart';
+import 'package:raajjepro/features/account/presentation/change_phone_screen.dart';
 import 'package:raajjepro/features/account/presentation/delete_account_screen.dart';
 import 'package:raajjepro/features/account/presentation/download_data_screen.dart';
 import 'package:raajjepro/features/auth/presentation/register_screen.dart';
@@ -18,9 +21,11 @@ import 'package:raajjepro/shared/shared.dart';
 
 /// Root widget. Routing is a plain named-route table; the root route is the
 /// AuthGate, which switches on the one auth state. Task 8 adds `/account`,
-/// `/account/sessions`, `/account/download` and `/account/delete`.
-/// `/account/password`, `/account/change-email` and `/account/phone` are
-/// Task 9's — same gap Task 6 left at `/account/change-email`.
+/// `/account/sessions`, `/account/download` and `/account/delete`. Task 9
+/// adds `/account/password`, `/account/change-email` and `/account/phone` —
+/// the last two close the gap Task 6 left where `VerifyEmailScreen`'s "Not
+/// your address? Change it" link and `AccountSettingsScreen`'s row already
+/// pushed those names.
 class RaajjeProApp extends ConsumerStatefulWidget {
   const RaajjeProApp({super.key});
   @override
@@ -55,6 +60,9 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         ActiveSessionsScreen.routeName: (_) => const ActiveSessionsScreen(),
         DownloadDataScreen.routeName: (_) => const DownloadDataScreen(),
         DeleteAccountScreen.routeName: (_) => const DeleteAccountScreen(),
+        ChangePasswordScreen.routeName: (_) => const ChangePasswordScreen(),
+        ChangeEmailScreen.routeName: (_) => const ChangeEmailScreen(),
+        ChangePhoneScreen.routeName: (_) => const ChangePhoneScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == VerifyEmailScreen.routeName) {
