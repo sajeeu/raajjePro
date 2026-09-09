@@ -82,10 +82,17 @@ void main() {
       tester,
     ) async {
       await pump(tester);
+      // The box holding the glyph, named through the glyph rather than as
+      // "the first SizedBox under the tile" — that finder silently moved onto
+      // the tile's own `SizedBox.expand` the moment one was added, and
+      // reported the chip as 116 dp.
       final chip = tester.getRect(
         find
-            .descendant(
-              of: find.byType(CategoryTile).first,
+            .ancestor(
+              of: find.descendant(
+                of: find.byType(CategoryTile).first,
+                matching: find.byType(Icon),
+              ),
               matching: find.byType(SizedBox),
             )
             .first,
@@ -122,16 +129,48 @@ void main() {
       tester,
     ) async {
       await pump(tester);
-      final rects = tester
-          .widgetList<CategoryTile>(find.byType(CategoryTile))
-          .toList()
-          .asMap()
-          .keys
-          .map((i) => tester.getRect(find.byType(CategoryTile).at(i)))
-          .toList();
-      final heights = rects.map((r) => r.height).toSet();
-      expect(heights, hasLength(1));
-      expect(rects.map((r) => r.width).toSet(), hasLength(1));
+
+      // Measure the box that PAINTS the tile, not `CategoryTile`. The grid
+      // constrains each cell tightly to 116 dp, so the widget reports 116
+      // however the surface inside it behaves — an earlier version of this
+      // test measured that and passed while the rendered tiles were visibly
+      // ragged, "Appliance Repair" drawing wider than "Fitness". `Pressable`
+      // wraps its child in `Center(widthFactor: 1, heightFactor: 1)`, which
+      // hands loose constraints down, so the surface shrink-wrapped its label
+      // until `SizedBox.expand` made it fill the cell.
+      Rect surfaceOf(int i) => tester.getRect(
+        find
+            .descendant(
+              of: find.byType(CategoryTile).at(i),
+              matching: find.byWidgetPredicate(
+                (w) =>
+                    w is DecoratedBox &&
+                    w.decoration is BoxDecoration &&
+                    (w.decoration as BoxDecoration).border != null,
+              ),
+            )
+            .first,
+      );
+
+      final count = find.byType(CategoryTile).evaluate().length;
+      expect(count, 12);
+      final painted = [for (var i = 0; i < count; i++) surfaceOf(i)];
+
+      expect(
+        painted.map((r) => r.width).toSet(),
+        hasLength(1),
+        reason:
+            'every painted tile must be one width; got '
+            '${painted.map((r) => r.width).toList()}',
+      );
+      expect(painted.map((r) => r.height).toSet(), hasLength(1));
+
+      // And that one width is the cell's, so the surface fills it rather than
+      // merely being consistent with itself.
+      final cell = tester.getRect(find.byType(CategoryTile).first);
+      expect(painted.first.width, closeTo(cell.width, 0.01));
+      expect(painted.first.height, closeTo(cell.height, 0.01));
+      expect(painted.first.width, closeTo(116, 0.01));
     });
 
     testWidgets('the skeleton occupies the same grid as the populated one', (

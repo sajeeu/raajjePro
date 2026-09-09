@@ -40,57 +40,67 @@ class CategoryTile extends StatelessWidget {
       // The grid cell is already taller than the 48 dp floor; without this the
       // Pressable's minimum would fight the cell's own height.
       minSize: 0,
-      builder: (context, s) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.panel),
-          border: Border.all(
-            color: s.pressed || s.hovered
-                ? colors.accentBorder
-                : colors.borderCard,
+      // `SizedBox.expand`, or the tile paints narrower than its cell. The grid
+      // constrains each cell tightly to 116 dp, but `Pressable` wraps its
+      // child in `Center(widthFactor: 1, heightFactor: 1)`, which passes
+      // *loose* constraints down — so the surface shrink-wrapped its label and
+      // "Appliance Repair" drew visibly wider than "Fitness". The prototype
+      // never says the tile fills its cell because a block `<div>` already
+      // does; Flutter has no such default. Same cause as the Register role
+      // cards.
+      builder: (context, s) => SizedBox.expand(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(
+              color: s.pressed || s.hovered
+                  ? colors.accentBorder
+                  : colors.borderCard,
+            ),
+            boxShadow: AppShadows.card(colors.ink),
           ),
-          boxShadow: AppShadows.card(colors.ink),
-        ),
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(
-            AppSpacing.sm,
-            AppSpacing.lg + 2,
-            AppSpacing.sm,
-            AppSpacing.md + 2,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: accent.tint,
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                ),
-                child: SizedBox.square(
-                  dimension: chip,
-                  child: Center(
-                    child: Icon(
-                      CategoryIcons.resolve(category.iconIdentifier),
-                      size: 22,
-                      color: accent.icon,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              AppSpacing.sm,
+              AppSpacing.lg + 2,
+              AppSpacing.sm,
+              AppSpacing.md + 2,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: accent.tint,
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                  ),
+                  child: SizedBox.square(
+                    dimension: chip,
+                    child: Center(
+                      child: Icon(
+                        CategoryIcons.resolve(category.iconIdentifier),
+                        size: 22,
+                        color: accent.icon,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm + 2),
-              Flexible(
-                child: Text(
-                  category.name,
-                  textAlign: TextAlign.center,
-                  style: type.secondary.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.ink,
-                    height: 1.2,
+                const SizedBox(height: AppSpacing.sm + 2),
+                Flexible(
+                  child: Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    style: type.secondary.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.ink,
+                      height: 1.2,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
