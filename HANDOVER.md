@@ -116,13 +116,14 @@ fails when it is wired. The emergency entry is **absent rather than dead** —
 §Phase 16 owes it. `docs/decisions/16-phase-4-categories.md` and
 `docs/design/explore-corrections.md`.
 
-🔧 **A plan discrepancy found while building it, flagged not resolved.**
-§0.0 item 12 says "the seed list **§Phase 4** calls for" when it introduces
-`docs/data/inhabited-islands.json`. §Phase 4's text names no island, and its
-Done-when has no island line; **§Phase 7's** first bullet is the one that says
-"Island reference data (real seed list, not five entries)". Phase 4 therefore
-seeded categories only. If islands were meant to land here, §Phase 4 needs the
-bullet §0.0 assumes it has.
+🔧 **A plan discrepancy found while building it — now resolved in the plan
+(2026-09-09, revision 5.21).** §0.0 item 12 used to say "the seed list
+**§Phase 4** calls for" when introducing `docs/data/inhabited-islands.json`,
+and §Phase 4 names no island anywhere: **§Phase 7's** first bullet is the one
+that asks for "Island reference data (real seed list, not five entries)", and
+§Sequencing asks Phase 4 only for `bookingMode` and `emergencyCapable`. Phase 4
+seeded categories only, which was the right reading. Item 12 now cites
+§Phase 7, and `/phase-7` points at the data file so the list is not re-derived.
 
 **Next**: `/phase-5`.
 

@@ -6,7 +6,7 @@
 
 Extracted 2026-09-01 from the Ministry of Fisheries and Agriculture's atoll register at `atollsofmaldives.gov.mv`, filtered to category **(I) Inhabited**. The same source also carries Resort (313), Uninhabited (553), Picnic, Proposed Resort, Industrial and Historical islands — 1,124 records in total — none of which RaajjePro needs. A service marketplace delivers to where people live.
 
-This closes the input the redesign plan flagged as the one thing only the product owner could supply. It is not yet wired into anything: it is data on disk, ready for the Phase 4 / Phase 7 seed.
+This closes the input the redesign plan flagged as the one thing only the product owner could supply. It is not yet wired into anything: it is data on disk, ready for the **Phase 7** seed. 🔧 **Phase 7, not Phase 4 — corrected 2026-09-09**, matching plan §0.0 item 12: Phase 4 seeds categories and names no island, and Phase 7's first bullet is the one that asks for this list.
 
 ## The finding that changes the design
 

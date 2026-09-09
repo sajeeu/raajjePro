@@ -20,7 +20,7 @@ reasoning behind each.
 | # | Decision | Choice |
 |---|---|---|
 | 1 | Where Business/Trade Name and `verificationTier` live before Phase 5 | A minimal `ProviderProfile` now (`userId`, `businessName`, `verificationTier` default `none`, `verificationStatus` default `unverified`), created by `getOrCreateProviderProfile` when a *provider* registers |
-| 2 | Saved preferences (§Phase 3 account-settings bullet) | Deferred past Phase 4 — needs `Island`, which Phase 4 seeds |
+| 2 | Saved preferences (§Phase 3 account-settings bullet) | Deferred — needs `Island`, which **Phase 7** seeds (🔧 read "Phase 4" until 2026-09-09; plan §0.0 item 12 mis-cited the phase and Phase 4 seeds categories only) |
 | 3 | Flutter crash reporting (pulled forward from Phase 21) | Sentry behind a `CrashReporter` interface, no-op with no DSN |
 | 4 | Done-when lines needing Phase 11/17 entities | Build the seams, verify end to end at the owning phase; each recorded as met for the mechanism with a ledger row |
 | 5 | "A recovery attempt without a verified email is refused" | Testable now as a guard, so tested now — `assertRecoverableByEmail` |
@@ -189,7 +189,7 @@ Sentry project — that needs a real DSN, which this build does not have.
   early so Business/Trade Name and `verificationTier` have somewhere to live
   at registration.
 - **Saved preferences**, deferred out of this phase's Account Settings
-  screen — Phase 6 or Phase 7 builds it once `Island` exists (Phase 4), never
+  screen — Phase 6 or Phase 7 builds it once `Island` exists (Phase 7), never
   keyed by island name (§0.0 item 12).
 - **`AnonymisationHooks`** (`backend/src/modules/account/anonymise.ts`) —
   Phase 11 registers the review-anonymisation hook; its test asserts a review
