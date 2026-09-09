@@ -12,6 +12,15 @@ a **JavaScript syntax error in the component script** — the `ISLANDS` array do
 not parse, and island search on that screen is gone. Not one row missing: the
 control.
 
+🔧 **Applied and verified 2026-09-09.** All four rows now close. Checked
+against the project with DesignSync rather than by preview: `Emergency Flow`
+and `Create Service` came back **byte-identical** to the repository's copies
+(69,711 and 97,533 bytes), and `Home` and `Saved Preferences` match on the
+closed row, the `#627187` placeholder, the alias clause in `searchIslands` and
+all 19 island rows. **Nothing to import** — the repository already held the
+repaired files, and the point of the round was to stop the next island-list
+change copying the break back down. That risk is closed.
+
 **Leave alone:** everything else. No layout, no colour, no copy, no component,
 no animation, no other island row, and nothing from Rounds 40–54. This round
 inserts one character in each of four files.
