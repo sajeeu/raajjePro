@@ -40,6 +40,15 @@ const SENSITIVE_KEYS = [
   'idToken',
   'secret',
   'recoveryCodes',
+  // Phase 5. No path logs these today — no serializer includes a body — but
+  // §Phase 5 requires payment details to stay out of all logs, and the one
+  // mechanism that would catch a future `log.info({ profile })` has to know
+  // the field names to catch them by.
+  'bankName',
+  'bankAccountName',
+  'bankAccountNumber',
+  'transferInstructions',
+  'paymentDetails',
 ];
 
 /** Depths 0 (bare key) through 3 (three levels of nesting). */

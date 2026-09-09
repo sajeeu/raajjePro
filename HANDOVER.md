@@ -91,7 +91,7 @@ None of that was visible in a design review. All of it would have been implement
 
 ## What this repository is, right now
 
-**Phases 0, 1, 2, 3, 3b, 3c and 4 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
+**Phases 0, 1, 2, 3, 3b, 3c, 4 and 5 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
 
 **Phase 3b is built**: reset-token issuance, expiry and consumption, every refresh token invalidated on success, and the three screens — request email, check-your-inbox, set new password. It sends a six-digit **code**, not a link. `docs/decisions/13-phase-3b-forgot-password.md`.
 
@@ -125,16 +125,71 @@ that asks for "Island reference data (real seed list, not five entries)", and
 seeded categories only, which was the right reading. Item 12 now cites
 §Phase 7, and `/phase-7` points at the data file so the list is not re-derived.
 
-**Next**: `/phase-5`.
+**Phase 5 is built** — provider profiles, backend only as §Phase 5 marks it.
+`ProviderProfile` gains the bio, years of experience, the four payment-detail
+fields, the account-level `acceptingNewCustomers` toggle, §1g's
+`maldivianOwned`, the per-provider `subscriptionPriceLaari` and the
+suspension pair. **Two things are deliberately not columns:** a phone number
+(§Phase 5 keeps exactly one, on the user row) and any visibility flag —
+`findVisibleProviders` derives it, and `information_schema` is asserted to
+hold no `lifecycle_status` or synonym.
+
+**Two seams carry the phase, because §Phase 5 is sequenced before the tables
+its rules name.** There is no `Listing` until Phase 8 and no `Booking` until
+Phase 17, so `PublishedListingSource` answers §1a's published-listing count
+and `ProviderConductSource` returns §1f's metrics — the `DeletionBlocker`
+pattern from Phase 3. Both defaults answer honestly rather than
+optimistically: nobody is publicly visible before listings exist, and conduct
+reports **null** rather than zero, because "0% on time" and "never been
+booked" are different claims. Rows **P5-1**, **P5-2** and **P5-3** in the
+ledger say what only the real tables can prove.
+
+`findVisibleProviders` is the one shared gate and suspension is an **input**
+to it, not a filter each consumer repeats — so Phases 13, 15 and 16 must call
+it rather than rebuild the rule. `readPublic` applies the gate itself and 404s for a
+drafts-only or suspended provider, rather than trusting the caller to have
+checked.
+
+Conduct display follows §1f exactly: numbers only, **no field on any shape can
+hold an editorial label**, rates suppressed below a ten-completed-booking
+floor measured against the 90-day window, and the provider sees their own
+numbers with `publiclyVisible: false` before a customer sees anything. The
+suppression flag is `metricsBelowFloor`, **not** `newProvider` — the floor is
+window-based, so that name would have printed "New provider · 47 jobs
+completed"; §1f's copy is Phase 12/13's call and both numbers are there to
+make it from. §1g's attribute is **null below Gold** — absent, not false.
+Payment details reach a customer through exactly one accessor,
+`paymentDetailsForBooking`, which takes no viewer on purpose because it is not
+a route; changing them is audited by field name, never by value. Four columns
+are absent from `PATCH /v1/providers/me` so a provider cannot self-verify,
+self-declare local ownership, price themselves or un-suspend themselves. A
+**read never creates the profile** — `isProvider` is `providerProfile !== null`
+and Phase 6's role switcher routes on it, so opening a screen must not turn a
+customer into a provider; the PATCH creates, which is §1a's implicit-creation
+moment. `docs/decisions/17-phase-5-provider-profiles.md`.
+
+🔧 **Two plan lines Phase 5 could not satisfy as written, both recorded in
+that decision file rather than resolved.** §Phase 5's Done-when says payment
+details are "absent from every response except the booking payment step",
+which read literally forbids a provider reading their own bank details and so
+makes §Phase 6a's collection step un-editable — the build takes it as "every
+response **to another user**", on the precedent the phone carves out in the
+same sentence, and the plan wording is what should change. And §Phase 6a's
+own Done-when routes a **phone number** through `PATCH /v1/providers/me`,
+which has no phone field by §Phase 5's single-copy rule: that half goes to
+Phase 3's `PATCH /v1/users/me/phone`. **Phase 6a's builder needs the second
+one before they start.**
+
+**Next**: `/phase-6`.
 
 | | |
 |---|---|
-| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.20. Every product decision. Read §0.0 first — it is a precedence rule |
+| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.21. Every product decision. Read §0.0 first — it is a precedence rule |
 | `CLAUDE.md` | Architectural invariants Claude must never violate. Loaded automatically |
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin` |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill |
 | `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |

@@ -7,6 +7,7 @@ import type {
   UserSessionRevokedReason,
 } from '../../generated/prisma/client.js';
 import type { Db } from '../audit/types.js';
+import { getOrCreateProviderProfile } from '../providers/repository.js';
 
 export type UserWithProfile = User & { providerProfile: ProviderProfile | null };
 export type SessionWithUser = UserSession & { user: UserWithProfile };
@@ -185,16 +186,18 @@ export class UserRepository {
     return holder !== null;
   }
 
-  /** Idempotent (§1a). Phase 6a and Phase 8 call this too; Phase 5 extends what it sets. */
-  async getOrCreateProviderProfile(
+  /**
+   * Idempotent (§1a). Delegates to the providers module, which owns the one
+   * implementation from Phase 5 onward — Phase 6a's onboarding and Phase 8's
+   * draft creation call it there. Kept as a method here because Phase 3's
+   * provider-variant registration creates the profile inside its own
+   * transaction and passes that `tx` in.
+   */
+  getOrCreateProviderProfile(
     db: Db,
     userId: string,
     businessName?: string,
   ): Promise<ProviderProfile> {
-    const existing = await db.providerProfile.findUnique({ where: { userId } });
-    if (existing !== null) return existing;
-    return db.providerProfile.create({
-      data: { userId, ...(businessName === undefined ? {} : { businessName }) },
-    });
+    return getOrCreateProviderProfile(db, userId, businessName);
   }
 }

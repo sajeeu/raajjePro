@@ -331,11 +331,26 @@ enum VerificationStatus {
   @@map("verification_status")
 }
 
-/// The provider half of an account. Phase 3 creates it with only the columns
+/// The provider half of an account. Phase 3 created it with only the columns
 /// Phase 3 reads — Business/Trade Name from the Register provider variant,
 /// and the tier the Bronze-uniqueness rule checks. Phase 5 adds the rest
 /// additively (plan §Phase 5). `verificationTier` is what the badge renders;
 /// `verificationStatus` is only the review state of a pending submission.
+///
+/// Two things are deliberately **not** columns here:
+///
+///   - **A phone number.** §Phase 5 stores "exactly one phone number" and that
+///     is `User.phoneE164`, captured in Phase 3. A second copy on this row
+///     would be a second thing to protect, and §1c allows exactly one endpoint
+///     in the whole system to return a number to another user.
+///   - **A public visibility flag.** §1a: visibility is *derived* from the
+///     published-listing count, never stored. There is no `lifecycleStatus`
+///     and there must never be one — v1 had it, it drifted, and a provider who
+///     unpublished their only listing stayed `active` with an empty profile.
+///
+/// `providerType`, the default service areas and the identity-document
+/// columns are Phase 6a's, Phase 7's and Phase 10a's respectively; Phase 5
+/// does not build ahead into them.
 model ProviderProfile {
   id                 String             @id @default(uuid()) @db.Uuid
   userId             String             @unique @map("user_id") @db.Uuid
@@ -343,9 +358,64 @@ model ProviderProfile {
   businessName       String?            @map("business_name")
   verificationTier   VerificationTier   @default(none) @map("verification_tier")
   verificationStatus VerificationStatus @default(unverified) @map("verification_status")
-  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  /// The short introduction Phase 6a collects, capped at 160 characters there
+  /// and in this module's Zod schema — the cap is a server-side rule
+  /// (invariant 4), not a text-field attribute.
+  bio               String? @db.VarChar(160)
+  yearsOfExperience Int?    @map("years_of_experience")
+
+  /// §1b, and never a global constant: the price this provider renews at,
+  /// written once at their first confirmed payment. Null means "not yet set" —
+  /// Phase 8a decides the value from §1b's cohort rule (the introductory rate
+  /// for the first 100 providers, the standard rate after them), so nothing
+  /// here defaults it and no provider-facing write may set it.
+  subscriptionPriceLaari Int? @map("subscription_price_laari")
+
+  /// Payment details (§Phase 5, load-bearing). The one piece of provider
+  /// information that IS shown to a customer, and only at a booking's payment
+  /// step, because the off-platform transfer cannot happen without it.
+  /// Excluded structurally from every other response and from all logs —
+  /// `toPublicProviderDto` has no branch that can reach these, and
+  /// `paymentDetailsForBooking` is the only mapper that reads them.
+  ///
+  /// "and/or other transfer instructions": the three bank fields cover the
+  /// normal case and `transferInstructions` carries anything that does not
+  /// fit. Phase 6a requires the three at onboarding; nothing is required here,
+  /// because a profile exists before onboarding finishes.
+  bankName             String? @map("bank_name")
+  bankAccountName      String? @map("bank_account_name")
+  bankAccountNumber    String? @map("bank_account_number")
+  transferInstructions String? @map("transfer_instructions")
+
+  /// §Phase 5: one provider-level toggle gating all of their listings, and
+  /// what Phase 8a's billing pause keys off (§1b Pause). Deliberately NOT on
+  /// the Listing entity (§Phase 8).
+  acceptingNewCustomers Boolean @default(true) @map("accepting_new_customers")
+
+  /// §1g. An attribute of the *business*, evidenced by the registration
+  /// document Gold already collects — never a nationality field on a person,
+  /// and never a ranking boost. Nullable because "below Gold the attribute is
+  /// absent rather than false": null is *not established*, which is a
+  /// different claim from false. Set by Gold review (Phase 10a), never by the
+  /// provider — `updateOwnProfile` cannot write it.
+  maldivianOwned Boolean? @map("maldivian_owned")
+
+  /// §1a: suspension is an INPUT to derived visibility, not a second filter
+  /// reimplemented per query — `findVisibleProviders` reads it so one change
+  /// covers search, Home and the public profile. Phase 10b owns the admin
+  /// suspend/unsuspend action and its audit trail; Phase 5 owns the column and
+  /// the filter, which is what the §Phase 5 Done-when asserts.
+  suspendedAt     DateTime? @map("suspended_at") @db.Timestamptz(6)
+  suspendedReason String?   @map("suspended_reason")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The candidate scan in `findVisibleProviders` filters on these two before
+  /// it asks the listing source anything.
+  @@index([suspendedAt, id])
+  @@index([verificationTier])
   @@map("provider_profile")
 }
 

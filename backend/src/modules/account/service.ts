@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
 import { userDto } from '../auth/dto.js';
+import { providerOwnExport } from '../providers/types.js';
 import type { OtpSendResult, OtpService } from '../auth/otp.js';
 import { normalisePhone } from '../auth/phone.js';
 import type { UserRepository, UserWithProfile } from '../auth/repository.js';
@@ -205,13 +206,12 @@ export class AccountService {
         createdAt: user.createdAt.toISOString(),
         termsAcceptedAt: user.termsAcceptedAt.toISOString(),
       },
+      // Phase 5 extended this section from two fields to the whole profile.
+      // Mapped by the providers module so the export and `GET
+      // /v1/providers/me` cannot drift apart, and own-data like the phone
+      // above — a provider's own bank details are theirs to take with them.
       providerProfile:
-        user.providerProfile === null
-          ? null
-          : {
-              businessName: user.providerProfile.businessName,
-              verificationTier: user.providerProfile.verificationTier,
-            },
+        user.providerProfile === null ? null : providerOwnExport(user.providerProfile),
       sessions: sessions.map((s) => ({
         deviceName: s.deviceName,
         createdAt: s.createdAt.toISOString(),

@@ -2,11 +2,11 @@
 
 Mobile-first, API-first local services marketplace for the Maldives. Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-**Phases 0, 1, 2, 3, 3b, 3c and 4 are built** — repository and environment foundation; design system and shared UI; backend core; identity and authentication; password reset; push infrastructure; the category catalogue. `HANDOVER.md` carries what each one delivered and `docs/decisions/` the record per phase. Phase 5 onward is still specification.
+**Phases 0, 1, 2, 3, 3b, 3c, 4 and 5 are built** — repository and environment foundation; design system and shared UI; backend core; identity and authentication; password reset; push infrastructure; the category catalogue; provider profiles. `HANDOVER.md` carries what each one delivered and `docs/decisions/` the record per phase. Phase 6 onward is still specification.
 
 ## The one document that matters
 
-`01_Development_Plan_v5.md`, at **revision 5.20**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
+`01_Development_Plan_v5.md`, at **revision 5.21**. It is the single source of truth for every product decision, and it is standalone. **Read §0.0 first — it is a precedence rule**: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Do not restate the plan's content elsewhere. Cite it. Seventeen review rounds have shown that every copy of a decision eventually drifts from it — that failure has occurred five times, and each time the plan was right and a derived copy was wrong.
 
@@ -24,7 +24,7 @@ Where a command says a screen has no mockup, propose the design and get approval
 
 RaajjePro is a mobile-first, API-first Local Service Marketplace for the Maldives.
 Frontend: Flutter. Backend: TypeScript (Fastify + Prisma + PostgreSQL). REST, versioned under /v1.
-Full specification: `01_Development_Plan_v5.md` at revision 5.20. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
+Full specification: `01_Development_Plan_v5.md` at revision 5.21. If any instruction here appears to conflict with that document, the document wins — flag the conflict rather than picking silently. Within that document, §0.0 is a precedence rule: where §0.1–0.3 conflict with a later section, the later section wins.
 
 Non-negotiable architectural invariants — never violate these even if a prompt doesn't restate them:
 

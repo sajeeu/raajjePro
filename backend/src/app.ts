@@ -27,6 +27,11 @@ import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { registerCategoryRoutes } from './modules/categories/routes.js';
 import { CategoryService } from './modules/categories/service.js';
+import { registerProviderAnonymisation } from './modules/providers/anonymise.js';
+import type { ProviderConductSource } from './modules/providers/conduct.js';
+import { registerProviderRoutes } from './modules/providers/routes.js';
+import { ProviderProfileService } from './modules/providers/service.js';
+import type { PublishedListingSource } from './modules/providers/visibility.js';
 import { AuditService } from './modules/audit/service.js';
 import { OtpService } from './modules/auth/otp.js';
 import { PasswordResetService } from './modules/auth/password-reset.js';
@@ -68,6 +73,10 @@ export interface AppDeps {
   confirmSubscription?: (url: string) => Promise<void>;
   /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
   deletionBlocker?: DeletionBlocker;
+  /** Phase 8 supplies the published-listing count §1a derives visibility from; until then nobody is publicly visible. */
+  publishedListings?: PublishedListingSource;
+  /** Phase 11 supplies §1f's computed conduct metrics; until then no rate is computable. */
+  providerConduct?: ProviderConductSource;
   /**
    * Test seam: when present, pino writes to this stream instead of stdout, so
    * a test can capture every log line a real run produces (the §Phase 3
@@ -84,6 +93,7 @@ declare module 'fastify' {
     account: AccountService;
     audit: AuditService;
     categories: CategoryService;
+    providers: ProviderProfileService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
     auth: AuthService;
@@ -176,7 +186,24 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
 
   // Phase 4. The catalogue every later module reads its per-category numbers
   // from — booking mode, lead time, quote windows, the emergency tier bar.
-  app.decorate('categories', new CategoryService({ prisma: deps.prisma, audit }));
+  const categories = new CategoryService({ prisma: deps.prisma, audit });
+  app.decorate('categories', categories);
+
+  // Phase 5. The provider half of an account, and §1a's single visibility
+  // gate. Both seams stay unfilled until the phase that owns the data lands:
+  // Phase 8 supplies the published-listing source, Phase 11 the conduct
+  // source. Until then nobody is publicly visible and no conduct rate is
+  // computable — which is the honest answer, not a placeholder.
+  app.decorate(
+    'providers',
+    new ProviderProfileService({
+      prisma: deps.prisma,
+      categories,
+      audit,
+      ...(deps.publishedListings === undefined ? {} : { listings: deps.publishedListings }),
+      ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
+    }),
+  );
 
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
@@ -218,6 +245,9 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
       data: { revokedAt: now, revokedReason: 'account_anonymised' },
     });
   });
+  // Phase 5. The bank details and the self-written bio go with the account;
+  // the verification decision and the billing price stay (see the hook).
+  registerProviderAnonymisation(anonymisation);
   app.decorate('anonymisation', anonymisation);
   const anonymiser = new AccountAnonymiser({
     prisma: deps.prisma,
@@ -259,6 +289,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerAccountRoutes(app);
   registerAuditRoutes(app);
   registerCategoryRoutes(app);
+  registerProviderRoutes(app);
   registerPushRoutes(app);
   registerEmailLogRoutes(app);
   await registerSesEventRoutes(app);
