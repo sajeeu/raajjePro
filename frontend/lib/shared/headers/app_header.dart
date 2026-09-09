@@ -111,14 +111,16 @@ class AppHeader extends StatelessWidget {
                 if (brand) ...[
                   const _LogoMark(),
                   const SizedBox(width: AppSpacing.sm + 2),
-                  // 🔧 Flexible, added in Phase 6. The brand row's other
-                  // children are all fixed width or already flexible, so the
-                  // wordmark was the one thing that could not give — and the
-                  // row overflowed at 200% text the moment the trailing slot
-                  // grew from a 36 dp avatar to a 48 dp control. It keeps its
-                  // natural width at every ordinary text scale (its share of
-                  // the free space is far wider than the word) and truncates
-                  // only where the alternative is a layout error.
+                  // 🔧 Flexible, added in Phase 6 when the row overflowed at
+                  // 200% text — the trailing slot had grown from a 36 dp
+                  // avatar to a 48 dp control and the wordmark was the one
+                  // child that could not give.
+                  //
+                  // It is now the narrow-screen backstop rather than the
+                  // 200%-text fix: `_Wordmark` does not scale with the OS
+                  // text setting at all (see the reasoning there), so the
+                  // pressure this relieved is gone and truncation is reserved
+                  // for a genuinely narrow frame.
                   const Flexible(child: _Wordmark()),
                 ] else ...[
                   if (onBack != null)
@@ -210,18 +212,30 @@ class _Wordmark extends StatelessWidget {
       header: true,
       label: 'RaajjePro',
       excludeSemantics: true,
-      child: Text.rich(
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        TextSpan(
-          text: 'Raajje',
-          style: style,
-          children: [
-            TextSpan(
-              text: 'Pro',
-              style: style.copyWith(color: colors.primary),
-            ),
-          ],
+      // The wordmark does not scale with the OS text setting. It is a brand
+      // mark, not content: a reader who enlarges text is enlarging what they
+      // need to *read*, and the app's identity is already carried by the logo
+      // beside it. Left scaling, it reached 34 px at 200% and either overflowed
+      // the row by 5.5 px or — once Phase 6 made it `Flexible` — truncated to
+      // "Raajj…", which reads as a bug rather than as an adaptation. Every
+      // other string in the header still scales, including the screen title.
+      //
+      // `maxLines`/`ellipsis` stay as the narrow-screen backstop: a 320 dp
+      // phone with a long trailing slot must degrade rather than overflow.
+      child: MediaQuery.withNoTextScaling(
+        child: Text.rich(
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          TextSpan(
+            text: 'Raajje',
+            style: style,
+            children: [
+              TextSpan(
+                text: 'Pro',
+                style: style.copyWith(color: colors.primary),
+              ),
+            ],
+          ),
         ),
       ),
     );
