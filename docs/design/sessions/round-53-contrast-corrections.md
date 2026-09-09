@@ -23,8 +23,9 @@ has the full table and the reasoning; this is the change list.
 
 ## Status — read this first
 
-🔧 **Authored 2026-09-07 and never run.** Rounds 51, 52 and 54 have been
-applied to this project; 53 has not. Meanwhile the Flutter app *has* taken
+🔧 **Authored 2026-09-07. Applied to the repository's artboards on 2026-09-08
+and 2026-09-09; still not applied in this project.** Rounds 51, 52 and 54 have
+been applied to this project; 53 has not. Meanwhile the Flutter app *has* taken
 these values (`docs/decisions/08-phase-1-design-system.md` records the seven),
 so **the app and the prototypes now disagree on all seven colours.** Every
 screen built "to match the prototype" from here reintroduces a value that
@@ -35,6 +36,32 @@ Two of them were caught the hard way, in built screens: `Sign In`'s footer
 caption and `Forgot Password`'s resend countdown and security footer all use
 `#8296B3` at 2.78:1 on the page. The app renders them compliant, the artboards
 do not, and the build session had to be told to ignore the artboard.
+
+### Where it has been applied, and one commit message not to read as the rule
+
+Imported into all 61 artboards in `mockups/design-composer/` across six commits,
+`26324b1..0426cd3`. Counted in the repository on 2026-09-09:
+
+- **17** `::placeholder` rules, every one `#627187`. None left at `#9AA9C0`.
+- **9** `color:#8296B3` remaining, **none on live text** — six on `Components`'
+  four disabled buttons and its disabled Island input (value *and* `<label>`,
+  which carries no `disabled` attribute), and three as an icon container's
+  `color:` that a child `<svg stroke="currentColor">` inherits, in
+  `Booking Detail`, `Dispatch Fee` and `Report`.
+- **5** `color:#9AA9C0` remaining, all password eye toggles — `Sign In`,
+  `Register` x2, `Forgot Password` x2. The same `currentColor` case §1's
+  caveat says not to sweep.
+- **77** CTA gradient middle stops at 40%. `Sign In`'s 55% header band and the
+  70% message-send gradient in `Booking Thread` and `Enquiry Thread` are
+  different gradients and are unchanged.
+
+**`8da73b8` overstates the rule and must not be read as it.** That commit's
+message says "Every occurrence of `#8296B3` in these six artboards becomes
+`#5B6B84`". That is neither what was done nor what this round asks for:
+`Components` deliberately keeps six, on controls that are genuinely disabled and
+so are held to the 3:1 graphic bar rather than 4.5:1. The rule is the one in
+§4 and in the counts above — **no `#8296B3` labels anything that is not
+disabled.** `26324b1` and `0426cd3` state it correctly.
 
 ## The inventory, so this is a sweep and not a spot-fix
 
