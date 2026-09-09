@@ -19,10 +19,17 @@ import 'package:share_plus/share_plus.dart';
 // account-settings providers disable it explicitly for the same reason.
 Duration? _noRetry(int retryCount, Object error) => null;
 
+/// `isAutoDispose` because the data is scoped to one signed-in account.
+/// `signOut` clears the token and sets `AuthGuest`; it invalidates nothing, so
+/// a provider that outlives its listeners keeps the previous account's name,
+/// email and phone in memory — and `build` here applies its result to
+/// `AuthState`, so a stale read does not merely display, it propagates. Phase 6
+/// made the profile summary auto-dispose for the same reason.
 final accountControllerProvider =
     AsyncNotifierProvider<AccountController, UserAccount>(
       AccountController.new,
       retry: _noRetry,
+      isAutoDispose: true,
     );
 
 /// `me`, fresh, for the settings screens. Applies the result to AuthState so
@@ -41,10 +48,13 @@ class AccountController extends AsyncNotifier<UserAccount> {
   }
 }
 
+/// Auto-dispose for the same reason, and the stake is higher: this is the list
+/// of a specific account's devices.
 final sessionsControllerProvider =
     AsyncNotifierProvider<SessionsController, List<SessionInfo>>(
       SessionsController.new,
       retry: _noRetry,
+      isAutoDispose: true,
     );
 
 class SessionsController extends AsyncNotifier<List<SessionInfo>> {

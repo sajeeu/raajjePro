@@ -192,7 +192,9 @@ void main() {
     expect(style.fontWeight, FontWeight.w700);
     expect(style.color, colors.textSecondary);
 
-    // Only the painted box shrank; the tap target is untouched.
+    // Only the painted box shrank; the tap target is untouched — and this
+    // taps rather than measures, for the reason the reveal toggle records: a
+    // control can measure 48 dp and still refuse a tap at 20 dp off centre.
     final tap = find.ancestor(of: guest, matching: find.byType(Pressable));
     expect(tester.getSize(tap.first).height, greaterThanOrEqualTo(48));
 
@@ -201,6 +203,13 @@ void main() {
       closeTo(tester.getSize(find.byType(Scaffold)).width / 2, 1),
       reason: 'the prototype centres it',
     );
+
+    // Last, because it navigates: a tap 4 dp inside the top edge of the
+    // target — well outside the 16 dp text it paints — must still register.
+    final box = tester.getRect(tap.first);
+    await tester.tapAt(Offset(box.center.dx, box.top + 4));
+    await tester.pumpAndSettle();
+    expect(find.text('HOME'), findsOneWidget);
   });
 
   testWidgets('the footer caption is weight 500, and passes AA', (
@@ -251,12 +260,32 @@ void main() {
     );
     expect(painted(1), AppSizes.inputHeight);
 
-    // And the 48 dp target survived the fix — it overflows the row instead of
-    // growing it.
+    // And the 48 dp target survived the fix. **Tapped, not measured.** An
+    // earlier attempt at this fix painted the control out of a zero-height
+    // `SizedBox` through an `OverflowBox`: `getSize` reported a perfect
+    // 48 x 48 while Flutter, which hit-tests a child against its parent's
+    // bounds, refused every tap outside that zero-height box. A measurement
+    // passes against that defect; only a tap fails.
     final toggle = find.descendant(
       of: find.byType(FieldRevealToggle),
       matching: find.byType(Pressable),
     );
     expect(tester.getSize(toggle.first), const Size(48, 48));
+
+    Future<void> tapOffCentre(Offset delta) async {
+      await tester.tapAt(tester.getCenter(toggle.first) + delta);
+      await tester.pump();
+    }
+
+    bool obscured() =>
+        tester.widget<TextField>(find.byType(TextField).at(1)).obscureText;
+
+    expect(obscured(), isTrue);
+    // 20 dp off centre on both axes — inside the 48 dp box, outside the 40 dp
+    // icon it paints.
+    await tapOffCentre(const Offset(20, 20));
+    expect(obscured(), isFalse, reason: 'a tap near the corner must register');
+    await tapOffCentre(const Offset(-20, -20));
+    expect(obscured(), isTrue, reason: 'and so must the opposite corner');
   });
 }

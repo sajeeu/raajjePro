@@ -202,6 +202,33 @@ void main() {
       expect(taps, 1);
     });
 
+    test('a Pressable cannot discard the label it requires', () {
+      // `excludeSemantics: true` returns the child unwrapped, so
+      // `semanticLabel` — which this widget *requires* — is dropped and a
+      // screen reader announces nothing. Passing both was therefore always a
+      // silent accessibility regression, and Phase 6 found one in the wild.
+      // The assert turns it into a failure at construction.
+      expect(
+        () => Pressable(
+          semanticLabel: 'Open profile',
+          excludeSemantics: true,
+          builder: (_, _) => const SizedBox.square(dimension: 24),
+        ),
+        throwsAssertionError,
+      );
+
+      // The legitimate shape: the child owns its semantics, so there is no
+      // label here to lose.
+      expect(
+        () => Pressable(
+          semanticLabel: '',
+          excludeSemantics: true,
+          builder: (_, _) => const SizedBox.square(dimension: 24),
+        ),
+        returnsNormally,
+      );
+    });
+
     testWidgets('an icon-only control is labelled', (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(

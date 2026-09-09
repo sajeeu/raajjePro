@@ -47,7 +47,15 @@ class Pressable extends StatefulWidget {
     this.focusRadius = AppRadius.button,
     this.excludeSemantics = false,
     this.tooltip,
-  });
+  }) : assert(
+         !excludeSemantics || semanticLabel == '',
+         'Pressable(excludeSemantics: true) returns the child unwrapped, so '
+         'semanticLabel is discarded — a screen reader announces nothing. '
+         'semanticLabel is required here, so passing both is always a silent '
+         'accessibility regression: either drop excludeSemantics and let this '
+         'widget own the semantics, or wrap the child in your own Semantics '
+         'and pass an empty label.',
+       );
 
   final PressableBuilder builder;
   final VoidCallback? onTap;
