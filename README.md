@@ -33,8 +33,10 @@ npm install                          # root: commit hooks only
 docker compose up -d                 # PostgreSQL 18 + pg_cron + WAL archiving, port 5435
 cd backend && cp .env.example .env && npm install
 npm run db:migrate                   # applies prisma/migrations, schedules the heartbeat job
+npm run db:seed                      # Phase 4 onward: the twelve categories. Create-if-absent, safe to re-run
 npm run dev                          # boots a server on :3000 (Phase 2 onward — Fastify, admin identity, email)
 curl localhost:3000/v1/health        # { "data": { "status": "ok", ... } }
+curl localhost:3000/v1/categories    # Phase 4 onward: the catalogue Explore draws, public, no auth
 npm run admin:create -- --email you@example.com   # creates the first admin; password is prompted, never a flag
 npm run jobs:status                  # is the scheduled no-op job firing? (exit 0 = yes)
 

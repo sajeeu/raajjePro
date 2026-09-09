@@ -69,6 +69,7 @@ refused at config load until these close.
 |---|---|---|
 | P1 | A deleted account's reviews remain with anonymised attribution. Phase 3 built `AnonymisationHooks` and tested that a registered hook runs in the anonymisation transaction. | Phase 11 registers the review hook and its test asserts a review survives with the author anonymised. |
 | P2 | A deletion request with an open booking completes automatically when that booking terminates. Phase 3 built the `DeletionBlocker` seam and tested it with an injected blocker. | Phase 17 supplies the real blocker; its test creates a booking, requests deletion, terminates the booking and sees anonymisation on the next run. |
+| P4 | **A category's `bookingMode` cannot change once it has published slots or live bookings** (plan §Sequencing, Round 15 follow-ups). Phase 4 seeds the mode and `PATCH /v1/admin/categories/:id` accepts a change to it unconditionally, because there is no `Listing` and no `Booking` to check against — the refusal has nowhere to read from. Invariant 4 means it has to be a server-side refusal when it lands, not an admin-UI control. | Phase 9a (published slots) and Phase 17 (live bookings) give the check something to read. Whichever lands second adds the refusal to `CategoryService.update` and a test that seeds a category, gives it a published slot or a non-terminal booking, and sees the mode change rejected — plus the same question for deactivating a category that still carries live listings. |
 
 ## Closed
 

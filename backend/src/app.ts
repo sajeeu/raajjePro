@@ -25,6 +25,8 @@ import { AccountService } from './modules/account/service.js';
 import { registerAdminAuthRoutes } from './modules/admin-auth/routes.js';
 import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
+import { registerCategoryRoutes } from './modules/categories/routes.js';
+import { CategoryService } from './modules/categories/service.js';
 import { AuditService } from './modules/audit/service.js';
 import { OtpService } from './modules/auth/otp.js';
 import { PasswordResetService } from './modules/auth/password-reset.js';
@@ -81,6 +83,7 @@ declare module 'fastify' {
     deps: AppDeps;
     account: AccountService;
     audit: AuditService;
+    categories: CategoryService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
     auth: AuthService;
@@ -171,6 +174,10 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   );
   app.decorate('social', new SocialAuthRegistry(stubProviders()));
 
+  // Phase 4. The catalogue every later module reads its per-category numbers
+  // from — booking mode, lead time, quote windows, the emergency tier bar.
+  app.decorate('categories', new CategoryService({ prisma: deps.prisma, audit }));
+
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
   const devices = new DeviceTokenRepository(deps.prisma, deps.clock);
@@ -251,6 +258,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerAuthRoutes(app);
   registerAccountRoutes(app);
   registerAuditRoutes(app);
+  registerCategoryRoutes(app);
   registerPushRoutes(app);
   registerEmailLogRoutes(app);
   await registerSesEventRoutes(app);

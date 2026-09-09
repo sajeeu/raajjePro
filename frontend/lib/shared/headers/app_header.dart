@@ -15,7 +15,12 @@ class AppHeaderAction {
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+
+  /// Null renders the disc exactly as it always looks but inert — no tap, no
+  /// press scale, and reported as disabled to a screen reader. Explore uses
+  /// it for the notification bell, whose destination Phase 19 owes; it is not
+  /// a "disabled" visual state and must never be used to grey a live control.
+  final VoidCallback? onTap;
 
   /// Unread count. Renders as a primary pill; spoken as part of the label.
   final int? badgeCount;
@@ -42,6 +47,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     this.actions = const [],
     this.leadingSlot,
+    this.trailingSlot,
     this.surface = false,
   }) : title = null,
        onBack = null,
@@ -54,7 +60,8 @@ class AppHeader extends StatelessWidget {
     this.backLabel = 'Back',
     this.actions = const [],
     this.surface = false,
-  }) : leadingSlot = null;
+  }) : leadingSlot = null,
+       trailingSlot = null;
 
   final String? title;
   final VoidCallback? onBack;
@@ -64,6 +71,11 @@ class AppHeader extends StatelessWidget {
   /// A widget between the wordmark and the actions (the island selector on
   /// Home). Constrained to what is left of the row.
   final Widget? leadingSlot;
+
+  /// A widget after the actions — the account avatar on Home and Explore,
+  /// which is not a bordered icon disc and so is not an [AppHeaderAction].
+  /// Brand headers only.
+  final Widget? trailingSlot;
   final bool surface;
 
   @override
@@ -134,6 +146,10 @@ class AppHeader extends StatelessWidget {
                     onTap: a.onTap,
                     badgeCount: a.badgeCount,
                   ),
+                ],
+                if (trailingSlot != null) ...[
+                  const SizedBox(width: AppSpacing.sm + 2),
+                  trailingSlot!,
                 ],
               ],
             ),
@@ -212,7 +228,7 @@ class _RoundAction extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final int? badgeCount;
 
   @override

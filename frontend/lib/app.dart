@@ -16,6 +16,7 @@ import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/session_expired_screen.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
+import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -69,6 +70,7 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
             const LegalPlaceholderScreen(title: 'Terms of Service'),
         '/legal/privacy': (_) =>
             const LegalPlaceholderScreen(title: 'Privacy Policy'),
+        ExploreScreen.routeName: (_) => const ExploreScreen(),
         GalleryScreen.routeName: (_) => const GalleryScreen(),
         AccountSettingsScreen.routeName: (_) => const AccountSettingsScreen(),
         ActiveSessionsScreen.routeName: (_) => const ActiveSessionsScreen(),
@@ -163,6 +165,8 @@ class _AuthGateState extends ConsumerState<AuthGate> {
 /// Phase 0's boot screen, still the home until Phase 16. Phase 3 adds the
 /// two entries it needs — Sign in for a guest, Account settings for a user —
 /// the latter a temporary bridge until Phase 6's Profile owns that row.
+/// Phase 4 adds Explore, reachable by everyone: the category grid is public
+/// and a guest must be able to browse it (§0.2).
 class _PlaceholderHome extends StatelessWidget {
   const _PlaceholderHome({required this.user});
   final UserAccount? user;
@@ -182,8 +186,15 @@ class _PlaceholderHome extends StatelessWidget {
                   children: [
                     Text('RaajjePro', style: context.type.screenTitle),
                     const SizedBox(height: AppSpacing.xl),
+                    AppButton.primary(
+                      label: 'Explore services',
+                      onPressed: () =>
+                          Navigator.of(context)
+                              .pushNamed(ExploreScreen.routeName),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     if (user == null)
-                      AppButton.primary(
+                      AppButton.secondary(
                         label: 'Sign in',
                         onPressed: () =>
                             Navigator.of(context)

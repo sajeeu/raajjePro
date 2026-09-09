@@ -601,3 +601,102 @@ model PushDelivery {
   @@index([dispatchId])
   @@map("push_delivery")
 }
+
+// ---------------------------------------------------------------------------
+// Phase 4 — categories
+// ---------------------------------------------------------------------------
+
+/// How a listing in this category is booked (plan §1c). The *mode* is a closed
+/// set; the *catalogue* deliberately is not — see `Category`.
+enum BookingMode {
+  slot
+  request
+
+  @@map("booking_mode")
+}
+
+/// A service category. Twelve are seeded (plan §1d), but the catalogue is
+/// **unlimited and never an enum** — §Phase 4's Done-when requires a
+/// thirteenth added through the API to appear in Explore with no rebuild, so
+/// `name` is free text and nothing in the schema or in validation enumerates
+/// it. Only `bookingMode` above is closed, and that is the booking machine's
+/// shape, not the catalogue's.
+///
+/// Every number here is seeded per category and stays admin-editable from
+/// Phase 10b. Downstream modules read them and must never hardcode a value:
+/// §1c's emergency gate reads `emergencyMinimumTier`, invariant 13's quote
+/// clock reads `quoteExpiryMinutes` / `quoteApprovalMinutes`, and Round 28's
+/// guarantee reads `callbackEligible`.
+///
+/// Invariant 8: no row is ever deleted. `DELETE /v1/admin/categories/:id`
+/// clears `isActive`, which drops it from the public list and from Explore.
+model Category {
+  id             String  @id @default(uuid()) @db.Uuid
+  /// Tile-short, and admin-editable — Round 25 renamed Computer to Appliance
+  /// Repair, so a rename is a thing that really happens. Unique, and unique
+  /// case-insensitively as well (a functional index, added in the migration):
+  /// "plumbing" beside "Plumbing" would render as two tiles.
+  ///
+  /// The *identifier* everything else references is the UUID (Phase 8's
+  /// listings, Phase 7's service areas), never this.
+  name           String  @unique
+  /// What the bootstrap keys on, so that renaming a seeded category does not
+  /// make the next `db:seed` re-create it under its old name — two active
+  /// rows, both in Explore. Written once with the seeded name and never
+  /// updated; null on anything an admin created, which the seed never touches.
+  seedKey        String? @unique @map("seed_key")
+  /// Carries the scope the tile label has no room for — Round 25 seeds
+  /// Appliance Repair's as "household appliances, TVs, computers, phones".
+  description    String
+  /// A glyph name the client resolves in its own registry, with a neutral
+  /// fallback for one it does not know. Not an asset path and not an icon
+  /// codepoint: a category seeded after a build shipped must still render.
+  iconIdentifier String  @map("icon_identifier")
+  /// A design-system accent token (`emerald`, `cyan` …), resolved by the
+  /// client the same way and with the same fallback. Never a hex value.
+  colorToken     String  @map("color_token")
+  sortOrder      Int     @map("sort_order")
+  isActive       Boolean @default(true) @map("is_active")
+
+  /// The default a listing in this category takes; overridable per listing (§1c).
+  bookingMode BookingMode @map("booking_mode")
+
+  /// §1c: true for Plumbing, Electrical, AC Repair and Moving alone. One half
+  /// of the composed emergency rule — the other halves are the provider's
+  /// tier and the listing's `isEmergency`.
+  emergencyCapable             Boolean           @default(false) @map("emergency_capable")
+  /// How soon a booking may be scheduled from now (Round 14).
+  minimumLeadTimeMinutes       Int               @map("minimum_lead_time_minutes")
+  /// How long a provider may take to *answer* an emergency broadcast — 30 for
+  /// all four capable categories (Round 22). Never how long they take to
+  /// arrive: that is per-offer `etaMinutes` on `EmergencyOffer` (§1c).
+  emergencyAcceptWindowMinutes Int?              @map("emergency_accept_window_minutes")
+  /// The tier bar for emergency work in this category (Round 15) — `gold` for
+  /// Electrical and Plumbing, `silver` for AC Repair and Moving. Read it;
+  /// never hardcode `silver`.
+  emergencyMinimumTier         VerificationTier? @map("emergency_minimum_tier")
+  /// The arrival options a provider picks from when making an offer (Round 22).
+  /// A Prisma scalar list cannot be null, so the plan's "null elsewhere" is an
+  /// empty array here; nothing is preselected in the UI either way.
+  emergencyEtaPresetsMinutes   Int[]             @map("emergency_eta_presets_minutes")
+
+  /// Invariant 13, per category (Round 15) — 120/240 on the household trades,
+  /// 1440/4320 where planning happens, null on the slot categories, which do
+  /// not quote. Never hardcode 24h/72h.
+  quoteExpiryMinutes   Int? @map("quote_expiry_minutes")
+  quoteApprovalMinutes Int? @map("quote_approval_minutes")
+
+  /// Round 28. Gates the wizard's step-6 opt-in, the card badge and the claim
+  /// path. False where nothing was fixed and so nothing can un-fix.
+  callbackEligible Boolean  @default(false) @map("callback_eligible")
+  /// The request form's occasion chips (Round 25), always ending in "Other".
+  /// Photography and Boat Charter only; empty elsewhere, for the same
+  /// scalar-list reason as `emergencyEtaPresetsMinutes`.
+  occasionPresets  String[] @map("occasion_presets")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive, sortOrder])
+  @@map("category")
+}
