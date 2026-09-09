@@ -89,7 +89,13 @@ export class ProviderProfileService {
   async readOwn(userId: string): Promise<OwnProviderDto> {
     const row = await this.repo.findByUserId(userId);
     if (row === null) {
-      throw new NotFoundError('This account has no provider profile yet');
+      throw new NotFoundError(
+        'This account has no provider profile yet',
+        // Not the bare `NOT_FOUND`: §Phase 6's role switch turns on
+        // telling this apart from a typo'd URL, and the API contract has
+        // the client route on the code.
+        'PROVIDER_PROFILE_NOT_FOUND',
+      );
     }
     return toOwnProviderDto(row, await this.conductFor(row.id));
   }

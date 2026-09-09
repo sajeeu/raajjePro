@@ -46,9 +46,25 @@ export class ConflictError extends AppError {
   }
 }
 
+/**
+ * An optional code, because `NOT_FOUND` alone cannot say *what* was not found.
+ *
+ * The API contract has the client route on the code, and a fixed one makes
+ * "this account has no provider profile yet" indistinguishable from a typo'd
+ * URL — two cases a caller must handle differently. Callers that have no
+ * client needing the distinction keep the default; adding a code is additive
+ * and needs no change anywhere else.
+ *
+ * **Message first, code second — deliberately unlike `AuthorizationError` and
+ * `ConflictError`, which take the code first.** Every existing caller passes a
+ * message positionally, and both parameters are strings, so matching the
+ * siblings' order would silently turn each of those messages into an error
+ * code with no type error to catch it. The inconsistency is the safe choice;
+ * do not "fix" it by reordering.
+ */
 export class NotFoundError extends AppError {
-  constructor(message = 'Not found') {
-    super(404, 'NOT_FOUND', message);
+  constructor(message = 'Not found', code = 'NOT_FOUND') {
+    super(404, code, message);
   }
 }
 

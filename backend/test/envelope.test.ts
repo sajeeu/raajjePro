@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
-import { BusinessRuleError } from '../src/core/errors.js';
+import { BusinessRuleError, NotFoundError } from '../src/core/errors.js';
 import { buildTestApp, databaseUrl } from './helpers/app.js';
 
 describe.skipIf(databaseUrl === undefined)('response envelope and error handling', () => {
@@ -66,6 +66,26 @@ describe.skipIf(databaseUrl === undefined)('response envelope and error handling
     const res = await ctx.app.inject({ method: 'GET', url: '/v1/nowhere' });
     expect(res.statusCode).toBe(404);
     expect(res.json<{ error: { code: string } }>().error.code).toBe('NOT_FOUND');
+  });
+
+  // `NotFoundError` takes an optional code so a 404 can say *what* was not
+  // found. The default matters as much as the option: every caller that has no
+  // client needing the distinction still answers `NOT_FOUND`, and the
+  // parameters are message-first precisely so those callers keep working.
+  it('defaults a NotFoundError to NOT_FOUND, and honours a code when given', () => {
+    const plain = new NotFoundError('No such provider');
+    expect(plain.status).toBe(404);
+    expect(plain.code).toBe('NOT_FOUND');
+    expect(plain.message).toBe('No such provider');
+
+    const specific = new NotFoundError('No profile yet', 'PROVIDER_PROFILE_NOT_FOUND');
+    expect(specific.status).toBe(404);
+    expect(specific.code).toBe('PROVIDER_PROFILE_NOT_FOUND');
+    expect(specific.message).toBe('No profile yet');
+
+    // The trap this signature avoids: a message passed positionally must never
+    // become the code.
+    expect(new NotFoundError('No such category').code).not.toBe('No such category');
   });
 
   it('carries a business-rule code at 422', async () => {

@@ -550,6 +550,48 @@ describe.skipIf(databaseUrl === undefined)('provider profiles', () => {
     });
   });
 
+  describe("the own read's 404", () => {
+    // The two cases a client must handle differently, asserted side by side
+    // with one set of credentials: "you have no provider profile yet" is a
+    // state to route on, a typo'd URL is a bug. Both are 404s and both said
+    // `NOT_FOUND` until `NotFoundError` took a code, which made §Phase 6's
+    // role-switch Done-when — first switch reaches onboarding, later ones
+    // reach the dashboard — turn on a distinction the API could not express.
+    it('says which thing was not found, and a bad path still says NOT_FOUND', async () => {
+      const customer = await registerUser(app);
+
+      const noProfile = await app.inject({
+        method: 'GET',
+        url: '/v1/providers/me',
+        headers: customer.headers,
+      });
+      expect(noProfile.statusCode).toBe(404);
+      expect(noProfile.json<{ error: { code: string } }>().error.code).toBe(
+        'PROVIDER_PROFILE_NOT_FOUND',
+      );
+
+      const badPath = await app.inject({
+        method: 'GET',
+        url: '/v1/providers/mee',
+        headers: customer.headers,
+      });
+      expect(badPath.statusCode).toBe(404);
+      expect(badPath.json<{ error: { code: string } }>().error.code).toBe('NOT_FOUND');
+    });
+
+    it('leaves the other not-founds in this module on the default code', async () => {
+      // Only the case with a client needing the distinction carries a code.
+      // Adding one is additive, so the rest stay `NOT_FOUND` until something
+      // actually routes on them.
+      const res = await app.inject({
+        method: 'GET',
+        url: `/v1/providers/${randomUUID()}/public`,
+      });
+      expect(res.statusCode).toBe(404);
+      expect(res.json<{ error: { code: string } }>().error.code).toBe('NOT_FOUND');
+    });
+  });
+
   describe('tiersAtOrAbove', () => {
     it('expands each tier to itself and everything above it', () => {
       expect(tiersAtOrAbove('gold')).toEqual(['gold']);

@@ -279,39 +279,39 @@ per-principal rate limiting and the fuller export. No behavioural regression,
 no authorization gap, no response shape that gained a phone number or a
 payment detail. What is left is documentation and test coverage:
 
-- **`docs/decisions/17-phase-5-provider-profiles.md` decision 9 is now wrong.**
-  It says "**both mappers** return null unless the tier is currently `gold`".
-  There are three mappers, and `providerOwnExport` deliberately returns the
-  **stored** value — an export is what the platform holds about the subject,
-  and §1g's absent-below-Gold rule governs what a *customer* is shown. §1g is
-  what a future reader will check in that file, so the file must not say
-  something the code does not do.
-- **The same file says "Nine decisions were made here" and carries eleven
-  `###` sections.** Decisions 10 and 11 were appended after the count was
-  corrected.
-- **Three fixes landed with no test.** All three are verified working, but
-  nothing in the repo holds them, so a future edit restores each silently:
-  the malformed-cursor fallback (a non-UUID cursor asserting a page rather
-  than a throw, beside the existing paging tests in
-  `backend/test/providers-profile.test.ts`); the five payment keys in
-  `SENSITIVE_KEYS` (`backend/test/logging.test.ts` is already an
-  enumerated-keys test and should grow five lines — the Phase 5 log assertion
-  passes whether or not the keys are listed, because no serializer logs a
-  body); and `tiersAtOrAbove`'s throw on an out-of-enum value, which its own
-  comment calls load-bearing for §Phase 17.3.
-- **`GET /v1/providers/me`'s 404 cannot be told apart from a missing route.**
-  `NotFoundError` hardcodes `NOT_FOUND`, so "no profile yet" and a typo'd URL
-  return the same code, and the API contract says the frontend routes on
-  codes. **Phase 6 and 6a must route on `isProvider` from the auth surface,
-  not on this status** — which is now a reliable signal, because the read no
-  longer creates the profile. Giving `NotFoundError` an optional code is the
-  real fix and is a **core change across every module**, so it is flagged here
-  rather than slipped into Phase 5.
-- **§Phase 5's Done-when 5 stays literally unmet in the repo, by decision.**
-  The owner chose (2026-09-09) to leave the plan wording and keep the
-  divergence recorded rather than amend it; §Phase 6a's phone line is left the
-  same way. Both are written up in the decision file. They stay on this list
-  rather than being closed by the Phase 5 commit.
+🔧 **Four of the five were done on 2026-09-09** in `3175a6a` and the
+`NotFoundError` change that follows it; what remains is the last item.
+
+- **Done — decision 9 and the decision count.** Decision 9 now names the two
+  display mappers and states why `providerOwnExport` returns the stored value:
+  §1g governs what a *customer* is shown, an export is what the platform holds
+  about the subject. The count reads eleven.
+- **Done — the three untested fixes now have tests**, each confirmed to fail
+  before it was kept: revert the fix, watch it go red, restore it. The
+  malformed cursor asserts a page across four shapes; the five payment keys are
+  asserted directly, nested as a profile would arrive, because no serializer
+  logs a body and the Phase 5 assertion could not see them; `tiersAtOrAbove`
+  throws outside the enum, which matters because `slice(-1)` returns
+  `['gold']` and §Phase 17.3 reads `emergencyMinimumTier` through it — a typo'd
+  tier would broadcast an emergency to Gold alone, unlogged.
+- **Done — `NotFoundError` takes an optional code.** `GET /v1/providers/me`
+  answers `PROVIDER_PROFILE_NOT_FOUND`; a bad path still answers `NOT_FOUND`;
+  every other caller keeps the default, so nothing else changed behaviour. The
+  parameters are **message first, code second**, deliberately unlike
+  `AuthorizationError` and `ConflictError`, which take the code first: eleven
+  callers already pass a message positionally and both are strings, so matching
+  the siblings would have turned each message into an error code with no type
+  error to catch it. Do not "fix" that inconsistency by reordering.
+  **Phase 6 and 6a should still route on `isProvider`** — no request, and
+  reliable because a read no longer creates the profile. Both commands say so.
+- **Open — two plan divergences the owner chose to record rather than amend
+  (2026-09-09).** §Phase 5's Done-when 5, read literally, would forbid a
+  provider reading their own bank details; §Phase 6a's Done-when routes a phone
+  number through `PATCH /v1/providers/me`, which has no phone field under
+  §Phase 5's single-copy rule, so that half goes to Phase 3's
+  `PATCH /v1/users/me/phone`. Both are written up in the decision file, and
+  `/phase-6a` now carries the second one so its builder meets it before
+  starting rather than after.
 
 **Built in VS Code:** every phase, Phase 3 onward.
 
