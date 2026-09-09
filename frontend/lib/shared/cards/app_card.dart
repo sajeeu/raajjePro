@@ -71,17 +71,34 @@ class AppCard extends StatelessWidget {
               color: pressed ? colors.accentBorder : colors.borderCard,
               width: AppSizes.dividerStroke,
             );
-      return AnimatedContainer(
-        duration: motion.fast,
-        curve: AppMotion.easeOut,
-        clipBehavior: clip ? Clip.antiAlias : Clip.none,
-        decoration: BoxDecoration(
-          color: color ?? colors.surface,
-          borderRadius: BorderRadius.circular(radius),
-          border: border,
-          boxShadow: AppShadows.card(colors.ink),
+      // **A card fills the width it is given.** Every prototype draws it as a
+      // block element, which does that by default in CSS and never says so;
+      // a Flutter box has no such default and sizes to its child. Until this
+      // was explicit, a card landed full width only when something inside it
+      // happened to be full width — the `expand: true` button on session
+      // expired, the `Row` in a settings row — and the one card whose content
+      // was all intrinsic (Explore's tile: a fixed 56 dp chip above a `Text`)
+      // collapsed to its longest label and drew a visibly ragged grid.
+      //
+      // `LayoutBuilder` rather than `width: double.infinity`, because a card
+      // in a horizontal carousel (Phase 16's Home rails) is handed an
+      // unbounded width, where infinity is a layout error. There it keeps the
+      // old shrink-wrap; the carousel gives it an explicit width, as those
+      // prototypes already do, and that width is then what it fills.
+      return LayoutBuilder(
+        builder: (context, constraints) => AnimatedContainer(
+          duration: motion.fast,
+          curve: AppMotion.easeOut,
+          width: constraints.maxWidth.isFinite ? constraints.maxWidth : null,
+          clipBehavior: clip ? Clip.antiAlias : Clip.none,
+          decoration: BoxDecoration(
+            color: color ?? colors.surface,
+            borderRadius: BorderRadius.circular(radius),
+            border: border,
+            boxShadow: AppShadows.card(colors.ink),
+          ),
+          child: Padding(padding: padding, child: child),
         ),
-        child: Padding(padding: padding, child: child),
       );
     }
 

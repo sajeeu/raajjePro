@@ -45,59 +45,70 @@ class EmptyState extends StatelessWidget {
     final colors = context.colors;
     final type = context.type;
 
-    return AppCard(
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: 26,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ExcludeSemantics(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _error ? colors.errorTint : colors.neutralTint,
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox.square(
-                dimension: AppSizes.touchTarget,
-                child: Center(
-                  child: Icon(
-                    icon,
-                    size: AppSizes.iconLg + 3,
-                    color: _error ? colors.errorText : colors.textSecondary,
+    // `width:340px` in `EmptyState.dc.html`, and 340 in every one of the 45
+    // artboards that import it — a fixed centred card, not a full-width one.
+    // Stated here because `AppCard` now fills the width it is given, and
+    // because it was never right by accident either: the card used to
+    // shrink-wrap its own text, which drew roughly 290 dp on Explore.
+    //
+    // A cap rather than a fixed width, so a 320 dp phone and a 200% text
+    // scale narrow it instead of overflowing.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 340),
+      child: AppCard(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: 26,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeSemantics(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _error ? colors.errorTint : colors.neutralTint,
+                  shape: BoxShape.circle,
+                ),
+                child: SizedBox.square(
+                  dimension: AppSizes.touchTarget,
+                  child: Center(
+                    child: Icon(
+                      icon,
+                      size: AppSizes.iconLg + 3,
+                      color: _error ? colors.errorText : colors.textSecondary,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm + 1),
-          Semantics(
-            header: true,
-            child: Text(
-              title,
-              style: type.cardTitle,
-              textAlign: TextAlign.center,
+            const SizedBox(height: AppSpacing.sm + 1),
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: type.cardTitle,
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm + 1),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 250),
-            child: Text(
-              body,
-              style: type.secondary,
-              textAlign: TextAlign.center,
+            const SizedBox(height: AppSpacing.sm + 1),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 250),
+              child: Text(
+                body,
+                style: type.secondary,
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.sm + 3),
-            AppButton.secondary(
-              label: actionLabel!,
-              onPressed: onAction,
-              size: AppButtonSize.compact,
-            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: AppSpacing.sm + 3),
+              AppButton.secondary(
+                label: actionLabel!,
+                onPressed: onAction,
+                size: AppButtonSize.compact,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
