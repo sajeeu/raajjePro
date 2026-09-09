@@ -8,7 +8,7 @@
 
 §Phase 5 names the entity's fields, the two functions every later phase calls, and five Done-when lines. Most of it is transcription. What it does not settle is **where the data two of its rules depend on comes from**, because §Phase 5 is sequenced before the phases that create it — there is no `Listing` table until §Phase 8 and no `Booking` until §Phase 17, and §Phase 5's central helper is defined in terms of both.
 
-Nine decisions were made here. Each is recorded with its reasoning.
+Eleven decisions were made here. Each is recorded with its reasoning. 🔧 Decisions 10 and 11 were appended by the QA re-review and the count read "nine" until 2026-09-09.
 
 ### 1. Two seams, because the rule can be written before its data exists
 
@@ -83,7 +83,7 @@ Flagged rather than silent, because it is an interpretation of an acceptance lin
 
 ### 9. §1g is gated in the mapper, not by a database constraint
 
-"Below Gold the attribute is absent rather than false" (§1g). A `CHECK` tying `maldivian_owned` to the gold tier would block an admin demoting a provider until the attribute was cleared, and would force a re-promotion to re-derive something the registration document already evidenced. So the column stores what Gold review found and **both mappers return null unless the tier is currently `gold`**.
+"Below Gold the attribute is absent rather than false" (§1g). A `CHECK` tying `maldivian_owned` to the gold tier would block an admin demoting a provider until the attribute was cleared, and would force a re-promotion to re-derive something the registration document already evidenced. So the column stores what Gold review found and **the two display mappers — `toPublicProviderDto` and `toOwnProviderDto` — return null unless the tier is currently `gold`**. 🔧 **The third mapper is deliberately different.** `providerOwnExport` returns the **stored** value: §1g's absent-below-Gold rule governs what a customer is shown, while an export is what the platform holds about the subject, and masking a fact out of it would be the wrong answer to the question the export exists to answer. This paragraph said "both mappers" while three existed — corrected 2026-09-09, because §1g is what a future reader checks here and it must not describe behaviour the code does not have.
 
 `providerType` (`individual` / `business`), which §1g's attribute hangs from, is §Phase 6a's field by that phase's own wording and was not built here.
 

@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { buildApp } from '../src/app.js';
 import { seedCategories } from '../src/modules/categories/seed.js';
+import { tiersAtOrAbove } from '../src/modules/providers/visibility.js';
 import type { OwnProviderDto } from '../src/modules/providers/types.js';
 import { buildTestApp, databaseUrl, freshIp } from './helpers/app.js';
 import { FakeConduct, FakeListings } from './helpers/providers.js';
@@ -522,6 +523,52 @@ describe.skipIf(databaseUrl === undefined)('provider profiles', () => {
       } finally {
         await batched.close();
       }
+    });
+
+    // A cursor is a client-supplied opaque string on a public endpoint, so a
+    // malformed one must read as "start from the beginning". Without the shape
+    // check in `decodeCursor` the decoded value reaches a `uuid` comparison and
+    // Postgres rejects it with an error the global handler can only turn into a
+    // 500 — a guessable way for anyone to make a public page fail. Verified
+    // live during the QA re-review and left without a test, which is how a
+    // future edit removes the check silently.
+    it('treats a malformed cursor as the first page, not a 500', async () => {
+      const listings = new FakeListings();
+      const { app: paged } = await buildTestApp({ deps: { publishedListings: listings } });
+      try {
+        const user = await createUser(paged.deps.prisma);
+        const profile = await paged.providers.getOrCreateProviderProfile(user.id);
+        listings.publish(profile.id);
+
+        for (const cursor of ['not-base64url!!', 'bm90LWEtdXVpZA', '', 'MTIz']) {
+          const page = await paged.providers.findVisibleProviders({}, { cursor });
+          expect(page.items.map((p) => p.id)).toContain(profile.id);
+        }
+      } finally {
+        await paged.close();
+      }
+    });
+  });
+
+  describe('tiersAtOrAbove', () => {
+    it('expands each tier to itself and everything above it', () => {
+      expect(tiersAtOrAbove('gold')).toEqual(['gold']);
+      expect(tiersAtOrAbove('silver')).toEqual(['silver', 'gold']);
+      expect(tiersAtOrAbove('bronze')).toEqual(['bronze', 'silver', 'gold']);
+      expect(tiersAtOrAbove('none')).toEqual(['none', 'bronze', 'silver', 'gold']);
+    });
+
+    it('throws on a value outside the enum rather than answering', () => {
+      // Its own comment calls this load-bearing and nothing tested it. The
+      // failure it prevents is specific: `slice(indexOf)` with a `-1` index
+      // returns `['gold']`, a silently stricter answer, and §Phase 17.3 reads a
+      // category's `emergencyMinimumTier` through here — so a typo'd tier would
+      // broadcast an emergency to Gold providers only, with nothing logged and
+      // no error to notice. Silver-eligible AC Repair and Moving would simply
+      // stop reaching the providers that serve them.
+      expect(() => tiersAtOrAbove('platinum' as never)).toThrow(/not a verification tier/);
+      expect(() => tiersAtOrAbove('' as never)).toThrow();
+      expect(() => tiersAtOrAbove('Gold' as never)).toThrow();
     });
   });
 });

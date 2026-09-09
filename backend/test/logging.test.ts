@@ -57,6 +57,50 @@ describe('loggerOptions redaction', () => {
     expect(output).toContain('[redacted]');
   });
 
+  // Phase 5's five payment keys, asserted separately because nothing else
+  // covers them: no serializer logs a body, so the Phase 5 log assertion passes
+  // whether or not these are in `SENSITIVE_KEYS`, and dropping one would be
+  // invisible until the day someone writes `log.info({ profile })`. §Phase 5
+  // makes payment details the one provider field a customer ever sees, at the
+  // booking payment step — a log line is not that step.
+  it('redacts the payment-detail keys, nested as a profile would arrive', async () => {
+    const { lines, stream } = captureStream();
+    const config = { ...testConfig(), logLevel: 'info' as const };
+    const app = Fastify({ logger: loggerOptionsForStream(config, stream) });
+
+    app.get('/probe', (request) => {
+      request.log.info(
+        {
+          bankName: 'Bank of Maldives',
+          bankAccountName: 'Aishath Ibrahim',
+          bankAccountNumber: '7701234567890',
+          transferInstructions: 'Reference the booking code',
+          profile: {
+            paymentDetails: {
+              bankAccountNumber: '7709999999999',
+              transferInstructions: 'Nested instructions',
+            },
+          },
+        },
+        'probe',
+      );
+      return { ok: true };
+    });
+
+    await app.ready();
+    await app.inject({ method: 'GET', url: '/probe' });
+    await app.close();
+
+    const output = lines.join('\n');
+    expect(output).not.toContain('Bank of Maldives');
+    expect(output).not.toContain('Aishath Ibrahim');
+    expect(output).not.toContain('7701234567890');
+    expect(output).not.toContain('Reference the booking code');
+    expect(output).not.toContain('7709999999999');
+    expect(output).not.toContain('Nested instructions');
+    expect(output).toContain('[redacted]');
+  });
+
   it('never logs a query string', async () => {
     const { lines, stream } = captureStream();
     const config = { ...testConfig(), logLevel: 'info' as const };
