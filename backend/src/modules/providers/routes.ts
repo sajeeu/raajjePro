@@ -25,13 +25,25 @@ import { updateOwnProviderBody } from './schema.js';
 export function registerProviderRoutes(app: FastifyInstance): void {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
-  // Who may call: any signed-in user, for their own provider profile — and it
-  // is created on first read (§1a's idempotent getOrCreate), so a customer
-  // hitting this becomes a provider-with-an-empty-profile rather than a 404.
+  // Who may call: any signed-in user, for their own provider profile.
+  //
+  // **A read never creates it.** An account with no provider profile gets a
+  // 404 — `isProvider` on `userDto` is `providerProfile !== null` and
+  // §Phase 6's role switcher routes on it, so a read that created a row would
+  // turn a customer into a provider permanently (invariant 8: nothing is ever
+  // hard-deleted). §1a's creation moments are Phase 6a's onboarding and the
+  // first `POST /v1/listings`; the PATCH below is the third, because sending
+  // business details is acting as a provider. Opening a screen is not.
+  //
   // Email verification is deliberately NOT required: §1c's stricter guard
   // gates booking, enquiry and messaging, and §1a says dashboard access is
   // never gated — a provider with only drafts reaches their workspace
   // normally. Phase 6a is where an unverified email blocks Continue.
+  //
+  // Phase 6 and 6a must route on `isProvider` from the auth surface, not on
+  // this status: `NotFoundError` carries a fixed `NOT_FOUND` code, so a
+  // caller cannot tell "no profile yet" from a typo'd URL. Giving that error
+  // an optional code is a core change, flagged rather than slipped in here.
   r.get('/v1/providers/me', { preValidation: requireAuth }, async (request, reply) => {
     return reply.send(ok(await app.providers.readOwn(userOf(request).id)));
   });

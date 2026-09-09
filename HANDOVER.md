@@ -141,7 +141,7 @@ and `ProviderConductSource` returns §1f's metrics — the `DeletionBlocker`
 pattern from Phase 3. Both defaults answer honestly rather than
 optimistically: nobody is publicly visible before listings exist, and conduct
 reports **null** rather than zero, because "0% on time" and "never been
-booked" are different claims. Rows **P5-1**, **P5-2** and **P5-3** in the
+booked" are different claims. Rows **P5-1** to **P5-4** in the
 ledger say what only the real tables can prove.
 
 `findVisibleProviders` is the one shared gate and suspension is an **input**
@@ -268,6 +268,50 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 
 - **Saved preferences** (§Phase 3's account-settings bullet) — deferred past Phase 4, because a saved address needs `Island`, which **Phase 7** seeds and never keys by name (§Phase 7's first bullet; §0.0 item 12 attributes the seed to Phase 4, which its text does not ask for). Phase 6 or 7 builds it.
 - **`AnonymisationHooks` and `DeletionBlocker`** (`backend/src/modules/account/anonymise.ts`) — the two seams Phase 3's deletion pipeline built and tested against a registered hook / an injected blocker. Phase 11 registers the real review-anonymisation hook; Phase 17 supplies the real open-bookings check. Both are ledger rows in `docs/deferred-verification.md` (P1, P2).
+
+**For the terminal session — the Phase 5 QA re-review's remaining items (2026-09-09).**
+A full re-review of Phase 5 confirmed every behavioural finding fixed and
+verified live: the §1a gate inside `readPublic`, the read that no longer
+creates a profile, 8-of-8 concurrent `getOrCreateProviderProfile` callers
+succeeding on one row, the deactivated-category lookup, the payment-detail
+audit entry, redaction at depths 0–3, the malformed cursor, the tier guard,
+per-principal rate limiting and the fuller export. No behavioural regression,
+no authorization gap, no response shape that gained a phone number or a
+payment detail. What is left is documentation and test coverage:
+
+- **`docs/decisions/17-phase-5-provider-profiles.md` decision 9 is now wrong.**
+  It says "**both mappers** return null unless the tier is currently `gold`".
+  There are three mappers, and `providerOwnExport` deliberately returns the
+  **stored** value — an export is what the platform holds about the subject,
+  and §1g's absent-below-Gold rule governs what a *customer* is shown. §1g is
+  what a future reader will check in that file, so the file must not say
+  something the code does not do.
+- **The same file says "Nine decisions were made here" and carries eleven
+  `###` sections.** Decisions 10 and 11 were appended after the count was
+  corrected.
+- **Three fixes landed with no test.** All three are verified working, but
+  nothing in the repo holds them, so a future edit restores each silently:
+  the malformed-cursor fallback (a non-UUID cursor asserting a page rather
+  than a throw, beside the existing paging tests in
+  `backend/test/providers-profile.test.ts`); the five payment keys in
+  `SENSITIVE_KEYS` (`backend/test/logging.test.ts` is already an
+  enumerated-keys test and should grow five lines — the Phase 5 log assertion
+  passes whether or not the keys are listed, because no serializer logs a
+  body); and `tiersAtOrAbove`'s throw on an out-of-enum value, which its own
+  comment calls load-bearing for §Phase 17.3.
+- **`GET /v1/providers/me`'s 404 cannot be told apart from a missing route.**
+  `NotFoundError` hardcodes `NOT_FOUND`, so "no profile yet" and a typo'd URL
+  return the same code, and the API contract says the frontend routes on
+  codes. **Phase 6 and 6a must route on `isProvider` from the auth surface,
+  not on this status** — which is now a reliable signal, because the read no
+  longer creates the profile. Giving `NotFoundError` an optional code is the
+  real fix and is a **core change across every module**, so it is flagged here
+  rather than slipped into Phase 5.
+- **§Phase 5's Done-when 5 stays literally unmet in the repo, by decision.**
+  The owner chose (2026-09-09) to leave the plan wording and keep the
+  divergence recorded rather than amend it; §Phase 6a's phone line is left the
+  same way. Both are written up in the decision file. They stay on this list
+  rather than being closed by the Phase 5 commit.
 
 **Built in VS Code:** every phase, Phase 3 onward.
 

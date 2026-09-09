@@ -21,7 +21,7 @@ interface Envelope<T> {
  * consumers named in the suspension line — search, Home, the public profile —
  * are Phases 15, 16 and 13. What is provable today is that all three reach
  * the rule through the one shared helper and none of them can get past it.
- * `docs/deferred-verification.md` rows P5-1 and P5-2 carry the rest.
+ * `docs/deferred-verification.md` rows P5-1 to P5-4 carry the rest.
  */
 describe.skipIf(databaseUrl === undefined)('§Phase 5 Done-when', () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
@@ -46,10 +46,11 @@ describe.skipIf(databaseUrl === undefined)('§Phase 5 Done-when', () => {
     });
 
     it('holds when the four call sites race each other', async () => {
-      // Phase 6a's onboarding, Phase 8's draft fallback, Phase 3's
-      // registration and a first profile read all call this. A double-tap on
-      // a flaky connection is the real case; the `@unique` on `user_id` is
-      // what makes the loser fail rather than insert.
+      // Phase 6a's onboarding, Phase 8's draft fallback and Phase 3's
+      // registration all call this. A double tap on a flaky connection is the
+      // real case, and the `@unique` on `user_id` is the arbiter: the loser
+      // catches its own P2002 and re-reads the winner's row, so every caller
+      // gets the profile and none of them sees an error.
       const user = await createUser(app.deps.prisma);
       const results = await Promise.allSettled(
         Array.from({ length: 6 }, () => app.providers.getOrCreateProviderProfile(user.id)),
