@@ -10,20 +10,24 @@ String relativeAge(DateTime when, DateTime now) {
   return d.inDays == 1 ? '1 day ago' : '${d.inDays} days ago';
 }
 
-String shortDate(DateTime d) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${d.day} ${months[d.month - 1]} ${d.year}';
-}
+/// `Jan 2026` — the Profile hero's "Member since" line (plan §Phase 6).
+/// Month and year only: the exact day a customer signed up is not something
+/// the screen has any reason to state.
+String monthAndYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
+
+String shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
+
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];

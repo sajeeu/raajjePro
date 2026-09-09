@@ -4,6 +4,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/domain/category.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/explore/controller/categories_controller.dart';
 import 'package:raajjepro/features/explore/presentation/tab_placeholder_screen.dart';
@@ -25,6 +26,11 @@ import 'package:raajjepro/shared/shared.dart';
 /// the island pill (Phase 7), the search field (Phase 15), the Saved heart
 /// (Phase 14) and the notification bell (Phase 19).
 ///
+/// 🔧 **Two of them are no longer inert.** Phase 6 built Profile, so the
+/// header's account disc and the `Profile` nav tab now go there — they were
+/// the two this screen recorded as owed by Phase 6, and their tripwire tests
+/// were removed with the wiring, which is what those tests exist to force.
+///
 /// **One control the prototype has is deliberately absent, not inert:** the
 /// "Something urgent? Get help now" entry. Round 23 removed the per-card
 /// emergency marker for advertising an action that did not exist; a tappable
@@ -34,7 +40,7 @@ import 'package:raajjepro/shared/shared.dart';
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
 
-  static const routeName = '/explore';
+  static const routeName = AppRoutes.explore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,11 +67,7 @@ class ExploreScreen extends ConsumerWidget {
                 onTap: null,
               ),
             ],
-            trailingSlot: InertControl(
-              label: 'Account',
-              owedBy: 'Phase 6',
-              child: _AccountAvatar(),
-            ),
+            trailingSlot: _AccountAvatar(),
           ),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
@@ -146,6 +148,11 @@ class ExploreScreen extends ConsumerWidget {
                 'Profile',
               ];
               if (index == 1) return; // already here
+              // Phase 6 built Profile, so that tab has a real destination.
+              if (index == 4) {
+                Navigator.of(context).pushNamed(AppRoutes.profile);
+                return;
+              }
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => TabPlaceholderScreen(tab: labels[index]),
@@ -159,32 +166,13 @@ class ExploreScreen extends ConsumerWidget {
   }
 }
 
-/// Marks a control that is drawn to the prototype but wired to nothing yet,
-/// naming the phase that owes it a destination.
-///
-/// It is a real widget rather than a comment so that
-/// `explore_chrome_test.dart` can assert the control is present *and* has no
-/// callback. When [owedBy] lands and wires the control, that test fails and
-/// has to be removed on purpose — which is the point.
-class InertControl extends StatelessWidget {
-  const InertControl({
-    required this.label,
-    required this.owedBy,
-    required this.child,
-    super.key,
-  });
-
-  final String label;
-  final String owedBy;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => child;
-}
-
 /// The header avatar. Reads the signed-in account rather than asserting one:
 /// a guest browses Explore freely (§0.2), and a "G" disc for a signed-in
 /// customer named Aishath would be a small lie in the corner of every screen.
+///
+/// 🔧 **Phase 6 gave it its destination.** A signed-in user reaches Profile;
+/// a guest reaches Sign in, because Profile renders an account and a guest
+/// has none. It was an [InertControl] owed by Phase 6 until then.
 class _AccountAvatar extends ConsumerWidget {
   const _AccountAvatar();
 
@@ -193,30 +181,44 @@ class _AccountAvatar extends ConsumerWidget {
     final colors = context.colors;
     final state = ref.watch(authControllerProvider);
     final name = state is AuthSignedIn ? state.user.fullName : null;
+    final signedIn = name != null && name.trim().isNotEmpty;
 
-    if (name != null && name.trim().isNotEmpty) {
-      // No tier overlay here: the badge's words have to be reachable on the
-      // same screen wherever the overlay appears, and Explore has nowhere to
-      // put them.
-      return AppAvatar(name: name, size: AppSizes.avatarMedium);
-    }
-    return Semantics(
-      label: 'Account. Sign in to see yours.',
-      excludeSemantics: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.accentTint,
-          shape: BoxShape.circle,
-        ),
-        child: SizedBox.square(
-          dimension: AppSizes.avatarMedium,
-          child: Icon(
-            Icons.person_outline_rounded,
-            size: AppSizes.iconLg,
-            color: colors.accentText,
-          ),
-        ),
-      ),
+    // A real control, so a real 48 dp target — `Pressable`'s floor, which is
+    // wider than the 36 dp disc it paints. Phase 6 made the brand wordmark
+    // `Flexible` for it: the header row had no give left and overflowed at
+    // 200% text as soon as this grew from an inert 36 dp avatar.
+    //
+    // An `OverflowBox` was tried first and is wrong — it lays the child out at
+    // 48 but `RenderBox.hitTest` gates on the parent's own size, so 36 dp of
+    // it was tappable and the extra 12 was paint only.
+    return Pressable(
+      onTap: () =>
+          Navigator.of(context)
+              .pushNamed(signedIn ? AppRoutes.profile : AppRoutes.signIn),
+      semanticLabel: signedIn ? 'Your profile' : 'Sign in',
+      focusRadius: AppRadius.pill,
+      // No `excludeSemantics` — that returns the child unwrapped and throws
+      // the label away. The avatar's initials are not a description of the
+      // control, so `Pressable` is what must speak for it.
+      builder: (context, s) => signedIn
+          // No tier overlay here: the badge's words have to be reachable on
+          // the same screen wherever the overlay appears, and Explore has
+          // nowhere to put them.
+          ? AppAvatar(name: name, size: AppSizes.avatarMedium)
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.accentTint,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox.square(
+                dimension: AppSizes.avatarMedium,
+                child: Icon(
+                  Icons.person_outline_rounded,
+                  size: AppSizes.iconLg,
+                  color: colors.accentText,
+                ),
+              ),
+            ),
     );
   }
 }

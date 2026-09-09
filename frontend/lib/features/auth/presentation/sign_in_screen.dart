@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:raajjepro/core/auth/auth_controller.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/sign_in_controller.dart';
 import 'package:raajjepro/features/auth/presentation/forgot_password_screen.dart';
@@ -21,7 +22,7 @@ import 'package:raajjepro/shared/shared.dart';
 /// a third-party notice.
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
-  static const routeName = '/sign-in';
+  static const routeName = AppRoutes.signIn;
 
   @override
   ConsumerState<SignInScreen> createState() => _SignInScreenState();

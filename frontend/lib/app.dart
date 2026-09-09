@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
 import 'package:raajjepro/features/account/presentation/active_sessions_screen.dart';
@@ -18,7 +19,10 @@ import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
+import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.dart';
+import 'package:raajjepro/features/profile/controller/role_switch.dart';
+import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// Root widget. Routing is a plain named-route table; the root route is the
@@ -79,6 +83,30 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         ChangePasswordScreen.routeName: (_) => const ChangePasswordScreen(),
         ChangeEmailScreen.routeName: (_) => const ChangeEmailScreen(),
         ChangePhoneScreen.routeName: (_) => const ChangePhoneScreen(),
+
+        // Phase 6. Profile itself, plus every destination its five rows,
+        // four booking tiles and role switcher reach. A row that navigates
+        // nowhere would leave §Phase 6's Done-when unprovable and a user
+        // unable to tell a dead control from a slow one, so each name is
+        // real and the ones whose screens do not exist yet land on
+        // `UnbuiltScreen` naming the phase that owes them.
+        ProfileScreen.routeName: (_) => const ProfileScreen(),
+        LegalIndexScreen.routeName: (_) => const LegalIndexScreen(),
+        AppRoutes.saved: (_) =>
+            const UnbuiltScreen(title: 'Saved', owedBy: 'Phase 14'),
+        AppRoutes.savedPreferences: (_) => const UnbuiltScreen(
+          title: 'Saved preferences',
+          // Deferred out of Phase 3's Account settings and past Phase 6:
+          // labelled addresses need `Island`, which Phase 7 seeds
+          // (`docs/decisions/12-phase-3-identity.md`, decision 2).
+          owedBy: 'Phase 7',
+        ),
+        AppRoutes.help: (_) =>
+            const UnbuiltScreen(title: 'Help & support', owedBy: 'Phase 19b'),
+        RoleSwitch.onboardingRoute: (_) =>
+            const UnbuiltScreen(title: 'Become a Provider', owedBy: 'Phase 6a'),
+        RoleSwitch.dashboardRoute: (_) =>
+            const UnbuiltScreen(title: 'My Services', owedBy: 'Phase 10'),
       },
       onGenerateRoute: (settings) {
         if (settings.name == VerifyEmailScreen.routeName) {
@@ -163,10 +191,11 @@ class _AuthGateState extends ConsumerState<AuthGate> {
 }
 
 /// Phase 0's boot screen, still the home until Phase 16. Phase 3 adds the
-/// two entries it needs — Sign in for a guest, Account settings for a user —
-/// the latter a temporary bridge until Phase 6's Profile owns that row.
-/// Phase 4 adds Explore, reachable by everyone: the category grid is public
-/// and a guest must be able to browse it (§0.2).
+/// two entries it needs — Sign in for a guest, and for a signed-in user the
+/// entry that was a temporary Account-settings bridge until Phase 6 built
+/// Profile; it now goes to Profile, which carries Account settings as one of
+/// its rows. Phase 4 adds Explore, reachable by everyone: the category grid
+/// is public and a guest must be able to browse it (§0.2).
 class _PlaceholderHome extends StatelessWidget {
   const _PlaceholderHome({required this.user});
   final UserAccount? user;
@@ -202,9 +231,10 @@ class _PlaceholderHome extends StatelessWidget {
                       )
                     else
                       AppButton.secondary(
-                        label: 'Account settings',
+                        label: 'Profile',
                         onPressed: () =>
-                            Navigator.of(context).pushNamed('/account'),
+                            Navigator.of(context)
+                                .pushNamed(ProfileScreen.routeName),
                       ),
                     if (user != null && !user!.emailVerified) ...[
                       const SizedBox(height: AppSpacing.md),

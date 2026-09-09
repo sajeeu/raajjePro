@@ -55,19 +55,19 @@ void main() {
     (tester) async {
       await boot(tester, FakeApiClient(), InMemoryTokenStore());
       expect(find.text('Sign in'), findsOneWidget);
-      expect(find.text('Account settings'), findsNothing);
+      expect(find.text('Profile'), findsNothing);
     },
   );
 
   testWidgets(
-    'stored tokens → me → signed-in home with Account settings; a dead session → Session expired',
+    'stored tokens → me → signed-in home with Profile; a dead session → Session expired',
     (tester) async {
       final api = FakeApiClient();
       final store = InMemoryTokenStore();
       await store.write(TokenPair.fromJson(tokensJson()));
       api.on('GET', '/v1/auth/me', (_) => userJson(verified: true));
       await boot(tester, api, store);
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
 
       api.fail('GET', '/v1/auth/me', status: 401, code: 'SESSION_EXPIRED');
       await store.write(TokenPair.fromJson(tokensJson()));
@@ -112,7 +112,7 @@ void main() {
       await settle(tester);
       await settle(tester);
 
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
     },
   );
 
@@ -177,7 +177,7 @@ void main() {
         ),
       );
       await settle(tester);
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
 
       final nav = tester.state<NavigatorState>(find.byType(Navigator));
       nav.pushNamed(ChangePhoneScreen.routeName);
@@ -205,7 +205,7 @@ void main() {
       );
       await tester.tap(find.widgetWithText(AppButton, 'Sign In'));
       await settle(tester);
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
 
       nav.pushNamed(ChangePhoneScreen.routeName);
       await settle(tester);
@@ -251,7 +251,7 @@ void main() {
       await settle(tester);
 
       expect(api.calls.where((c) => c.path == '/v1/auth/me').length, 1);
-      expect(find.text('Account settings'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
     },
   );
 }

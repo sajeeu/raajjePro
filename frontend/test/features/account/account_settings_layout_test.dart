@@ -4,7 +4,7 @@ import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
-import 'package:raajjepro/features/account/presentation/widgets/settings_row.dart';
+import 'package:raajjepro/shared/shared.dart';
 
 import '../../core/auth/auth_controller_test.dart' show userJson;
 import '../../helpers/fake_api.dart';

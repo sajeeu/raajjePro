@@ -111,7 +111,15 @@ class AppHeader extends StatelessWidget {
                 if (brand) ...[
                   const _LogoMark(),
                   const SizedBox(width: AppSpacing.sm + 2),
-                  const _Wordmark(),
+                  // 🔧 Flexible, added in Phase 6. The brand row's other
+                  // children are all fixed width or already flexible, so the
+                  // wordmark was the one thing that could not give — and the
+                  // row overflowed at 200% text the moment the trailing slot
+                  // grew from a 36 dp avatar to a 48 dp control. It keeps its
+                  // natural width at every ordinary text scale (its share of
+                  // the free space is far wider than the word) and truncates
+                  // only where the alternative is a layout error.
+                  const Flexible(child: _Wordmark()),
                 ] else ...[
                   if (onBack != null)
                     _RoundAction(
@@ -203,6 +211,8 @@ class _Wordmark extends StatelessWidget {
       label: 'RaajjePro',
       excludeSemantics: true,
       child: Text.rich(
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         TextSpan(
           text: 'Raajje',
           style: style,

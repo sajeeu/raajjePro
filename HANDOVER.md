@@ -91,7 +91,7 @@ None of that was visible in a design review. All of it would have been implement
 
 ## What this repository is, right now
 
-**Phases 0, 1, 2, 3, 3b, 3c, 4 and 5 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
+**Phases 0, 1, 2, 3, 3b, 3c, 4, 5 and 6 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
 
 **Phase 3b is built**: reset-token issuance, expiry and consumption, every refresh token invalidated on success, and the three screens — request email, check-your-inbox, set new password. It sends a six-digit **code**, not a link. `docs/decisions/13-phase-3b-forgot-password.md`.
 
@@ -180,7 +180,64 @@ which has no phone field by §Phase 5's single-copy rule: that half goes to
 Phase 3's `PATCH /v1/users/me/phone`. **Phase 6a's builder needs the second
 one before they start.**
 
-**Next**: `/phase-6`.
+**Phase 6 is built** — the customer profile module, backend and Flutter.
+`GET /v1/users/me/profile-summary` is the Profile screen's one read and
+`PATCH /v1/users/me` carries `fullName`; `account/dto.ts` records why the
+summary has no phone number, no avatar, no island and no counts, and which
+phase adds each. The screen is `Profile.dc.html` as Round 48 rewrote it: the
+hero, a 2×2 block of booking tiles, the five rows and the role switcher.
+
+**Five of its seven destinations do not exist yet, so they are routes rather
+than dead controls.** A new shared `UnbuiltScreen` says what is missing and
+names the phase that owes it — Saved (14), Saved preferences (7), Help &
+support (19b), the four booking tiles (17), and the switcher's two (6a and
+10) — and `owedBy` is asserted per destination, so landing one of those
+screens trips a test. The four tiles keep four *distinct* placeholders, because
+Round 48's finding was four labels reaching one screen and a generic
+placeholder would have reintroduced it. `RoleSwitch.destinationFor` is
+§Phase 6's last Done-when line as one function; the Done-when test drives the
+real app and its real route table, so a row pushing an unregistered name fails
+rather than passes.
+
+🔧 **Two deliberate departures from the delivered design, both in the hero.**
+The change-photo button is drawn to Round 48 §5's geometry and wired to
+nothing (`InertControl`, owed by Phase 8): §Phase 6 mentions no photo, `User`
+has no avatar column, and presigned media upload with EXIF stripping is
+§Phase 8's bullet. And the subtitle reads `Member since Jan 2026` alone, not
+`Malé, Maldives · Member since Jan 2026` — nothing stores a customer's island
+and `Island` is §Phase 7's seed, so the half that can be answered is answered
+and a test asserts no placeholder location is printed.
+
+Wiring Explore's two Phase-6-owed controls — the header account disc and the
+`Profile` nav tab — **broke the brand header at 200% text**, because
+`Pressable`'s 48 dp floor is 12 dp wider than the 36 dp avatar. 🔧 **Fixed by
+making Phase 1's `AppHeader` wordmark `Flexible`** — flagged rather than done
+silently, since it is shared Phase 1 code, and needed because the 48 dp floor
+and the 200%-text rule cannot both hold in that row otherwise. An
+`OverflowBox` was tried first and is wrong: `RenderBox.hitTest` gates on the
+box's own size, so the child laid out at 48 while only 36 was tappable. The
+test written with it measured layout size and passed against the defect; it
+now taps 20 dp off centre instead. **The general lesson: a geometry assertion
+about a tap target has to tap.**
+
+Phase 4's two tripwires for those controls were deleted on purpose, which is
+what they were for. `SettingsRow` and `InertControl` moved into `shared/` when
+Profile became their second consumer, and `core/routes.dart` now holds the
+route names that cross a feature boundary.
+`docs/decisions/18-phase-6-customer-profile.md` also records the three
+defects the QA review found — `Pressable(excludeSemantics: true)` silently
+discarding a `semanticLabel`, sign out staying on the screen, and the summary
+outliving the account it described — each with the regression test that now
+fails without its fix. Ledger rows **P6-1** to **P6-4**.
+
+**Saved preferences stays with Phase 7.** Phase 3 deferred it to "Phase 6 or
+Phase 7"; it needs `Island`, and §0.0 item 12 governs its island control in
+detail. Phase 6 did not take half of it.
+
+**Next**: `/phase-6a` — and its builder needs Phase 5's second flagged line
+first: §Phase 6a's Done-when routes a phone number through
+`PATCH /v1/providers/me`, which has no phone field. That half goes to
+`PATCH /v1/users/me/phone`.
 
 | | |
 |---|---|
@@ -189,8 +246,8 @@ one before they start.**
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it — `frontend/lib/README.md` lists every directory |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |

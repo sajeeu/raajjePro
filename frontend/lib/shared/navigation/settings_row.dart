@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
-import 'package:raajjepro/shared/shared.dart';
+import 'package:raajjepro/shared/cards/app_card.dart';
 
-/// One settings row (`Account Settings.dc.html`): a 46 dp icon disc, title,
-/// subtitle, chevron, in a card. [destructive] paints the delete row.
+/// One navigation row (`Account Settings.dc.html`, `Profile.dc.html`): a
+/// 46 dp icon disc, title, an optional subtitle, chevron, in a card.
+/// [destructive] paints the delete row.
+///
+/// Shared rather than feature-owned because two features draw it: Phase 3's
+/// Account settings, with a subtitle under every row, and Phase 6's Profile,
+/// whose five rows are subtitle-free by design (Round 48 §4 — "keep the rows
+/// subtitle-free"). `lib/README.md`: a widget a second feature needs moves
+/// here, it is not copied.
 ///
 /// Brief-vs-code: the brief wrapped `AppCard` in a bare `Pressable(child: …)`,
 /// but `Pressable` has no `child` parameter (only `builder`) — it would not
@@ -14,14 +21,14 @@ class SettingsRow extends StatelessWidget {
   const SettingsRow({
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.onTap,
     super.key,
+    this.subtitle,
     this.destructive = false,
   });
   final IconData icon;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final VoidCallback onTap;
   final bool destructive;
 
@@ -31,7 +38,7 @@ class SettingsRow extends StatelessWidget {
     final type = context.type;
     return AppCard(
       onTap: onTap,
-      semanticLabel: '$title, $subtitle',
+      semanticLabel: subtitle == null ? title : '$title, $subtitle',
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.lg,
         AppSpacing.md,
@@ -65,10 +72,11 @@ class SettingsRow extends StatelessWidget {
                     color: destructive ? colors.errorText : colors.ink,
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: type.secondary.copyWith(color: colors.textSecondary),
-                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: type.secondary.copyWith(color: colors.textSecondary),
+                  ),
               ],
             ),
           ),

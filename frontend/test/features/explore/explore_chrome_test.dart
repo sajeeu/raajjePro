@@ -3,9 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
+import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/explore/presentation/tab_placeholder_screen.dart';
 import 'package:raajjepro/features/explore/presentation/widgets/category_tile.dart';
+import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 import '../../core/auth/auth_controller_test.dart' show userJson;
@@ -20,6 +22,13 @@ import 'helpers.dart';
 /// screen was built on the promise it was inert. **When Phase 15 attaches
 /// search, the search test below fails and has to be deleted on purpose** —
 /// which is the intended cost.
+///
+/// 🔧 **Two of them have now been paid.** Phase 6 built Profile, so the
+/// header's account disc and the `Profile` nav tab have real destinations and
+/// their inert assertions are gone — replaced below by tests of where they
+/// go, which is the state Phase 4 was holding the line for. The island pill,
+/// the search field, the Saved heart, the bell and the category tiles are
+/// still inert and still asserted.
 ///
 /// The one control that is *absent* rather than inert is the emergency entry,
 /// and it has its own test here for the same reason: it must not reappear as
@@ -44,6 +53,15 @@ void main() {
     const ExploreScreen(),
     overrides: [apiClientProvider.overrideWithValue(api)],
   );
+
+  /// The header's account control for a guest. Scoped by the `Pressable`:
+  /// the Profile nav tab carries the same glyph but is not one of these.
+  Finder accountDisc() => find
+      .ancestor(
+        of: find.byIcon(Icons.person_outline_rounded),
+        matching: find.byType(Pressable),
+      )
+      .first;
 
   /// Finds the [InertControl] wrapper for [label] and returns it.
   InertControl inert(WidgetTester tester, String label) {
@@ -132,15 +150,29 @@ void main() {
     ) async {
       await pump(tester);
       expect(find.byType(AppAvatar), findsNothing);
-      // Scoped to the header: the Profile nav tab carries the same glyph.
-      final accountDisc = find.descendant(
-        of: find.byWidgetPredicate(
-          (w) => w is InertControl && w.label == 'Account',
-        ),
-        matching: find.byIcon(Icons.person_outline_rounded),
-      );
-      expect(accountDisc, findsOneWidget);
+      // Two on the screen now: the header disc and the Profile nav tab carry
+      // the same glyph, and neither may invent a name.
+      expect(find.byIcon(Icons.person_outline_rounded), findsNWidgets(2));
     });
+
+    testWidgets(
+      'takes a guest to Sign in, not to a profile they have none of',
+      (tester) async {
+        await pumpScreen(
+          tester,
+          const ExploreScreen(),
+          overrides: [apiClientProvider.overrideWithValue(api)],
+          routes: {
+            SignInScreen.routeName: (_) => const SignInScreen(),
+            ProfileScreen.routeName: (_) => const ProfileScreen(),
+          },
+        );
+        await tester.tap(accountDisc());
+        await settle(tester);
+        expect(find.byType(SignInScreen), findsOneWidget);
+        expect(find.byType(ProfileScreen), findsNothing);
+      },
+    );
 
     testWidgets('shows the signed-in account’s own initials', (tester) async {
       await pumpScreen(
@@ -162,6 +194,72 @@ void main() {
       // No tier overlay: the badge's words must be reachable on the same
       // screen wherever the overlay appears, and Explore has nowhere for them.
       expect(avatar.tier, VerificationTier.none);
+    });
+
+    testWidgets('takes a signed-in user to Profile — Phase 6 owed this', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+          authControllerProvider.overrideWith(
+            () => _FixedAuthController(
+              AuthSignedIn(UserAccount.fromJson(userJson())),
+            ),
+          ),
+        ],
+        routes: {ProfileScreen.routeName: (_) => const ProfileScreen()},
+      );
+      await tester.tap(find.byType(AppAvatar));
+      await settle(tester);
+      expect(find.byType(ProfileScreen), findsOneWidget);
+    });
+
+    testWidgets('has a tap target that is really 48 dp, not just 48 dp wide', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        routes: {SignInScreen.routeName: (_) => const SignInScreen()},
+      );
+      // Tapped 20 dp off centre: inside a 48 dp target, outside the 36 dp
+      // disc it paints. Asserted by tapping rather than by measuring, because
+      // a box can lay out at 48 while hit-testing at 36 — which is what an
+      // `OverflowBox` does, and why this screen does not use one.
+      final centre = tester.getCenter(accountDisc());
+      await tester.tapAt(centre + const Offset(20, 0));
+      await settle(tester);
+      expect(find.byType(SignInScreen), findsOneWidget);
+    });
+
+    testWidgets('announces itself, since it is now a control', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester);
+      expect(find.bySemanticsLabel('Sign in'), findsWidgets);
+      handle.dispose();
+    });
+
+    testWidgets('the brand row survives 200% text with it wired', (
+      tester,
+    ) async {
+      // Wiring this control widened the header's trailing slot from a 36 dp
+      // avatar to a 48 dp target, and the brand row overflowed by 5.5 px at
+      // 200% text. `AppHeader`'s wordmark is `Flexible` because of it.
+      await pumpScreen(
+        tester,
+        const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: ExploreScreen(),
+        ),
+        overrides: [apiClientProvider.overrideWithValue(api)],
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.byType(AppHeader), findsOneWidget);
     });
   });
 
@@ -195,6 +293,21 @@ void main() {
         'Profile',
       ]);
       expect(nav.currentIndex, 1);
+    });
+
+    testWidgets('the Profile tab reaches Profile — Phase 6 owed this too', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        routes: {ProfileScreen.routeName: (_) => const ProfileScreen()},
+      );
+      await tester.tap(find.text('Profile'));
+      await settle(tester);
+      expect(find.byType(TabPlaceholderScreen), findsNothing);
+      expect(find.byType(ProfileScreen), findsOneWidget);
     });
 
     testWidgets(

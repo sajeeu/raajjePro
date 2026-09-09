@@ -236,10 +236,15 @@ void main() {
       // A guest sees a generic disc rather than initials for a name the app
       // does not have — `explore_chrome_test.dart` covers the signed-in
       // branch. Either way it is 36, which is what the geometry asserts.
-      // Scoped to the header: the Profile nav tab carries the same glyph.
+      //
+      // 🔧 Scoped by the icon rather than by the `InertControl` Phase 6
+      // removed when it wired the control. The *painted* disc is still 36;
+      // its tap target is 48, which `explore_chrome_test.dart` asserts by
+      // tapping off-centre.
       final headerDisc = find.descendant(
-        of: find.byWidgetPredicate(
-          (w) => w is InertControl && w.label == 'Account',
+        of: find.ancestor(
+          of: find.byIcon(Icons.person_outline_rounded),
+          matching: find.byType(Pressable),
         ),
         matching: find.byType(SizedBox),
       );

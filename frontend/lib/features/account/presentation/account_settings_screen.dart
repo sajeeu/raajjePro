@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/format/relative_time.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/controller/account_controller.dart';
 import 'package:raajjepro/features/account/presentation/active_sessions_screen.dart';
@@ -10,7 +11,6 @@ import 'package:raajjepro/features/account/presentation/change_password_screen.d
 import 'package:raajjepro/features/account/presentation/change_phone_screen.dart';
 import 'package:raajjepro/features/account/presentation/delete_account_screen.dart';
 import 'package:raajjepro/features/account/presentation/download_data_screen.dart';
-import 'package:raajjepro/features/account/presentation/widgets/settings_row.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// Account settings (`Account Settings.dc.html`; plan §Phase 3). Rows the
@@ -19,7 +19,7 @@ import 'package:raajjepro/shared/shared.dart';
 /// rows) · error · populated · frozen (banner + changed delete row).
 class AccountSettingsScreen extends ConsumerWidget {
   const AccountSettingsScreen({super.key});
-  static const routeName = '/account';
+  static const routeName = AppRoutes.accountSettings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
 import { userDto } from '../auth/dto.js';
+import { profileSummaryDto, type ProfileSummaryDto } from './dto.js';
 import { providerOwnExport } from '../providers/types.js';
 import type { OtpSendResult, OtpService } from '../auth/otp.js';
 import { normalisePhone } from '../auth/phone.js';
@@ -179,6 +180,53 @@ export class AccountService {
         actorType: 'user',
         actorId: principal.id,
         action: 'user.phone.changed',
+        targetType: 'user',
+        targetId: principal.id,
+        reason: 'user_initiated',
+        requestId: meta.requestId,
+        ipAddress: meta.ip,
+      });
+    });
+    return this.loadOrThrow(principal.id);
+  }
+
+  /**
+   * Who may call: the signed-in user, about themselves. The Profile screen's
+   * one read (plan §Phase 6).
+   *
+   * No email-verification guard: §1c's stricter `requireEmailVerified` gates
+   * booking, enquiry and messaging, and reading your own profile is none of
+   * those. A frozen account reads normally too — it can still see who it is
+   * while its deletion is queued.
+   */
+  async profileSummary(userId: string): Promise<ProfileSummaryDto> {
+    return profileSummaryDto(await this.loadOrThrow(userId));
+  }
+
+  /**
+   * Who may call: the signed-in user, for their own account (plan §Phase 6,
+   * `PATCH /v1/users/me`).
+   *
+   * The route also carries `requireActiveAccount`, on the same reasoning
+   * §Phase 5's `PATCH /v1/providers/me` does: a frozen account is queued for
+   * anonymisation, which replaces the name with a placeholder, so rewriting
+   * the name it is about to erase is exactly the thing "starts nothing new"
+   * means.
+   *
+   * Audited as `user.name.changed`, with no value in the entry — a name is a
+   * PII value and the audit log takes IDs, enums and counts only.
+   */
+  async updateOwnUser(
+    principal: UserPrincipal,
+    body: { fullName: string },
+    meta: RequestMeta,
+  ): Promise<UserWithProfile> {
+    await this.deps.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: principal.id }, data: { fullName: body.fullName } });
+      await this.deps.audit.record(tx, {
+        actorType: 'user',
+        actorId: principal.id,
+        action: 'user.name.changed',
         targetType: 'user',
         targetId: principal.id,
         reason: 'user_initiated',
