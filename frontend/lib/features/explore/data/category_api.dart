@@ -30,12 +30,17 @@ class CategoryApi {
           ? ''
           : '?cursor=${Uri.encodeQueryComponent(cursor)}';
       final response = await _client.get('/v1/categories$query');
-      final data = response['data'];
+      // `ApiClient` unwraps the response envelope: a list payload arrives as
+      // `_list` and the envelope's `meta` as `_meta`. Reading `data` here got
+      // null on every call, so Explore rendered its empty state against a
+      // perfectly good 200 — invisible to the widget tests, which stubbed the
+      // server's wire shape rather than what the client hands a caller.
+      final data = response['_list'];
       if (data is! List) break;
       all.addAll(
         data.whereType<Map<String, dynamic>>().map(ServiceCategory.fromJson),
       );
-      final meta = response['meta'];
+      final meta = response['_meta'];
       cursor = meta is Map<String, dynamic>
           ? meta['nextCursor'] as String?
           : null;

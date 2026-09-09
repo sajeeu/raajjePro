@@ -196,4 +196,31 @@ void main() {
     final data = await c.get('/v1/auth/sessions');
     expect((data['_list'] as List).length, 1);
   });
+
+  test(
+    'a paged list carries its meta, so a caller can reach page two',
+    () async {
+      // Phase 4's category loop followed `meta.nextCursor` and never saw one,
+      // because the envelope's `meta` was dropped here. The cursor is the only
+      // route to the second page, so losing it silently truncates a list at
+      // whatever the first page happened to hold.
+      final c = client(
+        scripted([
+          (_) => http.Response(
+            jsonEncode({
+              'data': [
+                {'id': 'c1'},
+              ],
+              'meta': {'nextCursor': 'cur-2'},
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          ),
+        ]),
+      );
+      final data = await c.get('/v1/categories');
+      expect((data['_list'] as List).length, 1);
+      expect((data['_meta'] as Map<String, dynamic>)['nextCursor'], 'cur-2');
+    },
+  );
 }

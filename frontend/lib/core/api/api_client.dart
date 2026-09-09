@@ -160,7 +160,13 @@ class HttpApiClient implements ApiClient {
     if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
       final data = decoded['data'];
       if (data is Map<String, dynamic>) return data;
-      if (data is List) return {'_list': data};
+      if (data is List) {
+        // `meta` travels with a list under `_meta`, because a paged endpoint's
+        // cursor is useless to a caller that cannot see it: dropping it here
+        // left Phase 4's `GET /v1/categories` loop unable to reach page two.
+        final meta = decoded['meta'];
+        return {'_list': data, if (meta is Map<String, dynamic>) '_meta': meta};
+      }
       return {'value': data};
     }
 

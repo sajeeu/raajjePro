@@ -31,7 +31,7 @@ void main() {
     testWidgets('draws one tile per category the endpoint returned', (
       tester,
     ) async {
-      api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+      api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
       await pump(tester);
 
       expect(find.byType(CategoryTile), findsNWidgets(12));
@@ -39,12 +39,39 @@ void main() {
       expect(find.text('Home Repairs'), findsOneWidget);
     });
 
+    testWidgets('follows the cursor to a second page', (tester) async {
+      // The loop in `CategoryApi` existed from the start and was unreachable:
+      // it read the cursor from a key the client does not produce. Nothing
+      // exercised paging, so a catalogue past the first page would simply
+      // have gone missing from the grid.
+      api.on(
+        'GET',
+        '/v1/categories',
+        (_) => {
+          '_list': [categoryJson(id: 'p1', name: 'Page One', sortOrder: 1)],
+          '_meta': {'nextCursor': 'cur-2'},
+        },
+      );
+      api.on(
+        'GET',
+        '/v1/categories?cursor=cur-2',
+        (_) => {
+          '_list': [categoryJson(id: 'p2', name: 'Page Two', sortOrder: 2)],
+        },
+      );
+      await pump(tester);
+
+      expect(find.text('Page One'), findsOneWidget);
+      expect(find.text('Page Two'), findsOneWidget);
+      expect(find.byType(CategoryTile), findsNWidgets(2));
+    });
+
     testWidgets('shows a thirteenth with no rebuild — the Done-when line', (
       tester,
     ) async {
       api.on('GET', '/v1/categories', (_) {
         return {
-          'data': [
+          '_list': [
             ...seededTwelve(),
             categoryJson(
               id: 'cat-13',
@@ -79,7 +106,7 @@ void main() {
     ) async {
       api.on('GET', '/v1/categories', (_) {
         return {
-          'data': [
+          '_list': [
             categoryJson(id: 'a', name: 'Falana Repairs', sortOrder: 1),
             categoryJson(id: 'b', name: 'Dhoni Maintenance', sortOrder: 2),
           ],
@@ -98,7 +125,7 @@ void main() {
     ) async {
       api.on('GET', '/v1/categories', (_) {
         return {
-          'data': [
+          '_list': [
             categoryJson(id: 'z', name: 'Zebra', sortOrder: 1),
             categoryJson(id: 'a', name: 'Apple', sortOrder: 2),
           ],
@@ -116,7 +143,7 @@ void main() {
     testWidgets(
       'carries no emergency marker on any tile, capable or not (Round 23)',
       (tester) async {
-        api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+        api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
         await pump(tester);
 
         for (final word in ['Emergency', 'emergency', 'Urgent', '24/7']) {
@@ -128,7 +155,7 @@ void main() {
     testWidgets('shows Boat Charter as an ordinary request-based tile', (
       tester,
     ) async {
-      api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+      api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
       await pump(tester);
 
       final tile = tester.widget<CategoryTile>(
@@ -147,7 +174,7 @@ void main() {
       tester,
     ) async {
       api.gate = Completer<void>();
-      api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+      api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
       await pump(tester);
 
       expect(find.byType(SkeletonLoader), findsOneWidget);
@@ -163,7 +190,7 @@ void main() {
     testWidgets('empty names what happens next and offers a retry', (
       tester,
     ) async {
-      api.on('GET', '/v1/categories', (_) => {'data': <Object>[]});
+      api.on('GET', '/v1/categories', (_) => {'_list': <Object>[]});
       await pump(tester);
 
       expect(find.text('Nothing to explore yet'), findsOneWidget);
@@ -184,7 +211,7 @@ void main() {
       );
 
       // The retry is real: the second call succeeds and the grid appears.
-      api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+      api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
       await tester.tap(find.text('Try again'));
       await settle(tester);
       expect(find.byType(CategoryTile), findsNWidgets(12));

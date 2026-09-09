@@ -37,7 +37,7 @@ void main() {
 
   setUp(() {
     api = FakeApiClient();
-    api.on('GET', '/v1/categories', (_) => {'data': seededTwelve()});
+    api.on('GET', '/v1/categories', (_) => {'_list': seededTwelve()});
   });
 
   Future<void> pump(WidgetTester tester) => pumpScreen(
