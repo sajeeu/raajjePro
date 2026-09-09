@@ -18,6 +18,23 @@ Then the toolchain. Phase 0 is built, so a checkout needs Node 22, Docker with C
 
 🔧 **One Android SDK quirk, if the app will not build locally.** `frontend/android/app/build.gradle.kts` pins `compileSdk = 37`, which `flutter_secure_storage` 11 requires. The SDK publishes that platform as **`platforms;android-37.0`** — minor API levels are a 2025 change — but AGP 9.1 looks for a directory named `android-37`. On this machine the two are bridged by copying the installed `android-37.0` directory to `android-37`; the copy says so in its own `source.properties`. **CI needs none of this** — a fresh runner resolves the platform on its own, verified on the Phase 3 merge, which built `app-debug.apk` in 220 seconds. So this is a local-machine fix, not a project dependency:
 
+🔧 **The Android SDK is at `$HOME/Android`, not `$HOME/Android/Sdk`.** Worth
+saying because a session looked for the conventional path, concluded the
+machine had no `adb` and no emulator, and handed the whole device-verification
+pass on to someone else — on the same machine that has both. `adb` is
+`$HOME/Android/platform-tools/adb` and the emulator `$HOME/Android/emulator/emulator`;
+neither is on `PATH` and `ANDROID_HOME` is unset, so export both before
+building or launching:
+
+```bash
+export ANDROID_HOME="$HOME/Android"
+export PATH="$HOME/flutter/bin:$HOME/Android/platform-tools:$HOME/Android/emulator:$PATH"
+```
+
+Anything a Claude session starts dies with the session — the emulator, a
+`npm run dev`, a `flutter run`. `setsid nohup <cmd> &` survives a turn, but for
+a long session start the emulator and the API from your own terminal.
+
 ```bash
 sdkmanager "platforms;android-37.0"
 cp -r "$ANDROID_HOME/platforms/android-37.0" "$ANDROID_HOME/platforms/android-37"
