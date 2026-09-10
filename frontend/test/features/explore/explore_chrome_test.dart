@@ -205,6 +205,59 @@ void main() {
       expect(find.byType(ProfileScreen), findsOneWidget);
     });
 
+    testWidgets('the Profile TAB routes a guest to Sign in, like the avatar', (
+      tester,
+    ) async {
+      // Found on a device: the avatar checked for an account and the nav tab
+      // did not, so a guest tapping the tab reached Profile, took a 401 on
+      // `/v1/users/me/profile-summary` and read "Couldn't load your profile —
+      // your account is safe, try again". An error state for something that is
+      // not an error, about an account that does not exist.
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+        ],
+        routes: {
+          SignInScreen.routeName: (_) => const SignInScreen(),
+          ProfileScreen.routeName: (_) => const ProfileScreen(),
+        },
+      );
+
+      await tester.tap(find.text('Profile').last);
+      await settle(tester);
+      expect(find.byType(SignInScreen), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsNothing);
+    });
+
+    testWidgets('the Profile tab takes a signed-in user to Profile', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+          authControllerProvider.overrideWith(
+            () => _FixedAuthController(
+              AuthSignedIn(UserAccount.fromJson(userJson())),
+            ),
+          ),
+        ],
+        routes: {
+          SignInScreen.routeName: (_) => const SignInScreen(),
+          ProfileScreen.routeName: (_) => const ProfileScreen(),
+        },
+      );
+
+      await tester.tap(find.text('Profile').last);
+      await settle(tester);
+      expect(find.byType(ProfileScreen), findsOneWidget);
+    });
+
     testWidgets('has a tap target that is really 48 dp, not just 48 dp wide', (
       tester,
     ) async {
@@ -282,19 +335,29 @@ void main() {
       expect(nav.currentIndex, 1);
     });
 
-    testWidgets('the Profile tab reaches Profile — Phase 6 owed this too', (
+    testWidgets('the Profile tab is not a placeholder — Phase 6 owed this too', (
       tester,
     ) async {
+      // 🔧 This asserted that a *guest* tapping the tab reaches Profile, which
+      // is the defect a device pass found: Profile then 401s and draws an
+      // error card about an account the guest does not have. What Phase 6 owed
+      // was that the tab stop being a placeholder; where it goes depends on
+      // whether there is an account, and the two tests above cover both.
       await pumpScreen(
         tester,
         const ExploreScreen(),
-        overrides: [apiClientProvider.overrideWithValue(api)],
-        routes: {ProfileScreen.routeName: (_) => const ProfileScreen()},
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+        ],
+        routes: {
+          SignInScreen.routeName: (_) => const SignInScreen(),
+          ProfileScreen.routeName: (_) => const ProfileScreen(),
+        },
       );
-      await tester.tap(find.text('Profile'));
+      await tester.tap(find.text('Profile').last);
       await settle(tester);
       expect(find.byType(TabPlaceholderScreen), findsNothing);
-      expect(find.byType(ProfileScreen), findsOneWidget);
     });
 
     testWidgets(

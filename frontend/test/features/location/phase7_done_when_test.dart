@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/location/browsing_island_controller.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
+import 'package:raajjepro/features/explore/presentation/tab_placeholder_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -134,10 +135,16 @@ void main() {
       await settle(tester);
       expect(find.text('S. Meedhoo'), findsOneWidget);
 
-      // Off to another screen and back, through the real route table.
-      await tester.tap(find.text('Profile'));
+      // Off to another screen and back, through the real route table. The
+      // vehicle is the Bookings tab rather than Profile: a guest tapping
+      // Profile now reaches Sign in, because Profile renders an account and a
+      // guest has none (found on a device during this phase's pass, where the
+      // old behaviour drew "Couldn't load your profile" at a 401). What this
+      // test is about is the island surviving a round trip, and a pushed
+      // placeholder is as real a route as Profile was.
+      await tester.tap(find.text('Bookings'));
       await settle(tester);
-      expect(find.byType(ProfileScreen), findsOneWidget);
+      expect(find.byType(TabPlaceholderScreen), findsOneWidget);
 
       await tester.pageBack();
       await settle(tester);

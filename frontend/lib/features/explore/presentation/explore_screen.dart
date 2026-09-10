@@ -146,9 +146,20 @@ class ExploreScreen extends ConsumerWidget {
                 'Profile',
               ];
               if (index == 1) return; // already here
-              // Phase 6 built Profile, so that tab has a real destination.
+              // Phase 6 built Profile, so that tab has a real destination —
+              // and, like the header avatar beside it, only for someone who
+              // has an account. A guest reached Profile, which asked for
+              // `/v1/users/me/profile-summary`, took a 401 and drew
+              // "Couldn't load your profile — your account is safe, try
+              // again": an error for a state that is not an error, about an
+              // account that does not exist. Found on a device during the
+              // Phase 7 pass. The avatar had this right from the start; the
+              // tab is the copy that did not.
               if (index == 4) {
-                Navigator.of(context).pushNamed(AppRoutes.profile);
+                final signedIn =
+                    ref.read(authControllerProvider) is AuthSignedIn;
+                Navigator.of(context)
+                    .pushNamed(signedIn ? AppRoutes.profile : AppRoutes.signIn);
                 return;
               }
               Navigator.of(context).push(
