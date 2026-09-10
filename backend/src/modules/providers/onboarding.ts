@@ -68,7 +68,46 @@ export interface OnboardingInputs {
   emailVerified: boolean;
 }
 
-export function isOnboardingComplete({
+/**
+ * **The routing answer: has this account *ever* completed onboarding?**
+ *
+ * Sticky, and that is the point. §Phase 6a's Done-when is past tense — *"a
+ * provider who already completed onboarding never sees it again"* — and five of
+ * the requirements below are legally editable, so reading only the current
+ * values answered "not onboarded" for a provider who had been trading for
+ * months and cleared a bank field. §Phase 6's role switcher then sent them back
+ * into onboarding, whose last step hands off to a **fresh wizard draft**: right
+ * for someone who never finished, wrong for someone already trading. That was
+ * ledger P6A-3, and the owner's answer (2026-09-10) was to record the event
+ * rather than keep deriving it.
+ *
+ * `stamped OR meets-the-requirements-now` rather than the stamp alone, so the
+ * answer is right before any write has had the chance to stamp it — an account
+ * that qualifies by adding its last service area reads complete immediately and
+ * is stamped on the way past.
+ *
+ * This is not the §1a analogy it looks like. §1a derives *visibility*, a
+ * present-tense fact that must change when a listing is unpublished. This is
+ * history, and history does not un-happen.
+ */
+export function isOnboardingComplete(inputs: OnboardingInputs): boolean {
+  if (inputs.profile === null) return false;
+  // `!= null`, not `!== null`: the column is always null or a date from the
+  // database, but a caller holding a partial profile — a test fixture, a
+  // `select` that omits it — would have `undefined` read as *stamped* and
+  // every requirement skipped. Loose here is the safe comparison.
+  if (inputs.profile.onboardingCompletedAt != null) return true;
+  return meetsOnboardingRequirements(inputs);
+}
+
+/**
+ * The present-tense half: does this account satisfy §Phase 6a's requirements
+ * **right now**? What the stamp is written from, and the honest answer to "is
+ * anything missing" — which is a different question from "have they onboarded",
+ * and the one a later phase should ask if it wants to nudge a provider to fill
+ * a cleared bank field.
+ */
+export function meetsOnboardingRequirements({
   profile,
   serviceAreaCount,
   emailVerified,

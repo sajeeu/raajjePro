@@ -96,6 +96,11 @@ export class LocationService {
     await this.requireActiveIsland(islandId);
     const profile = await this.providers.getOrCreateProviderProfile(userId);
     await this.repo.addServiceArea(profile.id, islandId, this.clock());
+    // Step 3 is usually the last thing onboarding does, so this write is the
+    // one that most often completes it. Recording the moment here keeps the
+    // answer monotonic for a provider whose bank fields are later edited
+    // (ledger P6A-3) without a read ever having to mutate.
+    await this.providers.stampOnboardingIfComplete(userId);
     return this.currentAreas(profile.id);
   }
 

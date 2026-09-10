@@ -318,3 +318,35 @@ Rows **P6A-1** and **P6A-2** in `docs/deferred-verification.md`. Ledger row
 **P6-1**'s Phase 6a half is closed by this phase — the role switcher's first
 switch now lands on the real intro screen rather than a placeholder — and the
 row stays open for §Phase 10's half.
+
+---
+
+## Owner's answers, 2026-09-10 — recorded here because they change three things above
+
+**1. The bank list stays as the seven, and the gap is accepted.** A provider
+banking outside Bank of Maldives, Maldives Islamic Bank, State Bank of India,
+Habib Bank, Mauritius Commercial Bank, Commercial Bank of Maldives or Bank of
+Ceylon cannot finish onboarding. The artboard's `<select>` has no escape, the
+plan names no bank register, and nothing was invented — the alternative
+considered was an "Other" option revealing free text written to
+`transferInstructions`, which §Phase 5 already defines as "and/or other
+transfer instructions". **Not built.** If it ever is, that is the field to
+reach for, and the reason to revisit is §7's line about the first fifty
+providers mattering: this is a silently lost signup rather than a wrong screen.
+
+**2. `providerOnboardingComplete` is no longer derived alone (P6A-3, closed).**
+`ProviderProfile.onboardingCompletedAt` records the moment the requirements
+were first met. Decision 3 above argued for deriving it on §1a's reasoning that
+a stored flag drifts from its fields; that reasoning does not carry here.
+§1a derives **visibility** — present tense, and required to change the moment a
+listing is unpublished. §Phase 6a's Done-when asks a **past-tense** question,
+*"a provider who already completed onboarding never sees it again"*, and
+history does not un-happen. The stamp is a record of an event, like
+`trialStartedAt` and `paymentClaimedAt` elsewhere in this schema, not a mirror
+of the five requirements — and `meetsOnboardingRequirements` stays exported for
+the present-tense question, which is a different one.
+
+**3. Both plan amendments are made, revision 5.23.** §Phase 6's "a returning
+provider" now reads "a provider who has completed onboarding", and §Phase 6a's
+Done-when now splits the phone from the payment details, naming
+`PATCH /v1/users/me/phone` for the half `PATCH /v1/providers/me` cannot do.

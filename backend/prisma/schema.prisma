@@ -363,10 +363,10 @@ enum ProviderType {
 /// and Phase 10a's respectively; Phase 5 did not build ahead into them.
 /// `providerType` was in that list and is now below — Phase 6a added it.
 model ProviderProfile {
-  id                 String             @id @default(uuid()) @db.Uuid
-  userId             String             @unique @map("user_id") @db.Uuid
-  user               User               @relation(fields: [userId], references: [id])
-  businessName       String?            @map("business_name")
+  id           String  @id @default(uuid()) @db.Uuid
+  userId       String  @unique @map("user_id") @db.Uuid
+  user         User    @relation(fields: [userId], references: [id])
+  businessName String? @map("business_name")
 
   /// §Phase 6a's required "How will you offer services?" choice. **Nullable,
   /// and the null is meaningful**: §1a's implicit path (Phase 8's first draft
@@ -375,7 +375,19 @@ model ProviderProfile {
   /// the only door. Null therefore reads as *not yet asked*, which is what
   /// `providerOnboardingComplete` turns on — never as a default type, because
   /// guessing it would decide which documents §1e goes on to demand.
-  providerType       ProviderType?      @map("provider_type")
+  providerType ProviderType? @map("provider_type")
+
+  /// When this account first satisfied §Phase 6a's onboarding requirements.
+  /// **A record of an event, not a copy of the fields** — which is the whole
+  /// point. §Phase 6a's Done-when asks a past-tense question, "a provider who
+  /// already completed onboarding never sees it again", and a predicate over
+  /// current field values cannot answer it: five of those values are legally
+  /// editable, so a provider trading for months who cleared a bank field read
+  /// *incomplete* and was routed back into onboarding, whose last step hands
+  /// off to a fresh wizard draft (ledger P6A-3, owner's decision 2026-09-10).
+  /// Written once and never cleared, like `trialStartedAt` and
+  /// `paymentClaimedAt` elsewhere in this schema.
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
 
   verificationTier   VerificationTier   @default(none) @map("verification_tier")
   verificationStatus VerificationStatus @default(unverified) @map("verification_status")

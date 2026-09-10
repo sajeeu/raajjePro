@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.22 — read this before §0.1–0.3
+### 0.0 Revision 5.23 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -805,7 +805,7 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - `PATCH /v1/users/me`
 - Frontend: Profile screen (pixel-match), five rows navigating to sub-screens
 - **Role switcher:** an explicit customer ⇄ provider mode control. Providers are the only paying users; their workspace must not be buried. 🔧 **Proposed and designed in Session 9 (2026-09-06)** — the switcher's placement and the provider-mode IA are in `Profile.dc.html`. Build against it. This remains the one navigation change that departs from the original mockups.
-- Switching to provider mode for the first time routes into Phase 6a's onboarding flow rather than straight to the dashboard; a returning provider goes straight to My Services Dashboard.
+- Switching to provider mode for the first time routes into Phase 6a's onboarding flow rather than straight to the dashboard; 🔧 **a provider who has completed onboarding** goes straight to My Services Dashboard on every subsequent switch. **Corrected 2026-09-10:** this read "a returning provider", and read literally with "on every subsequent switch" it made §Phase 6a's own resume rule — *"a provider who abandons onboarding after step 1 or 2 and returns later resumes from wherever they left off"* — unimplementable, since a second switch would owe them the dashboard they have not earned. Completion is the condition, and it is a recorded fact rather than a re-derived one (`ProviderProfile.onboardingCompletedAt`).
 
 **Done when:** Profile reflects live data; every row navigates; switching to provider mode for the first time reaches the onboarding flow, and reaches My Services Dashboard directly on every subsequent switch.
 
@@ -828,7 +828,7 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - 🔧 **`providerType` — Round 21, new field on `ProviderProfile`:** `individual` or `business`. It is not cosmetic — it decides what Gold verification asks for (a business supplies registration documents, an individual supplies personal ID, §1e) and it is what §1g's **Maldivian-owned business** attribute hangs from. The delivered Register screen already collects a business/trade name, so the concept existed in the designs before it existed in this plan.
 - 🔧 **A "Not right now" action on the intro screen** returns the user to customer mode cleanly, leaving no orphaned draft and no resume prompt nagging them from the role switcher. Resuming where you left off is right for someone who *intends* to finish; it is the wrong behaviour for someone who started the flow, looked at what it involved, and decided against becoming a provider. Choosing it again later starts the flow fresh.
 
-**Done when:** a brand-new user going through Home's "Become a Provider" CTA or Phase 6's role switcher lands on the intro screen, not the wizard directly; completing account details persists phone and payment details onto the Provider Profile via the existing Phase 5 update endpoint; the flow hands off into a fresh wizard draft; a provider who already completed onboarding never sees it again, going straight to the dashboard or a resumed draft instead.
+**Done when:** a brand-new user going through Home's "Become a Provider" CTA or Phase 6's role switcher lands on the intro screen, not the wizard directly; completing account details persists 🔧 **payment details onto the Provider Profile via the existing Phase 5 update endpoint, and the phone through Phase 3's `PATCH /v1/users/me/phone` — corrected 2026-09-10.** This clause said the one endpoint persists both, and it cannot: `ProviderProfile` has no phone column and `updateOwnProviderBody` no phone key, deliberately, under §Phase 5's single-copy rule — the number lives on `User` and is the same one Phase 3 collects. Phase 5's record pre-flagged this and Phase 6a built to the correct split, writing the phone first so a number already held at Bronze fails before anything else is written; the flow hands off into a fresh wizard draft; a provider who already completed onboarding never sees it again, going straight to the dashboard or a resumed draft instead.
 
 ### Phase 7 — Service Areas & Location Module
 

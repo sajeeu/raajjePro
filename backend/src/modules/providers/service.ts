@@ -16,7 +16,7 @@ import {
   type ProviderConductRecord,
   type ProviderConductSource,
 } from './conduct.js';
-import { isOnboardingComplete } from './onboarding.js';
+import { isOnboardingComplete, meetsOnboardingRequirements } from './onboarding.js';
 import { ProviderRepository } from './repository.js';
 import type { UpdateOwnProviderBody } from './schema.js';
 import {
@@ -167,12 +167,38 @@ export class ProviderProfileService {
       }
       return updated;
     });
+    await this.stampOnboardingIfComplete(userId);
     return toOwnProviderDto(
-      row,
+      await this.repo.findByUserId(userId).then((r) => r ?? row),
       await this.conductFor(row.id),
       await this.serviceAreasOf(row.id),
       await this.emailVerified(userId),
     );
+  }
+
+  /**
+   * Records the moment §Phase 6a's requirements were first met, if this write
+   * is the one that met them. Idempotent and never cleared.
+   *
+   * Called from the writes that can complete onboarding — this profile update
+   * and the service-area add — rather than from a read. A GET that mutates is
+   * what Phase 5's QA review removed from `readOwn`, and one wrong answer for
+   * one request is a smaller price than a read with a side effect.
+   *
+   * Correctness does not depend on the timing: `isOnboardingComplete` answers
+   * `stamped OR meets-now`, so an account that qualifies is answered correctly
+   * before the stamp lands and monotonically after it.
+   */
+  async stampOnboardingIfComplete(userId: string): Promise<void> {
+    const profile = await this.repo.findByUserId(userId);
+    if (profile === null || profile.onboardingCompletedAt != null) return;
+    const met = meetsOnboardingRequirements({
+      profile,
+      serviceAreaCount: await this.locations.countCurrentServiceAreas(profile.id),
+      emailVerified: await this.emailVerified(userId),
+    });
+    if (!met) return;
+    await this.repo.update(userId, { onboardingCompletedAt: new Date() });
   }
 
   /**

@@ -284,10 +284,15 @@ describe.skipIf(databaseUrl === undefined)('§Phase 6a Done-when — over HTTP',
       expect((await summary(u)).providerOnboardingComplete).toBe(true);
     });
 
-    it('removing the last service area reopens it — nothing stored says otherwise', async () => {
-      // The reason this is derived rather than stored (§1a's own reasoning for
-      // visibility): a stored "onboarded" flag would still read true here,
-      // and the wizard would pre-fill from an empty default.
+    it('removing the last service area does not un-onboard a finished provider', async () => {
+      // 🔧 **Reversed by the owner's decision, 2026-09-10 (ledger P6A-3).**
+      // This asserted that removing the area reopened onboarding, on §1a's
+      // reasoning that a stored flag drifts from its fields. §1a derives
+      // *visibility*, which is present tense and must change; §Phase 6a's
+      // Done-when is past tense — "a provider who **already completed**
+      // onboarding never sees it again" — and history does not un-happen. The
+      // old behaviour routed a provider trading for months back into a flow
+      // whose last step opens a fresh wizard draft.
       const u = await registerUser(ctx.app);
       await verifyEmail(u);
       await accountDetails(u);
@@ -300,7 +305,12 @@ describe.skipIf(databaseUrl === undefined)('§Phase 6a Done-when — over HTTP',
         headers: u.headers,
       });
       expect(removed.statusCode).toBe(200);
-      expect((await summary(u)).providerOnboardingComplete).toBe(false);
+      expect((await summary(u)).providerOnboardingComplete).toBe(true);
+
+      // The present-tense question is still answerable — it is simply a
+      // different question, and the one a later phase asks to nudge a provider
+      // whose details have gone missing.
+      expect((await own(u)).json<Envelope<OwnProviderDto>>().data.serviceAreas).toHaveLength(0);
     });
 
     it('the two reads agree — one definition, two callers', async () => {
@@ -318,18 +328,24 @@ describe.skipIf(databaseUrl === undefined)('§Phase 6a Done-when — over HTTP',
       expect((await summary(u)).providerOnboardingComplete).toBe(true);
     });
 
-    it('the completeness flag survives a bank field being cleared, honestly', async () => {
-      // 🔧 **Not monotonic, and the test says so out loud.** Clearing a
-      // payment field is a legal edit (`updateOwnProviderBody` makes all three
-      // nullable), and it makes the flow incomplete again — which is right
-      // for a provider who never finished and wrong for one already trading.
-      // Ledger row **P6A-3** carries the second case to Phase 9/10, where
-      // `PublishedListingSource` is real and the question is answerable.
+    it('stays complete when a bank field is cleared, and stamps only once', async () => {
+      // 🔧 **The defect P6A-3 recorded, now fixed (owner, 2026-09-10).**
+      // Clearing a payment field is a legal edit — `updateOwnProviderBody`
+      // makes all three nullable — and it used to make the flow incomplete
+      // again, sending a trading provider back into onboarding.
       const u = await registerUser(ctx.app);
       await verifyEmail(u);
       await accountDetails(u);
       await addArea(u, male.id);
       expect((await summary(u)).providerOnboardingComplete).toBe(true);
+
+      const stampedAt = (
+        await ctx.prisma.providerProfile.findFirstOrThrow({
+          where: { userId: u.userId },
+          select: { onboardingCompletedAt: true },
+        })
+      ).onboardingCompletedAt;
+      expect(stampedAt).not.toBeNull();
 
       const cleared = await ctx.app.inject({
         method: 'PATCH',
@@ -338,24 +354,33 @@ describe.skipIf(databaseUrl === undefined)('§Phase 6a Done-when — over HTTP',
         payload: { bankName: null },
       });
       expect(cleared.statusCode).toBe(200);
-      expect(cleared.json<Envelope<OwnProviderDto>>().data.onboardingComplete).toBe(false);
-      expect((await summary(u)).providerOnboardingComplete).toBe(false);
-
-      // And it comes back when the field does — nothing latched it off.
-      await accountDetails(u);
+      expect(cleared.json<Envelope<OwnProviderDto>>().data.onboardingComplete).toBe(true);
       expect((await summary(u)).providerOnboardingComplete).toBe(true);
+
+      // Written once and never rewritten: a later completing write must not
+      // move the moment.
+      await accountDetails(u);
+      const after = (
+        await ctx.prisma.providerProfile.findFirstOrThrow({
+          where: { userId: u.userId },
+          select: { onboardingCompletedAt: true },
+        })
+      ).onboardingCompletedAt;
+      expect(after?.getTime()).toBe(stampedAt?.getTime());
     });
 
-    it('stores no column that could drift from it', async () => {
-      // The §1a discipline applied one entity over: derived, never stored.
+    it('stores the moment it happened, and nothing else about it', async () => {
+      // 🔧 Was "stores no column that could drift from it". One column now
+      // exists deliberately, and the assertion is that it is the *only* one:
+      // a record of an event, not a mirror of the five requirements. A second
+      // column — `onboarding_step`, `onboarding_status` — would be the copy
+      // §1a's discipline actually warns about.
       const columns = await ctx.prisma.$queryRawUnsafe<{ column_name: string }[]>(
         `select column_name from information_schema.columns where table_name = 'provider_profile'`,
       );
       const names = columns.map((c) => c.column_name);
       expect(names).toContain('provider_type');
-      for (const name of names) {
-        expect(name).not.toMatch(/onboard/i);
-      }
+      expect(names.filter((n) => /onboard/i.test(n))).toEqual(['onboarding_completed_at']);
     });
   });
 
