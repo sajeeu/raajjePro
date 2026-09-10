@@ -53,6 +53,26 @@ scripts/verify.sh                             # everything should be green
 
 The second migrate is the `_test` database. The suite writes real rows and never deletes them — it isolates by unique key rather than by truncating — so `backend/test/setup.ts` refuses to run against any database whose name does not end in `_test`. A fresh Docker volume creates it; the migration is yours to apply.
 
+🔧 **Looking at the app in a browser — preview only, added 2026-09-10.**
+`frontend/web/` exists so the app can be clicked through at any window size
+without an emulator. It is **not a supported platform**: no web build in CI, no
+web target in the plan, and `flutter_secure_storage` falls back to browser
+storage on web, so **session and token behaviour is not faithful** — layout,
+copy and anything read from the API are.
+
+Serve it on **port 5173**, not any other port. That is the origin the backend's
+CORS allows (it was reserved for the admin panel), so 5173 needs no backend
+change and anything else is refused by the browser:
+
+```bash
+(cd frontend && flutter build web --dart-define=API_BASE_URL=http://localhost:3000)
+python3 -m http.server 5173 --directory frontend/build/web
+```
+
+`flutter run -d chrome --web-port 5173` works too, with hot reload. Note that
+`flutter create --platforms=web .` also drops a stock `test/widget_test.dart`
+in; it was deleted, and should be deleted again if anyone re-runs it.
+
 `README.md` has the day-to-day commands and the four conventions every line of code follows.
 
 ## Write in the editor, verify in the terminal
