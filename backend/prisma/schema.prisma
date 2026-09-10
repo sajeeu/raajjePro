@@ -412,6 +412,11 @@ model ProviderProfile {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  /// §Phase 7: the islands this provider works on, account-level. A join row
+  /// is soft-deleted rather than removed, so this relation is never the
+  /// current list on its own — `ProviderServiceArea.removedAt` is.
+  serviceAreas ProviderServiceArea[]
+
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
   @@index([suspendedAt, id])
@@ -769,4 +774,104 @@ model Category {
 
   @@index([isActive, sortOrder])
   @@map("category")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — service areas & location
+// ---------------------------------------------------------------------------
+
+/// One inhabited island of the Maldives (§Phase 7, §0.0 item 12).
+///
+/// **A name is not an identifier and never was.** Sixteen normalised names
+/// occur in more than one atoll and `Meedhoo` exists in three, so this carries
+/// a UUID like every other entity (invariant 8) and nothing — a service area,
+/// a booking location, a search filter — may store or match on the name.
+///
+/// Seeded from `docs/data/inhabited-islands.json`, the ministry register
+/// extract, by `npm run db:seed`. Every derived column below is recomputed on
+/// each seed run; the register is the source and none of them is anybody's to
+/// edit.
+model Island {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// What the bootstrap keys on: `"<atollAbbr>:<name>"`, unique across the
+  /// register. Not the name, for the same reason `Category.seedKey` is not the
+  /// name — a row renamed underneath the seed would otherwise be re-created.
+  seedKey String @unique @map("seed_key")
+
+  /// The register spelling, apostrophes preserved. `An'golhitheemu`,
+  /// `Kon'dey`, `Male'` — the apostrophe transliterates a Thaana glottal and
+  /// stripping it produces a different, wrong name. Rendering is
+  /// `displayName`'s job, not this column's.
+  name String
+
+  /// The administrative atoll, as the register writes it — `Haa Dhaalu`.
+  atollName String @map("atoll_name")
+
+  /// The standard atoll code — `HDh`, `Dh`, `GA`. This is what qualifies an
+  /// ambiguous name in the Maldivian convention (`Dh. Meedhoo`) and what
+  /// island search also matches against (`gdh` alone lists that atoll).
+  atollAbbr String @map("atoll_abbr")
+
+  /// **Computed at seed time, never hardcoded** (§0.0 item 12). True when
+  /// another island shares this island's case-folded, apostrophe-stripped
+  /// name. Grouping on the *normalised* form is the point: on the raw strings
+  /// there are 15 collisions, on the normalised form 16 — `K. Vilingili` and
+  /// `GA. Vilin'gili` are different names that search cannot tell apart, and
+  /// an exact-match grouping leaves that one pair broken.
+  nameAmbiguous Boolean @map("name_ambiguous")
+
+  /// The normalised bare name — accents folded, apostrophes and punctuation
+  /// dropped, lower-cased. Search matches *anywhere* in this.
+  searchName String @map("search_name")
+
+  /// The normalised atoll code followed by the normalised name —
+  /// `dhmeedhoo`. One column covers both halves of the search rule: a
+  /// substring of the bare name is also a substring of this, and matching it
+  /// is what makes `dh mee` find `Dh. Meedhoo` and `gdh` list that atoll.
+  searchQualified String @map("search_qualified")
+
+  /// Invariant 8's soft delete. The register loses islands (depopulation,
+  /// consolidation) and a row that has ever been a service area or a booking
+  /// location can never be removed. Phase 10b owns the admin action.
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  serviceAreas ProviderServiceArea[]
+
+  /// The natural key, so two rows cannot claim the same island of the same atoll.
+  @@unique([atollAbbr, name])
+  @@index([isActive, name])
+  @@index([searchQualified])
+  @@map("island")
+}
+
+/// The islands a provider works on (§Phase 7).
+///
+/// Account-level and provider-scoped. Phase 8 gives a *listing* its own
+/// service areas, which is what discovery reads; this is the provider's own
+/// coverage, and §Phase 6a pre-fills the wizard from it.
+model ProviderServiceArea {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  islandId String @map("island_id") @db.Uuid
+  island   Island @relation(fields: [islandId], references: [id])
+
+  addedAt DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
+
+  /// Invariant 8: removing an island from the list clears nothing and deletes
+  /// no row — it stamps this, and re-adding the island revives the same row
+  /// with a fresh `addedAt`. The unique pair below is what makes that work.
+  removedAt DateTime? @map("removed_at") @db.Timestamptz(6)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([providerProfileId, islandId])
+  @@index([islandId, removedAt])
+  @@map("provider_service_area")
 }

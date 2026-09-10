@@ -6,7 +6,9 @@
 
 Extracted 2026-09-01 from the Ministry of Fisheries and Agriculture's atoll register at `atollsofmaldives.gov.mv`, filtered to category **(I) Inhabited**. The same source also carries Resort (313), Uninhabited (553), Picnic, Proposed Resort, Industrial and Historical islands — 1,124 records in total — none of which RaajjePro needs. A service marketplace delivers to where people live.
 
-This closes the input the redesign plan flagged as the one thing only the product owner could supply. It is not yet wired into anything: it is data on disk, ready for the **Phase 7** seed. 🔧 **Phase 7, not Phase 4 — corrected 2026-09-09**, matching plan §0.0 item 12: Phase 4 seeds categories and names no island, and Phase 7's first bullet is the one that asks for this list.
+This closes the input the redesign plan flagged as the one thing only the product owner could supply. 🔧 **Phase 7, not Phase 4 — corrected 2026-09-09**, matching plan §0.0 item 12: Phase 4 seeds categories and names no island, and Phase 7's first bullet is the one that asks for this list.
+
+🔧 **Seeded 2026-09-10.** This file is no longer data on disk: `backend/src/modules/location/seed-data.ts` **reads it** — it is not transcribed into a TypeScript array, because two copies of 192 names is one copy too many — and `npm run db:seed` bootstraps it beside the twelve categories. Editing this file changes what the next seed run writes, so treat it as source. `ISLAND_REGISTER_PATH` overrides the path; the seed test uses that to seed a fixture.
 
 ## The finding that changes the design
 
@@ -18,7 +20,7 @@ This closes the input the redesign plan flagged as the one thing only the produc
 
 An unambiguous name stands alone: `Kulhudhuffushi`, not `HDh. Kulhudhuffushi`. Prefixing all 192 was considered and rejected — it adds a code to 177 names that never needed one.
 
-**Derive the ambiguous set from the data, never from a hardcoded list.** At seed time, group islands by their **case-folded, apostrophe-stripped** name and qualify every name whose group has more than one row. `duplicateNames` below records today's fifteen exact-name collisions for reference and as a test fixture; it is not the mechanism. If the register gains or loses an island the rule must follow it on its own — that is the conditional rule's one real risk, and computing it removes it.
+**Derive the ambiguous set from the data, never from a hardcoded list.** At seed time, group islands by their **case-folded, apostrophe-stripped** name and qualify every name whose group has more than one row. 🔧 **As built, the grouping runs over the `island` table rather than over this file** — search answers from the database, so what makes two names indistinguishable is two *rows* sharing a normalised name, including one an earlier register carried and this one does not. `duplicateNames` below records today's fifteen exact-name collisions for reference and as a test fixture; it is not the mechanism. If the register gains or loses an island the rule must follow it on its own — that is the conditional rule's one real risk, and computing it removes it.
 
 **Normalise before grouping, or you miss one.** On the raw strings there are 15 collisions. On the normalised form there are **16**: `K. Vilingili` and `GA. Vilin'gili` are different names, so neither is flagged by an exact-match grouping — but search is apostrophe-insensitive by the rule below, so a customer typing "Vilingili" sees both and cannot tell them apart. Grouping on the raw name would leave that one pair broken in exactly the way the rule exists to prevent.
 

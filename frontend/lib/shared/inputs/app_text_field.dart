@@ -38,6 +38,7 @@ class AppTextField extends StatefulWidget {
     this.suffix,
     this.autocorrect = true,
     this.textCapitalization = TextCapitalization.none,
+    this.autofocus = false,
   });
 
   final String label;
@@ -73,6 +74,18 @@ class AppTextField extends StatefulWidget {
   final Widget? suffix;
   final bool autocorrect;
   final TextCapitalization textCapitalization;
+
+  /// 🔧 **Added in Phase 7** — flagged rather than done silently, because this
+  /// is shared Phase 1 code. §Phase 7's island picker opens as a bottom sheet
+  /// over a screen the customer is already reading, and the sheet exists to be
+  /// typed into: 192 islands is not a browsable list, so search *is* the
+  /// control. Raising the keyboard for it is the difference between one tap
+  /// and two.
+  ///
+  /// Off by default, and it must stay off anywhere a screen simply *contains*
+  /// a field — an autofocused input on arrival steals a screen reader's
+  /// starting point and covers half the page with a keyboard.
+  final bool autofocus;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -159,6 +172,7 @@ class _AppTextFieldState extends State<AppTextField> {
     final field = TextField(
       controller: _controller,
       focusNode: _focus,
+      autofocus: widget.autofocus,
       enabled: widget.enabled,
       readOnly: widget.readOnly,
       obscureText: widget.obscureText,

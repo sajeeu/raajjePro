@@ -3,6 +3,7 @@ import type {
   VerificationTier,
   VerificationStatus,
 } from '../../generated/prisma/client.js';
+import type { IslandDto } from '../location/types.js';
 import { meetsConductFloor, NO_CONDUCT, type ProviderConductRecord } from './conduct.js';
 
 /**
@@ -131,6 +132,18 @@ export interface OwnProviderDto {
   subscriptionPriceLaari: number | null;
   /** Own-read only. Never in `PublicProviderDto`, which has no field for it. */
   paymentDetails: PaymentDetailsDto;
+  /**
+   * §Phase 7: the islands this provider works on, account-level. Here rather
+   * than behind a second URL — §Phase 7 names a POST and a DELETE on
+   * `/v1/providers/me/service-areas` and no GET, so the read went to the
+   * endpoint that already existed, additively.
+   *
+   * Deliberately **not** on `PublicProviderDto`. §Phase 8 gives a listing its
+   * own service areas and those are what discovery matches on; this is the
+   * provider's own default, and a customer reading it would be reading a
+   * coverage claim no listing has to honour.
+   */
+  serviceAreas: IslandDto[];
   /** §1a: an input to visibility, and Phase 10b's action. A suspended provider is told, never silently delisted. */
   suspended: boolean;
   suspendedReason: string | null;
@@ -191,6 +204,7 @@ export function toPublicProviderDto(
 export function toOwnProviderDto(
   row: ProviderProfile,
   conduct: ProviderConductRecord = NO_CONDUCT,
+  serviceAreas: IslandDto[] = [],
 ): OwnProviderDto {
   return {
     id: row.id,
@@ -204,6 +218,7 @@ export function toOwnProviderDto(
     acceptingNewCustomers: row.acceptingNewCustomers,
     subscriptionPriceLaari: row.subscriptionPriceLaari,
     paymentDetails: toPaymentDetailsDto(row),
+    serviceAreas,
     suspended: row.suspendedAt !== null,
     suspendedReason: row.suspendedReason,
     conduct: {

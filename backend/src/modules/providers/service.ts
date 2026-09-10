@@ -8,6 +8,8 @@ import type {
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
 import type { CategoryService } from '../categories/service.js';
+import { LocationRepository } from '../location/repository.js';
+import { toIslandDto, type IslandDto } from '../location/types.js';
 import {
   NO_CONDUCT,
   noConductRecorded,
@@ -56,9 +58,17 @@ export class ProviderProfileService {
   private readonly categories: CategoryService;
   private readonly conduct: ProviderConductSource;
   private readonly audit: AuditService;
+  /**
+   * §Phase 7's join table, read for the provider's own profile shape. The
+   * *repository* rather than `LocationService`, because that service depends
+   * on this one for §1a's implicit profile creation — taking the repository
+   * reads the same rows through the same query with no cycle to unpick.
+   */
+  private readonly locations: LocationRepository;
 
   constructor(deps: Deps) {
     this.repo = new ProviderRepository(deps.prisma);
+    this.locations = new LocationRepository(deps.prisma);
     this.categories = deps.categories;
     this.audit = deps.audit;
     this.conduct = deps.conduct ?? noConductRecorded;
@@ -97,7 +107,7 @@ export class ProviderProfileService {
         'PROVIDER_PROFILE_NOT_FOUND',
       );
     }
-    return toOwnProviderDto(row, await this.conductFor(row.id));
+    return toOwnProviderDto(row, await this.conductFor(row.id), await this.serviceAreasOf(row.id));
   }
 
   /**
@@ -149,7 +159,7 @@ export class ProviderProfileService {
       }
       return updated;
     });
-    return toOwnProviderDto(row, await this.conductFor(row.id));
+    return toOwnProviderDto(row, await this.conductFor(row.id), await this.serviceAreasOf(row.id));
   }
 
   /**
@@ -232,6 +242,12 @@ export class ProviderProfileService {
     const category = await this.categories.repo.findById(categoryId);
     if (category === null) throw new NotFoundError('No such category');
     return category.bookingMode;
+  }
+
+  /** The provider's current service areas (§Phase 7), soft-deleted rows excluded by the repository. */
+  private async serviceAreasOf(providerProfileId: string): Promise<IslandDto[]> {
+    const rows = await this.locations.findCurrentServiceAreas(providerProfileId);
+    return rows.map((row) => toIslandDto(row.island));
   }
 
   private async conductFor(providerId: string): Promise<ProviderConductRecord> {

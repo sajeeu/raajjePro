@@ -169,7 +169,11 @@ void main() {
     ) async {
       const owed = {
         'Saved': 'Phase 14',
-        'Saved preferences': 'Phase 7',
+        // 🔧 Was Phase 7 until 2026-09-10. Phase 7 seeded `Island` and
+        // built the picker but does not own this screen — §1h's "carried
+        // forward by Book Again" puts it in 17.4
+        // (`docs/decisions/19-phase-7-service-areas.md`, decision 1).
+        'Saved preferences': 'Phase 17.4',
         'Help & support': 'Phase 19b',
       };
       await bootToProfile(tester);

@@ -5,11 +5,12 @@ Feature-based, as the plan's Phase 0 requires and `frontend/CLAUDE.md` details.
 | Directory | Holds |
 |---|---|
 | `core/theme/` | The design tokens (Phase 1): `AppColors`, `AppTypography`, geometry, motion, category accents, and `AppTheme` which assembles the `ThemeData`. Import `app_theme.dart`; reach tokens with `context.colors` / `context.type` / `context.motion`. |
-| `core/domain/` | Small domain types more than one feature needs — `VerificationTier`. |
+| `core/domain/` | Small domain types more than one feature needs — `VerificationTier`, `ServiceCategory`, and Phase 7's `Island` (its `displayName` is the server's: an ambiguous name is qualified `Dh. Meedhoo`, and nothing here rebuilds that rule). |
 | `core/api/` | Phase 3's one HTTP path to the backend: `ApiClient`/`HttpApiClient`, the envelope decode, `ApiException`/`ApiNetworkException`, and the single-flight `ACCESS_TOKEN_EXPIRED` refresh-and-retry. Every feature's data layer goes through this, never `http` directly. |
 | `core/auth/` | `AuthController` and the one `AuthState` the root widget switches on (`AuthUnknown`/`AuthGuest`/`AuthSessionExpired`/`AuthSignedIn`); `AuthApi` (the typed `/v1/auth` and `/v1/users/me` calls); `TokenStore` (secure storage); `FormDraftStore` (in-memory, the Session Expired promise's mechanism); `auth_models.dart` (`UserAccount`, `PhoneNumber`, `RegisterRequest`, …). |
 | `core/crash/` | `CrashReporter` interface, pulled forward from Phase 21 — Sentry behind it, a no-op with no `SENTRY_DSN`. |
 | `core/push/` | Phase 3c. `PushMessaging` — the seam over FCM/APNs, with `UnavailablePushMessaging` behind it because no vendor account exists and **no vendor SDK is a dependency** (`docs/decisions/15-phase-3c-push.md`); `PushController` (registration, token refresh, delivery ack, sign-out cleanup); `PushApi`; `InstallationIdStore` — the stable per-install id a token refresh is keyed on. |
+| `core/location/` | Phase 7. `IslandApi` (`GET /v1/islands?search=`, unpaged by §0.0 item 12 — every match, no cap); `islandSearchProvider`, a query-keyed autoDispose family so backspacing reuses the earlier answer; `BrowsingIslandController`, the header's island **held in memory for the session only** and defaulting to nothing. Matching, ranking and the display rule are all the server's — this layer sends what was typed and hands back what came back. |
 | `core/clock.dart` | `clockProvider`, overridable in tests so a fixed `DateTime` drives OTP/rate-limit countdowns without a real `Duration` wait. |
 | `core/format/` | Small display helpers shared across features — `relative_time.dart`'s `shortDate` and `monthAndYear` (Profile's "Member since Jan 2026"). |
 | `core/` (later) | Routing, config. No feature may import another feature; they meet here. |
@@ -22,5 +23,7 @@ Feature-based, as the plan's Phase 0 requires and `frontend/CLAUDE.md` details.
 | `shared/` | The shared widgets (Phase 1), one directory per kind — `buttons/`, `cards/`, `badges/`, `chips/`, `inputs/`, `toggles/`, `rating/`, `navigation/`, `headers/`, `avatar/`, `states/`, `sheets/`, `feedback/`, `motion/`. Import them all through `shared/shared.dart`. Phase 6 added three: `navigation/settings_row.dart` and `states/inert_control.dart` moved here when a second feature needed them, and `states/unbuilt_screen.dart` is where a route lands while the phase that owns its screen has not built it. |
 | `app.dart` | The root widget: the themed `MaterialApp` and the route table. |
 | `main.dart` | Entry point only — bootstraps and calls `runApp`. |
+
+`shared/location/` holds Phase 7's two reusable controls, both built standalone rather than for a screen: `IslandSearchList` (the search field and the ranked rows — search **is** the control, 192 islands is not a browsable list, and it never auto-selects a lone match), `IslandMultiSelect` (chips plus the list, embedded by §Phase 6a's onboarding and §Phase 9's wizard step 2) and `IslandPickerSheet` (the header's single-choice sheet). The multi-select's only runnable home today is the gallery's **Island picker** section — it belongs to no screen until Phase 6a.
 
 Each later phase adds its own feature directory and nothing else. A widget that a second feature needs moves to `shared/`; it is not copied.

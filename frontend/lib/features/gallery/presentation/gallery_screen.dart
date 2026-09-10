@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:raajjepro/core/domain/island.dart';
+import 'package:raajjepro/core/location/browsing_island_controller.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -82,6 +85,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
               ),
               Expanded(
                 child: ListView(
+                  // 🔧 **Keyed in Phase 7.** The island multi-select brought a
+                  // second, nested `ListView` into the gallery, and the a11y
+                  // sweep scrolls by finding one by type — which became
+                  // ambiguous. The key names the outer list rather than
+                  // relying on tree order.
+                  key: const ValueKey('gallery-list'),
                   padding: const EdgeInsetsDirectional.fromSTEB(
                     AppSpacing.screen,
                     AppSpacing.sm,
@@ -106,6 +115,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     const _NavSection(),
                     const _SaveHeartSection(),
                     const _StatesSection(),
+                    // Before the sheet section on purpose: the a11y sweep
+                    // scrolls to the bottom and then reaches for "Open a
+                    // sheet", so that specimen has to stay the last one.
+                    _LocationSection(overrides: _overrides),
                     _SheetSection(overrides: _overrides),
                   ],
                 ),
@@ -1205,6 +1218,88 @@ class _SheetSection extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Location — Phase 7
+
+/// The island controls (§Phase 7), against the **real** `GET /v1/islands`.
+///
+/// This is where §Phase 7's "the multi-select works standalone against real
+/// API data" is actually exercisable by hand: the widget is not
+/// screen-specific — §Phase 6a's onboarding and §Phase 9's wizard step 2 embed
+/// the same one — so the gallery is its only home until a screen owns it.
+///
+/// Nothing here prints a count of islands (§0.0 item 12), and neither control
+/// selects anything on its own.
+class _LocationSection extends StatefulWidget {
+  const _LocationSection({required this.overrides});
+
+  final GalleryOverrides overrides;
+
+  @override
+  State<_LocationSection> createState() => _LocationSectionState();
+}
+
+class _LocationSectionState extends State<_LocationSection> {
+  List<Island> _selected = const [];
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Island picker',
+      note:
+          'Search is the control, not a filter over a list. Matches anywhere in '
+          'the name and on the atoll code; never auto-selects.',
+      children: [
+        _Specimen(
+          'multi-select — live search',
+          child: _panel(
+            context,
+            // No `maxListHeight`: the gallery is a scrolling page, and that
+            // is the case the widget's default is built for — the list grows
+            // and this page scrolls it, exactly as §Phase 9's wizard step 2
+            // will.
+            IslandMultiSelect(
+              selected: _selected,
+              onChanged: (next) => setState(() => _selected = next),
+            ),
+          ),
+        ),
+        _Specimen(
+          'header sheet — single choice, session-scoped',
+          child: Consumer(
+            builder: (context, ref, _) {
+              final chosen = ref.watch(browsingIslandProvider);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppButton.secondary(
+                    label: 'Choose your island',
+                    onPressed: () => showAppBottomSheet<Island>(
+                      context: context,
+                      barrierLabel: 'Close island picker',
+                      // The route sits on the root navigator, above the
+                      // gallery's wrappers, so the switches are re-applied.
+                      builder: (ctx) =>
+                          widget.overrides.wrap(ctx, const IslandPickerSheet()),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    chosen == null
+                        ? 'Browsing everywhere'
+                        : 'Browsing ${chosen.displayName} · ${chosen.atollName}',
+                    style: context.type.secondary,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],

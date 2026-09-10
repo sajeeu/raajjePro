@@ -22,7 +22,7 @@ import 'package:raajjepro/shared/shared.dart';
 /// **Every one of the five rows navigates**, which §Phase 6's Done-when
 /// requires, and only two of the five destinations exist today: Account
 /// settings is Phase 3's real screen and Legal is Phase 3's placeholder
-/// index. Saved (Phase 14), Saved preferences (Phase 7) and Help & support
+/// index. Saved (Phase 14), Saved preferences (Phase 17.4) and Help & support
 /// (Phase 19b) land on [UnbuiltScreen], which names the owing phase rather
 /// than doing nothing. The four booking tiles do the same, each carrying its
 /// own tab so Round 48 §2's "four labels, one destination" defect does not

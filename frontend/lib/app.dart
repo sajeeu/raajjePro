@@ -97,9 +97,19 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         AppRoutes.savedPreferences: (_) => const UnbuiltScreen(
           title: 'Saved preferences',
           // Deferred out of Phase 3's Account settings and past Phase 6:
-          // labelled addresses need `Island`, which Phase 7 seeds
+          // labelled addresses need `Island`
           // (`docs/decisions/12-phase-3-identity.md`, decision 2).
-          owedBy: 'Phase 7',
+          //
+          // 🔧 **Phase 7 built `Island` and did not take this screen.**
+          // §Phase 7's bullets and Done-when name it nowhere, and no section
+          // of the plan specifies its entity shape or endpoints, so Phase 7
+          // declined to invent them
+          // (`docs/decisions/19-phase-7-service-areas.md`, decision 1).
+          // §1h is what asks for it — saved addresses, preferred windows and
+          // standing instructions "reused across bookings" and "carried
+          // forward by Book Again" — which is Phase 17.4's slice, and before
+          // bookings exist a saved preference has nothing to be used by.
+          owedBy: 'Phase 17.4',
         ),
         AppRoutes.help: (_) =>
             const UnbuiltScreen(title: 'Help & support', owedBy: 'Phase 19b'),

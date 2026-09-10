@@ -2,9 +2,14 @@ import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
+
+import '../../helpers/fake_api.dart';
+import '../../helpers/islands.dart';
 
 /// Plan §Phase 1, Done when: "the gallery renders every widget; a11y
 /// criteria verified … at 200% text scale; the gallery also renders
@@ -44,8 +49,24 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 
+    // 🔧 **A ProviderScope, new in Phase 7.** The gallery was Riverpod-free
+    // until §Phase 7's island multi-select became its first data-driven
+    // specimen — it searches `GET /v1/islands`, which is the point of it
+    // ("works standalone against real API data"). The API is faked here for
+    // the same reason every other screen test fakes it: an a11y sweep must
+    // not depend on a server, and the audit below then covers the island rows
+    // as it covers every other control.
+    final api = FakeApiClient()
+      ..on('GET', '/v1/islands', (_) => {'_list': sampleIslands()});
+
     await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.light(), home: const GalleryScreen()),
+      ProviderScope(
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const GalleryScreen(),
+        ),
+      ),
     );
     // The gallery's own switches are the real code path, so use them.
     if (rtl) await tester.tap(find.text('RTL'));
@@ -178,7 +199,7 @@ void main() {
 
   /// Scrolls to the end in view-height steps, auditing at each stop.
   Future<void> scrollAndAudit(WidgetTester tester, String scenario) async {
-    final list = find.byType(ListView);
+    final list = find.byKey(const ValueKey('gallery-list'));
     final semantics = <String>{};
     final clipping = <String>{};
     auditedControls = 0;

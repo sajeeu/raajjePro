@@ -27,6 +27,9 @@ import { AdminAuthService } from './modules/admin-auth/service.js';
 import { registerAuditRoutes } from './modules/audit/routes.js';
 import { registerCategoryRoutes } from './modules/categories/routes.js';
 import { CategoryService } from './modules/categories/service.js';
+import { serviceAreaExportContributor } from './modules/location/export.js';
+import { registerLocationRoutes } from './modules/location/routes.js';
+import { LocationService } from './modules/location/service.js';
 import { registerProviderAnonymisation } from './modules/providers/anonymise.js';
 import type { ProviderConductSource } from './modules/providers/conduct.js';
 import { registerProviderRoutes } from './modules/providers/routes.js';
@@ -94,6 +97,7 @@ declare module 'fastify' {
     audit: AuditService;
     categories: CategoryService;
     providers: ProviderProfileService;
+    location: LocationService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
     auth: AuthService;
@@ -194,16 +198,25 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // Phase 8 supplies the published-listing source, Phase 11 the conduct
   // source. Until then nobody is publicly visible and no conduct rate is
   // computable — which is the honest answer, not a placeholder.
+  const providers = new ProviderProfileService({
+    prisma: deps.prisma,
+    categories,
+    audit,
+    ...(deps.publishedListings === undefined ? {} : { listings: deps.publishedListings }),
+    ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
+  });
+  app.decorate('providers', providers);
+
+  // Phase 7. The island register and the provider service areas over it.
+  // Depends on `providers` for §1a's implicit profile creation — declaring
+  // where you work is acting as a provider — and the dependency runs one way:
+  // the provider profile reads the join table through `LocationRepository`,
+  // never through this service.
   app.decorate(
-    'providers',
-    new ProviderProfileService({
-      prisma: deps.prisma,
-      categories,
-      audit,
-      ...(deps.publishedListings === undefined ? {} : { listings: deps.publishedListings }),
-      ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
-    }),
+    'location',
+    new LocationService({ prisma: deps.prisma, providers, clock: deps.clock }),
   );
+  exportContributors.register(serviceAreaExportContributor(deps.prisma));
 
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
@@ -290,6 +303,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerAuditRoutes(app);
   registerCategoryRoutes(app);
   registerProviderRoutes(app);
+  registerLocationRoutes(app);
   registerPushRoutes(app);
   registerEmailLogRoutes(app);
   await registerSesEventRoutes(app);

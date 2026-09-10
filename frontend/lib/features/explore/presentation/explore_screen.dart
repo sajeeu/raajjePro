@@ -4,6 +4,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/domain/category.dart';
+import 'package:raajjepro/core/location/browsing_island_controller.dart';
 import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/explore/controller/categories_controller.dart';
@@ -26,10 +27,11 @@ import 'package:raajjepro/shared/shared.dart';
 /// the island pill (Phase 7), the search field (Phase 15), the Saved heart
 /// (Phase 14) and the notification bell (Phase 19).
 ///
-/// 🔧 **Two of them are no longer inert.** Phase 6 built Profile, so the
-/// header's account disc and the `Profile` nav tab now go there — they were
-/// the two this screen recorded as owed by Phase 6, and their tripwire tests
-/// were removed with the wiring, which is what those tests exist to force.
+/// 🔧 **Three of them are no longer inert.** Phase 6 built Profile, so the
+/// header's account disc and the `Profile` nav tab now go there, and Phase 7
+/// built the island picker, so the header pill opens it — each was recorded as
+/// owed by the phase that has now paid, and their tripwire tests were removed
+/// with the wiring, which is what those tests exist to force.
 ///
 /// **One control the prototype has is deliberately absent, not inert:** the
 /// "Something urgent? Get help now" entry. Round 23 removed the per-card
@@ -53,11 +55,7 @@ class ExploreScreen extends ConsumerWidget {
       body: Column(
         children: [
           const AppHeader.brand(
-            leadingSlot: InertControl(
-              label: 'Island',
-              owedBy: 'Phase 7',
-              child: _IslandPill(),
-            ),
+            leadingSlot: _IslandPill(),
             actions: [
               // An inert action: the disc renders as it always does and
               // reports itself disabled. Phase 19 supplies the destination.
@@ -223,16 +221,26 @@ class _AccountAvatar extends ConsumerWidget {
   }
 }
 
-class _IslandPill extends StatelessWidget {
+/// The header's browsing-island control (§Phase 7).
+///
+/// Reads [browsingIslandProvider], which holds the choice in memory for the
+/// session. Before anything is chosen the pill names the *action* — "Island" —
+/// rather than asserting a location: nothing defaults it, and printing a
+/// place the customer has not picked is the same mistake as auto-selecting a
+/// lone search match.
+class _IslandPill extends ConsumerWidget {
   const _IslandPill();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final type = context.type;
+    final chosen = ref.watch(browsingIslandProvider);
     return Pressable(
-      onTap: null,
-      semanticLabel: 'Choose your island',
+      onTap: () => showIslandPicker(context),
+      semanticLabel: chosen == null
+          ? 'Choose your island'
+          : 'Browsing ${chosen.displayName}. Change island',
       focusRadius: AppRadius.pill,
       minSize: 0,
       builder: (context, s) => Container(
@@ -257,10 +265,10 @@ class _IslandPill extends StatelessWidget {
             const SizedBox(width: AppSpacing.xxs + 1),
             Flexible(
               child: Text(
-                // Not a stored preference and not a default the product has
-                // chosen — Phase 7 owns island selection, and until then the
-                // pill names the action rather than asserting a location.
-                'Island',
+                // The qualified display name, so a customer browsing from
+                // `Dh. Meedhoo` is not shown the same pill as one browsing
+                // from `S. Meedhoo`.
+                chosen?.displayName ?? 'Island',
                 overflow: TextOverflow.ellipsis,
                 style: type.caption.copyWith(
                   fontWeight: FontWeight.w700,

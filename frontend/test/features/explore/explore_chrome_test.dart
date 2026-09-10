@@ -23,12 +23,12 @@ import 'helpers.dart';
 /// search, the search test below fails and has to be deleted on purpose** —
 /// which is the intended cost.
 ///
-/// 🔧 **Two of them have now been paid.** Phase 6 built Profile, so the
-/// header's account disc and the `Profile` nav tab have real destinations and
-/// their inert assertions are gone — replaced below by tests of where they
-/// go, which is the state Phase 4 was holding the line for. The island pill,
-/// the search field, the Saved heart, the bell and the category tiles are
-/// still inert and still asserted.
+/// 🔧 **Three of them have now been paid.** Phase 6 built Profile, so the
+/// header's account disc and the `Profile` nav tab have real destinations, and
+/// Phase 7 built the island picker, so the header pill opens it. Their inert
+/// assertions are gone — replaced by tests of where they go, which is the
+/// state Phase 4 was holding the line for. The search field, the Saved heart,
+/// the bell and the category tiles are still inert and still asserted.
 ///
 /// The one control that is *absent* rather than inert is the emergency entry,
 /// and it has its own test here for the same reason: it must not reappear as
@@ -73,19 +73,6 @@ void main() {
   }
 
   group('present, and doing nothing', () {
-    testWidgets('the island pill is drawn and owes Phase 7', (tester) async {
-      await pump(tester);
-      expect(inert(tester, 'Island').owedBy, 'Phase 7');
-
-      final pressable = tester.widget<Pressable>(
-        find.descendant(
-          of: find.byWidget(inert(tester, 'Island')),
-          matching: find.byType(Pressable),
-        ),
-      );
-      expect(pressable.onTap, isNull);
-    });
-
     testWidgets(
       'the search field is drawn, owes Phase 15, and takes no input',
       (tester) async {
