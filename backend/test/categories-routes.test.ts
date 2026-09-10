@@ -244,20 +244,16 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the category endpoints',
       expect(second.json<Err>().error.code).toBe('CATEGORY_NAME_TAKEN');
     });
 
-    it('refuses an emergency-capable category with no tier bar or answer window', async () => {
+    it('refuses to admit a new category to emergency dispatch at all', async () => {
+      // 🔧 Owner's decision 2026-09-10: emergency eligibility is code-defined
+      // (§Phase 10b). This asserted the coherence rule instead — that a
+      // capable category needs a tier and a window — which was reachable only
+      // because the API let a caller set capability in the first place.
       const res = await create(minimal({ emergencyCapable: true }));
       expect(res.statusCode).toBe(422);
       const body = res.json<Err>();
-      expect(body.error.code).toBe('CATEGORY_CONFIG_INCOHERENT');
-      expect(body.error.details?.map((d) => d.path).sort()).toEqual([
-        'emergencyAcceptWindowMinutes',
-        'emergencyMinimumTier',
-      ]);
-    });
-
-    it('refuses a tier bar on a category that is not emergency-capable', async () => {
-      const res = await create(minimal({ emergencyMinimumTier: 'silver' }));
-      expect(res.statusCode).toBe(422);
+      expect(body.error.code).toBe('CATEGORY_FIELD_CODE_DEFINED');
+      expect(body.error.details?.map((d) => d.path)).toEqual(['emergencyCapable']);
     });
 
     it('refuses one quote window without the other', async () => {
@@ -266,18 +262,28 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the category endpoints',
       expect(res.json<Err>().error.details?.[0]?.path).toBe('quoteApprovalMinutes');
     });
 
-    it('accepts a fully-specified emergency category', async () => {
+    it('accepts a fully-specified non-emergency category', async () => {
+      // What a thirteenth category can be: quoting, on any lead time, with
+      // every editable number set. What it cannot be is emergency-capable —
+      // the four that are are decided in code and seeded, not created here.
       const res = await create(
         minimal({
-          emergencyCapable: true,
-          emergencyMinimumTier: 'gold',
-          emergencyAcceptWindowMinutes: 30,
-          emergencyEtaPresetsMinutes: [15, 30],
+          minimumLeadTimeMinutes: 180,
           quoteExpiryMinutes: 120,
           quoteApprovalMinutes: 240,
+          callbackEligible: true,
         }),
       );
       expect(res.statusCode).toBe(201);
+      const created = res.json<Envelope<AdminCategoryDto>>().data;
+      expect(created.emergencyCapable).toBe(false);
+      expect(created.emergencyMinimumTier).toBeNull();
+    });
+
+    it('refuses an explicit tier bar as a code-defined field, not as incoherence', async () => {
+      const res = await create(minimal({ emergencyMinimumTier: 'silver' }));
+      expect(res.statusCode).toBe(422);
+      expect(res.json<Err>().error.code).toBe('CATEGORY_FIELD_CODE_DEFINED');
     });
 
     it('rejects a hex value where a colour token belongs', async () => {
@@ -305,25 +311,48 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the category endpoints',
     });
 
     it('checks coherence against the resulting row, not against the patch alone', async () => {
+      // Demonstrated on the quote pair rather than the emergency fields, which
+      // a patch can no longer touch: both windows or neither, and clearing one
+      // is invalid only because the *stored* row still has the other.
       const created = (
-        await create(
-          minimal({
-            emergencyCapable: true,
-            emergencyMinimumTier: 'silver',
-            emergencyAcceptWindowMinutes: 30,
-          }),
-        )
+        await create(minimal({ quoteExpiryMinutes: 120, quoteApprovalMinutes: 240 }))
       ).json<Envelope<AdminCategoryDto>>().data;
 
-      // Clearing the tier bar is only invalid because the stored row is capable.
       const res = await app.inject({
         method: 'PATCH',
         url: `/v1/admin/categories/${created.id}`,
         headers: { cookie, ...CSRF },
-        payload: { emergencyMinimumTier: null, reason: 'oops' },
+        payload: { quoteExpiryMinutes: null, reason: 'oops' },
       });
       expect(res.statusCode).toBe(422);
-      expect(res.json<Err>().error.details?.[0]?.path).toBe('emergencyMinimumTier');
+      expect(res.json<Err>().error.code).toBe('CATEGORY_CONFIG_INCOHERENT');
+      expect(res.json<Err>().error.details?.[0]?.path).toBe('quoteApprovalMinutes');
+    });
+
+    it('refuses a patch that would change emergency eligibility', async () => {
+      const created = (await create(minimal())).json<Envelope<AdminCategoryDto>>().data;
+      for (const payload of [
+        { emergencyCapable: true, reason: 'admit it' },
+        { emergencyMinimumTier: 'silver' as const, reason: 'lower the bar' },
+      ]) {
+        const res = await app.inject({
+          method: 'PATCH',
+          url: `/v1/admin/categories/${created.id}`,
+          headers: { cookie, ...CSRF },
+          payload,
+        });
+        expect(res.statusCode).toBe(422);
+        expect(res.json<Err>().error.code).toBe('CATEGORY_FIELD_CODE_DEFINED');
+      }
+
+      // And the editable numbers around it still patch.
+      const ok = await app.inject({
+        method: 'PATCH',
+        url: `/v1/admin/categories/${created.id}`,
+        headers: { cookie, ...CSRF },
+        payload: { minimumLeadTimeMinutes: 240, callbackEligible: true, reason: 'tune' },
+      });
+      expect(ok.statusCode).toBe(200);
     });
 
     it('404s an unknown id', async () => {

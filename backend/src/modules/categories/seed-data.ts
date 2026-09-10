@@ -10,6 +10,13 @@ import type { BookingMode, VerificationTier } from '../../generated/prisma/clien
  * stay admin-editable from Phase 10b — so a constant copied into a service
  * would go stale the first time an admin changes one.
  *
+ * Two exceptions, as of 2026-09-10: `emergencyCapable` and
+ * `emergencyMinimumTier` are **code-defined** (§Phase 10b) and the admin
+ * endpoints refuse them. They are still columns, still seeded and still read
+ * rather than hardcoded by consumers — what they are not is editable from the
+ * panel, because admitting a category to emergency dispatch is a safety
+ * decision rather than a scheduling one.
+ *
  * The catalogue itself is not closed. This is seed data, not an enum: the
  * Done-when requires a thirteenth category added through the API to appear
  * in Explore with no rebuild, so no validator anywhere may check a name

@@ -26,6 +26,51 @@ interface Deps {
  * and invariant 13's quote clock both read these columns and cannot evaluate
  * against a half-set row. Those coherence rules live in `assertCoherent`.
  */
+/**
+ * Emergency eligibility is code-defined, not configuration (§Phase 10b, owner's
+ * decision 2026-09-10). Plumbing, Electrical, AC Repair and **Moving** are the
+ * four, and the tier bar on each is §1c's — `gold` for Plumbing and Electrical,
+ * `silver` for AC Repair and Moving.
+ *
+ * The columns exist and are seeded because every consumer reads them rather
+ * than hardcoding a list; what does not exist is a way to change them from the
+ * panel. Admitting a category to emergency dispatch decides who gets sent to a
+ * stranger's home at 2am on a gas leak, and the numbers *around* it stay
+ * editable — lead time, the accept window, the ETA presets, the quote windows,
+ * `callbackEligible`. This is the one field where a wrong value is a safety
+ * question rather than a scheduling one.
+ *
+ * Refused rather than silently ignored: an admin who submits a change and is
+ * told nothing has no way to learn it did not take.
+ */
+const CODE_DEFINED = ['emergencyCapable', 'emergencyMinimumTier'] as const;
+
+/**
+ * On a patch, *any* value for these fields is a change to refuse. On a create
+ * the body carries Zod defaults, so `emergencyCapable` is always present as
+ * `false` — refusing presence would refuse every create, and what matters is
+ * an attempt to admit the new category, not the default that keeps it out.
+ */
+function assertNotCodeDefined(
+  patch: Record<string, unknown>,
+  mode: 'patch' | 'create' = 'patch',
+): void {
+  const attempted = CODE_DEFINED.filter((k) => {
+    const value = patch[k];
+    if (value === undefined) return false;
+    if (mode === 'patch') return true;
+    return k === 'emergencyCapable' ? value === true : value !== null;
+  });
+  if (attempted.length === 0) return;
+  throw new BusinessRuleError(
+    'CATEGORY_FIELD_CODE_DEFINED',
+    'Emergency eligibility is set in code, not here. Plumbing, Electrical, ' +
+      'AC Repair and Moving are emergency-capable, each at the tier §1c sets. ' +
+      'The timings and presets around it are editable.',
+    attempted.map((path) => ({ path, message: 'Not editable from the admin panel' })),
+  );
+}
+
 export class CategoryService {
   readonly repo: CategoryRepository;
   private readonly audit: AuditService;
@@ -80,6 +125,10 @@ export class CategoryService {
     actor: { adminId: string; meta: RequestMeta },
   ): Promise<AdminCategoryDto> {
     const { reason, ...fields } = body;
+    // A thirteenth category must not be able to admit itself to emergency
+    // dispatch either: the field defaults to false in the create body, and an
+    // explicit value is refused the same way a patch is.
+    assertNotCodeDefined(body, 'create');
     assertCoherent(fields);
     const clash = await this.repo.findByName(fields.name);
     if (clash !== null) {
@@ -103,6 +152,7 @@ export class CategoryService {
     actor: { adminId: string; meta: RequestMeta },
   ): Promise<AdminCategoryDto> {
     const { reason, ...patch } = body;
+    assertNotCodeDefined(patch);
     const current = await this.repo.findById(id);
     if (current === null) throw new NotFoundError('No such category');
 
