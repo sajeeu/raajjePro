@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.21 — read this before §0.1–0.3
+### 0.0 Revision 5.22 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -126,7 +126,11 @@ These were defects rather than choices — the spec contradicted itself or left 
 
 🔧 **Three defects inside the mockups themselves**, unrelated to the plan: step 3 renders the **Price field twice**; step 6 lists **FAQs twice**; Service Preview is titled *"Home Deep Cleaning"* under a Cleaning tag while its description is about **AC installation and repair**.
 
-### Screens with no mockup — 🔧 19, rated by how much a mockup actually buys you (Round 20)
+### Screens with no mockup — 🔧 **3 of the original 19, and all three are the admin panel** (Round 20's rating kept below)
+
+🔧 **Corrected 2026-09-10 — sixteen of these nineteen have since been designed.** Sessions 1–14 drew them, and 61 artboards are committed in `mockups/design-composer/`. Mapping this table against them leaves exactly three undesigned, and they are one surface: **the admin panel** — 10a's money and identity queues, 10b's accounts, config, search and shell, and 10c's ops dashboard. Its brief is `docs/design/sessions/15-admin-panel.md`. The header said 19 until today, and two phase sections (§Phase 6a, §Phase 17) still told a builder to propose a design that already existed — the drift this document's own §0.0 rule exists to catch, found by checking the artboard directory against the table rather than reading the table.
+
+The table stays because Round 20's rating is a record of a real judgement, not a to-do list. For each row below, assume designed unless it is one of the three admin rows.
 
 The agent proposes a design, you approve it, and only then does that phase's code get written. These are **not** lesser screens — they include the entire booking flow and every admin surface.
 
@@ -809,7 +813,7 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 
 🔧 **New in v5.** Earlier revisions had no dedicated onboarding screen — starting a draft listing was the only moment that created a Provider Profile, and the account-level fields (phone, payment details, `acceptingNewCustomers`) were collected later, awkwardly, from inside the dashboard after the provider already had a live listing. v5 gives onboarding a real flow, sequenced before the wizard rather than folded into it.
 
-No mockup exists. Propose a design before implementing — 2–3 screens reusing the established system, not a new visual language.
+🔧 **No longer propose-first — corrected 2026-09-10.** This line read "No mockup exists. Propose a design before implementing" and was stale: the flow is designed and committed as `mockups/design-composer/Become a Provider.dc.html`, carrying the intro screen, the grouped account-details step and the service-areas step. **Build against the artboard, not a fresh proposal** — and note that its third step needs Phase 7's `Island`, so it cannot be finished before that phase.
 
 1. **Intro screen:** what being a provider on RaajjePro means in plain terms — subscription-only monetization stays invisible here (that's Phase 8a/10a's job, later), this screen is about the mechanics: publish a service, get bookings, get paid directly by the customer, communicate entirely through the app. A single CTA into the next step.
 2. **Account details step:** collects the fields Phase 5 needs before a listing can meaningfully exist, 🔧 **grouped into three sections — About you · Getting paid · Availability (Round 21)** — because the delivered design showed the ungrouped list reads as a wall.
@@ -1105,7 +1109,7 @@ Save/unsave endpoints, saved list, heart toggle wired everywhere with optimistic
 - **17.3 — `EmergencyOffer`.** bookingId, providerId, calloutFeeLaari, 🔧 **etaMinutes (Round 22 — the provider's own arrival estimate, supplied with the fee, self-declared and never presented as a guarantee)**, createdAt, state. Offers now coexist: `emergency_offered` means *collecting and awaiting the customer*, not *claimed*. Plus the 90-second collection window, the MVR 200 dispatch fee, and the no-show re-dispatch path.
 - **17.4 — the callback guarantee.** 🔧 **Eligible categories only (Round 28, `callbackEligible`)**; opt-in per listing within those, displayed as a badge. A claim within 7 days creates a **new booking linked to the original at zero cost**, so it flows through the normal machinery and appears in both histories. Declining an honoured claim routes to Phase 22 and counts against conduct. This is the clearest answer to "why book here rather than calling them directly" — going direct forfeits it.
 
-The largest phase and the highest-risk one. No mockups — propose each frontend piece before implementing.
+The largest phase and the highest-risk one. 🔧 **No longer propose-first — corrected 2026-09-10.** This line read "No mockups — propose each frontend piece before implementing" and was the stalest sentence in the document: the whole funnel is drawn and committed. `Pick a Time` · `Request a Time` · `Emergency Flow` · `Provider Emergency` · `Booking Request` · `Booking Detail` · `Quote Received` · `Propose Time and Price` · `Propose Amendment` · `Payment Step` · `Payment Received` · `Mark Complete` · `Did This Happen` · `Raise Dispute` · `Reveal Contact` · `Dispatch Fee` · `Cancel Booking` · `Recurring Booking` · `Book Again` · `My Bookings` · `Rate This Job`. Build each slice against its artboards; propose only where a piece has none.
 
 🔧 **Build in four sequential slices**, each independently testable, rather than as one unit. Phase 17 carries three booking modes, five scheduled jobs, quote flows, recurring series, reschedule, and dispute/escalation paths. Attempting it in one pass is the single largest delivery risk in this plan.
 - **17.1 — slot-based core:** create, accept, decline, claim-payment, 🔧 **withdraw-payment-claim (Round 24)**, confirm-receipt, complete, cancel, the 24-hour and 7-day jobs

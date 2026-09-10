@@ -9,6 +9,7 @@ Build **Phase 17 — Bookings Module** of RaajjePro.
 1. `01_Development_Plan_v5.md` §0.0 — the precedence rule. Where §0.1–0.3 conflict with a later section, the later section wins.
 2. **§Phase 17** — the full specification for this phase, including its **Done when** criteria.
 3. §1c in full · §1h Repeat use — this phase depends on it.
+4. 🔧 **The funnel is designed — build against the artboards.** §Phase 17 said "No mockups — propose each frontend piece" until 2026-09-10 and was the stalest line in the plan. Twenty-one artboards in `mockups/design-composer/` cover it: Pick a Time, Request a Time, Emergency Flow, Provider Emergency, Booking Request, Booking Detail, Quote Received, Propose Time and Price, Propose Amendment, Payment Step, Payment Received, Mark Complete, Did This Happen, Raise Dispute, Reveal Contact, Dispatch Fee, Cancel Booking, Recurring Booking, Book Again, My Bookings, Rate This Job. Propose only where a piece genuinely has none.
 
 ## How to work
 
