@@ -3,19 +3,27 @@ import type {
   ProviderConductSource,
 } from '../../src/modules/providers/conduct.js';
 import { NO_CONDUCT } from '../../src/modules/providers/conduct.js';
+import type { Prisma } from '../../src/generated/prisma/client.js';
 import type { PublishedListingSource } from '../../src/modules/providers/visibility.js';
 
 /**
- * The `Listing` table stand-in. §Phase 5 is sequenced before §Phase 8, so
- * there is no listing to publish — what these tests assert is the rule §1a
- * states: a provider is visible if and only if the count of published, active
- * listings is above zero. `publish` / `unpublish` move a provider across that
- * line without a Listing schema Phase 5 has no business inventing.
+ * The `Listing` table stand-in, for tests about §1a's *rule* rather than
+ * about listings.
+ *
+ * §Phase 5 was sequenced before §Phase 8, so there was nothing to publish and
+ * this is how those tests move a provider across §1a's line. It survives
+ * Phase 8 because it still earns its place: a test of the visibility helper
+ * should not have to build a publishable listing — six required fields, a
+ * category, an island and an uploaded cover — to say "this provider has one".
+ *
+ * 🔧 **Predicate-shaped since Phase 8 (ledger P5-1).** The seam used to hand
+ * back a set and the helper scanned candidates in batches; now the rule is
+ * one SQL query, so the fake supplies `id IN (…)` over the providers it was
+ * told about. `test/listings-visibility.test.ts` is where the same assertions
+ * run against real published rows.
  */
 export class FakeListings implements PublishedListingSource {
   private readonly published = new Set<string>();
-  /** Every batch this source was asked about — so a test can prove the helper batches rather than querying per provider. */
-  readonly calls: string[][] = [];
 
   /** The provider has at least one published, active listing. */
   publish(providerId: string): void {
@@ -27,9 +35,8 @@ export class FakeListings implements PublishedListingSource {
     this.published.delete(providerId);
   }
 
-  providersWithPublishedListing(providerIds: string[]): Promise<Set<string>> {
-    this.calls.push(providerIds);
-    return Promise.resolve(new Set(providerIds.filter((id) => this.published.has(id))));
+  havingPublishedListing(): Prisma.ProviderProfileWhereInput {
+    return { id: { in: [...this.published] } };
   }
 }
 

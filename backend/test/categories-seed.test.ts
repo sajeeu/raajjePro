@@ -247,5 +247,59 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the seeded twelve', () =
         data: { minimumLeadTimeMinutes: before.minimumLeadTimeMinutes },
       });
     });
+
+    describe('suggested tags — §Phase 9’s step-1 chips', () => {
+      it('seeds all twelve categories from the prototype’s map', async () => {
+        await seedCategories(prisma);
+        const rows = await prisma.category.findMany({ where: { seedKey: { not: null } } });
+        const seeded = rows.filter((r) => CATEGORY_SEED.some((c) => c.name === r.seedKey));
+        expect(seeded).toHaveLength(12);
+        for (const row of seeded) {
+          expect(row.suggestedTags.length).toBeGreaterThan(0);
+        }
+        // Transcribed, not invented — the values are the designer's.
+        const electrical = seeded.find((r) => r.seedKey === 'Electrical');
+        expect(electrical?.suggestedTags).toEqual([
+          'Wiring',
+          'Fault finding',
+          'Rewiring',
+          'Lighting',
+          'Switchboards',
+          'New sockets',
+          'Safety check',
+        ]);
+      });
+
+      it('recomputes them on an existing row, unlike every other column', async () => {
+        // Create-if-absent would leave the twelve rows Phase 4 already made
+        // with an empty chip list forever. Safe to overwrite because §Phase
+        // 10b's editable Category fields are enumerated and this is not among
+        // them, so there is no admin edit to revert.
+        const before = await prisma.category.findUniqueOrThrow({ where: { seedKey: 'Cleaning' } });
+        await prisma.category.update({
+          where: { id: before.id },
+          data: { suggestedTags: ['stale'] },
+        });
+
+        const result = await seedCategories(prisma);
+
+        expect(result.tagsRefreshed).toContain('Cleaning');
+        const after = await prisma.category.findUniqueOrThrow({ where: { seedKey: 'Cleaning' } });
+        expect(after.suggestedTags).toEqual(before.suggestedTags);
+        // …and it left everything else exactly as it was.
+        expect(after.minimumLeadTimeMinutes).toBe(before.minimumLeadTimeMinutes);
+        expect(after.name).toBe(before.name);
+      });
+
+      it('reports nothing refreshed on a second run', async () => {
+        await seedCategories(prisma);
+        const again = await seedCategories(prisma);
+        expect(again.tagsRefreshed).toEqual([]);
+      });
+    });
   });
+  /**
+   * §Phase 8 (2026-09-10) added `suggestedTags` and made it the one column
+   * this seed rewrites on an existing row.
+   */
 });

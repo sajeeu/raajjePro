@@ -7,8 +7,9 @@ type Db = PrismaClient | Prisma.TransactionClient;
 /**
  * Idempotent profile creation (§1a, §Phase 5). Called by Phase 6a's
  * onboarding flow and — as a fallback for anyone who reaches the wizard
- * without it — by Phase 8's draft-creation endpoint. Phase 3's
- * provider-variant registration calls it too, inside its transaction.
+ * without it — by Phase 8's draft-creation endpoint
+ * (`POST /v1/providers/me/listings`). Phase 3's provider-variant
+ * registration calls it too, inside its transaction.
  *
  * A module-level function rather than a method so all four call sites share
  * one implementation: the `@unique` on `userId` means a second row is

@@ -32,8 +32,11 @@ export function registerProviderRoutes(app: FastifyInstance): void {
   // §Phase 6's role switcher routes on it, so a read that created a row would
   // turn a customer into a provider permanently (invariant 8: nothing is ever
   // hard-deleted). §1a's creation moments are Phase 6a's onboarding and the
-  // first `POST /v1/listings`; the PATCH below is the third, because sending
-  // business details is acting as a provider. Opening a screen is not.
+  // first draft save — which Phase 8 built at
+  // `POST /v1/providers/me/listings`, not the `/v1/listings` this comment
+  // predicted; the moment is unchanged, only the URL. The PATCH below is the
+  // third, because sending business details is acting as a provider.
+  // Opening a screen is not.
   //
   // Email verification is deliberately NOT required: §1c's stricter guard
   // gates booking, enquiry and messaging, and §1a says dashboard access is

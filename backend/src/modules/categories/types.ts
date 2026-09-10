@@ -27,6 +27,12 @@ export interface CategoryDto {
   quoteApprovalMinutes: number | null;
   callbackEligible: boolean;
   occasionPresets: string[];
+  /**
+   * §Phase 9's step-1 chips (§Phase 8). Suggestions only — a listing's own
+   * `tags` are free text underneath them, and nothing validates a tag
+   * against this list.
+   */
+  suggestedTags: string[];
 }
 
 /** The admin shape: the public one plus the soft-delete flag, so a deactivated row is reachable again. */
@@ -52,6 +58,7 @@ export function toCategoryDto(row: Category): CategoryDto {
     quoteApprovalMinutes: row.quoteApprovalMinutes,
     callbackEligible: row.callbackEligible,
     occasionPresets: row.occasionPresets,
+    suggestedTags: row.suggestedTags,
   };
 }
 

@@ -22,13 +22,20 @@ async function main(): Promise<void> {
   const config = loadConfig(process.env);
   const prisma = createPrismaClient(config.databaseUrl);
   try {
-    const { created, adopted, skipped } = await seedCategories(prisma);
+    const { created, adopted, skipped, tagsRefreshed } = await seedCategories(prisma);
     if (created.length > 0) process.stdout.write(`Created: ${created.join(', ')}\n`);
     if (adopted.length > 0) process.stdout.write(`Adopted: ${adopted.join(', ')}\n`);
     if (skipped.length > 0) process.stdout.write(`Already present: ${skipped.join(', ')}\n`);
+    if (tagsRefreshed.length > 0) {
+      // Named rather than counted: `suggestedTags` is the one column this
+      // seed rewrites on an existing row, so a run that changed twelve of
+      // them should be legible as such rather than as a silent upsert.
+      process.stdout.write(`Suggested tags refreshed on: ${tagsRefreshed.join(', ')}\n`);
+    }
     process.stdout.write(
       `Categories: ${String(created.length)} created, ${String(adopted.length)} adopted, ` +
-        `${String(skipped.length)} left alone.\n`,
+        `${String(skipped.length)} left alone, ` +
+        `${String(tagsRefreshed.length)} with tags refreshed.\n`,
     );
 
     const islands = await seedIslands(prisma);

@@ -8,6 +8,9 @@ const minimal = {
   ADMIN_TOTP_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
   EMAIL_FROM_ADDRESS: 'no-reply@example.test',
   AUTH_JWT_SECRET: Buffer.alloc(32, 9).toString('base64'),
+  // Phase 8. Required like the other two keys, and distinct from both — the
+  // media token is the ONLY authorization on the upload route.
+  MEDIA_SIGNING_KEY: Buffer.alloc(32, 11).toString('base64'),
 };
 
 describe('loadConfig', () => {
@@ -25,6 +28,9 @@ describe('loadConfig', () => {
     expect(config.rateLimit.authPerMinute).toBe(300);
     expect(config.email.transport).toBe('file');
     expect(config.push.transport).toBe('file');
+    expect(config.media.transport).toBe('file');
+    expect(config.media.baseUrl).toBe('http://localhost:3000');
+    expect(config.media.signingKey).toEqual(Buffer.alloc(32, 11));
     expect(config.admin.totpEncryptionKey).toEqual(Buffer.alloc(32, 7));
     expect(config.auth.accessTokenMinutes).toBe(15);
     expect(config.auth.refreshTokenDays).toBe(30);
@@ -111,8 +117,82 @@ describe('loadConfig', () => {
       SES_CONFIGURATION_SET_NOTIFICATION: 'n',
       SES_CONFIGURATION_SET_MARKETING: 'm',
       SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:1:t',
+      MEDIA_BASE_URL: 'https://api.raajjepro.mv',
     };
-    expect(loadConfig(production).push.transport).toBe('file');
+    // The media guard below makes production unbootable today on purpose, so
+    // this asserts on the ISSUE LIST rather than on a successful load: what
+    // it is checking is that no issue mentions the push transport.
+    let issues: string[] = [];
+    try {
+      loadConfig(production);
+    } catch (error) {
+      issues = error instanceof ConfigError ? error.issues : [];
+    }
+    expect(issues.filter((i) => i.startsWith('PUSH_TRANSPORT'))).toEqual([]);
+  });
+
+  // 🔧 Phase 8 copies EMAIL_TRANSPORT's guard rather than half of it. The two
+  // rules are deliberately unsatisfiable together until the object store
+  // lands — `s3` is refused because it is not built, `file` is refused in
+  // production because the images would vanish on the next deploy. Production
+  // therefore cannot boot yet, and that is the honest signal.
+  it('refuses a file media store in production, and s3 everywhere', () => {
+    const production = {
+      ...minimal,
+      NODE_ENV: 'production',
+      ADMIN_ORIGIN: 'https://admin.raajjepro.mv',
+      EMAIL_TRANSPORT: 'ses',
+      AWS_REGION: 'ap-south-1',
+      SES_CONFIGURATION_SET_OTP: 'otp',
+      SES_CONFIGURATION_SET_NOTIFICATION: 'n',
+      SES_CONFIGURATION_SET_MARKETING: 'm',
+      SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:1:t',
+      MEDIA_BASE_URL: 'https://api.raajjepro.mv',
+    };
+    expect(() => loadConfig({ ...production, MEDIA_STORAGE: 'file' })).toThrow(
+      /MEDIA_STORAGE: must be "s3" in production/,
+    );
+    // …and naming s3 does not get past it either, because s3 is not built.
+    expect(() => loadConfig({ ...production, MEDIA_STORAGE: 's3' })).toThrow(
+      /"s3" is not available yet/,
+    );
+    // Outside production the file transport is the normal, working default.
+    expect(loadConfig(minimal).media.transport).toBe('file');
+  });
+
+  // Phase 8, and the same shape as the two production rules above it: a
+  // signed media URL handed to a client over http:// is a token in the clear,
+  // and that token is the only authorization the upload route has.
+  it('requires an https media base URL in production', () => {
+    const production = {
+      ...minimal,
+      NODE_ENV: 'production',
+      ADMIN_ORIGIN: 'https://admin.raajjepro.mv',
+      EMAIL_TRANSPORT: 'ses',
+      AWS_REGION: 'ap-south-1',
+      SES_CONFIGURATION_SET_OTP: 'otp',
+      SES_CONFIGURATION_SET_NOTIFICATION: 'n',
+      SES_CONFIGURATION_SET_MARKETING: 'm',
+      SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:1:t',
+    };
+    expect(() => loadConfig(production)).toThrow(/MEDIA_BASE_URL/);
+  });
+
+  // The object store is procured at deployment (§0.0 item 17), exactly like
+  // SES and the push vendors. Refused outright rather than silently falling
+  // back, so a deployment cannot believe images are landing in a bucket.
+  it('refuses MEDIA_STORAGE=s3 until the transport exists', () => {
+    expect(() => loadConfig({ ...minimal, MEDIA_STORAGE: 's3' })).toThrow(/MEDIA_STORAGE/);
+  });
+
+  // The media token is the ONLY authorization on the upload route, so a key
+  // shared with another purpose means a signature forged in one context is
+  // valid here.
+  it('refuses a media signing key reused from another purpose', () => {
+    const shared = Buffer.alloc(32, 9).toString('base64');
+    expect(() => loadConfig({ ...minimal, MEDIA_SIGNING_KEY: shared })).toThrow(
+      /MEDIA_SIGNING_KEY: must differ from|AUTH_JWT_SECRET: must differ from MEDIA_SIGNING_KEY/,
+    );
   });
 
   it('requires the SES variables only when the transport is ses', () => {

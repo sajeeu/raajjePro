@@ -95,6 +95,7 @@ export function testConfig(options: TestAppOptions = {}): Config {
     ADMIN_TOTP_ENCRYPTION_KEY:
       process.env.ADMIN_TOTP_ENCRYPTION_KEY ?? Buffer.alloc(32, 1).toString('base64'),
     AUTH_JWT_SECRET: process.env.AUTH_JWT_SECRET ?? Buffer.alloc(32, 2).toString('base64'),
+    MEDIA_SIGNING_KEY: process.env.MEDIA_SIGNING_KEY ?? Buffer.alloc(32, 3).toString('base64'),
     EMAIL_FROM_ADDRESS: 'test@raajjepro.local',
     EMAIL_TRANSPORT: 'file',
     SES_EVENTS_TOPIC_ARN: 'arn:aws:sns:ap-south-1:123456789012:raajjepro-ses-events',

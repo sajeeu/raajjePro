@@ -28,8 +28,17 @@ import { registerAuditRoutes } from './modules/audit/routes.js';
 import { registerCategoryRoutes } from './modules/categories/routes.js';
 import { CategoryService } from './modules/categories/service.js';
 import { serviceAreaExportContributor } from './modules/location/export.js';
+import { ListingEvents } from './modules/listings/events.js';
+import type { ProviderEntitlementReader } from './modules/listings/entitlements.js';
+import { registerListingRoutes } from './modules/listings/routes.js';
+import { ListingService } from './modules/listings/service.js';
+import { PUBLISHED_LISTINGS } from './modules/listings/visibility.js';
 import { registerLocationRoutes } from './modules/location/routes.js';
 import { LocationService } from './modules/location/service.js';
+import { registerMediaRoutes } from './modules/media/routes.js';
+import { MediaService } from './modules/media/service.js';
+import { createMediaStorage } from './modules/media/transports/file.js';
+import type { MediaStorage } from './modules/media/types.js';
 import { registerProviderAnonymisation } from './modules/providers/anonymise.js';
 import type { ProviderConductSource } from './modules/providers/conduct.js';
 import { registerProviderRoutes } from './modules/providers/routes.js';
@@ -57,6 +66,7 @@ import { PushRegistrationService } from './modules/push/service.js';
 import { FallbackSweep } from './modules/push/sweep.js';
 import type { PushTransport } from './modules/push/types.js';
 import { anonymiseAccountsJob } from './jobs/anonymise-accounts.js';
+import { listingCountRollupJob } from './jobs/listing-count-rollup.js';
 import { notificationHealthJob } from './jobs/notification-health.js';
 import { pushFallbackJob } from './jobs/push-fallback.js';
 import { JobRunner } from './jobs/runner.js';
@@ -76,8 +86,16 @@ export interface AppDeps {
   confirmSubscription?: (url: string) => Promise<void>;
   /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
   deletionBlocker?: DeletionBlocker;
-  /** Phase 8 supplies the published-listing count §1a derives visibility from; until then nobody is publicly visible. */
+  /**
+   * §1a's published-listing predicate. Phase 8 supplies the real one over the
+   * `listing` table; a test may substitute `FakeListings` to move a provider
+   * across §1a's line without building a publishable listing.
+   */
   publishedListings?: PublishedListingSource;
+  /** Phase 8's object store. Defaults to the local file transport (§0.0 item 17). */
+  mediaStorage?: MediaStorage;
+  /** Phase 8a replaces this with `getProviderEntitlements`; until then every provider is on §1b's free tier. */
+  entitlements?: ProviderEntitlementReader;
   /** Phase 11 supplies §1f's computed conduct metrics; until then no rate is computable. */
   providerConduct?: ProviderConductSource;
   /**
@@ -98,6 +116,8 @@ declare module 'fastify' {
     categories: CategoryService;
     providers: ProviderProfileService;
     location: LocationService;
+    listings: ListingService;
+    media: MediaService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
     auth: AuthService;
@@ -179,15 +199,16 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   app.decorate('categories', categories);
 
   // Phase 5. The provider half of an account, and §1a's single visibility
-  // gate. Both seams stay unfilled until the phase that owns the data lands:
-  // Phase 8 supplies the published-listing source, Phase 11 the conduct
-  // source. Until then nobody is publicly visible and no conduct rate is
-  // computable — which is the honest answer, not a placeholder.
+  // gate. 🔧 **Phase 8 filled the published-listing seam** — the default is
+  // now the real predicate over the `listing` table, not the empty one, so a
+  // provider becomes publicly visible the moment they publish (ledger P5-1).
+  // Phase 11's conduct seam is still open: until bookings exist no rate is
+  // computable, which is the honest answer rather than a placeholder.
   const providers = new ProviderProfileService({
     prisma: deps.prisma,
     categories,
     audit,
-    ...(deps.publishedListings === undefined ? {} : { listings: deps.publishedListings }),
+    listings: deps.publishedListings ?? PUBLISHED_LISTINGS,
     ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
   });
   app.decorate('providers', providers);
@@ -224,6 +245,27 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     new LocationService({ prisma: deps.prisma, providers, clock: deps.clock }),
   );
   exportContributors.register(serviceAreaExportContributor(deps.prisma));
+
+  // Phase 8. `MediaService` is the one upload path every module uses; the
+  // storage behind it is a transport, defaulting to the local directory
+  // because the object store is procured at deployment (§0.0 item 17).
+  const media = new MediaService({
+    storage: deps.mediaStorage ?? createMediaStorage(config.media),
+    clock: deps.clock,
+  });
+  app.decorate('media', media);
+  const listings = new ListingService({
+    prisma: deps.prisma,
+    providers,
+    categories,
+    media,
+    clock: deps.clock,
+    // Phase 8a replaces this with the live `getProviderEntitlements` read.
+    // Until then every provider is on §1b's free tier, which is not a
+    // placeholder — with no `ProviderSubscription` table, they are.
+    ...(deps.entitlements === undefined ? {} : { entitlements: deps.entitlements }),
+  });
+  app.decorate('listings', listings);
 
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
@@ -291,6 +333,9 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     ),
   );
   jobs.register(notificationHealthJob(notificationHealth, app.log));
+  // Phase 8: the counters are rolled up from the event log on a schedule,
+  // never incremented per request.
+  jobs.register(listingCountRollupJob(new ListingEvents(deps.prisma, deps.clock), app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -311,6 +356,15 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerCategoryRoutes(app);
   registerProviderRoutes(app);
   registerLocationRoutes(app);
+  registerListingRoutes(app);
+  // The two routes the LOCAL media transport needs — this process playing the
+  // object store. There is one transport today, so they register
+  // unconditionally, the same shape `createPushTransport` takes for the same
+  // reason: a branch on a one-member union is a branch the compiler knows is
+  // always taken. **When `s3` lands, `MediaConfig` becomes a union and this
+  // becomes a real switch** — with a real store the client uploads to the
+  // store and reads from it, and these URLs must not exist at all.
+  registerMediaRoutes(app);
   registerPushRoutes(app);
   registerEmailLogRoutes(app);
   await registerSesEventRoutes(app);

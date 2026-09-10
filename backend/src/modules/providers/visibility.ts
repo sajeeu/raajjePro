@@ -26,35 +26,50 @@ import type {
  *
  * ## Why the listing count arrives through a seam
  *
- * §Phase 5 is sequenced before §Phase 8, so there is no `Listing` table for
- * this file to join against and inventing one would be building ahead into
- * Phase 8's schema. So the count comes from an injected
- * `PublishedListingSource`, the same pattern Phase 3 used for
- * `DeletionBlocker` — the *rule* lives here in one place from today, and
- * Phase 8 supplies the query that answers it.
+ * §Phase 5 was sequenced before §Phase 8, so there was no `Listing` table for
+ * this file to join against and inventing one would have been building ahead
+ * into Phase 8's schema. So the rule lives here and the *predicate* that
+ * answers its listing half is injected — the same pattern Phase 3 used for
+ * `DeletionBlocker`.
  *
- * `NO_PUBLISHED_LISTINGS` is the honest default: before Phase 8 there are no
- * listings, so nobody is publicly visible, and any caller that renders a
- * public directory before listings exist correctly renders an empty one.
+ * 🔧 **Phase 8 filled it, and the shape changed with it — ledger row P5-1,
+ * 2026-09-10.** The seam used to hand back a `Set` of provider ids, because
+ * a set is all a fake can produce and a page therefore had to be filled by
+ * scanning candidates in batches until it was full. Now that a real `listing`
+ * table exists the predicate goes **into** the candidate query, so a page is
+ * one indexed query with `take: limit + 1` and the batch-accumulating loop is
+ * gone. `docs/decisions/17-phase-5-provider-profiles.md` decision 2 recorded
+ * this as the change to make; every caller of `findVisibleProviders` is
+ * unaffected, which is what that note predicted.
+ *
+ * `NO_PUBLISHED_LISTINGS` remains the honest default for a build with the
+ * seam unfilled: nobody is publicly visible, so a public directory correctly
+ * renders empty.
  */
 
 /**
- * Answers "which of these providers hold at least one published, active
- * listing?" — the derived half of §1a, and nothing else. Suspension is not
- * this source's business; the helper applies it.
+ * Narrows a `ProviderProfile` query to those holding at least one published,
+ * active listing — the derived half of §1a, and nothing else.
  *
- * Batched rather than per-provider so that Phase 8's implementation is one
- * `groupBy` over `listing`, not one query per candidate.
+ * **Suspension is not this source's business.** §1a makes it an input to the
+ * helper below precisely so one change covers search, Home and the public
+ * profile; a source that filtered on it would be the second copy of the rule.
+ *
+ * A predicate rather than a lookup so the whole rule is one SQL statement.
+ * The listings module supplies the real one; a test supplies an id list.
  */
 export interface PublishedListingSource {
-  providersWithPublishedListing(providerIds: string[]): Promise<Set<string>>;
+  havingPublishedListing(): Prisma.ProviderProfileWhereInput;
 }
 
-/** Phase 8 replaces this. Until listings exist, nobody has one. */
+/**
+ * The default when nothing fills the seam. `id IN ()` matches nobody, which
+ * is the truthful answer for a build with no listings table wired up — not an
+ * empty object, which would match *everybody* and quietly turn every draft-only
+ * provider public.
+ */
 export const NO_PUBLISHED_LISTINGS: PublishedListingSource = {
-  providersWithPublishedListing(): Promise<Set<string>> {
-    return Promise.resolve(new Set());
-  },
+  havingPublishedListing: () => ({ id: { in: [] } }),
 };
 
 /**
@@ -113,15 +128,6 @@ export function tiersAtOrAbove(minimum: VerificationTier): VerificationTier[] {
 /** One page is a search page; the cursor is what keeps this endpoint bounded. */
 const DEFAULT_PAGE = 24;
 
-/**
- * How many candidates to pull per round trip while filling a page. The
- * published-listing predicate is applied outside SQL until Phase 8, so a page
- * is filled by scanning candidates in batches until it is full or they run
- * out. Over-fetching keeps the page a full page — a caller must never receive
- * a short page and conclude there is no more data.
- */
-const CANDIDATE_BATCH = 200;
-
 export class ProviderVisibility {
   constructor(
     private readonly prisma: PrismaClient,
@@ -138,36 +144,26 @@ export class ProviderVisibility {
     paging: { limit?: number; cursor?: string } = {},
   ): Promise<VisibleProviderPage> {
     const limit = paging.limit ?? DEFAULT_PAGE;
-    const items: ProviderProfile[] = [];
-    let after = paging.cursor === undefined ? null : decodeCursor(paging.cursor);
-    let exhausted = false;
+    const after = paging.cursor === undefined ? null : decodeCursor(paging.cursor);
 
-    // One extra beyond `limit` decides whether a next cursor exists, without a
-    // second count query.
-    while (items.length <= limit && !exhausted) {
-      const candidates = await this.prisma.providerProfile.findMany({
-        where: candidateWhere(filters, after),
-        orderBy: { id: 'asc' },
-        take: CANDIDATE_BATCH,
-      });
-      if (candidates.length < CANDIDATE_BATCH) exhausted = true;
-      if (candidates.length === 0) break;
+    // One query. `take: limit + 1` decides whether a next cursor exists
+    // without a second count, and the whole rule — suspension, account
+    // status, the caller's filters and the published-listing requirement — is
+    // one indexed scan. Until Phase 8 this was a batch-scan loop, because the
+    // listing half could not be expressed in SQL (ledger P5-1).
+    const rows = await this.prisma.providerProfile.findMany({
+      where: {
+        AND: [candidateWhere(filters, after), this.listings.havingPublishedListing()],
+      },
+      orderBy: { id: 'asc' },
+      take: limit + 1,
+    });
 
-      const withListing = await this.listings.providersWithPublishedListing(
-        candidates.map((c) => c.id),
-      );
-      for (const candidate of candidates) {
-        if (withListing.has(candidate.id)) items.push(candidate);
-      }
-      const last = candidates[candidates.length - 1];
-      if (last !== undefined) after = { id: last.id };
-    }
-
-    const page = items.slice(0, limit);
+    const page = rows.slice(0, limit);
     const last = page[page.length - 1];
     return {
       items: page,
-      nextCursor: items.length > limit && last !== undefined ? encodeCursor(last.id) : null,
+      nextCursor: rows.length > limit && last !== undefined ? encodeCursor(last.id) : null,
     };
   }
 
@@ -178,12 +174,12 @@ export class ProviderVisibility {
    */
   async isVisible(providerId: string): Promise<boolean> {
     const row = await this.prisma.providerProfile.findFirst({
-      where: { id: providerId, ...candidateWhere({}, null) },
+      where: {
+        AND: [{ id: providerId }, candidateWhere({}, null), this.listings.havingPublishedListing()],
+      },
       select: { id: true },
     });
-    if (row === null) return false;
-    const withListing = await this.listings.providersWithPublishedListing([providerId]);
-    return withListing.has(providerId);
+    return row !== null;
   }
 
   /** Same rule, addressed by the owning user — the shape Phase 13 gets from a search result row. */

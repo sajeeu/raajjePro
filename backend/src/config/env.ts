@@ -56,6 +56,20 @@ const schema = z.object({
   // posture EMAIL_TRANSPORT=file takes. `fcm_apns` is the shape the real
   // vendors will plug into and is refused below until they exist.
   PUSH_TRANSPORT: z.enum(['file', 'fcm_apns']).default('file'),
+
+  // Phase 8. `file` keeps listing images in backend/.media/ and signs its own
+  // upload and read URLs, the same posture the two transports above take —
+  // the object store is procured at deployment (§0.0 item 17). `s3` is the
+  // shape the real store will plug into and is refused below until it exists.
+  MEDIA_STORAGE: z.enum(['file', 's3']).default('file'),
+  /**
+   * The absolute base a signed media URL is built on. Absolute because a real
+   * store's URLs are absolute and point somewhere else entirely — a client
+   * must never have to know which transport it is talking to, or resolve one
+   * kind of URL differently from the other.
+   */
+  MEDIA_BASE_URL: z.string().min(1).default('http://localhost:3000'),
+  MEDIA_SIGNING_KEY: base32Key,
 });
 
 export type EmailChannel = 'otp' | 'notification' | 'marketing';
@@ -67,6 +81,17 @@ export interface FilePushConfig {
 }
 
 export type PushConfig = FilePushConfig;
+
+export interface FileMediaConfig {
+  transport: 'file';
+  /** Directory the file transport writes objects into. Gitignored, like .mail/ and .push/. */
+  directory: string;
+  baseUrl: string;
+  /** Signs the stand-in presigned URLs. 32 bytes; must differ from the other two keys. */
+  signingKey: Buffer;
+}
+
+export type MediaConfig = FileMediaConfig;
 
 export interface SesEmailConfig {
   transport: 'ses';
@@ -112,6 +137,7 @@ export interface Config {
   };
   email: SesEmailConfig | FileEmailConfig;
   push: PushConfig;
+  media: MediaConfig;
 }
 
 export class ConfigError extends Error {
@@ -148,12 +174,6 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   if (production && !adminOrigin.startsWith('https://')) {
     issues.push('ADMIN_ORIGIN: must be an https:// origin in production');
   }
-  if (
-    cleaned.AUTH_JWT_SECRET !== undefined &&
-    cleaned.AUTH_JWT_SECRET === cleaned.ADMIN_TOTP_ENCRYPTION_KEY
-  ) {
-    issues.push('AUTH_JWT_SECRET: must differ from ADMIN_TOTP_ENCRYPTION_KEY');
-  }
   // There is deliberately NO "must be fcm_apns in production" rule to match
   // email's. The FCM and APNs transports are not built — no Firebase project
   // and no Apple developer account exist (docs/decisions/15-phase-3c-push.md)
@@ -165,6 +185,48 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     issues.push(
       'PUSH_TRANSPORT: "fcm_apns" is not available yet — the FCM and APNs transports arrive with their vendor accounts (docs/deferred-verification.md L11, L12)',
     );
+  }
+  // 🔧 **EMAIL_TRANSPORT's whole posture, not half of it** (§Phase 8,
+  // 2026-09-10). Two rules that look contradictory and are not:
+  //
+  //   - `s3` is refused, because the transport is not built and no bucket
+  //     exists — a deployment that set it would believe images were going
+  //     somewhere durable.
+  //   - `file` is refused **in production**, because a local directory there
+  //     is worse than no images at all: they vanish on the next deploy, and
+  //     the provider who uploaded them is never told.
+  //
+  // Together they make production unbootable until the object store lands,
+  // which is the honest signal and the point of copying the guard. This is
+  // deliberately UNLIKE `PUSH_TRANSPORT`, which has no production rule
+  // because the email fallback carries a notification when push cannot.
+  // Nothing carries a listing's cover image if the store does not.
+  const mediaStorage = cleaned.MEDIA_STORAGE ?? 'file';
+  if (mediaStorage === 's3') {
+    issues.push(
+      'MEDIA_STORAGE: "s3" is not available yet — the object-store transport arrives with the bucket (docs/deferred-verification.md L13)',
+    );
+  }
+  if (production && mediaStorage !== 's3') {
+    issues.push('MEDIA_STORAGE: must be "s3" in production');
+  }
+  // Three distinct 32-byte keys. Reusing one across purposes means a
+  // signature forged in one context is valid in another, and the media token
+  // is the *only* authorization on the upload route.
+  const keys: { name: string; value: unknown }[] = [
+    { name: 'AUTH_JWT_SECRET', value: cleaned.AUTH_JWT_SECRET },
+    { name: 'ADMIN_TOTP_ENCRYPTION_KEY', value: cleaned.ADMIN_TOTP_ENCRYPTION_KEY },
+    { name: 'MEDIA_SIGNING_KEY', value: cleaned.MEDIA_SIGNING_KEY },
+  ];
+  for (const [index, a] of keys.entries()) {
+    for (const b of keys.slice(index + 1)) {
+      if (a.value !== undefined && a.value === b.value) {
+        issues.push(`${a.name}: must differ from ${b.name}`);
+      }
+    }
+  }
+  if (production && !(cleaned.MEDIA_BASE_URL ?? '').startsWith('https://')) {
+    issues.push('MEDIA_BASE_URL: must be an https:// URL in production');
   }
 
   if (emailTransport === 'ses') {
@@ -239,5 +301,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     },
     email,
     push: { transport: 'file', directory: '.push' },
+    media: {
+      transport: 'file',
+      directory: '.media',
+      // Trailing slashes would double up in every signed URL.
+      baseUrl: v.MEDIA_BASE_URL.replace(/\/+$/, ''),
+      signingKey: v.MEDIA_SIGNING_KEY,
+    },
   };
 }

@@ -450,6 +450,12 @@ model ProviderProfile {
   /// current list on its own — `ProviderServiceArea.removedAt` is.
   serviceAreas ProviderServiceArea[]
 
+  /// §Phase 8. Every listing this provider owns, drafts and deleted rows
+  /// included — the relation is not a filtered view and no consumer should
+  /// treat it as one. §1a's published-listing count goes through
+  /// `PublishedListings`, which is one indexed query rather than a load.
+  listings Listing[]
+
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
   @@index([suspendedAt, id])
@@ -802,8 +808,28 @@ model Category {
   /// scalar-list reason as `emergencyEtaPresetsMinutes`.
   occasionPresets  String[] @map("occasion_presets")
 
+  /// §Phase 9's step-1 chips, and 🔧 **this phase's column — added
+  /// 2026-09-10.** §Phase 9 requires "a category-scoped set of suggested
+  /// tags" as tappable pills and is frontend-only, so it cannot add the
+  /// column and would stop mid-build on the missing one.
+  ///
+  /// **Designed, not invented**: seeded from `Create Service.dc.html`'s
+  /// `TAGS` map, which covers all twelve categories. Note the contrast with
+  /// the price units, which deliberately have no column — the same prototype
+  /// keys *these* by category and renders the units as a flat five, so the
+  /// designer keyed the thing the plan calls category-scoped and left the
+  /// other alone.
+  ///
+  /// Suggestions only. A listing's own `tags` are free text underneath the
+  /// chips and nothing validates them against this list.
+  suggestedTags String[] @map("suggested_tags")
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// §Phase 8. Read by the emergency re-evaluation and by Phase 15's browse;
+  /// never loaded whole.
+  listings Listing[]
 
   @@index([isActive, sortOrder])
   @@map("category")
@@ -874,6 +900,10 @@ model Island {
 
   serviceAreas ProviderServiceArea[]
 
+  /// §Phase 8's per-listing areas (ledger P7-3) — a different table from the
+  /// account-level one above, and the one discovery matches on.
+  listingServiceAreas ListingServiceArea[]
+
   /// The natural key, so two rows cannot claim the same island of the same atoll.
   @@unique([atollAbbr, name])
   @@index([isActive, name])
@@ -907,4 +937,411 @@ model ProviderServiceArea {
   @@unique([providerProfileId, islandId])
   @@index([islandId, removedAt])
   @@map("provider_service_area")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 8 — service listings
+// ---------------------------------------------------------------------------
+
+/// How a listing's price is *calculated* (§Phase 8, Round 16). The plan
+/// referred to a per-listing "model" from v4 onward without ever saying what
+/// the values were; these five are that enumeration.
+///
+/// Two of them constrain `bookingMode`: `range` and `quote` force `request`,
+/// because §1c requires `agreedAmount` at `accepted` and a slot-mode listing
+/// priced `quote` would have the customer booking a fixed time at an unknown
+/// price. `ListingService` enforces it on publish and on any write to a
+/// published listing.
+enum PricingModel {
+  fixed
+  hourly
+  daily
+  range
+  quote
+
+  @@map("pricing_model")
+}
+
+/// What the customer *sees*, separate from how the price is calculated
+/// (§Phase 8, Round 16) — `fixed` + `session` renders "MVR 500/session".
+///
+/// **A closed enum and never free text**, which is the whole of the bullet's
+/// stated reason: free text yields `/session`, `/sesion` and `/per session`
+/// on three listings, and an enum makes that impossible.
+///
+/// 🔧 The bullet also says to "seed a short list **per category**", and the
+/// plan names no such subset anywhere — §Phase 10b enumerates the editable
+/// Category fields without one, and the wizard prototype renders a flat five
+/// whatever the category, in a file that *does* key its tag suggestions by
+/// category. So there is deliberately no `Category.priceUnits` column: a
+/// narrowing invented here would silently block a legitimate provider at
+/// publish (ledger row **P8-1**, `docs/decisions/21-phase-8-service-listings.md`).
+enum PriceUnit {
+  job
+  hour
+  day
+  session
+  visit
+
+  @@map("price_unit")
+}
+
+/// The wizard axis: a draft is being written, a published listing is live
+/// (§Phase 8). Deletion is deliberately **not** a third value — see
+/// `Listing.deletedAt`.
+enum ListingStatus {
+  draft
+  published
+
+  @@map("listing_status")
+}
+
+/// §1b, enumerated in Round 17. A listing is publicly visible only at
+/// `active` **and** `status: 'published'`.
+///
+/// 🔧 **System-hidden and provider-hidden are deliberately different values.**
+/// `hidden_over_cap` is set and cleared **only** by the entitlement system,
+/// `hidden_by_provider` **only** by the provider, `hidden_by_admin` only by
+/// moderation. Under a single `hidden` value the two are indistinguishable and
+/// a paid upgrade would silently republish something the provider had
+/// deliberately withdrawn.
+enum ListingVisibility {
+  active
+  hidden_by_provider
+  hidden_over_cap
+  hidden_by_admin
+
+  @@map("listing_visibility")
+}
+
+/// A media object attached to a listing (§Phase 8: "media upload via
+/// presigned URL"). Its bytes live in `MediaStorage`, never in the database.
+///
+/// The row exists from the moment an upload target is issued, which is what
+/// makes the object key server-chosen rather than client-supplied — a client
+/// naming its own key could overwrite another provider's cover image.
+enum ListingMediaStatus {
+  /// An upload target has been issued and the bytes have not been finalised.
+  pending
+  /// The bytes were read back, sniffed, EXIF-stripped and rewritten.
+  stored
+
+  @@map("listing_media_status")
+}
+
+/// What a `ListingEvent` records (§Phase 8: "view and booking counts come from
+/// an event log with periodic rollup, not per-request counter writes").
+///
+/// Open by intent rather than by accident: §1b's downgrade rule ranks
+/// unprotected listings by confirmed bookings over the trailing 90 days and
+/// falls back to views, which is a *windowed* question the rollup counters
+/// cannot answer on their own — the log is what makes it answerable.
+enum ListingEventKind {
+  view
+  booking
+
+  @@map("listing_event_kind")
+}
+
+/// A service listing (§Phase 8).
+///
+/// **A Listing is not a Provider Profile** (invariant 1). Nothing about who
+/// the provider *is* lives here — no phone, no bank details, no verification
+/// tier, and no `acceptingNewCustomers`, which §Phase 8 names explicitly as
+/// provider-level because Phase 8a's billing pause keys off it.
+///
+/// **Almost every column is nullable, and that is the requirement**
+/// (invariant 2): "a draft must be saveable with zero required fields
+/// filled". Only `publish` enforces the six required fields, and it does so in
+/// the service — a NOT NULL here would make the draft-save endpoint
+/// impossible. `assertPublishable` is the single place that list is written.
+model Listing {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// Nullable for the same reason the rest are: a draft may be saved before a
+  /// category is chosen. Required to publish. The *identifier* is the UUID,
+  /// never the category name (§Phase 4).
+  categoryId String?   @map("category_id") @db.Uuid
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  // -- Step 1, Details ------------------------------------------------------
+
+  name             String?
+  /// Capped at the wizard's counter. Server-side because invariant 4 puts
+  /// every rule here, not only in the client.
+  shortDescription String? @map("short_description") @db.VarChar(200)
+  longDescription  String? @map("long_description") @db.VarChar(2000)
+
+  /// Round 12's category-scoped chips plus free text underneath, up to ten.
+  /// A scalar list rather than a table for the same reason
+  /// `Category.occasionPresets` is one: a tag has no identity of its own, is
+  /// referenced from nowhere, and the wizard edits the set as a whole.
+  tags String[]
+
+  // -- Step 3, Pricing ------------------------------------------------------
+
+  /// §Phase 8: "pricing is per-listing (each listing carries its own model and
+  /// rates), not per-provider".
+  pricingModel PricingModel? @map("pricing_model")
+
+  /// Integer laari throughout (invariant 7): MVR 150 = 15000. Never a float,
+  /// never a decimal-as-string, and never converted to one on the way out.
+  /// `priceLaari` carries `fixed` / `hourly` / `daily`; the two range columns
+  /// carry `range`; `quote` carries none of them.
+  priceLaari    Int? @map("price_laari")
+  priceMinLaari Int? @map("price_min_laari")
+  priceMaxLaari Int? @map("price_max_laari")
+
+  /// What the customer sees, constrained to the category's seeded list.
+  priceUnit PriceUnit? @map("price_unit")
+
+  // -- Step 5, Availability -------------------------------------------------
+
+  /// §1c: defaulted from the category seed, provider-overridable. Nullable
+  /// only because a draft may have no category yet to default from; it is set
+  /// the moment one is chosen.
+  bookingMode BookingMode? @map("booking_mode")
+
+  /// The wizard's simple working window for *this service*. ISO weekday
+  /// numbers, 1 = Monday. The recurring availability rules, the slot
+  /// generator and time off are §Phase 9a's and are not modelled here.
+  workingDays      Int[]   @map("working_days")
+  /// `HH:MM`, 24-hour. A string rather than a time column because it is a
+  /// recurring wall-clock window with no date, and Maldives is a single
+  /// timezone with no DST — reading it back as a `time` would invite a
+  /// timezone conversion that has no meaning here.
+  workingHoursFrom String? @map("working_hours_from") @db.VarChar(5)
+  workingHoursTo   String? @map("working_hours_to") @db.VarChar(5)
+
+  /// §1c's composed emergency rule, listing half. Settable only when the
+  /// category is `emergencyCapable` **and** the provider's `verificationTier`
+  /// meets that category's `emergencyMinimumTier` — `gold` for Electrical and
+  /// Plumbing, `silver` for AC Repair and Moving. Never a boolean `verified`
+  /// check and never a hardcoded tier. Enforced on publish and on update, and
+  /// re-evaluated when a tier drops (Round 17).
+  isEmergency Boolean @default(false) @map("is_emergency")
+
+  // -- Step 6, Extra information -------------------------------------------
+
+  whatsIncluded    String? @map("whats_included") @db.VarChar(1000)
+  whatsNotIncluded String? @map("whats_not_included") @db.VarChar(1000)
+
+  /// `[{ question, answer }]`, validated by Zod on the way in and capped
+  /// there. Inline for the same reason `tags` is: an FAQ has no identity, is
+  /// referenced from nowhere, and step 6 edits the list as a whole.
+  faqs Json @default("[]")
+
+  /// §1i, all four self-declared and **none verified by RaajjePro**. None of
+  /// them gates publish. Any response carrying them must render as an
+  /// attributed claim — "Provider states: 90-day workmanship warranty" — never
+  /// as a platform assertion, and never inside the callback badge's visual
+  /// treatment.
+  warrantyOffered     Boolean @default(false) @map("warranty_offered")
+  warrantyTermsText   String? @map("warranty_terms_text") @db.VarChar(500)
+  insuranceDeclared   Boolean @default(false) @map("insurance_declared")
+  insuranceDetailText String? @map("insurance_detail_text") @db.VarChar(500)
+
+  /// §1h, and per-category since Round 28: opt-in per listing **within an
+  /// eligible category**, read from `Category.callbackEligible`. Unlike the
+  /// two claims above this one is RaajjePro's promise and is enforced — which
+  /// is exactly why it may not be set on a category where nothing was fixed
+  /// and so nothing can un-fix.
+  callbackGuaranteeOffered Boolean @default(false) @map("callback_guarantee_offered")
+
+  // -- Step 4, Media --------------------------------------------------------
+
+  /// The cover image — required to publish (§0.2 item 4: v4 left it optional,
+  /// which meant a listing could go live with a blank thumbnail on every card
+  /// and in every search result). Points at one of this listing's own
+  /// `ListingMedia` rows; the service checks that before writing it.
+  coverMediaId String?       @unique @map("cover_media_id") @db.Uuid
+  coverMedia   ListingMedia? @relation("ListingCover", fields: [coverMediaId], references: [id])
+
+  media ListingMedia[] @relation("ListingMedia")
+
+  // -- Step 2, Location -----------------------------------------------------
+
+  /// §Phase 8, ledger row **P7-3**: a listing's own service areas, and these
+  /// are what a customer's island filter reads. `ProviderServiceArea` is the
+  /// account-level *default* the wizard pre-fills from and nothing more; the
+  /// two must never be conflated, and nothing here matches on a name.
+  serviceAreas ListingServiceArea[]
+
+  // -- Step 7, Meta ---------------------------------------------------------
+
+  status     ListingStatus     @default(draft)
+  visibility ListingVisibility @default(active)
+
+  /// When the listing most recently became published. Cleared by nothing —
+  /// hiding a listing changes `visibility`, not this.
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz(6)
+  /// The first time it ever went live. Phase 8a's third trial trigger is
+  /// "7 days after a provider's first published listing", which needs the
+  /// first moment and not the latest one.
+  firstPublishedAt DateTime? @map("first_published_at") @db.Timestamptz(6)
+
+  /// Invariant 8's soft delete. **A timestamp rather than a third
+  /// `ListingStatus` value**, because deletion is orthogonal to the wizard
+  /// axis: a deleted listing that had been published must still read as
+  /// having been published — its bookings and reviews reference it and the
+  /// record of what a customer booked cannot become a draft.
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  /// §Phase 8: "view and booking counts come from an event log with periodic
+  /// rollup, not per-request counter writes". These are the rollup; the log is
+  /// `ListingEvent` and the job that folds one into the other is
+  /// `listing-count-rollup`. Reading a count never writes a row.
+  viewCount        Int       @default(0) @map("view_count")
+  bookingCount     Int       @default(0) @map("booking_count")
+  /// The watermark the rollup job counts forward from. Null means nothing has
+  /// been rolled up yet.
+  countsRolledUpAt DateTime? @map("counts_rolled_up_at") @db.Timestamptz(6)
+
+  events ListingEvent[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// §1a's derived visibility resolves through this composite: the
+  /// published-listing count is `(providerProfileId, status, visibility,
+  /// deletedAt)` and nothing else, so it is one index scan per provider batch.
+  @@index([providerProfileId, status, visibility, deletedAt])
+  /// The owner's My Services list, newest first.
+  @@index([providerProfileId, deletedAt, updatedAt])
+  /// Phase 15's category browse, and the emergency re-evaluation's scan.
+  @@index([categoryId, status, visibility])
+  @@map("listing")
+}
+
+/// The islands **one listing** serves (§Phase 8, ledger row P7-3).
+///
+/// Keyed on `islandId` and never on a name (§0.0 item 12): sixteen normalised
+/// names occur in more than one atoll and `Meedhoo` exists in three, so a
+/// service area matched by name would silently serve the wrong atoll.
+///
+/// Deliberately a separate table from `ProviderServiceArea` rather than a
+/// reuse of it. That one is the provider's account-level coverage — §Phase 6a
+/// collects it and the wizard pre-fills step 2 from it — and this one is what
+/// discovery matches on. A provider whose account default includes an island
+/// but whose listing does not is not discoverable for that island, and the
+/// listing is what decides.
+model ListingServiceArea {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  islandId String @map("island_id") @db.Uuid
+  island   Island @relation(fields: [islandId], references: [id])
+
+  addedAt DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
+
+  /// Invariant 8, and the same revival pattern `ProviderServiceArea` uses:
+  /// removing an island stamps this and re-adding it revives the row.
+  removedAt DateTime? @map("removed_at") @db.Timestamptz(6)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([listingId, islandId])
+  /// Phase 15's island filter reads this direction: which listings serve here.
+  @@index([islandId, removedAt])
+  @@map("listing_service_area")
+}
+
+/// One uploaded image belonging to a listing (§Phase 8).
+///
+/// The row is created when the upload target is issued, so the storage key is
+/// **server-chosen**. A client-supplied key would let one provider overwrite
+/// another's cover image, which is the failure a presigned upload most easily
+/// invites.
+model ListingMedia {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation("ListingMedia", fields: [listingId], references: [id])
+
+  /// Set when this row is the listing's cover. The relation is here so the
+  /// foreign key has a back reference; `Listing.coverMediaId` is the truth.
+  coverOf Listing[] @relation("ListingCover")
+
+  /// The object key inside `MediaStorage`. Opaque to clients — they receive a
+  /// short-lived signed URL, never this.
+  objectKey   String @unique @map("object_key")
+  contentType String @map("content_type")
+  /// The size of the **stored** bytes, which is what is left after EXIF is
+  /// stripped, not what the client declared it would upload.
+  byteSize    Int?   @map("byte_size")
+
+  status ListingMediaStatus @default(pending)
+
+  /// Gallery order, 0-based. The cover is not part of it — it is named by
+  /// `Listing.coverMediaId` — so a listing whose only image is its cover has
+  /// an empty gallery rather than a one-item one.
+  sortOrder Int? @map("sort_order")
+
+  /// When the bytes were read back, sniffed, EXIF-stripped and rewritten.
+  /// Null on a `pending` row, and the honest answer to "has anything actually
+  /// been uploaded?".
+  storedAt DateTime? @map("stored_at") @db.Timestamptz(6)
+
+  /// Invariant 8. Removing an image stamps this; the object stays in storage,
+  /// because a booking or a review may reference the listing as it looked.
+  ///
+  /// **The provider's action, and only theirs.** Moderation uses the pair
+  /// below, for the same reason §1b keeps `hidden_by_provider` and
+  /// `hidden_by_admin` apart on a listing: under one field the two are
+  /// indistinguishable, and restoring a moderated image would resurrect one
+  /// the provider had deliberately taken down.
+  removedAt DateTime? @map("removed_at") @db.Timestamptz(6)
+
+  /// 🔧 **Reversible moderation visibility — added 2026-09-10.** `photo` is
+  /// one of §Phase 22's six `Report.targetType` values, so an admin must be
+  /// able to hide a **single image** of a listing and put it back. §1d:
+  /// moderation is always a status flag, never a hard delete — and invariant
+  /// 8's soft delete above covers the provider removing an image, not an
+  /// admin hiding one.
+  ///
+  /// Phase 22 owns the action, its required reason and its audit entry;
+  /// Phase 8 owns the columns and the filter, which is the same split
+  /// §Phase 5 used for `ProviderProfile.suspendedAt`.
+  hiddenByAdminAt     DateTime? @map("hidden_by_admin_at") @db.Timestamptz(6)
+  hiddenByAdminReason String?   @map("hidden_by_admin_reason")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([listingId, removedAt, hiddenByAdminAt, sortOrder])
+  @@map("listing_media")
+}
+
+/// The append-only log §Phase 8's counts are rolled up from.
+///
+/// **Not a per-request counter write.** An `UPDATE listing SET view_count =
+/// view_count + 1` on every card impression serialises every reader of a
+/// popular listing behind one row lock; an insert here does not. The rollup
+/// job folds these into `Listing.viewCount` / `bookingCount` periodically, and
+/// the rows stay so that §1b's "confirmed bookings over the trailing 90 days"
+/// remains answerable — a counter cannot answer a windowed question.
+///
+/// No PII (root CLAUDE.md 1d): a listing id, a kind and a time. Deliberately
+/// no viewer — nothing in this phase needs one, and a viewer column on an
+/// impression log is the kind of thing that is easy to add and hard to justify
+/// later.
+model ListingEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  kind       ListingEventKind
+  occurredAt DateTime         @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  /// The rollup walks `(occurredAt, id)` forward from each listing's
+  /// watermark, so this is the index it reads.
+  @@index([listingId, kind, occurredAt])
+  @@index([occurredAt])
+  @@map("listing_event")
 }

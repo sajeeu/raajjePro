@@ -5,6 +5,9 @@ coverage/
 .mail/
 # File-transport push output (PUSH_TRANSPORT=file), development/test only.
 .push/
+
+# Phase 8: MEDIA_STORAGE=file writes listing images here.
+.media/
 # Prisma client is generated on install (npm run postinstall); never committed.
 src/generated/
 # Real environment values live only on the machine that uses them.

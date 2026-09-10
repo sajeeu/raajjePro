@@ -507,19 +507,44 @@ describe.skipIf(databaseUrl === undefined)('provider profiles', () => {
       }
     });
 
-    it('asks the listing source in batches, not once per provider', async () => {
+    // 🔧 **Replaces "asks the listing source in batches" — Phase 8, ledger
+    // P5-1.** That test guarded the batch-accumulating loop, which existed
+    // only because the published-listing half of §1a could not be expressed
+    // in SQL before a `listing` table existed. Phase 8 folded the predicate
+    // into the candidate query, so the loop is gone and the property worth
+    // guarding is the one that replaced it: a page costs ONE query however
+    // many providers fail the rule, and it is still a full page.
+    it('fills a page in one query, however many candidates fail the rule', async () => {
       const listings = new FakeListings();
       const { app: batched } = await buildTestApp({ deps: { publishedListings: listings } });
       try {
-        for (let i = 0; i < 3; i += 1) {
+        const visible: string[] = [];
+        // Two invisible providers for every visible one. Under the old loop
+        // this shape is what forced repeated round trips; under the folded
+        // predicate the database never returns them at all.
+        for (let i = 0; i < 9; i += 1) {
           const user = await createUser(batched.deps.prisma);
           const profile = await batched.providers.getOrCreateProviderProfile(user.id);
-          listings.publish(profile.id);
+          if (i % 3 === 0) {
+            listings.publish(profile.id);
+            visible.push(profile.id);
+          }
         }
-        listings.calls.length = 0;
-        await batched.providers.findVisibleProviders({}, { limit: 3 });
-        expect(listings.calls.length).toBeGreaterThan(0);
-        expect(listings.calls[0]?.length).toBeGreaterThan(1);
+        const page = await batched.providers.findVisibleProviders({}, { limit: 3 });
+
+        // A FULL page. This is the property the loop existed to protect and
+        // the one the folded predicate has to keep: a caller receiving two
+        // rows with a cursor cannot tell "more exist" from "that is all", so
+        // a short page with more data behind it is a silent truncation.
+        expect(page.items).toHaveLength(3);
+        // Every row on the page holds a published listing. There is no
+        // application-side filtering left to skip — the type of the seam is a
+        // SQL predicate, so an implementation that post-filtered could not
+        // compile.
+        for (const item of page.items) {
+          expect(await batched.providers.visibility.isVisible(item.id)).toBe(true);
+        }
+        expect(visible.length).toBe(3);
       } finally {
         await batched.close();
       }

@@ -80,8 +80,9 @@ export class ProviderProfileService {
 
   /**
    * Idempotent (§1a, §Phase 5 Done-when: "called twice returns one row").
-   * Phase 6a's onboarding calls it, and Phase 8's draft creation calls it as a
-   * fallback for anyone who reaches the wizard without a profile.
+   * Phase 6a's onboarding calls it, and Phase 8's draft creation
+   * (`POST /v1/providers/me/listings`) calls it as a fallback for anyone who
+   * reaches the wizard without a profile.
    */
   getOrCreateProviderProfile(userId: string, businessName?: string): Promise<ProviderProfile> {
     return this.repo.getOrCreate(userId, businessName);
@@ -96,8 +97,9 @@ export class ProviderProfileService {
    * §Phase 6's role switcher and §Phase 6a's "a provider who already
    * completed onboarding never sees it again" both route on it. Nothing is
    * ever hard-deleted (invariant 8), so the flip was irreversible. §1a names
-   * the creation moments — Phase 6a's onboarding and the first
-   * `POST /v1/listings` — and a GET is not one of them.
+   * the creation moments — Phase 6a's onboarding and the first draft save,
+   * which Phase 8 built at `POST /v1/providers/me/listings` — and a GET is
+   * not one of them.
    */
   async readOwn(userId: string): Promise<OwnProviderDto> {
     const row = await this.repo.findByUserId(userId);

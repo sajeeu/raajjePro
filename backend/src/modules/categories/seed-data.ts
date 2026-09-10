@@ -41,6 +41,12 @@ export interface CategorySeed {
   quoteApprovalMinutes: number | null;
   callbackEligible: boolean;
   occasionPresets: string[];
+  /**
+   * §Phase 9's step-1 chips (§Phase 8, added 2026-09-10). Seeded from
+   * `Create Service.dc.html`'s `TAGS` map — designed content, transcribed
+   * rather than invented.
+   */
+  suggestedTags: string[];
 }
 
 /** The arrival options an emergency offer picks from (Round 22). None is preselected in the UI. */
@@ -74,6 +80,14 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     // Round 28: a clean either happened or did not — there is nothing to un-fix.
     callbackEligible: false,
     occasionPresets: [],
+    suggestedTags: [
+      'Deep cleaning',
+      'Move-out',
+      'Sofa & carpet',
+      'Kitchen',
+      'Windows',
+      'Weekly regular',
+    ],
   },
   {
     name: 'Plumbing',
@@ -93,6 +107,14 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: [
+      'Leak repair',
+      'Pipe fitting',
+      'Water pump',
+      'Drain blockage',
+      'Bathroom',
+      'Water heater',
+    ],
   },
   {
     name: 'Electrical',
@@ -110,6 +132,15 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: [
+      'Wiring',
+      'Fault finding',
+      'Rewiring',
+      'Lighting',
+      'Switchboards',
+      'New sockets',
+      'Safety check',
+    ],
   },
   {
     name: 'AC Repair',
@@ -127,6 +158,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: ['Servicing', 'Gas refill', 'Installation', 'Repair', 'Duct cleaning'],
   },
   {
     name: 'Beauty',
@@ -144,6 +176,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: null,
     callbackEligible: false,
     occasionPresets: [],
+    suggestedTags: ['Bridal', 'Hair', 'Makeup', 'Nails', 'Henna', 'Facials'],
   },
   {
     name: 'Photography',
@@ -170,6 +203,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
       'Family',
       'Other',
     ],
+    suggestedTags: ['Weddings', 'Event coverage', 'Portraits', 'Product', 'Drone'],
   },
   {
     name: 'Pest Control',
@@ -188,6 +222,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: ['Cockroaches', 'Ants', 'Termites', 'Bed bugs', 'Rodents', 'Fumigation'],
   },
   {
     name: 'Appliance Repair',
@@ -206,6 +241,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: ['Washing machine', 'Refrigerator', 'Oven', 'TV', 'Laptops & PCs', 'Phone'],
   },
   {
     name: 'Moving',
@@ -224,6 +260,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     // A move happened or it did not; a free repeat move has no referent.
     callbackEligible: false,
     occasionPresets: [],
+    suggestedTags: ['House move', 'Office move', 'Furniture', 'Inter-island', 'Packing'],
   },
   {
     name: 'Fitness',
@@ -241,6 +278,7 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: null,
     callbackEligible: false,
     occasionPresets: [],
+    suggestedTags: ['Personal training', 'Yoga', 'Group sessions', 'Strength', 'Weight loss'],
   },
   {
     name: 'Home Repairs',
@@ -261,6 +299,14 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
     quoteApprovalMinutes: 240,
     callbackEligible: true,
     occasionPresets: [],
+    suggestedTags: [
+      'Painting',
+      'Tiling',
+      'Mounting & hanging',
+      'Furniture assembly',
+      'Door & lock fixes',
+      'Sealing & grouting',
+    ],
   },
   {
     name: 'Boat Charter',
@@ -285,6 +331,13 @@ export const CATEGORY_SEED: readonly CategorySeed[] = [
       'Snorkeling trip',
       'Island hopping',
       'Other',
+    ],
+    suggestedTags: [
+      'Airport transfer',
+      'Excursions',
+      'Fishing trips',
+      'Island hopping',
+      'Private charter',
     ],
   },
 ];
