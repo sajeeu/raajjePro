@@ -111,7 +111,7 @@ None of that was visible in a design review. All of it would have been implement
 
 ## What this repository is, right now
 
-**Phases 0, 1, 2, 3, 3b, 3c, 4, 5, 6, 6a, 7 and 8 are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
+**Phases 0, 1, 2, 3, 3b, 3c, 4, 5, 6, 6a, 7, 8 and 8a are built.** Phase 0 is the repository and environment foundation: both apps boot, lint is clean, the pg_cron no-op job is observably firing, PITR is configured on the local database, CI runs lint/build/test plus dependency scanning. Phase 1 is the design system: tokens, every shared widget §Phase 1 lists (plus the verification badge, text input, toggle and avatar by decision), the three motion primitives, and a component gallery at `/gallery` that `flutter test` scrolls end to end under LTR, RTL, 200% text and reduced motion. `docs/decisions/08-phase-1-design-system.md` records the decisions and the seven prototype colours that failed AA and were corrected. **One thing is still open from Phase 1's Done-when:** the screen-reader pass with TalkBack or VoiceOver needs a device — the checklist is in that decision file. Phase 2 is the backend core: Fastify under `/v1`, the standard envelope and error hierarchy, Postgres-backed rate limiting and idempotency, a real admin identity model (TOTP MFA, sessions, force-logout, the queryable audit log), and Amazon SES with bounce/complaint handling and a suppression list honoured before every send. `docs/decisions/10-phase-2-backend-core.md` records what changed during the build and what Phase 3 must confirm. **Phase 3's backend is built**: register/login, JWT access + refresh rotation with per-device sessions, email OTP behind `requireEmailVerified`, account settings (change password/email/phone, sessions, data export), the deletion pipeline (queued, frozen, 30-day backstop) and its Node job runner. **Phase 3's Flutter half is built**: Sign In, Register (pixel-match), Verify Email (one OTP screen shared by verify-email and change-email), Session expired, `AuthGate` and the route table, Account Settings with its sessions/download/delete sub-screens, and Change password/email/phone with the phone-never-verified design-rule test. `docs/decisions/12-phase-3-identity.md` records what changed during the build on both halves, the three "Phase 3 must confirm" items resolved, the frontend's prototype divergences, and what Phase 3b/5/6/11/17 pick up. Run it with `flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000` from `frontend/` against a running backend — the OTP code lands in the newest JSON file under `backend/.mail/` (the file transport).
 
 **Phase 3b is built**: reset-token issuance, expiry and consumption, every refresh token invalidated on success, and the three screens — request email, check-your-inbox, set new password. It sends a six-digit **code**, not a link. `docs/decisions/13-phase-3b-forgot-password.md`.
 
@@ -463,21 +463,94 @@ reads the listing's set. New rows **L13** (a real object store), **P8-2**
 tier-drop re-evaluation wired to Phase 10a, with its notification); **P8-1**
 is the plan's own row for the unbuilt per-category `priceUnit` narrowing.
 
-**Next**: `/phase-8a` — Subscription & Trial, or `/phase-9` — the
-Create/Edit Service Wizard. Phase 8a replaces the body of `activeListingCap`
-and its callers do not change. Phase 9 wires the wizard to
+**Phase 8a is built** — subscription and trial, backend only.
+`/v1/providers/me/subscription` carries the status, the trial, the pause and
+the upgrade request; `/v1/providers/me/payment-submissions/:id/{proof,submit}`
+carry §1b's proof upload; `/v1/providers/me/invoices` carries the PDFs; and
+`/v1/admin/payment-submissions` carries the queue with confirm, reject and
+reverse, all audit-logged.
+`docs/decisions/22-phase-8a-subscription-and-trial.md` carries the full
+record.
+
+🔧 **Six answers arrived from the plan before the schema landed** (revision
+5.28), and two changed the build. **The 7-day job prompts and does not start
+a trial** — §Phase 8a's "all three call `startTrial`" is superseded, because a
+trial is one per account and firing it when no booking has landed spends it
+when premium is worth least. **The introductory-rate conversion is a fifth
+scheduled job**, since §1b requires it and no other phase owns it. The other
+four confirmed what was proposed: premium's listing cap is **unlimited**
+(`null` in the DTO, meaning no limit and never unknown), the
+`acceptingNewCustomers` toggle **is** the pause, RaajjePro's own bank details
+are typed config required in production, and **the appeal action is not
+built** (ledger row **P8A-1** says why).
+
+**`getProviderEntitlements` is the single source of tier truth** — one live
+read of two columns, never cached, and structurally unable to see
+`payment_submission`, so a `pending` payment cannot grant anything. A missing
+row is the free tier rather than an error, `expired` **is** §1b's grace period
+and still carries premium, and `free` is the downgrade. 🔧 **It reads the
+stored status and does not recompute it from the dates** — the lifecycle job
+advances the state, as `backend/CLAUDE.md` requires, so there is one
+implementation rather than two that could disagree.
+
+**Downgrade and restore are one function.** `applyEntitlementVisibility`
+reconciles a provider's live listings against their current cap, so §1b's
+"upgrade restores exactly what downgrade hid" is a property of one code path
+rather than an agreement between two. Protected listings — a committed future
+job — fill the cap first and stay visible regardless of it; among the rest the
+highest performer survives, ranked over §1b's 90 days and tie-broken on
+`firstPublishedAt` rather than the gameable `updatedAt`.
+
+**One pause, two doors.** §1b's "pause keys off the `acceptingNewCustomers`
+toggle" is literal: `ProviderProfileService` gained a listener that §Phase 8a
+registers, and the billing endpoints write the toggle *through* that service.
+At the ten-day cap the clock resumes and **the toggle is left alone** —
+whether a provider takes work is theirs to decide. 🔧 The counter is
+`cumulativePausedMinutes` where §Phase 8a's field list says days, because a
+whole-day counter lets a 23-hour pause round to zero and repeat forever; the
+API still speaks in days, spent rounded up and remaining rounded down.
+
+**The invoice PDF is written, not imported** — one page of Helvetica, no
+dependency, and checked with `pdftotext` as well as by its own test, which is
+what caught an em dash rendering as `?`. Non-Latin text is not representable
+and degrades to `?`; Thaana is out of v1 scope. A confirmation reserves the
+number and stores the bytes **before** its transaction, so a storage failure
+aborts the confirmation instead of committing an invoice with no document, and
+two admins confirming at once get one 200 and one 409.
+
+Three jobs on the Phase 0 runner, all hourly: `subscription-lifecycle` (the
+warning, expiry → grace, grace → downgrade, the win-back pair, the forced
+resume and the over-cap reconcile, in one pass per row),
+`subscription-trial-prompt` and `subscription-introductory-conversion`. Every
+notification is stamped so an hourly job sends it once.
+
+**A defect the tests caught:** the reversal derived `status` from the
+rolled-back dates but left `tier` alone, so reversing a provider's only
+payment left them premium for another seven days on a payment that never
+arrived.
+
+New ledger rows **P8A-2** (the booking seam: the confirmed-booking trigger and
+the downgrade protection, both against `FakeBookings`), **P8A-3** (that a
+provider is actually told — `BillingNotifier` logs and drops until §Phase 19,
+and two events have no §Phase 19 type at all) and **P8A-4** (the pause
+consequence in the toggle's own copy, which is a design round's).
+**P8A-1** is the plan's own row for the unbuilt appeal.
+
+**Next**: `/phase-9` — the Create/Edit Service Wizard. It wires the wizard to
 `/v1/providers/me/listings`, reads its chips from `Category.suggestedTags`
-rather than building a second copy of the map, and renders the server's own
-`emergency.reason` on step 5 rather than recomputing the rule.
+rather than building a second copy of the map, renders the server's own
+`emergency.reason` on step 5 rather than recomputing the rule, and shows the
+over-cap refusal as an upgrade prompt — the cap it reads is now the live
+entitlement rather than a constant.
 
 | | |
 |---|---|
-| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.25. Every product decision. Read §0.0 first — it is a precedence rule |
+| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.28. Every product decision. Read §0.0 first — it is a precedence rule |
 | `CLAUDE.md` | Architectural invariants Claude must never violate. Loaded automatically |
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs |
 | `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |

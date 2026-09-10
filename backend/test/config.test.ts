@@ -212,6 +212,48 @@ describe('loadConfig', () => {
     }
   });
 
+  // Phase 8a, §1b step 2: a provider cannot pay a subscription without
+  // somewhere to send the money. Unset in development is fine — the endpoint
+  // returns `bankTransfer: null` rather than an example account, because a
+  // provider who transfers to a made-up number has lost it — and required in
+  // production, the posture EMAIL_TRANSPORT and MEDIA_STORAGE already take.
+  it('leaves the billing bank details null when unset, and requires all three in production', () => {
+    expect(loadConfig(minimal).billing.bankDetails).toBeNull();
+
+    // All three or none: a half-configured account is the worst of the three
+    // states, because the screen renders and the transfer goes nowhere.
+    expect(
+      loadConfig({ ...minimal, BILLING_BANK_NAME: 'Bank of Maldives' }).billing.bankDetails,
+    ).toBeNull();
+
+    const configured = loadConfig({
+      ...minimal,
+      BILLING_BANK_NAME: 'Bank of Maldives',
+      BILLING_BANK_ACCOUNT_NAME: 'RaajjePro Pvt Ltd',
+      BILLING_BANK_ACCOUNT_NUMBER: '7770000000000',
+    });
+    expect(configured.billing.bankDetails).toEqual({
+      bankName: 'Bank of Maldives',
+      accountName: 'RaajjePro Pvt Ltd',
+      accountNumber: '7770000000000',
+    });
+
+    let caught: unknown;
+    try {
+      loadConfig({ ...minimal, NODE_ENV: 'production' });
+    } catch (error) {
+      caught = error;
+    }
+    const issues = (caught as ConfigError).issues.join('\n');
+    for (const name of [
+      'BILLING_BANK_NAME',
+      'BILLING_BANK_ACCOUNT_NAME',
+      'BILLING_BANK_ACCOUNT_NUMBER',
+    ]) {
+      expect(issues).toContain(`${name}: required in production`);
+    }
+  });
+
   it('reports a schema failure and a production business-rule violation together', () => {
     let caught: unknown;
     try {

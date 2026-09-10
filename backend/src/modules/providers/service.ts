@@ -45,6 +45,27 @@ interface Deps {
 }
 
 /**
+ * 🔧 §1b: "**pause keys off the provider-level `acceptingNewCustomers`
+ * toggle**", confirmed literal on 2026-09-10 — turning the toggle off starts
+ * the billing pause and turning it on resumes it.
+ *
+ * A listener rather than a call, for the same reason `AnonymisationHooks` is
+ * one: this module must not learn what a subscription is. §Phase 8a registers
+ * the single implementation in `app.ts`, and its own `pause`/`resume`
+ * endpoints reach it by writing the toggle **through this service** — so
+ * whichever door a provider comes through, one function decides what happens
+ * to the clock. Two independent pause states would be the same failure as a
+ * stored copy of a derived rule, in state form.
+ *
+ * Before §Phase 8a there is nothing registered and the toggle is what it
+ * always was: a switch that hides a provider's listings.
+ */
+export type AcceptingNewCustomersListener = (
+  providerProfileId: string,
+  accepting: boolean,
+) => Promise<void>;
+
+/**
  * Provider profiles (§Phase 5).
  *
  * The provider half of an account: who they are, how a customer pays them,
@@ -68,6 +89,9 @@ export class ProviderProfileService {
    */
   private readonly locations: LocationRepository;
 
+  /** §Phase 8a's billing pause, registered after construction (see `AcceptingNewCustomersListener`). */
+  private acceptingListener: AcceptingNewCustomersListener | null = null;
+
   constructor(deps: Deps) {
     this.prisma = deps.prisma;
     this.repo = new ProviderRepository(deps.prisma);
@@ -76,6 +100,16 @@ export class ProviderProfileService {
     this.audit = deps.audit;
     this.conduct = deps.conduct ?? noConductRecorded;
     this.visibility = new ProviderVisibility(deps.prisma, deps.listings ?? NO_PUBLISHED_LISTINGS);
+  }
+
+  /**
+   * Registers §Phase 8a's billing pause. Called once, from `app.ts`, after
+   * both services exist — the same shape `ExportContributors.register` and
+   * `AnonymisationHooks.register` take, and for the same reason: the
+   * dependency runs one way and this module stays unaware of the other.
+   */
+  onAcceptingNewCustomersChanged(listener: AcceptingNewCustomersListener): void {
+    this.acceptingListener = listener;
   }
 
   /**
@@ -148,7 +182,8 @@ export class ProviderProfileService {
     body: UpdateOwnProviderBody,
     meta?: RequestMeta,
   ): Promise<OwnProviderDto> {
-    await this.repo.getOrCreate(userId);
+    const before = await this.repo.getOrCreate(userId);
+    const wasAccepting = before.acceptingNewCustomers;
     const changedPaymentFields = PAYMENT_FIELDS.filter((f) => body[f] !== undefined);
 
     const row = await this.repo.transaction(async (tx) => {
@@ -170,6 +205,12 @@ export class ProviderProfileService {
       return updated;
     });
     await this.stampOnboardingIfComplete(userId);
+    // §1b's billing pause, and only when the toggle actually moved: a PATCH
+    // that re-sends the value it already had must not spend pause allowance,
+    // and §Phase 9's queued autosaves replay exactly that way.
+    if (body.acceptingNewCustomers !== undefined && body.acceptingNewCustomers !== wasAccepting) {
+      await this.acceptingListener?.(row.id, body.acceptingNewCustomers);
+    }
     return toOwnProviderDto(
       await this.repo.findByUserId(userId).then((r) => r ?? row),
       await this.conductFor(row.id),

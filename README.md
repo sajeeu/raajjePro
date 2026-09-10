@@ -9,7 +9,7 @@ Phases 0, 1, 2 and Phase 3 (both halves) are built: both apps boot, lint is clea
 
 | File | What it is |
 |---|---|
-| `01_Development_Plan_v5.md` | **The authoritative spec**, at revision 5.20. Standalone. Read §0.0 first — it is a precedence rule. |
+| `01_Development_Plan_v5.md` | **The authoritative spec**, at revision 5.28. Standalone. Read §0.0 first — it is a precedence rule. |
 
 Everything else in this repo derives from that file, and nothing else restates it. Seventeen review rounds established why: every copy of a decision eventually drifts from the original, and it happened five times before the copies were removed.
 

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { AppError, BusinessRuleError, NotFoundError } from '../../core/errors.js';
 import type { Clock } from '../../core/clock.js';
 import {
@@ -143,6 +145,30 @@ export class MediaService {
     return { contentType: actual, byteSize: stripped.length };
   }
 
+  /**
+   * Who may call: a module storing bytes **this server generated** — §Phase
+   * 8a's PDF invoices are the first, and the identity-decision records
+   * §Phase 10a will keep are the likely second.
+   *
+   * Deliberately a separate method from the three-step upload rather than a
+   * flag on it, because every step of that flow exists to distrust a client:
+   * the key is server-chosen so one tenant cannot overwrite another's object,
+   * the declared type is checked against the real bytes, and the metadata is
+   * stripped. None of that applies to bytes this process just produced —
+   * there is no client, no declaration to disbelieve and no camera EXIF to
+   * remove — and routing them through `finalise` would fail on the first
+   * check, since a PDF is not one of the three accepted image types.
+   *
+   * The key is still this module's to choose, for the same reason it is in
+   * `issueUploadTarget`: a caller-supplied key is how one caller's object
+   * lands on another's.
+   */
+  async putGenerated(purpose: string, bytes: Buffer, contentType: string): Promise<string> {
+    const objectKey = `${purpose}/${randomUUID()}`;
+    await this.storage.put(objectKey, bytes, contentType);
+    return objectKey;
+  }
+
   /** A short-lived URL for a stored object. Re-issued on every read, never persisted. */
   readUrl(objectKey: string): string {
     return this.storage.readUrl(
@@ -186,10 +212,19 @@ export class MediaService {
    * it expires.
    *
    * The content type is **sniffed from the stored bytes** rather than carried
-   * in the token. Everything in the store has been through `finalise`, so the
-   * bytes are known to be one of the three accepted types, and reading it off
-   * the object rather than off the URL means a token cannot assert a type the
-   * object does not have.
+   * in the token. Everything a client uploaded has been through `finalise`, so
+   * those bytes are known to be one of the three accepted image types, and
+   * reading the type off the object rather than off the URL means a token
+   * cannot assert a type the object does not have.
+   *
+   * 🔧 **PDFs are recognised as well, since §Phase 8a stores generated
+   * invoices here.** Sniffed rather than trusted for the same reason as the
+   * images — and served with its real type rather than as
+   * `application/octet-stream`, so an invoice opens rather than downloading as
+   * an unnamed blob. `sniffImageType` is left exactly as it is: the *upload*
+   * path must keep refusing anything that is not one of the three image
+   * types, and widening it would have quietly let a client upload a PDF as a
+   * listing photo.
    */
   async serve(token: string, secret: Buffer): Promise<{ bytes: Buffer; contentType: string }> {
     const claims = this.verify(token, secret);
@@ -198,7 +233,7 @@ export class MediaService {
     }
     const bytes = await this.storage.get(claims.key);
     if (bytes === null) throw new NotFoundError('No such image');
-    return { bytes, contentType: sniffImageType(bytes) ?? 'application/octet-stream' };
+    return { bytes, contentType: sniffStoredType(bytes) };
   }
 
   private verify(token: string, secret: Buffer) {
@@ -216,6 +251,20 @@ export class MediaService {
       throw error;
     }
   }
+}
+
+/** `%PDF-` — the five bytes a PDF must open with. */
+const PDF_MAGIC = Buffer.from('%PDF-', 'latin1');
+
+/**
+ * What is in the store, by its bytes: one of the three image types, a PDF, or
+ * something this server does not claim to know.
+ */
+function sniffStoredType(bytes: Buffer): string {
+  const image = sniffImageType(bytes);
+  if (image !== null) return image;
+  if (bytes.subarray(0, PDF_MAGIC.length).equals(PDF_MAGIC)) return 'application/pdf';
+  return 'application/octet-stream';
 }
 
 function assertAcceptedType(contentType: string): asserts contentType is ImageContentType {

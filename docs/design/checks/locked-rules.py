@@ -64,6 +64,11 @@ RULES = [
      "Round 15: quote windows are per-category — 120/240 or 1440/4320. Never hardcode."),
     ("pre-Round-22 Moving window", r"Moving[^.]{0,40}\b120\b|\b120\b[^.]{0,40}Moving",
      "Round 22: the emergency response window is 30 minutes for all four categories."),
+    ("pre-2026-09-10 trial triggers", r"all three (?:call|fire|start|trigger)|"
+                                      r"three triggers[^.]{0,80}(?:comes first|call|start)",
+     "2026-09-10 (§Phase 8a): the 7-day job PROMPTS and does not start. Two triggers "
+     "start a trial — the confirmed-booking transition and the explicit request — and "
+     "one nudges toward the second."),
     ("SES gating Phase 3", r"production access[^.]{0,80}before Phase 3|"
                            r"before Phase 3[^.]{0,80}production access|"
                            r"sandbox before this phase|Phase 3 waits on it",

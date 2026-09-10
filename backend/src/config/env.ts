@@ -70,6 +70,19 @@ const schema = z.object({
    */
   MEDIA_BASE_URL: z.string().min(1).default('http://localhost:3000'),
   MEDIA_SIGNING_KEY: base32Key,
+
+  // Phase 8a. RaajjePro's own bank account — what §1b step 2 shows a provider
+  // alongside their reference code, and the account §Phase 10a's receipt
+  // analysis checks a proof against. Typed configuration by decision
+  // (2026-09-10, §Phase 8a): no entity holds them and §Phase 10b's config
+  // list does not include them, so an admin-editable surface would be
+  // building ahead. Optional here and **required in production** below, the
+  // posture EMAIL_TRANSPORT and MEDIA_STORAGE already take — nothing
+  // fabricates an account number, and no payment screen can ship pointing at
+  // a placeholder.
+  BILLING_BANK_NAME: z.string().min(1).optional(),
+  BILLING_BANK_ACCOUNT_NAME: z.string().min(1).optional(),
+  BILLING_BANK_ACCOUNT_NUMBER: z.string().min(1).optional(),
 });
 
 export type EmailChannel = 'otp' | 'notification' | 'marketing';
@@ -92,6 +105,20 @@ export interface FileMediaConfig {
 }
 
 export type MediaConfig = FileMediaConfig;
+
+/**
+ * Where a provider sends their subscription transfer (§1b step 2).
+ *
+ * `null` when unconfigured, which only development and test can be — the
+ * production guard in `loadConfig` refuses a boot without it. The endpoint
+ * returns the null rather than substituting an example account: a provider
+ * who transfers money to a made-up account number has lost it.
+ */
+export interface BillingBankDetails {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+}
 
 export interface SesEmailConfig {
   transport: 'ses';
@@ -138,6 +165,7 @@ export interface Config {
   email: SesEmailConfig | FileEmailConfig;
   push: PushConfig;
   media: MediaConfig;
+  billing: { bankDetails: BillingBankDetails | null };
 }
 
 export class ConfigError extends Error {
@@ -229,6 +257,21 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     issues.push('MEDIA_BASE_URL: must be an https:// URL in production');
   }
 
+  // Phase 8a, §1b: a provider cannot pay a subscription without somewhere to
+  // send the money, so production without these is a billing flow that shows
+  // a reference code and no account. All three or none — a partially
+  // configured account is the worst of the three states, because the screen
+  // renders and the transfer goes nowhere.
+  if (production) {
+    for (const name of [
+      'BILLING_BANK_NAME',
+      'BILLING_BANK_ACCOUNT_NAME',
+      'BILLING_BANK_ACCOUNT_NUMBER',
+    ] as const) {
+      if (cleaned[name] === undefined) issues.push(`${name}: required in production`);
+    }
+  }
+
   if (emailTransport === 'ses') {
     const required: [string, string | undefined][] = [
       ['AWS_REGION', cleaned.AWS_REGION],
@@ -307,6 +350,21 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
       // Trailing slashes would double up in every signed URL.
       baseUrl: v.MEDIA_BASE_URL.replace(/\/+$/, ''),
       signingKey: v.MEDIA_SIGNING_KEY,
+    },
+    billing: {
+      // All three or nothing, so no consumer has to handle a half-configured
+      // account. The production guard above is what makes the null impossible
+      // where it would matter.
+      bankDetails:
+        v.BILLING_BANK_NAME !== undefined &&
+        v.BILLING_BANK_ACCOUNT_NAME !== undefined &&
+        v.BILLING_BANK_ACCOUNT_NUMBER !== undefined
+          ? {
+              bankName: v.BILLING_BANK_NAME,
+              accountName: v.BILLING_BANK_ACCOUNT_NAME,
+              accountNumber: v.BILLING_BANK_ACCOUNT_NUMBER,
+            }
+          : null,
     },
   };
 }

@@ -33,6 +33,11 @@ import type { ProviderEntitlementReader } from './modules/listings/entitlements.
 import { registerListingRoutes } from './modules/listings/routes.js';
 import { ListingService } from './modules/listings/service.js';
 import { PUBLISHED_LISTINGS } from './modules/listings/visibility.js';
+import { registerSubscriptionAdminRoutes } from './modules/subscriptions/admin-routes.js';
+import type { SubscriptionBookingSource } from './modules/subscriptions/bookings.js';
+import type { BillingNotifier } from './modules/subscriptions/notifications.js';
+import { registerSubscriptionRoutes } from './modules/subscriptions/routes.js';
+import { SubscriptionService } from './modules/subscriptions/service.js';
 import { registerLocationRoutes } from './modules/location/routes.js';
 import { LocationService } from './modules/location/service.js';
 import { registerMediaRoutes } from './modules/media/routes.js';
@@ -66,6 +71,11 @@ import { PushRegistrationService } from './modules/push/service.js';
 import { FallbackSweep } from './modules/push/sweep.js';
 import type { PushTransport } from './modules/push/types.js';
 import { anonymiseAccountsJob } from './jobs/anonymise-accounts.js';
+import {
+  subscriptionIntroductoryConversionJob,
+  subscriptionLifecycleJob,
+  subscriptionTrialPromptJob,
+} from './jobs/subscription-lifecycle.js';
 import { listingCountRollupJob } from './jobs/listing-count-rollup.js';
 import { notificationHealthJob } from './jobs/notification-health.js';
 import { pushFallbackJob } from './jobs/push-fallback.js';
@@ -94,8 +104,26 @@ export interface AppDeps {
   publishedListings?: PublishedListingSource;
   /** Phase 8's object store. Defaults to the local file transport (§0.0 item 17). */
   mediaStorage?: MediaStorage;
-  /** Phase 8a replaces this with `getProviderEntitlements`; until then every provider is on §1b's free tier. */
+  /**
+   * 🔧 **Phase 8a filled this seam.** The default is now
+   * `getProviderEntitlements` over the real `provider_subscription` table
+   * rather than `FREE_TIER_ONLY`, and `ListingService` did not change — the
+   * interface is what survived (§Phase 8's own note, ledger row P5-1's
+   * pattern). A test may still inject a reader to put a provider on a cap
+   * without building a subscription.
+   */
   entitlements?: ProviderEntitlementReader;
+  /**
+   * §Phase 17.1 supplies the real one. Until `Booking` exists, no provider
+   * has a booking and no listing is protected by one — which is the true
+   * answer rather than a stub (`modules/subscriptions/bookings.ts`).
+   */
+  subscriptionBookings?: SubscriptionBookingSource;
+  /**
+   * §Phase 19 owns notification content; until then the default logs that a
+   * billing event fired and that nothing delivered it.
+   */
+  billingNotifier?: BillingNotifier;
   /** Phase 11 supplies §1f's computed conduct metrics; until then no rate is computable. */
   providerConduct?: ProviderConductSource;
   /**
@@ -117,6 +145,7 @@ declare module 'fastify' {
     providers: ProviderProfileService;
     location: LocationService;
     listings: ListingService;
+    subscriptions: SubscriptionService;
     media: MediaService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
@@ -254,16 +283,44 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     clock: deps.clock,
   });
   app.decorate('media', media);
+
+  // Phase 8a. §1b's monetization: the trial, the 30-day billing anchor, the
+  // shared pause, the manual `PaymentSubmission` mechanism and
+  // `getProviderEntitlements` — "the single source of tier truth". It is
+  // constructed **before** `ListingService` because it supplies that
+  // service's entitlement reader; the dependency runs one way, and the
+  // downgrade reads listing rows through the `visibility.ts` fragments rather
+  // than through `ListingService`, which is what keeps it one-way.
+  const subscriptions = new SubscriptionService({
+    prisma: deps.prisma,
+    providers,
+    media,
+    audit,
+    clock: deps.clock,
+    bankDetails: config.billing.bankDetails,
+    ...(deps.subscriptionBookings === undefined ? {} : { bookings: deps.subscriptionBookings }),
+    ...(deps.billingNotifier === undefined ? {} : { notifier: deps.billingNotifier }),
+    log: app.log,
+  });
+  app.decorate('subscriptions', subscriptions);
+  // 🔧 §1b's "pause keys off the provider-level `acceptingNewCustomers`
+  // toggle", wired as one implementation reached through two doors: the
+  // billing endpoints write the toggle through `ProviderProfileService`, and
+  // `PATCH /v1/providers/me` fires this same listener.
+  providers.onAcceptingNewCustomersChanged((providerProfileId, accepting) =>
+    subscriptions.acceptingNewCustomersChanged(providerProfileId, accepting),
+  );
+
   const listings = new ListingService({
     prisma: deps.prisma,
     providers,
     categories,
     media,
     clock: deps.clock,
-    // Phase 8a replaces this with the live `getProviderEntitlements` read.
-    // Until then every provider is on §1b's free tier, which is not a
-    // placeholder — with no `ProviderSubscription` table, they are.
-    ...(deps.entitlements === undefined ? {} : { entitlements: deps.entitlements }),
+    // 🔧 **Phase 8a's `getProviderEntitlements`, filling §Phase 8's seam.**
+    // `FREE_TIER_ONLY` was the right answer while no subscription table
+    // existed; now the cap is read live per provider and no caller changed.
+    entitlements: deps.entitlements ?? subscriptions.entitlementReader,
   });
   app.decorate('listings', listings);
 
@@ -336,6 +393,13 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // Phase 8: the counters are rolled up from the event log on a schedule,
   // never incremented per request.
   jobs.register(listingCountRollupJob(new ListingEvents(deps.prisma, deps.clock), app.log));
+  // Phase 8a: §1b's lifecycle on the runner rather than check-on-read — the
+  // 7-day warning, expiry → grace, grace → downgrade, the win-back pair, the
+  // forced resume at the pause cap, the "Try Premium" prompt and the
+  // introductory-rate conversion.
+  jobs.register(subscriptionLifecycleJob(subscriptions, app.log));
+  jobs.register(subscriptionTrialPromptJob(subscriptions, app.log));
+  jobs.register(subscriptionIntroductoryConversionJob(subscriptions, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -357,6 +421,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerProviderRoutes(app);
   registerLocationRoutes(app);
   registerListingRoutes(app);
+  registerSubscriptionRoutes(app);
+  registerSubscriptionAdminRoutes(app);
   // The two routes the LOCAL media transport needs — this process playing the
   // object store. There is one transport today, so they register
   // unconditionally, the same shape `createPushTransport` takes for the same
