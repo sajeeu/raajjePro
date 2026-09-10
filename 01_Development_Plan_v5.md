@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.26 — read this before §0.1–0.3
+### 0.0 Revision 5.27 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -879,10 +879,12 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
   - `POST /v1/providers/me/subscription/start-trial` — an explicit provider-initiated "Try Premium"
   - 🔧 **A third, proactive trigger: prompt "Try Premium" automatically 7 days after a provider's first published listing** if no booking has landed and no trial has started. Without it the confirmed-booking trigger is close to decorative for the provider it most needs to reach — a new provider is capped at one listing, and reaching `confirmed` requires publish → accept → payment → attestation → provider confirmation, realistically days to weeks after signup. The explicit button would otherwise be the only trigger that ever fires in a useful timeframe, and it only fires for a provider who already went looking for it.
   - All three call the same `startTrial(providerId)` function, which is a no-op if a trial has ever run for that account.
+  - 🔧 **Two of the three triggers are buildable in this phase and one is a seam — 2026-09-10.** There is no `Booking` until §Phase 17.1, so "the transition of any booking into `confirmed`" has nothing to hook and the admin-resolving-`payment_unresolved` case has no transition either. Build `startTrial(providerId)` and its two reachable callers — the explicit `POST /v1/providers/me/subscription/start-trial`, and the proactive 7-day prompt, which is fully testable now that §Phase 8 built listings — then take the confirmed-booking half through a narrow injected source, the third use of a pattern this build has twice been right about (`DeletionBlocker` in §Phase 3, `PublishedListingSource` in §Phase 5, `ProviderEntitlementReader` in §Phase 8, whose `FREE_TIER_ONLY` default **this phase now replaces**). §Phase 17.1 wires the real transition and closes the ledger row. Do not build a `Booking` table to test a trial trigger.
 - 🔧 **Billing anchor, not calendar month** (§1b): 30-day periods from `billingAnchorAt`; pausing shifts the anchor by the paused duration.
 - **Pause logic shared between `trialing` and `active`** — one function, one 10-cumulative-day cap, resume-remaining-time semantics, forced auto-resume at the cap, applied identically regardless of state.
 - **Scheduled jobs** (Phase 0's runner, not check-on-read): 7-day-out warning, expiry → grace, grace → downgrade, **win-back notifications at 7 and 30 days post-downgrade**
 - **Downgrade listing-protection:** before hiding any listing, exclude any with a non-terminal booking and a future `scheduledFor` (§1b)
+  - 🔧 **Same seam, second question — 2026-09-10.** This asks a listing-level question no table can answer yet. It is the *rule* that must live here in one place, because §1b's whole point is that upgrade restores exactly what downgrade hid: with the protection missing, a provider's committed job is hidden out from under a customer, and `hidden_over_cap` is then indistinguishable from a listing they took down themselves. Build the rule against the seam and assert it with a fake, as §Phase 5 did for visibility.
 - `getProviderEntitlements(providerId)` — the single source of tier truth, **live DB read every call**, no caching, nothing granted on a `pending` submission
 - Endpoints: upgrade-request, subscription status, pause/resume, start-trial
 - Admin: confirm / reject / **reverse** a submission, plus the pending list. All audit-logged.
