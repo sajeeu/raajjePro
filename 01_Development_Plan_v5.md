@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.23 — read this before §0.1–0.3
+### 0.0 Revision 5.24 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -854,6 +854,7 @@ Sequenced after Phase 3 (device-token registration needs an authenticated user) 
 - Draft-save accepting partial/empty payloads; implicitly creates the Provider Profile; **requires an idempotency key**
 - Publish endpoint: full required-field validation returning a structured missing-field list. 🔧 **Six required fields, not five:** name, category, short description, at least one island, a pricing model with its price, **and now a cover image.** v4 left the cover image optional at publish, which meant a listing could go live with a blank thumbnail — the first thing a customer sees on every card and in search results. Everything else (gallery beyond the cover, availability detail, extra info) stays optional.
   - **Also enforces the entitlement cap.** v1 checked the cap only at draft creation, so drafts made during a trial could all be published after downgrade.
+  - 🔧 **The cap reader is a seam here, and §Phase 8a fills it — decided 2026-09-10.** This clause needs a tier before §Phase 8a's `getProviderEntitlements`, which it names as the single source of tier truth, exists. Phase 8 therefore defines the narrow reader it needs and returns the **free-tier cap of 1 active listing**, which is not a guess: §1b's table sets free tier at one active listing, and a provider with no `ProviderSubscription` row is on it. Phase 8a replaces the body with the live database read and its callers do not change. This is the pattern §Phase 5 used for `PublishedListingSource` (ledger row **P5-1**) and it worked — the rule was built and tested one phase before its data source landed. Do **not** build `ProviderSubscription`, the trial triggers or the pause logic here; 8a's triggers hook booking state transitions that do not exist until §Phase 9a, so they could not be tested.
 - Media upload via presigned URL — **server-side content-type and size validation, EXIF stripping on every image**
 - Soft-delete only; document cascade rules for a listing with bookings, reviews, or reserved slots
 - **View and booking counts come from an event log with periodic rollup**, not per-request counter writes
