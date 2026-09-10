@@ -10,6 +10,7 @@ Build **slice 17.4** of RaajjePro's Phase 17 (Bookings Module) — *Recurring se
 2. **§Phase 17**, specifically the 17.4 subsection, plus its **Done when** list.
 3. **§1c** in full — booking modes, the status machine, the emergency rules and the contact exception.
 4. **§1h Repeat use** — the locked agreement, callback guarantee and provider replacement.
+5. 🔧 **This slice also owns Saved Preferences** (owner's decision, 2026-09-10). §Phase 3 collected it and deferred it for `Island`; §Phase 7 seeded `Island` and correctly declined it, since no section gave it an entity shape. §1h is what asks for it — saved addresses, preferred time windows and standing instructions, "carried forward by **Book Again**", which is this slice. The design exists: `mockups/design-composer/Saved Preferences.dc.html`. Profile's row currently reaches an `UnbuiltScreen` naming Phase 17.4; wiring it is part of finishing here.
 
 ## How to work
 

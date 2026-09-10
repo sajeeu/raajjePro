@@ -189,7 +189,7 @@ hero, a 2×2 block of booking tiles, the five rows and the role switcher.
 
 **Five of its seven destinations do not exist yet, so they are routes rather
 than dead controls.** A new shared `UnbuiltScreen` says what is missing and
-names the phase that owes it — Saved (14), Saved preferences (7), Help &
+names the phase that owes it — Saved (14), Saved preferences (17.4), Help &
 support (19b), the four booking tiles (17), and the switcher's two (6a and
 10) — and `owedBy` is asserted per destination, so landing one of those
 screens trips a test. The four tiles keep four *distinct* placeholders, because
@@ -230,7 +230,7 @@ discarding a `semanticLabel`, sign out staying on the screen, and the summary
 outliving the account it described — each with the regression test that now
 fails without its fix. Ledger rows **P6-1** to **P6-4**.
 
-🔧 **Saved preferences does not stay with Phase 7 — corrected 2026-09-10.**
+🔧 **Saved preferences belongs to Phase 17.4 — settled by the owner, 2026-09-10, and now written into the plan's 17.4 slice line.**
 This paragraph said it did, and Phase 7 turned out not to own it: §Phase 7's
 three bullets and its Done-when name it nowhere, and no section of the plan
 specifies its entity shape or its endpoints, so building it would have meant
@@ -379,7 +379,7 @@ It is a safety net for a forgotten push, not a substitute for committing as you 
 
 **Left open by design, for a named later phase — not a gap, a seam:**
 
-- **Saved preferences** (§Phase 3's account-settings bullet) — 🔧 **Phase 7 seeded `Island` and did not take it (2026-09-10).** §Phase 7's bullets and Done-when name it nowhere and no section of the plan gives it an entity shape or endpoints, so Phase 7 declined to invent them. §1h asks for it as part of repeat use — "carried forward by Book Again" — so it sits with **Phase 17.4**, by which point a saved address has a booking to be used by. The island control it needs now exists (`IslandMultiSelect`, `IslandPickerSheet`).
+- **Saved preferences** (§Phase 3's account-settings bullet) — 🔧 **now Phase 17.4's, settled by the owner 2026-09-10 and written into §Phase 17's slice list.** Phase 7 seeded `Island` and did not take it: §Phase 7's bullets and Done-when name it nowhere and no section of the plan gives it an entity shape or endpoints, so Phase 7 declined to invent them. §1h asks for it as part of repeat use — "carried forward by Book Again" — so it sits with **Phase 17.4**, by which point a saved address has a booking to be used by. The island control it needs now exists (`IslandMultiSelect`, `IslandPickerSheet`).
 - **`AnonymisationHooks` and `DeletionBlocker`** (`backend/src/modules/account/anonymise.ts`) — the two seams Phase 3's deletion pipeline built and tested against a registered hook / an injected blocker. Phase 11 registers the real review-anonymisation hook; Phase 17 supplies the real open-bookings check. Both are ledger rows in `docs/deferred-verification.md` (P1, P2).
 
 **For the terminal session — the Phase 5 QA re-review's remaining items (2026-09-09).**
