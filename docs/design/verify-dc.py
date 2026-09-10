@@ -14,7 +14,18 @@ FORBIDDEN = [
     # Round 44 renamed the slot-mode card affordance. "Book instantly" named an immediacy the
     # state machine does not produce: a slot booking enters `requested` and waits for the
     # provider on the same 24-hour clock as a request. Cleared by Round 44 - LOCKED.
-    ("pre-Round-44 slot affordance", r"Book instantly|confirmed straight away|books? instantly",
+    # Widened 2026-09-10: the original three phrasings were the ones visible at the time, and
+    # `Create Service.dc.html` step 5 sailed through every round since on "it's confirmed
+    # instantly" - a fourth wording, promising the same thing to the provider choosing the mode.
+    # Match the CLAIM, not the sentence: instant/immediate/automatic directly against
+    # confirmation or booking, in either order. Adjacency is deliberate - allowing a two-word
+    # gap flagged Help Support's "You're notified immediately and the booking record keeps the
+    # history", where it is the NOTICE that is immediate and the sentence is true.
+    ("pre-Round-44 slot affordance",
+     r"Book instantly|books? instantly|confirmed straight away"
+     r"|(?:instant(?:ly)?|immediate(?:ly)?|automatic(?:ally)?)\s+(?:confirm\w*|book\w*)"
+     r"|(?:confirm\w*|book\w*)\s+(?:instantly|immediately|automatically)"
+     r"|confirmation\s+is\s+instant\w*",
      "Round 44: the slot label is 'Pick a time'. A slot booking still needs the provider to accept."),
     # Round 27 amended the never-torn-down rule: the booking thread stays open for the life of
     # the booking and 7 days after completion - the callback window - then locks read-only.

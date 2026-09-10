@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.25 — read this before §0.1–0.3
+### 0.0 Revision 5.26 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -168,10 +168,11 @@ The agent proposes a design, you approve it, and only then does that phase's cod
 
 **Public visibility is derived, not stored.** A provider is publicly visible if and only if `count(listings WHERE status='published' AND visibility='active') > 0`, computed by one shared query helper — `findVisibleProviders` — that Featured Providers, search, and the public profile endpoint all call. There is no stored `lifecycleStatus` field. v1 had one, flipped one-way on first publish, and it drifted: a provider who unpublished their only listing stayed `active` forever with an empty public profile.
 
-- **`ProviderProfile` is created implicitly** on the first `POST /v1/listings` by a user who has none. `getOrCreateProviderProfile(userId)` is idempotent.
+- **`ProviderProfile` is created implicitly** on the first 🔧 **`POST /v1/providers/me/listings`** by a user who has none. `getOrCreateProviderProfile(userId)` is idempotent.
 - **`verificationTier`** (`none` / `bronze` / `silver` / `gold`) is a separate axis — identity and trade evidence, admin-transitioned except the auto-granted Silver route (§1e). Never conflated with visibility. A provider can be visible at tier `none` simultaneously. `verificationStatus` (`unverified` / `pending` / `verified`) persists alongside it as the *review* state of a pending submission, not as the badge.
 - 🔧 **Suspension is an input to visibility.** An admin-suspended provider (§Phase 10b) is excluded by `findVisibleProviders`, so one change covers search, Home, and the public profile. Their listing pages return a neutral unavailable state rather than a booking form. Without this the derived-visibility model would leave a suspended provider fully listed and apparently bookable, with rejection happening only server-side after the customer had committed.
-- **Idempotency:** `POST /v1/listings` requires a client-supplied key so a retry on a flaky connection cannot create orphan drafts. "Become a Provider" for a user with an existing draft resumes it.
+- **Idempotency:** 🔧 **`POST /v1/providers/me/listings`** requires a client-supplied key so a retry on a flaky connection cannot create orphan drafts. "Become a Provider" for a user with an existing draft resumes it.
+- 🔧 **Both URLs corrected 2026-09-10; they had said `POST /v1/listings` since v4.** Owner-facing listing endpoints live under `/v1/providers/me/listings`, the convention §Phase 5 set (`GET /v1/providers/me`, `POST /v1/providers/me/service-areas`) and §Phase 6a built on. The two lines above are about implicit profile creation and the idempotency key rather than about URL design, and §Phase 8 — which actually specifies these endpoints — names no URL at all, so nothing later overrode them and they simply went stale. Keeping `/v1/listings/:id` free of owner-only writes is the other half: this document already spends that namespace on public reads (`GET /v1/listings/:id/public`, `POST /v1/listings/:id/bookings`), and one URL whose response shape depends on the viewer is what §Phase 5 declined for providers.
 - **Dashboard access is never gated.** A provider with only drafts reaches My Services Dashboard normally, stats at zero.
 
 ---
