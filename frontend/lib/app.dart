@@ -21,6 +21,7 @@ import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.dart';
+import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -113,10 +114,17 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         ),
         AppRoutes.help: (_) =>
             const UnbuiltScreen(title: 'Help & support', owedBy: 'Phase 19b'),
-        RoleSwitch.onboardingRoute: (_) =>
-            const UnbuiltScreen(title: 'Become a Provider', owedBy: 'Phase 6a'),
+        // Phase 6a. The onboarding flow itself — three steps behind one
+        // route, resuming from whichever the provider left off on.
+        BecomeProviderScreen.routeName: (_) => const BecomeProviderScreen(),
         RoleSwitch.dashboardRoute: (_) =>
             const UnbuiltScreen(title: 'My Services', owedBy: 'Phase 10'),
+
+        // Where §Phase 6a hands off (its step 4): the wizard's step 1 on a
+        // fresh draft. Phase 9 replaces the placeholder; the handoff itself
+        // is built and asserted now.
+        AppRoutes.createService: (_) =>
+            const UnbuiltScreen(title: 'New service', owedBy: 'Phase 9'),
       },
       onGenerateRoute: (settings) {
         if (settings.name == VerifyEmailScreen.routeName) {

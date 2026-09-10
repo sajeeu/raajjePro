@@ -15,6 +15,7 @@ class ProfileSummary {
     required this.fullName,
     required this.memberSince,
     required this.isProvider,
+    required this.providerOnboardingComplete,
   });
 
   factory ProfileSummary.fromJson(Map<String, dynamic> json) => ProfileSummary(
@@ -22,15 +23,29 @@ class ProfileSummary {
     fullName: json['fullName'] as String,
     memberSince: DateTime.parse(json['memberSince'] as String),
     isProvider: json['isProvider'] as bool,
+    // Absent on a response that predates §Phase 6a, and false is the right
+    // reading of that: nobody had completed a flow that did not exist.
+    providerOnboardingComplete:
+        json['providerOnboardingComplete'] as bool? ?? false,
   );
 
   final String id;
   final String fullName;
   final DateTime memberSince;
 
-  /// Whether this account already has a Provider Profile — the one thing the
-  /// role switcher needs to tell a first switch from a later one (§Phase 6).
+  /// Whether this account already has a Provider Profile. Not what the role
+  /// switcher routes on any more — see [providerOnboardingComplete] — but
+  /// still the answer to "is there a profile", which §1a's implicit creation
+  /// path and §Phase 8's wizard fallback both turn on.
   final bool isProvider;
+
+  /// 🔧 **§Phase 6a's signal, and what the role switcher routes on.** Derived
+  /// server-side from what onboarding's three steps collect plus the verified
+  /// email §Phase 5 requires to finish, and never stored
+  /// (`backend/src/modules/providers/onboarding.ts`). It is a different
+  /// question from [isProvider], which flips at step 2 —
+  /// `RoleSwitch.destinationFor` explains why the distinction matters.
+  final bool providerOnboardingComplete;
 }
 
 /// Typed calls for the Profile screen. No rule lives here; the server decides.

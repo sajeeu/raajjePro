@@ -168,7 +168,9 @@ class _ProfileBody extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
                 ],
-                _RoleSwitchRow(isProvider: summary.isProvider),
+                _RoleSwitchRow(
+                  onboardingComplete: summary.providerOnboardingComplete,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 const _SignOutButton(),
               ],
@@ -210,12 +212,15 @@ class _ProfileBody extends ConsumerWidget {
 /// change in the app that departs from the original mockups.
 ///
 /// Opens the sheet; the sheet's Provider card resolves through [RoleSwitch],
-/// so a first switch reaches §Phase 6a's onboarding and every later one
-/// §Phase 10's dashboard. The pill names the mode you are in now.
+/// so a switch reaches §Phase 6a's onboarding until that flow is finished and
+/// §Phase 10's dashboard afterwards. 🔧 **Phase 6a changed the signal** from
+/// `isProvider` to onboarding completeness, because the profile is created at
+/// onboarding's step 2 and a provider who stopped at step 3 would otherwise
+/// never be shown it again. The pill names the mode you are in now.
 class _RoleSwitchRow extends StatelessWidget {
-  const _RoleSwitchRow({required this.isProvider});
+  const _RoleSwitchRow({required this.onboardingComplete});
 
-  final bool isProvider;
+  final bool onboardingComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -230,8 +235,9 @@ class _RoleSwitchRow extends StatelessWidget {
             // Close the sheet first, so Back from the destination returns to
             // Profile rather than to a sheet over it.
             Navigator.of(sheetContext).pop();
-            Navigator.of(context)
-                .pushNamed(RoleSwitch.destinationFor(isProvider: isProvider));
+            Navigator.of(context).pushNamed(
+              RoleSwitch.destinationFor(onboardingComplete: onboardingComplete),
+            );
           },
         ),
       ),

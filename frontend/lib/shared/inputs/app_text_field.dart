@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:raajjepro/core/theme/app_theme.dart';
+import 'package:raajjepro/shared/inputs/field_requirement.dart';
 
 /// The text input (`Components.dc.html` → Text input). Label above at
 /// 14/700; a 52 dp-minimum field with a 14 radius and a 1.5 border; states
@@ -39,6 +40,7 @@ class AppTextField extends StatefulWidget {
     this.autocorrect = true,
     this.textCapitalization = TextCapitalization.none,
     this.autofocus = false,
+    this.requirement,
   });
 
   final String label;
@@ -86,6 +88,13 @@ class AppTextField extends StatefulWidget {
   /// a field — an autofocused input on arrival steals a screen reader's
   /// starting point and covers half the page with a keyboard.
   final bool autofocus;
+
+  /// 🔧 **Added in Phase 6a** — flagged rather than done silently, because
+  /// this is shared Phase 1 code. Draws a Required/Optional pill on the label
+  /// row, as every form in the delivered prototypes does, and appends the word
+  /// to the spoken label so the mark is not visual-only. Null draws nothing,
+  /// which is what every field built before this expects.
+  final FieldRequirement? requirement;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -163,6 +172,9 @@ class _AppTextFieldState extends State<AppTextField> {
     );
 
     final spoken = StringBuffer(widget.label);
+    if (widget.requirement != null) {
+      spoken.write(', ${widget.requirement!.label.toLowerCase()}');
+    }
     if (hasMessage) spoken.write(', ${widget.errorText}');
     if (!hasMessage && widget.helper != null) {
       spoken.write(', ${widget.helper}');
@@ -202,7 +214,17 @@ class _AppTextFieldState extends State<AppTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ExcludeSemantics(child: Text(widget.label, style: labelStyle)),
+        ExcludeSemantics(
+          child: widget.requirement == null
+              ? Text(widget.label, style: labelStyle)
+              : Row(
+                  children: [
+                    Flexible(child: Text(widget.label, style: labelStyle)),
+                    const SizedBox(width: AppSpacing.sm),
+                    FieldRequirementPill(widget.requirement!),
+                  ],
+                ),
+        ),
         const SizedBox(height: AppSpacing.sm),
         // MergeSemantics folds the label and the editable into one node whose
         // rect is the whole 52 dp box; the GestureDetector makes that box the

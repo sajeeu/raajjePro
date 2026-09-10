@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:raajjepro/core/clock.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/verify_email_controller.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/circle_back_button.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/countdown_text.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/otp_code_entry.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -19,7 +19,13 @@ export 'package:raajjepro/features/auth/controller/verify_email_controller.dart'
 /// success · send_failed · offline. Two timers, two clocks.
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({required this.args, super.key});
-  static const routeName = '/verify-email';
+
+  /// 🔧 **Defined in `core/routes.dart` since Phase 6a**, which is the second
+  /// feature to push this name — §Phase 6a's account-details step blocks
+  /// Continue on an unverified email and carries the way out of it. Two
+  /// independent `'/verify-email'` literals with nothing asserting they match
+  /// is exactly what that file exists to prevent.
+  static const routeName = AppRoutes.verifyEmail;
   final VerifyEmailArgs args;
 
   @override

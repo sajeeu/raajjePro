@@ -11,6 +11,7 @@ import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/crash/crash_reporter.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
+import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -30,10 +31,12 @@ import 'helpers.dart';
 /// isolation, because two of the three lines are about routing: a row that
 /// pushes a name nothing registered throws here rather than passing.
 ///
-/// The two destinations behind the role switcher are §Phase 6a's and
-/// §Phase 10's screens, neither of which exists. What Phase 6 owns is the
-/// *decision* — which route, on which signal — and that is what these assert.
-/// `docs/deferred-verification.md` rows P6-1 and P6-2 carry the rest.
+/// 🔧 **One of the two destinations behind the role switcher is now real.**
+/// §Phase 6a built `BecomeProviderScreen`, so the first-switch assertion below
+/// lands on the intro step rather than on a placeholder — which is the half of
+/// ledger row **P6-1** that Phase 6a closes. §Phase 10's dashboard is still a
+/// placeholder, and the signal itself moved from `isProvider` to onboarding
+/// completeness in the same phase (`role_switch.dart` says why).
 void main() {
   late FakeApiClient api;
   late InMemoryTokenStore store;
@@ -50,6 +53,7 @@ void main() {
   Future<NavigatorState> bootToProfile(
     WidgetTester tester, {
     bool isProvider = false,
+    bool onboardingComplete = false,
     String fullName = 'Aishath Naeema',
     String memberSince = '2026-01-14T08:30:00.000Z',
   }) async {
@@ -60,6 +64,7 @@ void main() {
         fullName: fullName,
         memberSince: memberSince,
         isProvider: isProvider,
+        providerOnboardingComplete: onboardingComplete,
       ),
     );
     await store.write(TokenPair.fromJson(tokensJson()));
@@ -193,7 +198,7 @@ void main() {
     });
   });
 
-  group('the role switcher routes on isProvider', () {
+  group('the role switcher routes on onboarding completeness', () {
     /// Opens the sheet and chooses Provider.
     Future<void> switchToProviding(WidgetTester tester) async {
       await tester.ensureVisible(find.text('Switch to providing'));
@@ -209,32 +214,77 @@ void main() {
     testWidgets('a first switch reaches onboarding, never the wizard', (
       tester,
     ) async {
+      // §Phase 6a's own first Done-when line, from the Profile side: the
+      // intro step, not `/services/new`.
+      api.fail(
+        'GET',
+        '/v1/providers/me',
+        status: 404,
+        code: 'PROVIDER_PROFILE_NOT_FOUND',
+      );
       await bootToProfile(tester, isProvider: false);
       await switchToProviding(tester);
-      final screen = tester.widget<UnbuiltScreen>(find.byType(UnbuiltScreen));
-      expect(screen.title, 'Become a Provider');
-      expect(screen.owedBy, 'Phase 6a');
+      expect(find.byType(BecomeProviderScreen), findsOneWidget);
+      expect(find.text('Offer your services on RaajjePro'), findsOneWidget);
+      expect(find.text('Step 1 of 3'), findsOneWidget);
+      expect(find.byType(UnbuiltScreen), findsNothing);
     });
 
     testWidgets('a returning provider reaches the dashboard directly', (
       tester,
     ) async {
-      await bootToProfile(tester, isProvider: true);
+      await bootToProfile(tester, isProvider: true, onboardingComplete: true);
       await switchToProviding(tester);
       final screen = tester.widget<UnbuiltScreen>(find.byType(UnbuiltScreen));
       expect(screen.title, 'My Services');
       expect(screen.owedBy, 'Phase 10');
-      // Not the onboarding flow: §Phase 6a's Done-when is that a provider who
-      // has completed it never sees it again.
-      expect(find.text('Become a Provider is not built yet'), findsNothing);
+      // §Phase 6a's Done-when: a provider who has completed it never sees the
+      // flow again.
+      expect(find.byType(BecomeProviderScreen), findsNothing);
+    });
+
+    testWidgets('a provider mid-onboarding is sent back into it, not on', (
+      tester,
+    ) async {
+      // The case `isProvider` alone could not see. Step 2 has landed — so a
+      // profile exists and `isProvider` is true — and step 3 has not.
+      api.on(
+        'GET',
+        '/v1/providers/me',
+        (_) => {
+          'businessName': "Hassan's Repairs",
+          'providerType': 'individual',
+          'paymentDetails': {
+            'bankName': 'Bank of Maldives (BML)',
+            'bankAccountName': 'Hassan Ibrahim',
+            'bankAccountNumber': '7730000123456',
+          },
+          'serviceAreas': <Object>[],
+          'onboardingComplete': false,
+        },
+      );
+      api.on('GET', '/v1/islands', (_) => {'_list': <Object>[]});
+      await bootToProfile(tester, isProvider: true, onboardingComplete: false);
+      await switchToProviding(tester);
+      expect(find.byType(BecomeProviderScreen), findsOneWidget);
+      // Resumed at the step they stopped on, not restarted at the intro.
+      expect(find.text('Step 3 of 3'), findsOneWidget);
+      expect(find.text('Where do you usually work?'), findsOneWidget);
     });
 
     testWidgets('the sheet closes, so Back from the destination is Profile', (
       tester,
     ) async {
+      api.fail(
+        'GET',
+        '/v1/providers/me',
+        status: 404,
+        code: 'PROVIDER_PROFILE_NOT_FOUND',
+      );
       await bootToProfile(tester, isProvider: false);
       await switchToProviding(tester);
-      await tester.tap(find.text('Go back'));
+      // §Phase 6a's "Not right now" — back to customer mode, nothing saved.
+      await tester.tap(find.text('Not right now'));
       await settle(tester);
       expect(find.byType(ProfileScreen), findsOneWidget);
       expect(find.text("How you're using RaajjePro"), findsNothing);
@@ -259,12 +309,20 @@ void main() {
     ) async {
       // The rule as one expression, so it cannot drift from the UI test above
       // and so §Phase 6a and §Phase 10 have something to read.
+      //
+      // 🔧 **Phase 6a changed the input from `isProvider` to onboarding
+      // completeness.** The two are not the same moment: onboarding's step 2
+      // creates the provider profile, so `isProvider` flips one step early
+      // and a provider who stopped on step 3 was being sent to the dashboard
+      // instead of back to the step they left. §Phase 6a's own Done-when says
+      // it is a provider who "already completed onboarding" who never sees
+      // the flow again. `role_switch.dart` carries the full note.
       expect(
-        RoleSwitch.destinationFor(isProvider: false),
+        RoleSwitch.destinationFor(onboardingComplete: false),
         RoleSwitch.onboardingRoute,
       );
       expect(
-        RoleSwitch.destinationFor(isProvider: true),
+        RoleSwitch.destinationFor(onboardingComplete: true),
         RoleSwitch.dashboardRoute,
       );
     });

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
+import 'package:raajjepro/shared/feedback/generic_error_copy.dart';
 
 /// The prototype's exact copy for a duplicate email — set here, once, never
 /// derived from the server's `message` (routing is on `ApiException.code`).

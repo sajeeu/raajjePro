@@ -3,7 +3,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/form_draft_store.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
+import 'package:raajjepro/shared/feedback/generic_error_copy.dart';
 
 class ChangeFormState {
   const ChangeFormState({

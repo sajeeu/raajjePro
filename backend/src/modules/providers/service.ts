@@ -16,6 +16,7 @@ import {
   type ProviderConductRecord,
   type ProviderConductSource,
 } from './conduct.js';
+import { isOnboardingComplete } from './onboarding.js';
 import { ProviderRepository } from './repository.js';
 import type { UpdateOwnProviderBody } from './schema.js';
 import {
@@ -55,6 +56,7 @@ interface Deps {
 export class ProviderProfileService {
   readonly repo: ProviderRepository;
   readonly visibility: ProviderVisibility;
+  private readonly prisma: PrismaClient;
   private readonly categories: CategoryService;
   private readonly conduct: ProviderConductSource;
   private readonly audit: AuditService;
@@ -67,6 +69,7 @@ export class ProviderProfileService {
   private readonly locations: LocationRepository;
 
   constructor(deps: Deps) {
+    this.prisma = deps.prisma;
     this.repo = new ProviderRepository(deps.prisma);
     this.locations = new LocationRepository(deps.prisma);
     this.categories = deps.categories;
@@ -107,7 +110,12 @@ export class ProviderProfileService {
         'PROVIDER_PROFILE_NOT_FOUND',
       );
     }
-    return toOwnProviderDto(row, await this.conductFor(row.id), await this.serviceAreasOf(row.id));
+    return toOwnProviderDto(
+      row,
+      await this.conductFor(row.id),
+      await this.serviceAreasOf(row.id),
+      await this.emailVerified(userId),
+    );
   }
 
   /**
@@ -159,7 +167,35 @@ export class ProviderProfileService {
       }
       return updated;
     });
-    return toOwnProviderDto(row, await this.conductFor(row.id), await this.serviceAreasOf(row.id));
+    return toOwnProviderDto(
+      row,
+      await this.conductFor(row.id),
+      await this.serviceAreasOf(row.id),
+      await this.emailVerified(userId),
+    );
+  }
+
+  /**
+   * §Phase 6a's "has this account completed onboarding?", for a caller that
+   * already holds the user row — §Phase 6's `profile-summary`, whose whole
+   * point is to be *one* call for the Profile screen (`onboarding.ts` carries
+   * the rule and the reasoning).
+   *
+   * It takes the profile rather than re-reading it because the caller's row
+   * already carries it, and counts service areas itself so that no consumer
+   * has to know that step 3 is part of the answer. Same shape as §1a's
+   * visibility helper: one definition, called from everywhere, never copied.
+   */
+  async isOnboardingComplete(user: {
+    emailVerifiedAt: Date | null;
+    providerProfile: ProviderProfile | null;
+  }): Promise<boolean> {
+    if (user.providerProfile === null) return false;
+    return isOnboardingComplete({
+      profile: user.providerProfile,
+      serviceAreaCount: await this.locations.countCurrentServiceAreas(user.providerProfile.id),
+      emailVerified: user.emailVerifiedAt !== null,
+    });
   }
 
   /**
@@ -248,6 +284,19 @@ export class ProviderProfileService {
   private async serviceAreasOf(providerProfileId: string): Promise<IslandDto[]> {
     const rows = await this.locations.findCurrentServiceAreas(providerProfileId);
     return rows.map((row) => toIslandDto(row.island));
+  }
+
+  /**
+   * §Phase 5 keeps exactly one copy of an account's identity fields and this
+   * is not the module that owns them, so this reads the one column
+   * `onboardingComplete` needs rather than widening the provider row.
+   */
+  private async emailVerified(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { emailVerifiedAt: true },
+    });
+    return user?.emailVerifiedAt != null;
   }
 
   private async conductFor(providerId: string): Promise<ProviderConductRecord> {

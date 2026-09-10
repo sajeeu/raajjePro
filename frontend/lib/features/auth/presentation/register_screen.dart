@@ -9,7 +9,6 @@ import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/circle_back_button.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/phone_field.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/role_toggle.dart';
 import 'package:raajjepro/shared/shared.dart';

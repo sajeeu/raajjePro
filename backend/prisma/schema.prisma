@@ -331,6 +331,17 @@ enum VerificationStatus {
   @@map("verification_status")
 }
 
+/// §Phase 6a, Round 21. How a provider offers services — and **not
+/// cosmetic**: §1e reads it to decide what Gold verification asks for (an
+/// individual supplies personal ID, a business supplies registration
+/// documents), and §1g's Maldivian-owned *business* attribute hangs from it.
+enum ProviderType {
+  individual
+  business
+
+  @@map("provider_type")
+}
+
 /// The provider half of an account. Phase 3 created it with only the columns
 /// Phase 3 reads — Business/Trade Name from the Register provider variant,
 /// and the tier the Bronze-uniqueness rule checks. Phase 5 adds the rest
@@ -348,14 +359,24 @@ enum VerificationStatus {
 ///     and there must never be one — v1 had it, it drifted, and a provider who
 ///     unpublished their only listing stayed `active` with an empty profile.
 ///
-/// `providerType`, the default service areas and the identity-document
-/// columns are Phase 6a's, Phase 7's and Phase 10a's respectively; Phase 5
-/// does not build ahead into them.
+/// The default service areas and the identity-document columns are Phase 7's
+/// and Phase 10a's respectively; Phase 5 did not build ahead into them.
+/// `providerType` was in that list and is now below — Phase 6a added it.
 model ProviderProfile {
   id                 String             @id @default(uuid()) @db.Uuid
   userId             String             @unique @map("user_id") @db.Uuid
   user               User               @relation(fields: [userId], references: [id])
   businessName       String?            @map("business_name")
+
+  /// §Phase 6a's required "How will you offer services?" choice. **Nullable,
+  /// and the null is meaningful**: §1a's implicit path (Phase 8's first draft
+  /// save, Phase 3's provider-variant registration) creates a profile without
+  /// anybody having been asked, and §Phase 6a is the front door rather than
+  /// the only door. Null therefore reads as *not yet asked*, which is what
+  /// `providerOnboardingComplete` turns on — never as a default type, because
+  /// guessing it would decide which documents §1e goes on to demand.
+  providerType       ProviderType?      @map("provider_type")
+
   verificationTier   VerificationTier   @default(none) @map("verification_tier")
   verificationStatus VerificationStatus @default(unverified) @map("verification_status")
 

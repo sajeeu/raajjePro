@@ -37,6 +37,17 @@ const bio = z.string().trim().max(160);
 export const updateOwnProviderBody = z
   .object({
     businessName: z.string().trim().min(1).max(120).nullable(),
+
+    /**
+     * §Phase 6a, Round 21. **The one key here that is not nullable**, and the
+     * exception is deliberate: clearing a bio returns a provider to a state
+     * they were legitimately in, whereas there is no "no type" a provider can
+     * meaningfully go back to. The column is nullable only because §1a's
+     * implicit creation path makes a profile before anybody has been asked
+     * (`onboarding.ts`), and un-asking is not an edit — §1e reads this to
+     * decide which documents Gold review demands.
+     */
+    providerType: z.enum(['individual', 'business']),
     bio: bio.nullable(),
     /** A working life, not an age. Zero is meaningful — "just starting out". */
     yearsOfExperience: z.int().min(0).max(80).nullable(),

@@ -1,7 +1,7 @@
 import type { Clock } from '../../core/clock.js';
 import { AuthenticationError, BusinessRuleError } from '../../core/errors.js';
 import type { UserPrincipal } from '../../core/principal.js';
-import { Prisma, type PrismaClient } from '../../generated/prisma/client.js';
+import { Prisma, type PrismaClient, type ProviderProfile } from '../../generated/prisma/client.js';
 import { hashPassword, verifyPassword } from '../admin-auth/crypto.js';
 import type { RequestMeta } from '../admin-auth/service.js';
 import type { AuditService } from '../audit/service.js';
@@ -32,6 +32,23 @@ export function assertRecoverableByEmail(user: { emailVerifiedAt: Date | null })
   }
 }
 
+/**
+ * What `profile-summary` needs from §Phase 5's provider service, and nothing
+ * else.
+ *
+ * Declared here rather than imported as a class, on the precedent Phase 3 set
+ * with `DeletionBlocker` and `ExportContributors`: the account module states
+ * the one question it asks and the provider module answers it. Widening this
+ * to the whole service would let an identity endpoint reach a payment detail.
+ */
+export interface ProviderOnboardingSource {
+  /** §Phase 6a, derived — see `providers/onboarding.ts` for the rule. */
+  isOnboardingComplete(user: {
+    emailVerifiedAt: Date | null;
+    providerProfile: ProviderProfile | null;
+  }): Promise<boolean>;
+}
+
 /** Account settings (plan §Phase 3): each change re-checks the credential, re-verifies where the plan says, and is audited. */
 export class AccountService {
   constructor(
@@ -42,6 +59,8 @@ export class AccountService {
       audit: AuditService;
       clock: Clock;
       exportContributors: ExportContributors;
+      /** §Phase 6a: the one thing the Profile screen's role switcher routes on. */
+      providerOnboarding: ProviderOnboardingSource;
     },
   ) {}
 
@@ -200,7 +219,8 @@ export class AccountService {
    * while its deletion is queued.
    */
   async profileSummary(userId: string): Promise<ProfileSummaryDto> {
-    return profileSummaryDto(await this.loadOrThrow(userId));
+    const user = await this.loadOrThrow(userId);
+    return profileSummaryDto(user, await this.deps.providerOnboarding.isOnboardingComplete(user));
   }
 
   /**

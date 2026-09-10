@@ -2,7 +2,7 @@
 
 Mobile-first, API-first local services marketplace for the Maldives. Flutter app (customer + provider) · TypeScript/Fastify/Prisma/PostgreSQL backend · separate React admin web app.
 
-**Phases 0, 1, 2, 3, 3b, 3c, 4, 5, 6 and 7 are built** — repository and environment foundation; design system and shared UI; backend core; identity and authentication; password reset; push infrastructure; the category catalogue; provider profiles; the customer profile and its role switcher; service areas and the location module. `HANDOVER.md` carries what each one delivered and `docs/decisions/` the record per phase. Phase 6a onward is still specification.
+**Phases 0, 1, 2, 3, 3b, 3c, 4, 5, 6, 6a and 7 are built** — repository and environment foundation; design system and shared UI; backend core; identity and authentication; password reset; push infrastructure; the category catalogue; provider profiles; the customer profile and its role switcher; provider onboarding; service areas and the location module. `HANDOVER.md` carries what each one delivered and `docs/decisions/` the record per phase. Phase 8 onward is still specification.
 
 ## The one document that matters
 

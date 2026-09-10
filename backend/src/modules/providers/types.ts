@@ -1,10 +1,12 @@
 import type {
   ProviderProfile,
+  ProviderType,
   VerificationTier,
   VerificationStatus,
 } from '../../generated/prisma/client.js';
 import type { IslandDto } from '../location/types.js';
 import { meetsConductFloor, NO_CONDUCT, type ProviderConductRecord } from './conduct.js';
+import { isOnboardingComplete } from './onboarding.js';
 
 /**
  * What a provider profile looks like on the wire.
@@ -121,6 +123,18 @@ export interface OwnProviderDto {
   id: string;
   userId: string;
   businessName: string | null;
+  /**
+   * §Phase 6a's required "How will you offer services?" choice. Null means
+   * *not yet asked* — §1a's implicit path creates a profile without one — and
+   * `onboardingComplete` below is what turns on it.
+   *
+   * Deliberately **not** on `PublicProviderDto`. §Phase 6a gives it two jobs,
+   * and neither is a customer-facing one: it decides what §1e's Gold review
+   * asks for, and it is what §1g's Maldivian-owned *business* attribute hangs
+   * from. §Phase 13 owns the public profile and can add it there additively if
+   * that screen turns out to want it.
+   */
+  providerType: ProviderType | null;
   bio: string | null;
   yearsOfExperience: number | null;
   verificationTier: VerificationTier;
@@ -148,6 +162,17 @@ export interface OwnProviderDto {
   suspended: boolean;
   suspendedReason: string | null;
   conduct: OwnConductDto;
+  /**
+   * §Phase 6a, derived and never stored — see `onboarding.ts` for the full
+   * rule and for why the verified-email requirement is expressed here rather
+   * than as a guard on `PATCH /v1/providers/me`.
+   *
+   * The onboarding screen reads it to decide whether the flow is finished;
+   * §Phase 6's role switcher reads the same fact from `profile-summary`, so
+   * that one screen does not pay for a second request. There is exactly one
+   * definition behind both.
+   */
+  onboardingComplete: boolean;
   createdAt: string;
 }
 
@@ -201,15 +226,24 @@ export function toPublicProviderDto(
   };
 }
 
+/**
+ * The last two parameters are **required, with no defaults**, and that is
+ * deliberate: both feed `onboardingComplete`, and a default would let a
+ * forgetful caller return `false` for a provider who has finished — routing
+ * them back into onboarding (§Phase 6a). A missing argument should be a
+ * compile error, not a wrong answer.
+ */
 export function toOwnProviderDto(
   row: ProviderProfile,
-  conduct: ProviderConductRecord = NO_CONDUCT,
-  serviceAreas: IslandDto[] = [],
+  conduct: ProviderConductRecord,
+  serviceAreas: IslandDto[],
+  emailVerified: boolean,
 ): OwnProviderDto {
   return {
     id: row.id,
     userId: row.userId,
     businessName: row.businessName,
+    providerType: row.providerType,
     bio: row.bio,
     yearsOfExperience: row.yearsOfExperience,
     verificationTier: row.verificationTier,
@@ -227,6 +261,11 @@ export function toOwnProviderDto(
       publiclyVisible: meetsConductFloor(conduct),
       metrics: conductMetrics(conduct),
     },
+    onboardingComplete: isOnboardingComplete({
+      profile: row,
+      serviceAreaCount: serviceAreas.length,
+      emailVerified,
+    }),
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -249,6 +288,7 @@ export function toPaymentDetailsDto(row: ProviderProfile): PaymentDetailsDto {
 export function providerOwnExport(row: ProviderProfile): Record<string, unknown> {
   return {
     businessName: row.businessName,
+    providerType: row.providerType,
     bio: row.bio,
     yearsOfExperience: row.yearsOfExperience,
     verificationTier: row.verificationTier,

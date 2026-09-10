@@ -18,6 +18,13 @@ abstract final class AppRoutes {
   // Phase 3.
   static const signIn = '/sign-in';
 
+  /// 🔧 **Added by Phase 6a**, which is the second feature to need it:
+  /// §Phase 6a's account-details step blocks Continue on an unverified email
+  /// and has to carry the way out of it. Pushed with the untyped
+  /// `{'email': ..., 'purpose': ...}` arguments `VerifyEmailArgs` already
+  /// accepts, so no feature has to import another's controller for the type.
+  static const verifyEmail = '/verify-email';
+
   // Phase 6.
   static const profile = '/profile';
   static const accountSettings = '/account';
@@ -34,4 +41,13 @@ abstract final class AppRoutes {
 
   /// §Phase 10's My Services Dashboard — every later switch.
   static const providerDashboard = '/provider/services';
+
+  // Phase 6a.
+
+  /// §Phase 9's Create/Edit Service Wizard, entered at step 1 on a fresh
+  /// draft. §Phase 6a hands off here the moment onboarding finishes — "so the
+  /// very next thing the provider does is describe their first service" — and
+  /// the name is here rather than on the wizard's own screen because the
+  /// screen does not exist yet and the handoff does.
+  static const createService = '/services/new';
 }

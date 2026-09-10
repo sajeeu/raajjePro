@@ -9,7 +9,6 @@ import 'package:raajjepro/features/auth/presentation/forgot_password_screen.dart
 import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/field_reveal_toggle.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/generic_error_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/social_sign_in_row.dart';

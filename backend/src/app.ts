@@ -173,21 +173,6 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
       clock: deps.clock,
     }),
   );
-  const exportContributors = new ExportContributors();
-  app.decorate('exportContributors', exportContributors);
-  app.decorate(
-    'account',
-    new AccountService({
-      prisma: deps.prisma,
-      repo: authService.repo,
-      otp,
-      audit,
-      clock: deps.clock,
-      exportContributors,
-    }),
-  );
-  app.decorate('social', new SocialAuthRegistry(stubProviders()));
-
   // Phase 4. The catalogue every later module reads its per-category numbers
   // from — booking mode, lead time, quote windows, the emergency tier bar.
   const categories = new CategoryService({ prisma: deps.prisma, audit });
@@ -206,6 +191,28 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
   });
   app.decorate('providers', providers);
+
+  const exportContributors = new ExportContributors();
+  app.decorate('exportContributors', exportContributors);
+  app.decorate(
+    'account',
+    new AccountService({
+      prisma: deps.prisma,
+      repo: authService.repo,
+      otp,
+      audit,
+      clock: deps.clock,
+      exportContributors,
+      // 🔧 **Phases 4 and 5 moved above this line in Phase 6a**, which is the
+      // only reason the order changed: `GET /v1/users/me/profile-summary` now
+      // answers §Phase 6a's "has this account completed onboarding?", and the
+      // one definition of that lives in the provider service. Neither Phase 4
+      // nor Phase 5 depends on anything constructed between here and there,
+      // and `account` is decorated in the same place it always was.
+      providerOnboarding: providers,
+    }),
+  );
+  app.decorate('social', new SocialAuthRegistry(stubProviders()));
 
   // Phase 7. The island register and the provider service areas over it.
   // Depends on `providers` for §1a's implicit profile creation — declaring

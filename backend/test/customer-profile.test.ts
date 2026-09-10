@@ -14,6 +14,7 @@ interface Summary {
   fullName: string;
   memberSince: string;
   isProvider: boolean;
+  providerOnboardingComplete: boolean;
 }
 
 /**
@@ -97,11 +98,15 @@ describe.skipIf(databaseUrl === undefined)('customer profile', () => {
       expect(JSON.parse(body)).toMatchObject({
         data: { id: u.userId, isProvider: false },
       });
+      // The exact key list, so a field added here has to be added
+      // deliberately. `providerOnboardingComplete` is §Phase 6a's, and the
+      // role switcher routes on it (`providers/onboarding.ts`).
       expect(Object.keys((JSON.parse(body) as Envelope<Summary>).data).sort()).toEqual([
         'fullName',
         'id',
         'isProvider',
         'memberSince',
+        'providerOnboardingComplete',
       ]);
     });
 

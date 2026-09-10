@@ -7,7 +7,6 @@ import 'package:raajjepro/core/auth/form_draft_store.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/controller/change_controllers.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/phone_field.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// Change phone (`Account Settings.dc.html`; plan §Phase 3). The number is

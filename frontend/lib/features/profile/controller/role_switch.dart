@@ -7,28 +7,41 @@ import 'package:raajjepro/core/routes.dart';
 /// > flow, and reaches My Services Dashboard directly on every subsequent
 /// > switch.
 ///
-/// The signal is `isProvider` from the profile summary, which is
-/// `providerProfile !== null` on the server. It answers the question with no
-/// extra request and it is trustworthy because a provider-profile *read* no
-/// longer creates the row — §Phase 5 moved creation onto the write precisely
-/// so that opening a screen cannot turn a customer into a provider
-/// (`docs/decisions/17-phase-5-provider-profiles.md`, decision 11). A 404
-/// from `GET /v1/providers/me` now answers `PROVIDER_PROFILE_NOT_FOUND` and
-/// would say the same thing, but it costs a round trip to learn what the
-/// screen already knows.
+/// 🔧 **The signal changed in Phase 6a, and `isProvider` was not enough.**
 ///
-/// Both destinations are real named routes today and both land on
-/// [UnbuiltScreen] until their phases build them. The decision — which route,
-/// on which signal — is Phase 6's and is tested here and now; the screens
-/// behind it are not.
+/// It was `isProvider` — `providerProfile !== null` on the server — and that
+/// answered "first switch or later switch" only if the two moments were the
+/// same. They are not. Onboarding's step 2 *is* §1a's profile-creation
+/// moment, so `isProvider` flips one step before the flow ends: a provider
+/// who closed the app on step 3 read as a returning provider and was sent to
+/// a dashboard, never seeing the step they stopped on. §Phase 6a requires the
+/// opposite — *"a provider who abandons onboarding after step 1 or 2 … and
+/// returns later resumes from wherever they left off"* — and it is *"a
+/// provider who already **completed** onboarding"* who never sees the flow
+/// again.
+///
+/// So the signal is now `providerOnboardingComplete`, from the same one
+/// `profile-summary` call: derived server-side from what §Phase 6a's three
+/// steps collect plus the verified email §Phase 5 requires to finish
+/// (`backend/src/modules/providers/onboarding.ts`). §Phase 6's own wording,
+/// "a returning provider goes straight to My Services Dashboard", reads the
+/// same way — someone mid-flow has not returned yet.
+///
+/// `isProvider` is unchanged and still on the wire; it answers a different
+/// question (does a profile exist) that §Phase 5's implicit creation path and
+/// §Phase 8's wizard fallback both care about.
+///
+/// The dashboard route still lands on [UnbuiltScreen] until §Phase 10 builds
+/// it; the onboarding route is real as of Phase 6a.
 abstract final class RoleSwitch {
-  /// §Phase 6a's onboarding intro. A first switch lands here, never on the
-  /// wizard directly (§Phase 6a's own Done-when).
+  /// §Phase 6a's onboarding flow. A first switch — and a resumed one — lands
+  /// here, never on the wizard directly (§Phase 6a's own Done-when).
   static const onboardingRoute = AppRoutes.becomeProvider;
 
-  /// §Phase 10's My Services Dashboard. Every later switch lands here.
+  /// §Phase 10's My Services Dashboard. Every switch after onboarding is
+  /// finished lands here.
   static const dashboardRoute = AppRoutes.providerDashboard;
 
-  static String destinationFor({required bool isProvider}) =>
-      isProvider ? dashboardRoute : onboardingRoute;
+  static String destinationFor({required bool onboardingComplete}) =>
+      onboardingComplete ? dashboardRoute : onboardingRoute;
 }

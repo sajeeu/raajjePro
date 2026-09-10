@@ -40,13 +40,37 @@ export interface ProfileSummaryDto {
   /** `createdAt`, named for the one thing the screen prints from it. */
   memberSince: string;
   isProvider: boolean;
+  /**
+   * 🔧 **Added by §Phase 6a**, and it is what the role switcher now routes on.
+   *
+   * `isProvider` alone could not answer §Phase 6a's Done-when. It flips the
+   * moment onboarding's step 2 lands — that write is §1a's profile-creation
+   * moment — so a provider who closed the app on step 3 read as a returning
+   * provider and was sent to the dashboard, never seeing the step they
+   * stopped on. §Phase 6a requires the opposite: *"a provider who abandons
+   * onboarding after step 1 or 2 … resumes from wherever they left off"*, and
+   * it is *"a provider who already **completed** onboarding"* who never sees
+   * the flow again.
+   *
+   * So this is the finer signal, derived from the fields §Phase 6a's three
+   * steps collect plus the verified email §Phase 5 requires to finish
+   * (`providers/onboarding.ts` holds the one definition; nothing stores it).
+   * `isProvider` stays exactly as it was — additive-only — and still answers
+   * "does a provider profile exist", which is what §Phase 5's implicit
+   * creation path and Phase 8's fallback care about.
+   */
+  providerOnboardingComplete: boolean;
 }
 
-export function profileSummaryDto(user: UserWithProfile): ProfileSummaryDto {
+export function profileSummaryDto(
+  user: UserWithProfile,
+  providerOnboardingComplete: boolean,
+): ProfileSummaryDto {
   return {
     id: user.id,
     fullName: user.fullName,
     memberSince: user.createdAt.toISOString(),
     isProvider: user.providerProfile !== null,
+    providerOnboardingComplete,
   };
 }

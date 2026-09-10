@@ -44,10 +44,15 @@ export function registerProviderRoutes(app: FastifyInstance): void {
   // `PROVIDER_PROFILE_NOT_FOUND` where a bad path answers `NOT_FOUND`
   // (`NotFoundError` took an optional code on 2026-09-09).
   //
-  // Phase 6 and 6a should still route on `isProvider` from the auth surface,
-  // which costs no request and is reliable because a read no longer creates
-  // the profile — the code is what makes a 404 legible when one is reached
-  // anyway, not an invitation to probe for one.
+  // 🔧 **Phase 6a superseded the routing advice this comment used to give.**
+  // It said Phase 6 and 6a should route on `isProvider` from the auth
+  // surface. They do not: `isProvider` flips at onboarding's step 2, which is
+  // §1a's profile-creation moment, so it reads true for a provider who has
+  // not finished. The switcher routes on `providerOnboardingComplete` from
+  // `profile-summary` instead — derived, never stored, defined once in
+  // `providers/onboarding.ts`. What still holds is why the 404 below carries
+  // its own code: it makes a missing profile legible when one is reached, not
+  // an invitation to probe for one.
   r.get('/v1/providers/me', { preValidation: requireAuth }, async (request, reply) => {
     return reply.send(ok(await app.providers.readOwn(userOf(request).id)));
   });

@@ -56,6 +56,17 @@ export class LocationRepository {
   }
 
   /**
+   * The same set as `findCurrentServiceAreas`, counted rather than loaded —
+   * §Phase 6a's onboarding check only needs "at least one" and the Profile
+   * screen asks for it on every load.
+   */
+  countCurrentServiceAreas(providerProfileId: string): Promise<number> {
+    return this.prisma.providerServiceArea.count({
+      where: { providerProfileId, removedAt: null },
+    });
+  }
+
+  /**
    * Adds an island, or revives a previously removed one. Upsert on the unique
    * `(providerProfileId, islandId)` pair, which is what makes the operation
    * idempotent by construction: a retried request converges on the one row
