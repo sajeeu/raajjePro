@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
+import 'package:raajjepro/core/offline/offline_queue.dart';
 import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
@@ -176,7 +179,31 @@ class _AuthGateState extends ConsumerState<AuthGate> {
   @override
   void initState() {
     super.initState();
-    _lifecycleListener = AppLifecycleListener(onResume: _retryIfStillGuest);
+    _lifecycleListener = AppLifecycleListener(onResume: _onResume);
+    // 🔧 **Drain whatever the last run left behind — 2026-09-14.** The queue
+    // survives a cold start by design: it holds data rather than closures, in
+    // a file. What it did not have was anything to wake it. `replay()` ran
+    // only from `ServiceWizardScreen`'s own lifecycle listener, from
+    // `NoConnectionView`'s retry button, or from the next `submit()` — so a
+    // provider who typed offline, killed the app and reopened it kept a
+    // written-but-unsent PATCH indefinitely. Verified on a device: the file
+    // held the request across a force-stop, a reconnect and a fresh sign-in,
+    // and the server still had no name on the listing.
+    //
+    // At the root instead, because the queue is not the wizard's: it is
+    // app-wide (`offline-queue-and-replay`), and §Phase 17.1, 18 and 9a will
+    // put their own writes through it. Reading the provider here also *mounts*
+    // it, which is what loads the file in the first place.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(ref.read(offlineQueueProvider.notifier).replay());
+    });
+  }
+
+  Future<void> _onResume() async {
+    await _retryIfStillGuest();
+    if (!mounted) return;
+    await ref.read(offlineQueueProvider.notifier).replay();
   }
 
   Future<void> _retryIfStillGuest() async {
