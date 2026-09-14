@@ -51,6 +51,14 @@ abstract final class AppRoutes {
   /// screen does not exist yet and the handoff does.
   static const createService = '/services/new';
 
+  /// §Phase 9a's provider surfaces. Availability is per listing and takes a
+  /// `listingId` argument; My Calendar is account-wide. The names live here
+  /// rather than on the screens because §Phase 10's dashboard is what will
+  /// reach them — its own bullet list carries "Slot management entry point
+  /// (Phase 9a)" — and the two features may not import each other.
+  static const providerAvailability = '/provider/availability';
+  static const providerCalendar = '/provider/calendar';
+
   /// §Phase 10a's provider billing screen. Added by §Phase 9, which is the
   /// first surface that has to reach it: the over-cap upgrade prompt's CTA
   /// is "See what upgrading allows", and §Phase 9's own line calls for an

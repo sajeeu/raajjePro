@@ -61,6 +61,9 @@ class FakeApiClient implements ApiClient {
   Future<Map<String, dynamic>> patch(String path, {Object? body}) =>
       _call('PATCH', path, body);
   @override
+  Future<Map<String, dynamic>> put(String path, {Object? body}) =>
+      _call('PUT', path, body);
+  @override
   Future<Map<String, dynamic>> delete(String path) =>
       _call('DELETE', path, null);
 }

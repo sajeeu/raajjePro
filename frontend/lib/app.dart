@@ -20,6 +20,9 @@ import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 import 'package:raajjepro/features/auth/presentation/session_expired_screen.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
+import 'package:raajjepro/features/availability/presentation/availability_screen.dart';
+import 'package:raajjepro/features/availability/presentation/my_calendar_screen.dart';
+import 'package:raajjepro/features/availability/presentation/slot_picker_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
@@ -132,6 +135,25 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // a fresh draft rather than the provider's most recent one; an
         // id in the arguments resumes an existing listing, which is how
         // §Phase 10's dashboard will open one.
+        // Phase 9a. The provider's two surfaces and the customer's picker.
+        //
+        // Registered here but not yet *linked to*: §Phase 10's dashboard owns
+        // the way in — its own bullet list carries "Slot management entry
+        // point (Phase 9a)" — and §Phase 12's Service Preview owns the way
+        // into the picker. Both take their arguments untyped, so neither of
+        // those features has to import this one.
+        AvailabilityScreen.routeName: (context) => AvailabilityScreen(
+          args: AvailabilityArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        MyCalendarScreen.routeName: (_) => const MyCalendarScreen(),
+        SlotPickerScreen.routeName: (context) => SlotPickerScreen(
+          args: SlotPickerArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+
         AppRoutes.createService: (context) => ServiceWizardScreen(
           args: ServiceWizardArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,

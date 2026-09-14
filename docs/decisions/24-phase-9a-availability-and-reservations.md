@@ -208,3 +208,58 @@ them from the dashboard is §Phase 10's**, whose own bullet list carries "Slot
 management entry point (Phase 9a)". The routes are registered and reachable by
 name; Phase 10 puts the door on. Same for the picker, which §Phase 12's Service
 Preview will push.
+
+## 11. The rule editor saves in one step, because a local preview cannot be honest
+
+`Availability.dc.html` edits a rule into a **local preview** — "Preview
+updated — not saved yet", with Save changes and Discard — and commits it with
+a second action.
+
+Producing that preview means expanding rules into times **in Flutter**. Which
+times a rule produces is not a property of the rule: it also depends on the
+listing's exceptions, the provider's time away across every service, the lead
+boundary, the 60-day horizon, and which times are already held by bookings on
+*other* listings. That is `expandSlots` plus four more inputs, all server-side,
+and a second implementation of it would eventually disagree with the one that
+decides what customers can actually book — while being the one on screen, and
+therefore the one the provider trusts.
+
+So the rule saves in one step, behind the artboard's own confirmation sheet
+and its exact reassurance — *"Times someone has already booked stay exactly as
+they are. Only future, unbooked times change."* — and the grid then renders
+what the server actually did. What is lost is seeing the new grid before
+committing; what is kept is that the grid is never a guess.
+
+**The alternative, not taken:** a server-side dry run
+(`POST …/rules/preview`) would honour the interaction exactly and keep one
+implementation. It was not built because §Phase 9a's endpoint list is
+"generate/regenerate, block/unblock, list open slots for a listing" and adding
+a fifth endpoint on the strength of an artboard is the kind of gap-filling
+§Scope Discipline asks to be raised rather than resolved. It is offered to the
+design round instead — `docs/design/sessions/round-57-the-preview-that-cannot-be-local.md`.
+
+## 12. The client presents in Maldives time and never calls `toLocal()`
+
+`core/format/maldives_time.dart` is the client half of §9's convention, and
+every screen in the feature groups, labels and compares through it.
+
+That matters even in a single-timezone market. A device left on another
+timezone — a traveller's phone, an emulator on UTC, a CI runner — would
+otherwise file a 21:00 Malé appointment under the wrong heading while the
+server and the provider both call it Tuesday. `test/core/maldives_time_test.dart`
+asserts the same instant expressed two ways reads identically, which is the
+assertion a `toLocal()` would fail.
+
+## 13. Nothing in this feature goes through the offline queue
+
+§0.0 item 14 keeps the queue to exactly three surfaces — the wizard's
+autosave, the slot/request accept prompt, and chat sends. None of these is one
+of them, and the reasoning transfers: a replayed rule edit would rewrite a
+published grid from a decision made somewhere else, and a replayed block would
+withdraw a time minutes after the provider changed their mind. These fail
+visibly, show the server's own message, and are retried by hand.
+
+The server's message is rendered verbatim on refusal, because every refusal
+here is a sentence written for a provider to read — "Those hours overlap
+another rule on the same day (09:00–13:00). Edit that one instead." A generic
+failure would throw that away.

@@ -73,6 +73,11 @@ abstract class ApiClient {
     Map<String, String>? headers,
   });
   Future<Map<String, dynamic>> patch(String path, {Object? body});
+
+  /// A whole-resource replacement, as distinct from [patch]'s partial update.
+  /// Added by §Phase 9a, whose availability-rule editor opens with every field
+  /// filled and writes the rule back entire.
+  Future<Map<String, dynamic>> put(String path, {Object? body});
   Future<Map<String, dynamic>> delete(String path);
 }
 
@@ -117,6 +122,10 @@ class HttpApiClient implements ApiClient {
   @override
   Future<Map<String, dynamic>> patch(String path, {Object? body}) =>
       _send('PATCH', path, body: body);
+
+  @override
+  Future<Map<String, dynamic>> put(String path, {Object? body}) =>
+      _send('PUT', path, body: body);
 
   @override
   Future<Map<String, dynamic>> delete(String path) => _send('DELETE', path);
