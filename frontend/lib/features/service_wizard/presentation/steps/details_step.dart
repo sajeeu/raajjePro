@@ -180,7 +180,7 @@ class _DetailsStepState extends ConsumerState<DetailsStep> {
                       onSubmitted: (_) => _addTag(),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md - 2),
+                  const SizedBox(width: AppSpacing.sm2),
                   Padding(
                     // Clears the field's own label row, so the button lines up
                     // with the input rather than with the label.
@@ -271,8 +271,8 @@ class _CategoryGrid extends StatelessWidget {
       itemCount: categories.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        mainAxisSpacing: AppSpacing.sm + 2,
-        crossAxisSpacing: AppSpacing.sm + 2,
+        mainAxisSpacing: AppSpacing.sm2,
+        crossAxisSpacing: AppSpacing.sm2,
         // Tall enough for a two-line name at a larger text size — "Appliance
         // Repair" is the one that decides this.
         mainAxisExtent: 96,

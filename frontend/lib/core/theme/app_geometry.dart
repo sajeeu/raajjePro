@@ -9,11 +9,31 @@ abstract final class AppSpacing {
   static const double xxs = 4;
   static const double xs = 6;
   static const double sm = 8;
+  static const double sm2 = 10;
   static const double md = 12;
+  static const double md2 = 14;
   static const double lg = 16;
+  static const double lg2 = 18;
   static const double xl = 20;
+  static const double xl2 = 22;
   static const double xxl = 24;
+  static const double xxl2 = 26;
   static const double xxxl = 32;
+
+  // 🔧 **The half-steps, named 2026-09-14.** The scale above was the 4-ish
+  // one; the app's real rhythm is a 2 dp step from 8 to 26, and 121 call
+  // sites across 44 files were reaching the unnamed halves by arithmetic —
+  // `AppSpacing.sm + 2` fifty-four times, `lg + 2` twenty-seven, `md + 2`
+  // thirty, `xxl - 2` ten. Every one of those resolved to a value this scale
+  // simply had no name for.
+  //
+  // That is the same failure Round 51 fixed in motion, in spacing form: a
+  // literal sitting between two tokens, where a reader cannot tell whether it
+  // is a considered value or a nudge. Naming them changes no pixel — the
+  // numbers are identical — and it removes the arithmetic, which is what let
+  // ±1 drift in beside ±2 (there are still 46 odd-valued sites; they are
+  // off-grid rather than half-steps, and belong to a design round rather than
+  // a rename).
 
   /// Horizontal screen padding — 20, consistently.
   static const double screen = xl;

@@ -49,7 +49,7 @@ class RoleSwitchSheet extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Container(
             padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: AppSpacing.lg - 2,
+              horizontal: AppSpacing.md2,
               vertical: AppSpacing.md,
             ),
             decoration: BoxDecoration(
@@ -164,7 +164,7 @@ class _ModeCard extends StatelessWidget {
       color: current ? colors.surfaceMuted : null,
       padding: const EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md + 2,
+        vertical: AppSpacing.md2,
       ),
       child: Row(
         children: [

@@ -46,7 +46,7 @@ class ProfileHero extends StatelessWidget {
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               AppSpacing.xl,
-              AppSpacing.sm + 2,
+              AppSpacing.sm2,
               AppSpacing.xl,
               AppSpacing.xxs,
             ),

@@ -300,19 +300,19 @@ class _AppTextFieldState extends State<AppTextField> {
                       children: [
                         if (widget.prefix != null) ...[
                           widget.prefix!,
-                          const SizedBox(width: AppSpacing.sm + 2),
+                          const SizedBox(width: AppSpacing.sm2),
                         ] else if (widget.prefixIcon != null) ...[
                           Icon(
                             widget.prefixIcon,
                             size: 18,
                             color: colors.placeholder,
                           ),
-                          const SizedBox(width: AppSpacing.sm + 2),
+                          const SizedBox(width: AppSpacing.sm2),
                         ],
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsetsDirectional.symmetric(
-                              vertical: AppSpacing.md + 2,
+                              vertical: AppSpacing.md2,
                             ),
                             child: field,
                           ),

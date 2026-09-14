@@ -187,7 +187,7 @@ class _Loaded extends StatelessWidget {
               key: ValueKey(view.step),
               padding: const EdgeInsetsDirectional.fromSTEB(
                 AppSpacing.screen,
-                AppSpacing.md + 2,
+                AppSpacing.md2,
                 AppSpacing.screen,
                 AppSpacing.xxl + AppSpacing.xxxl,
               ),

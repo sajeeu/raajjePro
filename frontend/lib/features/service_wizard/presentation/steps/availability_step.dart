@@ -65,7 +65,7 @@ class AvailabilityStep extends StatelessWidget {
           title: 'Availability',
           body: 'How customers book this service, and when you work.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         const ControlLabel(label: 'How this service is booked'),
         const SizedBox(height: AppSpacing.sm),
         ChoiceCard(
@@ -91,7 +91,7 @@ class AvailabilityStep extends StatelessWidget {
           selected: listing.bookingMode != BookingMode.slot || slotsBlocked,
           onTap: () => controller.chooseBookingMode(BookingMode.request),
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           title: 'Working days',
           children: [
@@ -107,7 +107,7 @@ class AvailabilityStep extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md + 2),
+            const SizedBox(height: AppSpacing.md2),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -137,7 +137,7 @@ class AvailabilityStep extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           children: [
             Row(
@@ -173,7 +173,7 @@ class AvailabilityStep extends StatelessWidget {
               ],
             ),
             if (emergency.allowed) ...[
-              const SizedBox(height: AppSpacing.sm + 2),
+              const SizedBox(height: AppSpacing.sm2),
               Text(
                 _expectation(category),
                 style: type.secondary.copyWith(

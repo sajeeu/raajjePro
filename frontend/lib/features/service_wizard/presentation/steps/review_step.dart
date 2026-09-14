@@ -278,7 +278,7 @@ class _MissingCard extends StatelessWidget {
                   border: Border(top: BorderSide(color: colors.warningBorder)),
                 ),
                 padding: const EdgeInsetsDirectional.symmetric(
-                  vertical: AppSpacing.sm + 2,
+                  vertical: AppSpacing.sm2,
                   horizontal: 2,
                 ),
                 child: Row(
@@ -291,7 +291,7 @@ class _MissingCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm + 2),
+                    const SizedBox(width: AppSpacing.sm2),
                     Expanded(
                       child: Text(
                         field.message,
@@ -351,7 +351,7 @@ class _ReadyCard extends StatelessWidget {
             size: AppSizes.iconLg,
             color: colors.successText,
           ),
-          const SizedBox(width: AppSpacing.sm + 2),
+          const SizedBox(width: AppSpacing.sm2),
           Expanded(
             child: Text(
               'Ready to publish — all $count required fields are complete.',
@@ -422,7 +422,7 @@ class _ReviewCard extends StatelessWidget {
                 border: Border(bottom: BorderSide(color: colors.divider)),
               ),
               padding: const EdgeInsetsDirectional.symmetric(
-                vertical: AppSpacing.sm + 2,
+                vertical: AppSpacing.sm2,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +436,7 @@ class _ReviewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md + 2),
+                  const SizedBox(width: AppSpacing.md2),
                   Expanded(
                     child: Text(
                       row.value,

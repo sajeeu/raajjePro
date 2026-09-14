@@ -129,9 +129,9 @@ class _ProfileBody extends ConsumerWidget {
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               AppSpacing.xl,
-              AppSpacing.md + 2,
+              AppSpacing.md2,
               AppSpacing.xl,
-              AppSpacing.xxl + 2,
+              AppSpacing.xxl2,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -293,7 +293,7 @@ class _SignOutButton extends ConsumerWidget {
       semanticLabel: 'Sign out',
       builder: (context, s) => Padding(
         padding: const EdgeInsetsDirectional.symmetric(
-          vertical: AppSpacing.md + 2,
+          vertical: AppSpacing.md2,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -330,7 +330,7 @@ class _ProfileSkeleton extends StatelessWidget {
                 child: const Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(
                     AppSpacing.xl,
-                    AppSpacing.sm + 2,
+                    AppSpacing.sm2,
                     AppSpacing.xl,
                     AppSpacing.xl,
                   ),
@@ -341,7 +341,7 @@ class _ProfileSkeleton extends StatelessWidget {
                         height: ProfileHero.avatarSize,
                         shape: BoxShape.circle,
                       ),
-                      SizedBox(height: AppSpacing.md + 2),
+                      SizedBox(height: AppSpacing.md2),
                       SkeletonBox.line(width: 160, height: 18),
                       SizedBox(height: AppSpacing.sm),
                       SkeletonBox.line(width: 220),
@@ -367,12 +367,12 @@ class _ProfileSkeleton extends StatelessWidget {
                       ),
                       padding: const EdgeInsetsDirectional.symmetric(
                         horizontal: AppSpacing.md,
-                        vertical: AppSpacing.lg + 2,
+                        vertical: AppSpacing.lg2,
                       ),
                       child: const Column(
                         children: [
                           _TileRowSkeleton(),
-                          SizedBox(height: AppSpacing.lg + 2),
+                          SizedBox(height: AppSpacing.lg2),
                           _TileRowSkeleton(),
                         ],
                       ),

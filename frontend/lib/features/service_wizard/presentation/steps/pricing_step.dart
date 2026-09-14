@@ -63,7 +63,7 @@ class _PricingStepState extends State<PricingStep> {
               'Clear, transparent prices build trust and get more bookings. '
               'Always in MVR.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         const ControlLabel(
           label: 'How the price works',
           requirement: FieldRequirement.mandatory,
@@ -89,7 +89,7 @@ class _PricingStepState extends State<PricingStep> {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardNote(
           tone: (model?.forcesRequestMode ?? false)
               ? NoteTone.cautionary
@@ -99,7 +99,7 @@ class _PricingStepState extends State<PricingStep> {
               'time slot — customers request a time instead, since no one can '
               'book a set time at an unknown price.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         if (model == PricingModel.quote)
           const WizardSection(
             title: 'No price shown',
@@ -151,7 +151,7 @@ class _PricingStepState extends State<PricingStep> {
               ),
             ],
           ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardNote(
           icon: Icons.visibility_outlined,
           tone: NoteTone.informative,

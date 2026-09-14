@@ -180,6 +180,51 @@ void main() {
     });
   });
 
+  group('the spacing scale is the scale', () {
+    /// Every half-step the app actually uses is named (2026-09-14): the scale
+    /// runs 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 32. Before that it
+    /// named only the coarse steps, so 125 call sites across 44 files reached
+    /// the unnamed ones by arithmetic — `AppSpacing.sm + 2` fifty-four times.
+    /// A reader could not tell a considered value from a nudge, which is how
+    /// ±1 drifted in beside ±2.
+    ///
+    /// A ratchet rather than a ban, because 51 genuinely off-grid sites
+    /// remain (5, 7, 9, 11, 13, 15, 17, 28, 34 dp). Those are pixel decisions
+    /// that came from the artboards, so snapping them here would put the app
+    /// out of sync with its own prototypes — they belong to a design round.
+    /// What this forbids is *growth*: a new phase reaching for arithmetic
+    /// instead of a token.
+    const allowedOffGrid = 51;
+
+    test('no new arithmetic on a spacing token', () {
+      final pattern = RegExp(r'AppSpacing\.([a-z0-9]+)\s*[-+]\s*[0-9.]+');
+      final hits = <String>[];
+      for (final file in Directory(
+        'lib',
+      ).listSync(recursive: true).whereType<File>()) {
+        if (!file.path.endsWith('.dart')) continue;
+        if (file.path.endsWith('app_geometry.dart')) continue;
+        final lines = file.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          if (lines[i].trimLeft().startsWith('//')) continue;
+          if (pattern.hasMatch(lines[i])) {
+            hits.add('${file.path}:${i + 1}: ${lines[i].trim()}');
+          }
+        }
+      }
+      expect(
+        hits.length,
+        lessThanOrEqualTo(allowedOffGrid),
+        reason:
+            'Spacing arithmetic grew from $allowedOffGrid to ${hits.length}. '
+            'Use a named step — the scale has every 2 dp from 8 to 26 — or, '
+            'if the value genuinely is not on it, take it to a design round '
+            'and lower this number when the artboard is corrected.\n'
+            '${hits.join('\n')}',
+      );
+    });
+  });
+
   group('Pressable — the 48 dp floor', () {
     testWidgets('a 20 dp child gets a 48 dp hit area', (tester) async {
       var taps = 0;

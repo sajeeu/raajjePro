@@ -63,9 +63,9 @@ class CategoryTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               AppSpacing.sm,
-              AppSpacing.lg + 2,
+              AppSpacing.lg2,
               AppSpacing.sm,
-              AppSpacing.md + 2,
+              AppSpacing.md2,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -87,7 +87,7 @@ class CategoryTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm + 2),
+                const SizedBox(height: AppSpacing.sm2),
                 Flexible(
                   child: Text(
                     category.name,

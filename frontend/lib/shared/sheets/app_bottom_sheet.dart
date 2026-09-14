@@ -58,7 +58,7 @@ class AppBottomSheet extends StatelessWidget {
             ExcludeSemantics(
               child: Padding(
                 padding: const EdgeInsetsDirectional.only(
-                  top: AppSpacing.sm + 2,
+                  top: AppSpacing.sm2,
                   bottom: AppSpacing.md,
                 ),
                 child: Center(

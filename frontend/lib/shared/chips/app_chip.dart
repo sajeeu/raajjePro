@@ -120,7 +120,7 @@ class AppChip extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsetsDirectional.only(
                 start: 14,
-                end: AppSpacing.sm + 2,
+                end: AppSpacing.sm2,
                 top: AppSpacing.xs,
                 bottom: AppSpacing.xs,
               ),

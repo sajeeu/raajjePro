@@ -204,7 +204,7 @@ class WizardSection extends StatelessWidget {
         boxShadow: AppShadows.card(colors.ink),
       ),
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.lg + 2,
+        horizontal: AppSpacing.lg2,
         vertical: AppSpacing.lg,
       ),
       child: Column(
@@ -285,7 +285,7 @@ class ChoiceCard extends StatelessWidget {
         ),
         padding: const EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md + 2,
+          vertical: AppSpacing.md2,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

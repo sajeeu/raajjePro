@@ -11,6 +11,7 @@ Applies to everything under `frontend/`. The root `CLAUDE.md` and `01_Developmen
 - Errors surface INLINE where the user can act on them, not as generic toasts. A field error belongs under its field.
 - Accessibility is built in, not retrofitted: 48x48 minimum touch targets, visible focus states, semantic labels, and reduced-motion handling that degrades shimmer and transitions when the OS flag is set.
 - Never hardcode a color, font, spacing value or radius. Use design tokens; add to them explicitly if genuinely missing.
+- 🔧 **And never do arithmetic on a token** — `AppSpacing.sm + 2` is not a token, it is a literal with a token in it, and a reader cannot tell a considered value from a nudge. The scale names **every 2 dp step from 8 to 26** (`sm2` 10, `md2` 14, `lg2` 18, `xl2` 22, `xxl2` 26) precisely so you never need to. Corrected app-wide on 2026-09-14: 125 arithmetic sites across 44 files became named steps, changing no pixel. `test/shared/design_rules_test.dart` ratchets the remainder — it fails if the count grows, so a new phase cannot add one. If a value genuinely is not on the scale, that is a question for a design round, not a `+ 2`.
 
 ---
 

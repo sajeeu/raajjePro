@@ -60,7 +60,7 @@ class PublishedSheet extends StatelessWidget {
             textAlign: TextAlign.center,
             style: type.screenTitle,
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           Text(
             _body(),
             textAlign: TextAlign.center,
@@ -80,7 +80,7 @@ class PublishedSheet extends StatelessWidget {
                   .pushReplacementNamed(AppRoutes.providerDashboard);
             },
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           AppButton.text(label: 'Done', expand: true, onPressed: onDone),
         ],
       ),
@@ -151,7 +151,7 @@ class ListingCapSheet extends StatelessWidget {
             textAlign: TextAlign.center,
             style: type.screenTitle,
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           Text(
             _body(),
             textAlign: TextAlign.center,
@@ -170,7 +170,7 @@ class ListingCapSheet extends StatelessWidget {
               Navigator.of(context).pushNamed(AppRoutes.providerBilling);
             },
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           AppButton.text(
             label: 'Keep it as a draft',
             expand: true,

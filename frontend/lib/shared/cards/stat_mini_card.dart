@@ -96,7 +96,7 @@ class StatMiniCardRow extends StatelessWidget {
   const StatMiniCardRow({
     required this.children,
     super.key,
-    this.gap = AppSpacing.sm + 2,
+    this.gap = AppSpacing.sm2,
     this.minTileWidth = 110,
   });
 

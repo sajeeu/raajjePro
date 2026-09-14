@@ -97,9 +97,9 @@ class ExploreScreen extends ConsumerWidget {
           const Padding(
             padding: EdgeInsetsDirectional.fromSTEB(
               AppSpacing.xl,
-              AppSpacing.md + 2,
+              AppSpacing.md2,
               AppSpacing.xl,
-              AppSpacing.md + 2,
+              AppSpacing.md2,
             ),
             child: InertControl(
               label: 'Search',
@@ -371,7 +371,7 @@ class _Grid extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.xl,
-        AppSpacing.sm + 2,
+        AppSpacing.sm2,
         AppSpacing.xl,
         AppSpacing.xxl + 4,
       ),
@@ -414,7 +414,7 @@ class _GridSkeleton extends StatelessWidget {
         child: GridView.builder(
           padding: const EdgeInsetsDirectional.fromSTEB(
             AppSpacing.xl,
-            AppSpacing.sm + 2,
+            AppSpacing.sm2,
             AppSpacing.xl,
             AppSpacing.xxl + 4,
           ),
@@ -443,9 +443,9 @@ class _TileSkeleton extends StatelessWidget {
       child: const Padding(
         padding: EdgeInsetsDirectional.fromSTEB(
           AppSpacing.sm,
-          AppSpacing.lg + 2,
+          AppSpacing.lg2,
           AppSpacing.sm,
-          AppSpacing.md + 2,
+          AppSpacing.md2,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -455,7 +455,7 @@ class _TileSkeleton extends StatelessWidget {
               height: CategoryTile.chip,
               radius: AppRadius.card,
             ),
-            SizedBox(height: AppSpacing.sm + 2),
+            SizedBox(height: AppSpacing.sm2),
             SkeletonBox.line(width: 52, height: 10),
           ],
         ),

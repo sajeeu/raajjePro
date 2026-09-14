@@ -41,7 +41,7 @@ class MediaStep extends StatelessWidget {
               'Good photos dramatically increase bookings. Show your work at '
               'its best.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           title: 'Cover image',
           requirement: FieldRequirement.mandatory,
@@ -69,7 +69,7 @@ class MediaStep extends StatelessWidget {
                 aspectRatio: 16 / 9,
                 semanticLabel: 'Cover image',
               ),
-              const SizedBox(height: AppSpacing.sm + 2),
+              const SizedBox(height: AppSpacing.sm2),
               Row(
                 children: [
                   Expanded(
@@ -80,7 +80,7 @@ class MediaStep extends StatelessWidget {
                       onPressed: controller.pickCover,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm + 2),
+                  const SizedBox(width: AppSpacing.sm2),
                   AppButton.text(
                     label: 'Remove',
                     size: AppButtonSize.compact,
@@ -92,7 +92,7 @@ class MediaStep extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           title: 'Gallery',
           requirement: FieldRequirement.optional,
@@ -105,8 +105,8 @@ class MediaStep extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 3,
-              mainAxisSpacing: AppSpacing.sm + 2,
-              crossAxisSpacing: AppSpacing.sm + 2,
+              mainAxisSpacing: AppSpacing.sm2,
+              crossAxisSpacing: AppSpacing.sm2,
               padding: EdgeInsets.zero,
               children: [
                 for (var index = 0; index < gallery.length; index++)
@@ -209,7 +209,7 @@ class _UploadPrompt extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppSpacing.lg,
-            vertical: AppSpacing.xxl + 2,
+            vertical: AppSpacing.xxl2,
           ),
           child: Column(
             children: [
@@ -284,7 +284,7 @@ class _UploadTile extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsetsDirectional.all(AppSpacing.sm + 2),
+          padding: const EdgeInsetsDirectional.all(AppSpacing.sm2),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

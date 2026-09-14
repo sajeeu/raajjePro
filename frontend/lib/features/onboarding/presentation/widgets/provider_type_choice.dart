@@ -129,9 +129,9 @@ class _TypeCard extends StatelessWidget {
       builder: (context, states) => AnimatedContainer(
         duration: context.motion.fast,
         padding: const EdgeInsetsDirectional.fromSTEB(
-          AppSpacing.lg - 2,
-          AppSpacing.lg - 2,
-          AppSpacing.lg - 2,
+          AppSpacing.md2,
+          AppSpacing.md2,
+          AppSpacing.md2,
           AppSpacing.md + 1,
         ),
         decoration: BoxDecoration(

@@ -40,9 +40,9 @@ class OnboardingProgress extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(
           AppSpacing.xl,
-          AppSpacing.lg + 2,
+          AppSpacing.lg2,
           AppSpacing.xl,
-          AppSpacing.md + 2,
+          AppSpacing.md2,
         ),
         child: Column(
           children: [
@@ -66,7 +66,7 @@ class OnboardingProgress extends StatelessWidget {
                 const SizedBox(width: AppSizes.iconButtonSize),
               ],
             ),
-            const SizedBox(height: AppSpacing.lg - 2),
+            const SizedBox(height: AppSpacing.md2),
             ExcludeSemantics(
               child: Row(
                 children: [

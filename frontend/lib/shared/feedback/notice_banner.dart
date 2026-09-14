@@ -64,7 +64,7 @@ class NoticeBanner extends StatelessWidget {
                   child: Icon(icon, size: 16, color: colors.warning),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm + 2),
+              const SizedBox(width: AppSpacing.sm2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

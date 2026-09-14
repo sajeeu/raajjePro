@@ -70,11 +70,11 @@ class ServiceAreasStep extends StatelessWidget {
             'single service.',
             style: type.body.copyWith(color: colors.textSecondary),
           ),
-          const SizedBox(height: AppSpacing.lg + 2),
+          const SizedBox(height: AppSpacing.lg2),
           Container(
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md + 2,
+              vertical: AppSpacing.md2,
             ),
             decoration: BoxDecoration(
               color: colors.accentTint,
@@ -100,7 +100,7 @@ class ServiceAreasStep extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.lg + 2),
+          const SizedBox(height: AppSpacing.lg2),
           IslandMultiSelect(
             selected: selected,
             onChanged: (next) {

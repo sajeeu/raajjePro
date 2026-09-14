@@ -102,15 +102,15 @@ class AppHeader extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
               AppSpacing.xl,
-              AppSpacing.md + 2,
+              AppSpacing.md2,
               AppSpacing.xl,
-              AppSpacing.sm + 2,
+              AppSpacing.sm2,
             ),
             child: Row(
               children: [
                 if (brand) ...[
                   const _LogoMark(),
-                  const SizedBox(width: AppSpacing.sm + 2),
+                  const SizedBox(width: AppSpacing.sm2),
                   // 🔧 Flexible, added in Phase 6 when the row overflowed at
                   // 200% text — the trailing slot had grown from a 36 dp
                   // avatar to a 48 dp control and the wordmark was the one
@@ -147,7 +147,7 @@ class AppHeader extends StatelessWidget {
                           ),
                   ),
                 for (final a in actions) ...[
-                  const SizedBox(width: AppSpacing.sm + 2),
+                  const SizedBox(width: AppSpacing.sm2),
                   _RoundAction(
                     icon: a.icon,
                     label: a.badgeCount == null || a.badgeCount == 0
@@ -158,7 +158,7 @@ class AppHeader extends StatelessWidget {
                   ),
                 ],
                 if (trailingSlot != null) ...[
-                  const SizedBox(width: AppSpacing.sm + 2),
+                  const SizedBox(width: AppSpacing.sm2),
                   trailingSlot!,
                 ],
               ],

@@ -169,7 +169,7 @@ class _BankRow extends StatelessWidget {
             ? colors.background
             : Colors.transparent,
         padding: const EdgeInsetsDirectional.symmetric(
-          vertical: AppSpacing.md + 2,
+          vertical: AppSpacing.md2,
         ),
         child: Row(
           children: [

@@ -36,7 +36,7 @@ class LocationStep extends StatelessWidget {
               'Customers only see services available on their island. At '
               'least one island is needed to publish.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         const WizardNote(
           icon: Icons.place_outlined,
           tone: NoteTone.informative,
@@ -44,7 +44,7 @@ class LocationStep extends StatelessWidget {
               'Pre-filled from your default coverage areas. Edit freely — '
               'changes here apply to this service only.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         IslandMultiSelect(
           key: const Key('wizard-islands'),
           selected: view.listing.serviceAreas,

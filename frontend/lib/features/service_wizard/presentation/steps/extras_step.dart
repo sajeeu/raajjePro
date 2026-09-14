@@ -87,7 +87,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
               'Everything on this step is optional — none of it blocks '
               'publishing. It builds trust with customers who are comparing.',
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           children: [
             AppTextField(
@@ -98,7 +98,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
               textCapitalization: TextCapitalization.sentences,
               onChanged: widget.controller.setWhatsIncluded,
             ),
-            const SizedBox(height: AppSpacing.md + 2),
+            const SizedBox(height: AppSpacing.md2),
             AppTextField(
               label: "What's not included",
               controller: _notIncluded,
@@ -109,7 +109,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           title: 'FAQs',
           helper: 'Answer the questions you get asked in chat anyway.',
@@ -119,7 +119,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
                 faq: listing.faqs[index],
                 onRemove: () => widget.controller.removeFaq(index),
               ),
-              const SizedBox(height: AppSpacing.sm + 2),
+              const SizedBox(height: AppSpacing.sm2),
             ],
             AppTextField(
               key: const Key('wizard-faq-question'),
@@ -129,7 +129,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: AppSpacing.md - 2),
+            const SizedBox(height: AppSpacing.sm2),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -145,7 +145,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
                     onSubmitted: (_) => _addFaq(),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md - 2),
+                const SizedBox(width: AppSpacing.sm2),
                 Padding(
                   padding: const EdgeInsetsDirectional.only(
                     top: AppSpacing.xxl + AppSpacing.xxs,
@@ -160,7 +160,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg + 2),
+        const SizedBox(height: AppSpacing.lg2),
         WizardSection(
           title: 'Warranty & insurance',
           children: [
@@ -217,7 +217,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
           ],
         ),
         if (listing.callbackAvailable) ...[
-          const SizedBox(height: AppSpacing.lg + 2),
+          const SizedBox(height: AppSpacing.lg2),
           WizardSection(
             borderColor: colors.guaranteeBorder,
             children: [
@@ -299,7 +299,7 @@ class _FaqRow extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.md + 2,
+          horizontal: AppSpacing.md2,
           vertical: AppSpacing.md,
         ),
         child: Row(
@@ -321,7 +321,7 @@ class _FaqRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm + 2),
+            const SizedBox(width: AppSpacing.sm2),
             Pressable(
               semanticLabel: 'Remove the FAQ "${faq.question}"',
               onTap: onRemove,

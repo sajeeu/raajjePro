@@ -64,9 +64,9 @@ class AnimatedBottomNav extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
-              AppSpacing.sm + 2,
+              AppSpacing.sm2,
               AppSpacing.sm,
-              AppSpacing.sm + 2,
+              AppSpacing.sm2,
               AppSpacing.md,
             ),
             child: Semantics(

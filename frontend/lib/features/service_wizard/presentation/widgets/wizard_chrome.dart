@@ -47,7 +47,7 @@ class WizardHeader extends StatelessWidget {
                     : 'Back to ${WizardStep.values[view.step.index - 1].label}',
                 onTap: onBack,
               ),
-              const SizedBox(width: AppSpacing.sm + 2),
+              const SizedBox(width: AppSpacing.sm2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +156,7 @@ class _StepPill extends StatelessWidget {
         duration: context.motion.fast,
         height: AppSizes.chipHeight,
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.lg - 2,
+          horizontal: AppSpacing.md2,
         ),
         decoration: BoxDecoration(
           color: selected ? colors.primary : colors.surface,

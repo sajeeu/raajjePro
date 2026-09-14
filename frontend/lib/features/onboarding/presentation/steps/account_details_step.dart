@@ -169,7 +169,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
           const _SectionRule(label: 'About you'),
           const _PhotoRow(),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           AppTextField(
             key: const Key('onboarding-name'),
             label: 'Provider or business name',
@@ -182,7 +182,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             requirement: FieldRequirement.mandatory,
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           ProviderTypeChoice(
             value: _type,
             errorText: errors['providerType'],
@@ -192,7 +192,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             },
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           RegisteredPhoneRow(
             editing: widget.editingPhone,
             dial: _dial,
@@ -203,7 +203,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             onChanged: () => widget.onClearError('phone'),
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           AccountEmailRow(
             email: widget.account.email,
             verified: widget.account.emailVerified,
@@ -211,7 +211,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             onVerify: widget.onVerifyEmail,
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           AppTextField(
             key: const Key('onboarding-intro'),
             label: 'Short introduction',
@@ -245,7 +245,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             requirement: FieldRequirement.mandatory,
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           AppTextField(
             key: const Key('onboarding-account'),
             label: 'Account number',
@@ -272,7 +272,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
             requirement: FieldRequirement.mandatory,
           ),
 
-          const SizedBox(height: AppSpacing.xxl - 2),
+          const SizedBox(height: AppSpacing.xl2),
           BankField(
             value: _bank,
             errorText: errors['bankName'],
@@ -319,7 +319,7 @@ class _SectionRule extends StatelessWidget {
             label,
             style: context.type.overline.copyWith(color: colors.textSecondary),
           ),
-          const SizedBox(width: AppSpacing.sm + 2),
+          const SizedBox(width: AppSpacing.sm2),
           Expanded(child: Divider(height: 1, color: colors.border)),
         ],
       ),
@@ -345,7 +345,7 @@ class _PhotoRow extends StatelessWidget {
       owedBy: 'Phase 8',
       child: AppCard(
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.lg + 2,
+          horizontal: AppSpacing.lg2,
           vertical: AppSpacing.lg,
         ),
         child: Row(
@@ -406,7 +406,7 @@ class _DirectPaymentNotice extends StatelessWidget {
     return Container(
       padding: const EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md + 2,
+        vertical: AppSpacing.md2,
       ),
       decoration: BoxDecoration(
         color: colors.successTint,

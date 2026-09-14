@@ -294,7 +294,7 @@ class _TokensSection extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsetsDirectional.symmetric(
-                        horizontal: AppSpacing.sm + 2,
+                        horizontal: AppSpacing.sm2,
                         vertical: AppSpacing.xs,
                       ),
                       child: Row(
@@ -811,8 +811,8 @@ class _StatusSection extends StatelessWidget {
         _panel(
           context,
           Wrap(
-            spacing: AppSpacing.sm + 2,
-            runSpacing: AppSpacing.sm + 2,
+            spacing: AppSpacing.sm2,
+            runSpacing: AppSpacing.sm2,
             children: [for (final s in BadgeStatus.values) StatusBadge(s)],
           ),
         ),
@@ -1207,7 +1207,7 @@ class _SheetSection extends StatelessWidget {
                         onPressed: () => Navigator.of(ctx).pop(),
                         expand: true,
                       ),
-                      const SizedBox(height: AppSpacing.sm + 2),
+                      const SizedBox(height: AppSpacing.sm2),
                       AppButton.text(
                         label: 'Keep it',
                         onPressed: () => Navigator.of(ctx).pop(),

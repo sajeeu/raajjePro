@@ -325,9 +325,9 @@ class _Footer extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(
             AppSpacing.xl,
-            AppSpacing.lg - 2,
+            AppSpacing.md2,
             AppSpacing.xl,
-            AppSpacing.xxl - 2,
+            AppSpacing.xl2,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -339,7 +339,7 @@ class _Footer extends StatelessWidget {
                   expand: true,
                   onPressed: onContinueIntro,
                 ),
-                const SizedBox(height: AppSpacing.sm + 2),
+                const SizedBox(height: AppSpacing.sm2),
                 AppButton.text(
                   label: 'Not right now',
                   expand: true,
@@ -366,7 +366,7 @@ class _Footer extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: type.secondary.copyWith(color: colors.successText),
                   ),
-                  const SizedBox(height: AppSpacing.sm + 2),
+                  const SizedBox(height: AppSpacing.sm2),
                 ],
                 AppButton.primary(
                   key: const Key('onboarding-finish'),

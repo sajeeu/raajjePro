@@ -51,8 +51,8 @@ class IntroStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           AppCard(
             padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: AppSpacing.lg + 2,
-              vertical: AppSpacing.xxs + 2,
+              horizontal: AppSpacing.lg2,
+              vertical: AppSpacing.xs,
             ),
             child: Column(
               children: [
@@ -78,7 +78,7 @@ class IntroStep extends StatelessWidget {
                   color: colors.success,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm + 2),
+              const SizedBox(width: AppSpacing.sm2),
               Expanded(
                 child: Text(
                   // The reassurance the "Not right now" action makes true:
@@ -149,9 +149,9 @@ class _Hero extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(
-          AppSpacing.xxl - 2,
-          AppSpacing.xxl + 2,
-          AppSpacing.xxl - 2,
+          AppSpacing.xl2,
+          AppSpacing.xxl2,
+          AppSpacing.xl2,
           AppSpacing.xxl + AppSpacing.xxs,
         ),
         child: Column(
@@ -185,12 +185,12 @@ class _Hero extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.lg - 2),
+            const SizedBox(height: AppSpacing.md2),
             Text(
               'Offer your services on RaajjePro',
               style: type.screenTitle.copyWith(color: colors.onPrimary),
             ),
-            const SizedBox(height: AppSpacing.sm + 2),
+            const SizedBox(height: AppSpacing.sm2),
             Text(
               'Turn your skills into bookings from customers across the '
               'Maldives — on your terms.',
@@ -237,7 +237,7 @@ class _MechanicRow extends StatelessWidget {
             ),
             child: Icon(row.icon, size: AppSizes.iconLg + 3, color: ink),
           ),
-          const SizedBox(width: AppSpacing.lg - 2),
+          const SizedBox(width: AppSpacing.md2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

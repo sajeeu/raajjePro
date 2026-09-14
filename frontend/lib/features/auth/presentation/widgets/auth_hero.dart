@@ -119,7 +119,7 @@ class AuthHero extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.sm + 2),
+                        const SizedBox(height: AppSpacing.sm2),
                         Text(
                           '🇲🇻 Maldives Local Service Marketplace',
                           style: type.secondary.copyWith(

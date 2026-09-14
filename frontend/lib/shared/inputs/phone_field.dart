@@ -45,7 +45,7 @@ class PhoneField extends StatelessWidget {
               Padding(
                 padding: const EdgeInsetsDirectional.only(
                   end: AppSpacing.xs,
-                  bottom: AppSpacing.md + 2,
+                  bottom: AppSpacing.md2,
                 ),
                 child: Text('🇲🇻', style: type.body),
               ),

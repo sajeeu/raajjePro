@@ -70,7 +70,7 @@ class OnboardingDoneSheet extends StatelessWidget {
             textAlign: TextAlign.center,
             style: type.screenTitle,
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           Text(
             'Your provider profile is ready. Next, add your first service so '
             'customers on ${_where(islands)} can find you.',
@@ -84,7 +84,7 @@ class OnboardingDoneSheet extends StatelessWidget {
             expand: true,
             onPressed: onStart,
           ),
-          const SizedBox(height: AppSpacing.sm + 2),
+          const SizedBox(height: AppSpacing.sm2),
           AppButton.text(
             label: 'Back to service area',
             expand: true,

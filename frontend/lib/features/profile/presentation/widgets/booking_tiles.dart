@@ -87,12 +87,12 @@ class BookingTilesCard extends StatelessWidget {
       radius: AppRadius.feature,
       padding: const EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.lg + 2,
+        vertical: AppSpacing.lg2,
       ),
       child: Column(
         children: [
           for (var row = 0; row < 2; row += 1) ...[
-            if (row > 0) const SizedBox(height: AppSpacing.lg + 2),
+            if (row > 0) const SizedBox(height: AppSpacing.lg2),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
