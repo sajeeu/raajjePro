@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:raajjepro/core/feedback/app_haptics.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/motion/pressable.dart';
 
@@ -45,7 +46,12 @@ class SaveHeartToggle extends StatelessWidget {
     final label = itemName == null ? verb : '$verb $itemName';
 
     return Pressable(
-      onTap: onChanged == null ? null : () => onChanged!(!saved),
+      onTap: onChanged == null
+          ? null
+          : () {
+              AppHaptics.selection();
+              onChanged!(!saved);
+            },
       toggled: saved,
       semanticLabel: label,
       focusRadius: AppRadius.pill,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:raajjepro/core/feedback/app_haptics.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/motion/pressable.dart';
 
@@ -49,7 +50,14 @@ class AppToggle extends StatelessWidget {
     }
 
     return Pressable(
-      onTap: _enabled ? () => onChanged!(!value) : null,
+      onTap: _enabled
+          ? () {
+              // A toggle is the clearest 'a choice changed' there is,
+              // and the one most often tapped without looking.
+              AppHaptics.selection();
+              onChanged!(!value);
+            }
+          : null,
       enabled: _enabled,
       toggled: value,
       semanticLabel: spoken.toString(),

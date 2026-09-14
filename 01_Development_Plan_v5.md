@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.29 — read this before §0.1–0.3
+### 0.0 Revision 5.30 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -691,6 +691,7 @@ A Gold provider already submits business registration (§1e). They **may** addit
   - `Semantics` labels on every control and icon-only button
   - `MediaQuery.textScaler` respected — no fixed-height text containers
   - every motion primitive has a reduced-motion path honouring the OS setting
+  - 🔧 **Haptic feedback, added 2026-09-14 on the owner's instruction.** This list said nothing about touch feedback and the app had none. Three events, deliberately — `selection` when a choice changes, `commit` when something lands that cannot be quietly undone, `refused` when the app says no — because haptics on every tap teaches its owner to ignore them, which costs the one channel that still works when nobody is looking at the screen. `AppHaptics` is the vocabulary; a call site names the event, never a vibration. **Not gated on reduced motion**: that setting is about movement on screen, and someone who turned animation off has not asked their phone to stop vibrating. Not gated on a setting of ours either — both platforms already own that preference and a second switch would be a second source of truth.
 - Component gallery route rendering everything with sample data
 
 - 🔧 **Built RTL-ready, without shipping Dhivehi — Round 15.** Thaana is right-to-left, and §6 defers localisation while noting only the font consequence. The *layout* consequence is the expensive one: in Flutter, RTL is `Directionality`, `EdgeInsetsDirectional`, `start`/`end` and mirrored motion, not a translation file. A design system built with absolute directions is inherited by every later phase, making the retrofit a rewrite of the presentation layer. Use directional insets and alignment **exclusively** — no `EdgeInsets.only(left:)`, no `TextAlign.left`, no hardcoded row order. This costs nothing now and is the difference between adding a locale later and rebuilding the frontend.

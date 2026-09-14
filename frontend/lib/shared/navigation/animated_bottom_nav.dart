@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:raajjepro/core/feedback/app_haptics.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/motion/pressable.dart';
 
@@ -125,7 +126,10 @@ class AnimatedBottomNav extends StatelessWidget {
                             active: i == currentIndex,
                             index: i,
                             count: n,
-                            onTap: () => onSelected(i),
+                            onTap: () {
+                              AppHaptics.selection();
+                              onSelected(i);
+                            },
                           ),
                         ),
                     ],

@@ -6,6 +6,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/categories/categories_controller.dart';
 import 'package:raajjepro/core/domain/category.dart';
 import 'package:raajjepro/core/domain/island.dart';
+import 'package:raajjepro/core/feedback/app_haptics.dart';
 import 'package:raajjepro/core/location/account_service_areas.dart';
 import 'package:raajjepro/core/media/media_picker.dart';
 import 'package:raajjepro/core/media/media_uploader.dart';
@@ -757,6 +758,11 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
     if (!_alive) return;
 
     if (_view.missing.isNotEmpty) {
+      // The app said no, and it says so by moving the provider to Review and
+      // marking the gaps — a change they may not be looking at the moment
+      // they tap. §Phase 1's record: a refusal and a success must never feel
+      // the same.
+      AppHaptics.refused();
       _set(
         _view.copyWith(
           publishAttempted: true,
@@ -773,6 +779,9 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
           .read(listingApiProvider)
           .publish(_view.listing.id);
       if (!_alive) return;
+      // Live, and not quietly undoable — the one moment in this flow that
+      // earns more than a selection tick.
+      AppHaptics.commit();
       _set(
         _view.copyWith(
           listing: published,
@@ -797,6 +806,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
 
   void _handlePublishRefusal(ApiException e) {
     if (!_alive) return;
+    AppHaptics.refused();
     switch (e.code) {
       case 'LISTING_INCOMPLETE':
         final details = e.details;
