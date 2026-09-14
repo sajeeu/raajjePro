@@ -90,7 +90,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 AppSpacing.xxl,
                 AppSpacing.xxxl,
               ),
-              child: Column(
+              child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(

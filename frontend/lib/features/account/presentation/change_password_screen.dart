@@ -94,7 +94,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 AppSpacing.xl,
                 AppSpacing.xxl,
               ),
-              child: Column(
+              child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (s.offline) InlineNotice.offline(onRetry: _submit),

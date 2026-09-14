@@ -42,7 +42,7 @@ class LegalIndexScreen extends StatelessWidget {
                 AppSpacing.xl,
                 AppSpacing.xxl,
               ),
-              children: [
+              children: fadeUpAll([
                 Container(
                   padding: const EdgeInsetsDirectional.all(AppSpacing.md),
                   decoration: BoxDecoration(
@@ -68,7 +68,7 @@ class LegalIndexScreen extends StatelessWidget {
                   onTap: () =>
                       Navigator.of(context).pushNamed('/legal/privacy'),
                 ),
-              ],
+              ]),
             ),
           ),
         ],

@@ -191,7 +191,7 @@ class _Loaded extends StatelessWidget {
                 AppSpacing.screen,
                 AppSpacing.xxl + AppSpacing.xxxl,
               ),
-              child: Column(
+              child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (view.formError != null &&

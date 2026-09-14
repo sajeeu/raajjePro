@@ -40,7 +40,7 @@ class AccountSettingsScreen extends ConsumerWidget {
               loading: () => SkeletonLoader(
                 child: ListView(
                   padding: AppSpacing.screenInsets,
-                  children: [
+                  children: fadeUpAll([
                     for (var i = 0; i < 6; i++)
                       const Padding(
                         padding: EdgeInsetsDirectional.only(
@@ -48,7 +48,7 @@ class AccountSettingsScreen extends ConsumerWidget {
                         ),
                         child: SkeletonRow(),
                       ),
-                  ],
+                  ]),
                 ),
               ),
               error: (_, _) => Center(

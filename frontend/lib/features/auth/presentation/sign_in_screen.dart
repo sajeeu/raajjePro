@@ -57,7 +57,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
+        child: FadeUpColumn(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const AuthHero(),

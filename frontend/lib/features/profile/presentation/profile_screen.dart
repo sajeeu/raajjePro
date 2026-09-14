@@ -119,7 +119,7 @@ class _ProfileBody extends ConsumerWidget {
     final type = context.type;
 
     return SingleChildScrollView(
-      child: Column(
+      child: FadeUpColumn(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ProfileHero(

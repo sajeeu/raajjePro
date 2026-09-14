@@ -109,7 +109,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             AppSpacing.xxl,
             AppSpacing.xxxl,
           ),
-          child: Column(
+          child: FadeUpColumn(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Align(

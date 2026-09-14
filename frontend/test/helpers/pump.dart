@@ -46,7 +46,26 @@ Future<void> pumpScreen(
   await settle(tester);
 }
 
+/// Advance past every finite entrance on the screen.
+///
+/// A fixed advance rather than `pumpAndSettle`, because this app has loops
+/// that never settle — the skeleton shimmer and the button spinner run until
+/// their widget goes away, and `pumpAndSettle` would spin on them forever.
+///
+/// 🔧 **Derived from the tokens since 2026-09-14**, where it used to be a flat
+/// 400 ms. `FadeUp` staggers a list by up to `staggerStep * staggerCap`, so
+/// the last item now finishes at 180 + 350 = 530 ms — past the old window,
+/// which left late children mid-transform. A tap then missed them, because
+/// `Transform.translate` moves the hit area with the paint. Ten tests failed
+/// that way and every one of them looked like a broken screen rather than a
+/// short clock.
 Future<void> settle(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(
+    AppMotion.page +
+        AppMotion.staggerStep * AppMotion.staggerCap +
+        // Slack, so a primitive that gains a frame or two does not silently
+        // reintroduce the same class of failure.
+        const Duration(milliseconds: 120),
+  );
 }

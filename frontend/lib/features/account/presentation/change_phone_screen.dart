@@ -87,7 +87,7 @@ class _ChangePhoneScreenState extends ConsumerState<ChangePhoneScreen> {
                 AppSpacing.xl,
                 AppSpacing.xxl,
               ),
-              child: Column(
+              child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Plain text — no icon, no "verified".

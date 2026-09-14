@@ -182,10 +182,19 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
     Animation<double> secondaryAnimation,
   ) {
     // Rise above the keyboard when the sheet holds an input.
+    //
+    // 🔧 **Animated — 2026-09-14.** `viewInsets` jumps from 0 to the full
+    // keyboard height in one frame, so a sheet that autofocuses its field
+    // moved twice: it rose, settled, and was then shoved upward. One beat on
+    // the token scale turns the second movement into part of the same
+    // gesture. `base` rather than `sheet` because this is an in-place change,
+    // not an arrival.
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     return SafeArea(
       bottom: false,
-      child: Padding(
+      child: AnimatedPadding(
+        duration: motion.base,
+        curve: AppMotion.easeOut,
         padding: EdgeInsetsDirectional.only(bottom: keyboard),
         child: Align(
           alignment: AlignmentDirectional.bottomCenter,
@@ -216,16 +225,28 @@ class _AppSheetRoute<T> extends PopupRoute<T> {
       curve: AppMotion.easeOut,
       reverseCurve: AppMotion.easeIn,
     );
-    return FadeTransition(
-      opacity: curved,
-      child: AnimatedBuilder(
-        animation: curved,
-        builder: (context, child) => Transform.translate(
-          offset: Offset(0, AppMotion.sheetSlide * (1 - curved.value)),
-          child: child,
-        ),
+    // 🔧 **The sheet rises opaque; the scrim does the fading — 2026-09-14.**
+    //
+    // This used to wrap the whole thing in a `FadeTransition`, following
+    // `motion.css`'s `sheetUp` (`from{opacity:0;transform:translateY(64px)}`).
+    // The surface is opaque white, so fading it made it *translucent for 300
+    // ms*: a screen recording of the island picker opening over Explore shows
+    // the category grid and the bottom nav straight through the sheet, with
+    // the skeleton rows drawn over the tiles. That is what "loads odd" was.
+    //
+    // The style guide's own rule settles it — "this is Flutter, not a
+    // website … match its values, not its idioms". A CSS opacity fade on a
+    // positioned element is the idiom; the value is the 64 dp rise over
+    // `--m-sheet` on `--e-out`, which is kept exactly. `barrierColor` already
+    // fades the scrim with this same animation, so the page still dims on
+    // the same beat — it is just no longer visible *through* the sheet.
+    return AnimatedBuilder(
+      animation: curved,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, AppMotion.sheetSlide * (1 - curved.value)),
         child: child,
       ),
+      child: child,
     );
   }
 }

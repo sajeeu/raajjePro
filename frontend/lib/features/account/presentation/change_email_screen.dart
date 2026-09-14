@@ -89,7 +89,7 @@ class _ChangeEmailScreenState extends ConsumerState<ChangeEmailScreen> {
                 AppSpacing.xl,
                 AppSpacing.xxl,
               ),
-              child: Column(
+              child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(

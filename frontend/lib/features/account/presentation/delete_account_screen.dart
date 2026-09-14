@@ -115,7 +115,7 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
       ),
       children: [
         AppCard(
-          child: Column(
+          child: FadeUpColumn(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(

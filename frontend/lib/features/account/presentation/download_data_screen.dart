@@ -44,7 +44,7 @@ class DownloadDataScreen extends ConsumerWidget {
               ),
               children: [
                 AppCard(
-                  child: Column(
+                  child: FadeUpColumn(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(

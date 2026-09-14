@@ -43,10 +43,8 @@ class FadeUp extends StatefulWidget {
 }
 
 class _FadeUpState extends State<FadeUp> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: AppMotion.page,
-  );
+  late final AnimationController _controller = AnimationController(vsync: this);
+  late Animation<double> _entrance;
   bool _started = false;
 
   @override
@@ -59,17 +57,34 @@ class _FadeUpState extends State<FadeUp> with SingleTickerProviderStateMixin {
       // Jump to rest rather than animating for zero time: a zero-duration
       // controller still schedules a frame, and the slide would lay out one
       // off-screen frame first — the flash `ResolvedMotion` documents.
+      _controller.duration = AppMotion.page;
+      _entrance = _controller;
       _controller.value = 1;
       return;
     }
+
+    // 🔧 **The stagger is an `Interval`, not a delayed start.** The obvious
+    // way to hold an item back is `Future.delayed(...).then(forward)`, and it
+    // works — but the timer outlives a widget test that finishes inside the
+    // delay, and the framework fails the test with "pending timers" rather
+    // than the assertion it was making. `phase6_done_when_test.dart` caught
+    // it on three tests at once.
+    //
+    // Folding the delay into the curve removes the timer entirely: one
+    // controller running `delay + page`, flat for the first stretch. It also
+    // cancels with `dispose`, which a bare `Future.delayed` does not.
     final delay = motion.staggerFor(widget.index);
-    if (delay == Duration.zero) {
-      _controller.forward();
-    } else {
-      Future<void>.delayed(delay, () {
-        if (mounted) _controller.forward();
-      });
-    }
+    final total = delay + AppMotion.page;
+    _controller.duration = total;
+    _entrance = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(
+        delay.inMicroseconds / total.inMicroseconds,
+        1,
+        curve: AppMotion.easeOut,
+      ),
+    );
+    _controller.forward();
   }
 
   @override
@@ -81,25 +96,66 @@ class _FadeUpState extends State<FadeUp> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final rise = AppMotion.of(context).fadeUpSlide;
-    final curved = CurvedAnimation(
-      parent: _controller,
-      curve: AppMotion.easeOut,
-    );
     return AnimatedBuilder(
-      animation: curved,
+      animation: _entrance,
       // Built once and reused: the child does not depend on the animation,
       // so rebuilding it every frame of a 350 ms entrance would be the most
       // expensive way to do the cheapest thing.
       child: widget.child,
       builder: (context, child) => Opacity(
-        opacity: curved.value,
+        opacity: _entrance.value,
+        // 🔧 **Semantics do not fade.** `RenderOpacity` drops its child from
+        // the semantics tree entirely at alpha 0, so without this a screen
+        // reader loses the whole page for the length of its entrance —
+        // longer for a staggered item, which starts later. Content that is
+        // arriving is still content, and a reader that reaches it before the
+        // pixels do has lost nothing.
+        //
+        // Caught by `sign_in_screen_test.dart`, which finds its four
+        // third-party buttons by semantics label: the text finders passed and
+        // the semantics finders returned nothing, which is the signature.
+        alwaysIncludeSemantics: true,
         child: Transform.translate(
-          offset: Offset(0, rise * (1 - curved.value)),
+          offset: Offset(0, rise * (1 - _entrance.value)),
           child: child,
         ),
       ),
     );
   }
+}
+
+/// A [Column] whose children enter with [FadeUp], each one step behind the
+/// last.
+///
+/// A drop-in replacement, so adopting the entrance on a screen is one word
+/// rather than a rewrite — which matters because there is no shared scaffold
+/// here: all twenty screens build their own, and an entrance applied by hand
+/// to each would drift by the third one.
+///
+/// Wrap the screen's **content** column, not its outermost one. Wrapping the
+/// outermost gives every child the same index and the whole page arrives as a
+/// block, which is the thing this exists to remove.
+class FadeUpColumn extends StatelessWidget {
+  const FadeUpColumn({
+    required this.children,
+    super.key,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.mainAxisAlignment = MainAxisAlignment.start,
+    this.mainAxisSize = MainAxisSize.max,
+  });
+
+  final List<Widget> children;
+  final CrossAxisAlignment crossAxisAlignment;
+  final MainAxisAlignment mainAxisAlignment;
+  final MainAxisSize mainAxisSize;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: crossAxisAlignment,
+    mainAxisAlignment: mainAxisAlignment,
+    mainAxisSize: mainAxisSize,
+    children: fadeUpAll(children),
+  );
 }
 
 /// [FadeUp] applied down a run of siblings, each one step behind the last.
