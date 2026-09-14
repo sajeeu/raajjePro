@@ -792,6 +792,52 @@ $HOME/Android/emulator/emulator -avd raajjepro_a11y -no-boot-anim &
 
 Start it from your own terminal, not from a Claude session — one started by a session dies with it. The checklist, the result so far and the step 1 defect are in `docs/decisions/08-phase-1-design-system.md`. The gallery has its own RTL, 200% text and reduced-motion toggles, so step 13 needs no OS settings.
 
+## Do not judge motion on the emulator
+
+Measured on 2026-09-14, after an hour of chasing a sheet animation that
+"wasn't smooth". It was smooth. The emulator cannot paint fast enough to show
+it, and every cheap way of checking that lies to you.
+
+**The numbers**, from Flutter's own timeline on a **profile** build:
+
+| | median | what it means |
+|---|---|---|
+| `Animator::BeginFrame` (UI thread) | **0.4 ms** | the app's build and layout cost nothing |
+| `GPURasterizer::Draw` (raster thread) | **12.3 ms** | painting one frame, ~25–40× a real phone |
+| interval between frames | **55 ms** | ≈18 fps, which is exactly what "not smooth" looks like |
+
+So the app produced frames in 0.4 ms and the emulator took 12.3 ms to paint
+each one. `-gpu host` changes nothing — the bottleneck is the emulated GL
+path, not which renderer is picked.
+
+**Two ways of measuring that do not work:**
+
+- **`screenrecord`.** It caps at ~14 unique fps on this emulator regardless of
+  what is on screen. A continuous fling — which Flutter renders at 60 fps by
+  definition — measures the same ~14 fps as a janky animation, so the number
+  tells you nothing. A recording is still useful for *what* is drawn (it is
+  how the sheet's see-through bug was found); it is worthless for *how fast*.
+- **`dumpsys gfxinfo`.** Reports `Total frames rendered: 0` for a Flutter app.
+  It measures the HWUI pipeline, which Flutter bypasses entirely.
+
+**What does work:**
+
+```bash
+# Build first, with nothing competing — an AOT build starves the emulator.
+cd frontend && flutter build apk --profile --dart-define=API_BASE_URL=http://10.0.2.2:3000
+# Then start the device, then attach without rebuilding:
+flutter run --profile -d emulator-5554 --use-application-binary=build/app/outputs/flutter-apk/app-profile.apk
+```
+
+That prints a VM service URL. `curl "$VS/getVMTimeline"` returns the real
+`Frame`, `Animator::BeginFrame` and `GPURasterizer::Draw` events with
+durations. Note the ring buffer is short — capture immediately after the
+interaction, and expect only a handful of frames.
+
+**And the honest answer: use a phone.** The profile APK installs on one, and
+it is the only place the question can actually be settled. Everything above is
+how to avoid spending an hour finding that out again.
+
 ## One rule that overrides everything
 
 Where anything disagrees with `01_Development_Plan_v5.md`, **the plan wins and the disagreement gets flagged, not silently resolved.** Five times a decision was reversed in the plan and survived in a copy of it. Every single time the plan was right and the copy was wrong.
