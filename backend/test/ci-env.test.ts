@@ -44,8 +44,13 @@ function ciJobEnv(): Record<string, string> {
   for (const line of lines.slice(start + 1)) {
     if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
     const match = /^ {6}([A-Z0-9_]+):\s*(.*)$/.exec(line);
-    if (match === null) break; // The first line at any other indent ends the block.
-    env[match[1]] = match[2].trim();
+    // The first line at any other indent ends the block. Destructured rather
+    // than indexed because `noUncheckedIndexedAccess` types a capture group as
+    // possibly undefined, and it is right to: a regex that matched says
+    // nothing to the compiler about how many groups it filled.
+    const [, key, value] = match ?? [];
+    if (key === undefined || value === undefined) break;
+    env[key] = value.trim();
   }
   return env;
 }
