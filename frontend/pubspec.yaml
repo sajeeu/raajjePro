@@ -19,7 +19,7 @@ dependencies:
   # getTemporaryDirectory() itself rather than Directory.systemTemp, which on
   # Android is a directory shared with other apps (final review #5).
   path_provider: 2.1.6
-  sentry_flutter: 9.29.0
+  sentry_flutter: 9.30.0
   # Phase 9's media step. The cover image is one of the six fields required to
   # publish (§0.2 item 4), so a wizard that cannot reach the photo library
   # cannot create a service end-to-end — which is §Phase 9's first Done-when
