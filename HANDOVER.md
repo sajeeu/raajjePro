@@ -48,8 +48,24 @@ docker compose up -d                          # Postgres 18 + pg_cron + WAL arch
 (cd backend && cp .env.example .env && npm install && npm run db:migrate)
 (cd backend && DATABASE_URL="postgresql://raajjepro:raajjepro@localhost:5435/raajjepro_test?schema=public" npm run db:deploy)
 (cd frontend && flutter pub get)
-scripts/verify.sh                             # everything should be green
+scripts/verify.sh                             # every step but backend lint — see below
 ```
+
+⚠️ **`scripts/verify.sh` fails on `backend lint`, and it is not your
+checkout.** Since Phase 9a added six models, type-aware ESLint needs more than
+**6 GB** of heap on this repository, where the same lint passed under Node's
+default 4 GB before. It is the generated Prisma client's type surface, not any
+particular code: a worktree at the previous commit lints clean, and copying in
+only the new `schema.prisma` — with none of the new TypeScript — reproduces it.
+Splitting the run does not help, and 7 GB is OOM-killed on a 15 GB machine.
+
+**Everything else is green**, including `typecheck`, all 633 backend tests,
+`flutter analyze` and all 471 frontend tests, and `eslint` over any subset of
+files (which is why the pre-commit hook still works). Ledger row **P9A-4**
+carries the options — raise the CI heap, trim the most expensive
+`strictTypeChecked` rules, or reduce Prisma's relation surface — and the choice
+is the owner's, because each one changes shared lint configuration or the
+schema's integrity guarantees.
 
 The second migrate is the `_test` database. The suite writes real rows and never deletes them — it isolates by unique key rather than by truncating — so `backend/test/setup.ts` refuses to run against any database whose name does not end in `_test`. A fresh Docker volume creates it; the migration is yours to apply.
 
