@@ -243,8 +243,8 @@ class _MissingCard extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.lg + 1,
-        vertical: AppSpacing.lg - 1,
+        horizontal: AppSpacing.n17,
+        vertical: AppSpacing.n15,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -256,7 +256,7 @@ class _MissingCard extends StatelessWidget {
                 size: AppSizes.iconMd,
                 color: colors.warningText,
               ),
-              const SizedBox(width: AppSpacing.sm + 1),
+              const SizedBox(width: AppSpacing.n9),
               Expanded(
                 child: Text(
                   '$count required field${count == 1 ? '' : 's'} missing',
@@ -340,8 +340,8 @@ class _ReadyCard extends StatelessWidget {
         border: Border.all(color: colors.successBorder),
       ),
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.lg + 1,
-        vertical: AppSpacing.lg - 1,
+        horizontal: AppSpacing.n17,
+        vertical: AppSpacing.n15,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,9 +382,9 @@ class _ReviewCard extends StatelessWidget {
     return AppCard(
       radius: AppRadius.tile,
       padding: const EdgeInsetsDirectional.fromSTEB(
-        AppSpacing.lg + 1,
+        AppSpacing.n17,
         AppSpacing.xs,
-        AppSpacing.lg + 1,
+        AppSpacing.n17,
         AppSpacing.sm,
       ),
       child: Column(
@@ -395,7 +395,7 @@ class _ReviewCard extends StatelessWidget {
               border: Border(bottom: BorderSide(color: colors.divider)),
             ),
             padding: const EdgeInsetsDirectional.symmetric(
-              vertical: AppSpacing.md - 1,
+              vertical: AppSpacing.n11,
             ),
             child: Row(
               children: [

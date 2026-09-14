@@ -188,13 +188,14 @@ void main() {
     /// A reader could not tell a considered value from a nudge, which is how
     /// ±1 drifted in beside ±2.
     ///
-    /// A ratchet rather than a ban, because 51 genuinely off-grid sites
-    /// remain (5, 7, 9, 11, 13, 15, 17, 28, 34 dp). Those are pixel decisions
-    /// that came from the artboards, so snapping them here would put the app
-    /// out of sync with its own prototypes — they belong to a design round.
-    /// What this forbids is *growth*: a new phase reaching for arithmetic
-    /// instead of a token.
-    const allowedOffGrid = 51;
+    /// 🔧 **Zero, since 2026-09-14.** This was a ratchet at 51 while those
+    /// sites still reached their values by arithmetic. They were never drift
+    /// — 13 px appears 172 times across the 61 artboards, 11 px 159, 9 px 112
+    /// — so they are named (`AppSpacing.n13` and friends) rather than snapped,
+    /// which would have moved the app away from its own prototypes. With the
+    /// arithmetic gone the ceiling can be a floor: there is no longer any
+    /// value on screen that a call site has to compute.
+    const allowedOffGrid = 0;
 
     test('no new arithmetic on a spacing token', () {
       final pattern = RegExp(r'AppSpacing\.([a-z0-9]+)\s*[-+]\s*[0-9.]+');

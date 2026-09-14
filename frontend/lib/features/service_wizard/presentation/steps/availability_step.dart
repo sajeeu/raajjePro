@@ -83,7 +83,7 @@ class AvailabilityStep extends StatelessWidget {
               : null,
           onTap: () => controller.chooseBookingMode(BookingMode.slot),
         ),
-        const SizedBox(height: AppSpacing.sm + 1),
+        const SizedBox(height: AppSpacing.n9),
         ChoiceCard(
           key: const Key('booking-mode-request'),
           title: 'Request a time',
@@ -156,7 +156,7 @@ class AvailabilityStep extends StatelessWidget {
                     color: colors.warning,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md + 1),
+                const SizedBox(width: AppSpacing.n13),
                 Expanded(
                   child: AppToggle(
                     key: const Key('wizard-emergency'),

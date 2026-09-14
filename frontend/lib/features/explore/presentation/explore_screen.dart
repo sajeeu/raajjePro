@@ -273,7 +273,7 @@ class _IslandPill extends ConsumerWidget {
               size: 13,
               color: colors.accentText,
             ),
-            const SizedBox(width: AppSpacing.xxs + 1),
+            const SizedBox(width: AppSpacing.n5),
             Flexible(
               child: Text(
                 // The qualified display name, so a customer browsing from
@@ -287,7 +287,7 @@ class _IslandPill extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.xxs + 1),
+            const SizedBox(width: AppSpacing.n5),
             Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 11,
@@ -373,7 +373,7 @@ class _Grid extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.sm2,
         AppSpacing.xl,
-        AppSpacing.xxl + 4,
+        AppSpacing.n28,
       ),
       gridDelegate: _gridDelegate(context),
       itemCount: categories.length,
@@ -424,7 +424,7 @@ class _GridSkeleton extends StatelessWidget {
             AppSpacing.xl,
             AppSpacing.sm2,
             AppSpacing.xl,
-            AppSpacing.xxl + 4,
+            AppSpacing.n28,
           ),
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: _gridDelegate(context),

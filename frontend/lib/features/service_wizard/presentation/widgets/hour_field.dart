@@ -85,7 +85,7 @@ class HourField extends StatelessWidget {
             color: colors.textTertiary,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs + 1),
+        const SizedBox(height: AppSpacing.n7),
         Pressable(
           semanticLabel: '$label, $shown',
           onTap: () => _choose(context),
@@ -101,7 +101,7 @@ class HourField extends StatelessWidget {
               ),
             ),
             padding: const EdgeInsetsDirectional.symmetric(
-              horizontal: AppSpacing.lg - 1,
+              horizontal: AppSpacing.n15,
               vertical: AppSpacing.md,
             ),
             child: Row(

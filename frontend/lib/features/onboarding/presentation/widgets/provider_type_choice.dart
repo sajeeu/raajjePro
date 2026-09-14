@@ -132,7 +132,7 @@ class _TypeCard extends StatelessWidget {
           AppSpacing.md2,
           AppSpacing.md2,
           AppSpacing.md2,
-          AppSpacing.md + 1,
+          AppSpacing.n13,
         ),
         decoration: BoxDecoration(
           color: selected ? colors.accentTint : colors.surface,

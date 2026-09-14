@@ -62,7 +62,7 @@ class StatMiniCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm + 1),
+            const SizedBox(height: AppSpacing.n9),
             if (hasValue)
               // A number never breaks across lines; the row reflows instead.
               Text(

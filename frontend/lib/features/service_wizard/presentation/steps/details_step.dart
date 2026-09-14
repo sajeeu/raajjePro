@@ -324,7 +324,7 @@ class _CategoryChoice extends StatelessWidget {
           ),
           padding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppSpacing.xs,
-            vertical: AppSpacing.md + 1,
+            vertical: AppSpacing.n13,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -391,7 +391,7 @@ class _ChooseCategoryFirst extends StatelessWidget {
               size: AppSizes.iconLg,
               color: colors.textSecondary,
             ),
-            const SizedBox(width: AppSpacing.md - 1),
+            const SizedBox(width: AppSpacing.n11),
             Expanded(
               child: Text(
                 "Choose a category above first — we'll suggest tags customers "

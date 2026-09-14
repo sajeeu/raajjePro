@@ -112,7 +112,7 @@ class _NoConnectionViewState extends ConsumerState<NoConnectionView> {
                     ),
                     child: Icon(
                       Icons.wifi_off_rounded,
-                      size: AppSpacing.xxxl + 2,
+                      size: AppSpacing.n34,
                       color: colors.textSecondary,
                     ),
                   ),

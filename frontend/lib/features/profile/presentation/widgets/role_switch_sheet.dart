@@ -68,7 +68,7 @@ class RoleSwitchSheet extends StatelessWidget {
                     color: colors.primary,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md - 1),
+                const SizedBox(width: AppSpacing.n11),
                 Expanded(
                   child: Text(
                     'Your first switch opens Become a Provider — a short '
@@ -119,9 +119,7 @@ class ModePill extends StatelessWidget {
     final primary = emphasis == ModePillEmphasis.primary;
     return Container(
       height: 22,
-      padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.sm + 1,
-      ),
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpacing.n9),
       decoration: BoxDecoration(
         color: primary ? colors.primary : colors.neutralTint,
         borderRadius: AppRadius.circular(AppRadius.pill),
@@ -182,7 +180,7 @@ class _ModeCard extends StatelessWidget {
               color: current ? colors.primary : colors.neutralText,
             ),
           ),
-          const SizedBox(width: AppSpacing.md + 1),
+          const SizedBox(width: AppSpacing.n13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

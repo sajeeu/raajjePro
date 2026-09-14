@@ -137,8 +137,8 @@ class MediaStep extends StatelessWidget {
               ),
               child: Padding(
                 padding: const EdgeInsetsDirectional.symmetric(
-                  horizontal: AppSpacing.lg - 1,
-                  vertical: AppSpacing.md + 1,
+                  horizontal: AppSpacing.n15,
+                  vertical: AppSpacing.n13,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +227,7 @@ class _UploadPrompt extends StatelessWidget {
                   color: colors.primary,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm + 1),
+              const SizedBox(height: AppSpacing.n9),
               Text(
                 title,
                 style: type.bodyStrong.copyWith(

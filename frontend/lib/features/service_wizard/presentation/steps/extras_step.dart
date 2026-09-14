@@ -259,7 +259,7 @@ class _EnforcedByRaajjePro extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.sm + 1,
+        horizontal: AppSpacing.n9,
         vertical: 3,
       ),
       child: Row(

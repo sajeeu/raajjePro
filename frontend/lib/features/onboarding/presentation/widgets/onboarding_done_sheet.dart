@@ -59,7 +59,7 @@ class OnboardingDoneSheet extends StatelessWidget {
               ),
               child: Icon(
                 Icons.check_rounded,
-                size: AppSpacing.xxxl + 2,
+                size: AppSpacing.n34,
                 color: colors.onPrimary,
               ),
             ),

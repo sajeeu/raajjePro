@@ -35,6 +35,32 @@ abstract final class AppSpacing {
   // off-grid rather than half-steps, and belong to a design round rather than
   // a rename).
 
+  /// 🔧 **Traced, not chosen — 2026-09-14.** The nine values below are not on
+  /// the scale and are not meant to be. They come from the artboards, which
+  /// were drawn on a 1 dp grid and never had a spacing system: 13 px appears
+  /// 172 times across the 61 prototypes, 11 px 159 times, 9 px 112. Flutter
+  /// reproduced them faithfully, then hid them behind arithmetic —
+  /// `AppSpacing.md + 1` — where they read as a considered half-step rather
+  /// than a traced measurement.
+  ///
+  /// The `n` prefix is the whole point: a call site now says *this number was
+  /// measured off an artboard*, which is a different claim from `md`. Naming
+  /// them changes no pixel and removes the last arithmetic; it does not make
+  /// them part of the vocabulary.
+  ///
+  /// **Rationalising them is a design round's job, not a rename's** — it
+  /// means moving ~750 values across 61 artboards, and the app would have to
+  /// follow rather than lead. When that lands, this group is deleted.
+  static const double n5 = 5;
+  static const double n7 = 7;
+  static const double n9 = 9;
+  static const double n11 = 11;
+  static const double n13 = 13;
+  static const double n15 = 15;
+  static const double n17 = 17;
+  static const double n28 = 28;
+  static const double n34 = 34;
+
   /// Horizontal screen padding — 20, consistently.
   static const double screen = xl;
 

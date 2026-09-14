@@ -104,14 +104,14 @@ class WizardNote extends StatelessWidget {
         border: Border.all(color: border),
       ),
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.lg - 1,
+        horizontal: AppSpacing.n15,
         vertical: AppSpacing.md,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: AppSizes.iconMd, color: iconColor),
-          const SizedBox(width: AppSpacing.md - 1),
+          const SizedBox(width: AppSpacing.n11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +313,7 @@ class ChoiceCard extends StatelessWidget {
                     )
                   : null,
             ),
-            const SizedBox(width: AppSpacing.md + 1),
+            const SizedBox(width: AppSpacing.n13),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,7 +329,7 @@ class ChoiceCard extends StatelessWidget {
                         ),
                       ),
                       if (_disabled) ...[
-                        const SizedBox(width: AppSpacing.xs + 1),
+                        const SizedBox(width: AppSpacing.n7),
                         Icon(
                           Icons.lock_outline_rounded,
                           size: 13,

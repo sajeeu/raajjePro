@@ -84,7 +84,7 @@ class _PricingStepState extends State<PricingStep> {
                   onTap: () => widget.controller.choosePricingModel(option),
                 ),
                 if (option != PricingModel.values.last)
-                  const SizedBox(height: AppSpacing.sm + 1),
+                  const SizedBox(height: AppSpacing.n9),
               ],
             ],
           ),
@@ -206,7 +206,7 @@ class _MoneyField extends StatelessWidget {
       prefix: Container(
         height: 32,
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.md - 1,
+          horizontal: AppSpacing.n11,
         ),
         decoration: BoxDecoration(
           color: colors.neutralTint,

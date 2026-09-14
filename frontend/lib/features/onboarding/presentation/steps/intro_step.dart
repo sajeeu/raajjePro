@@ -177,7 +177,7 @@ class _Hero extends StatelessWidget {
                     size: AppSizes.iconSm + 2,
                     color: colors.onPrimary,
                   ),
-                  const SizedBox(width: AppSpacing.xs + 1),
+                  const SizedBox(width: AppSpacing.n7),
                   Text(
                     'For Providers',
                     style: type.pill.copyWith(color: colors.onPrimary),
@@ -223,9 +223,7 @@ class _MechanicRow extends StatelessWidget {
     };
 
     return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(
-        vertical: AppSpacing.lg - 1,
-      ),
+      padding: const EdgeInsetsDirectional.symmetric(vertical: AppSpacing.n15),
       child: Row(
         children: [
           Container(

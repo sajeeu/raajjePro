@@ -243,7 +243,7 @@ class _RoleSwitchRow extends StatelessWidget {
       ),
       semanticLabel: "Switch to providing. You're a customer now.",
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: AppSpacing.lg - 1,
+        horizontal: AppSpacing.n15,
         vertical: AppSpacing.md,
       ),
       child: Row(
@@ -263,7 +263,7 @@ class _RoleSwitchRow extends StatelessWidget {
               color: colors.onPrimary,
             ),
           ),
-          const SizedBox(width: AppSpacing.md + 1),
+          const SizedBox(width: AppSpacing.n13),
           Expanded(child: Text('Switch to providing', style: type.cardTitle)),
           const ModePill(label: 'Customer', emphasis: ModePillEmphasis.neutral),
         ],

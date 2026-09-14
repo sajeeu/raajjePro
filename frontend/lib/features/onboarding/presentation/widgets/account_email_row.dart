@@ -67,7 +67,7 @@ class AccountEmailRow extends StatelessWidget {
                         size: AppSizes.iconLg,
                         color: colors.success,
                       ),
-                      const SizedBox(width: AppSpacing.xxs + 1),
+                      const SizedBox(width: AppSpacing.n5),
                       ExcludeSemantics(
                         child: Text(
                           // 🔧 **"Email verified", not the bare "Verified"

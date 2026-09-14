@@ -81,7 +81,7 @@ class EmptyState extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm + 1),
+            const SizedBox(height: AppSpacing.n9),
             Semantics(
               header: true,
               child: Text(
@@ -90,7 +90,7 @@ class EmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm + 1),
+            const SizedBox(height: AppSpacing.n9),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 250),
               child: Text(
@@ -100,7 +100,7 @@ class EmptyState extends StatelessWidget {
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AppSpacing.sm + 3),
+              const SizedBox(height: AppSpacing.n11),
               AppButton.secondary(
                 label: actionLabel!,
                 onPressed: onAction,

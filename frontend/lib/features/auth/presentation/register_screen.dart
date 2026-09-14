@@ -121,7 +121,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text('Create account', style: type.screenTitle),
-              const SizedBox(height: AppSpacing.xxs + 1),
+              const SizedBox(height: AppSpacing.n5),
               Text(
                 'Join RaajjePro — it only takes a minute',
                 style: type.body.copyWith(color: colors.textSecondary),

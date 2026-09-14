@@ -237,7 +237,7 @@ class SavePill extends StatelessWidget {
       child: Container(
         height: 30,
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: AppSpacing.md - 1,
+          horizontal: AppSpacing.n11,
         ),
         decoration: BoxDecoration(
           color: background,
@@ -329,7 +329,7 @@ class WizardFooter extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm + 1),
+                const SizedBox(height: AppSpacing.n9),
               ],
               Row(
                 children: [

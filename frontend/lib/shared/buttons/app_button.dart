@@ -158,7 +158,7 @@ class AppButton extends StatelessWidget {
           children: [
             if (loading) ...[
               AppSpinner(color: fg, size: compact ? 14 : 16),
-              const SizedBox(width: AppSpacing.sm + 1),
+              const SizedBox(width: AppSpacing.n9),
             ] else if (icon != null) ...[
               Icon(icon, size: compact ? 16 : 18, color: fg),
               const SizedBox(width: AppSpacing.sm),

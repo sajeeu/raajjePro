@@ -72,7 +72,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text('Welcome back', style: type.screenTitle),
-                  const SizedBox(height: AppSpacing.xxs + 1),
+                  const SizedBox(height: AppSpacing.n5),
                   Text(
                     'Sign in to your RaajjePro account',
                     style: type.body.copyWith(color: colors.textSecondary),

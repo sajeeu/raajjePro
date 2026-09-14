@@ -270,12 +270,12 @@ class _OfflineBanner extends StatelessWidget {
       ),
       padding: const EdgeInsetsDirectional.symmetric(
         horizontal: AppSpacing.screen,
-        vertical: AppSpacing.sm + 1,
+        vertical: AppSpacing.n9,
       ),
       child: Row(
         children: [
           Icon(Icons.wifi_off_rounded, size: 14, color: colors.warningText),
-          const SizedBox(width: AppSpacing.sm + 1),
+          const SizedBox(width: AppSpacing.n9),
           Expanded(
             child: Text(
               "You're offline — changes are queued and will sync "
