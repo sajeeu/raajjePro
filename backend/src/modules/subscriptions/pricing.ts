@@ -52,11 +52,16 @@ export interface ResolvedPrice {
  * > changes because of someone else's signup.
  *
  * Pure, because the boundary is the part worth asserting and a shared
- * database cannot be positioned on either side of it: this suite's rows are
- * never deleted (`test/setup.ts`), so the hundredth priced provider is
- * somewhere in its history and every later run is past the boundary for good.
- * The pure function is testable at 99 and at 100; `priceForProvider` below is
- * this plus one query.
+ * database is an awkward place to stand on either side of it — a run would
+ * have to create ninety-nine providers to reach it. The pure function is
+ * testable at 99 and at 100; `priceForProvider` below is this plus one query.
+ *
+ * 🔧 This paragraph used to justify itself differently: the suite's rows were
+ * "never deleted, so the hundredth priced provider is somewhere in its
+ * history and every later run is past the boundary for good". That stopped
+ * being true on 2026-09-14, when the test database began being emptied once
+ * per run — see `test/global-setup.ts`. The conclusion survives the reason
+ * changing, which is why the test did not.
  */
 export function resolvePrice(input: {
   /** The provider's own `subscriptionPriceLaari`, or null if no payment has been confirmed yet. */

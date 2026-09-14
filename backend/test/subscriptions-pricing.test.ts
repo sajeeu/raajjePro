@@ -11,12 +11,16 @@ import {
 /**
  * §1b's price rule at its boundaries.
  *
- * The boundary is the part worth asserting and the one a shared database
- * cannot be positioned on: this suite's rows are never deleted
- * (`test/setup.ts`), so the hundredth priced provider is somewhere in its
- * history and every later run is past the cohort for good. Hence the pure
- * function — the integration is asserted in `test/phase8a-done-when.test.ts`,
- * which checks the quote, the write and that nothing later moves it.
+ * The boundary is the part worth asserting and an awkward one to reach
+ * through a database — a run would have to create ninety-nine providers to
+ * stand next to it. Hence the pure function; the integration is asserted in
+ * `test/phase8a-done-when.test.ts`, which checks the quote, the write and
+ * that nothing later moves it.
+ *
+ * 🔧 The reason given here until 2026-09-14 was that the suite's rows were
+ * never deleted, so every run was past the cohort for good. `global-setup.ts`
+ * now empties the database once per run, so a run starts inside the cohort
+ * rather than outside it.
  */
 describe('§1b subscription pricing', () => {
   it('gives the introductory rate to the first 100 providers and the standard rate after', () => {

@@ -3,12 +3,17 @@
 import 'dotenv/config';
 
 /**
- * These tests write real rows and never clean up. That is deliberate — they
- * isolate by unique key (a fresh email per admin, `freshIp()` per rate-limit
- * subject) rather than by truncating, which keeps them parallel-safe and
- * keeps the "counters survive a restart" test honest. The cost is that every
- * run leaves admin accounts, sessions, audit entries and suppressed addresses
- * behind, and invariant 8 means none of them can ever be hard-deleted.
+ * These tests write real rows and never clean up *between tests*. That is
+ * deliberate — they isolate by unique key (a fresh email per admin,
+ * `freshIp()` per rate-limit subject) rather than by truncating, which keeps
+ * them parallel-safe and keeps the "counters survive a restart" test honest.
+ * Within a run, every row any test writes is still there at the end of it,
+ * and invariant 8 means none of them can ever be hard-deleted.
+ *
+ * 🔧 **Between runs is a different question, answered in `global-setup.ts`
+ * since 2026-09-14:** the database is emptied once before the first file
+ * loads. Left to accumulate, it grew until a sweep-shaped test timed out four
+ * days after it was written.
  *
  * So the database they run against must be one nobody minds. Nothing used to
  * enforce that: the suite read the same `DATABASE_URL` the application does,

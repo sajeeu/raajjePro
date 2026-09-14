@@ -774,10 +774,13 @@ describe.skipIf(databaseUrl === undefined)('§Phase 8a Done-when', () => {
       const submission = await submitPayment(app, p.headers);
       await confirmPayment(app, admin.cookie, submission.id);
       // Put them on the introductory rate explicitly rather than relying on
-      // the cohort count: this suite's history is long past the hundredth
-      // priced provider (see the pricing test), and what is under test here
-      // is the *conversion*, whose contract is "a provider whose price is the
-      // introductory rate converts 12 months after their billing anchor".
+      // the cohort count, which is not this test's subject either way: what is
+      // under test is the *conversion*, whose contract is "a provider whose
+      // price is the introductory rate converts 12 months after their billing
+      // anchor". 🔧 Until 2026-09-14 this comment said the suite's history was
+      // "long past the hundredth priced provider" — true of a database that
+      // was never emptied, and false the moment one run stopped inheriting the
+      // last one's rows.
       await app.deps.prisma.providerProfile.update({
         where: { id: p.profileId },
         data: { subscriptionPriceLaari: INTRODUCTORY_PRICE_LAARI },
@@ -793,7 +796,15 @@ describe.skipIf(databaseUrl === undefined)('§Phase 8a Done-when', () => {
 
       // Thirty days out: the notice goes, and the price has not moved.
       time.set(addDays(start, 335));
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).noticed).toBe(1);
+      // At least ours. 🔧 This read `toBe(1)` until 2026-09-14, which was only
+      // ever true because the database was dirty: every other provider this
+      // file creates was past the hundredth and so never on the introductory
+      // rate. From an empty database they are all inside the cohort and come
+      // due in the same sweep. The count is not the contract — the two
+      // assertions below are, and they name this provider.
+      expect(
+        (await app.subscriptions.runIntroductoryConversion(time.clock())).noticed,
+      ).toBeGreaterThanOrEqual(1);
       expect(notifier.eventsFor(p.profileId)).toContain('introductory_price_converting');
       expect((await readStatus(app, p.headers)).billing.priceLaari).toBe(INTRODUCTORY_PRICE_LAARI);
       expect((await readStatus(app, p.headers)).billing.introductoryConvertsAt).toBe(
@@ -803,7 +814,9 @@ describe.skipIf(databaseUrl === undefined)('§Phase 8a Done-when', () => {
       // Twelve months and the notice both served: it converts, once, and the
       // conversion is audit-logged as a system action.
       time.set(addDays(start, 366));
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).converted).toBe(1);
+      expect(
+        (await app.subscriptions.runIntroductoryConversion(time.clock())).converted,
+      ).toBeGreaterThanOrEqual(1);
       const converted = await readStatus(app, p.headers);
       expect(converted.billing.priceLaari).toBe(STANDARD_PRICE_LAARI);
       expect(converted.billing.introductory).toBe(false);
@@ -845,16 +858,39 @@ describe.skipIf(databaseUrl === undefined)('§Phase 8a Done-when', () => {
 
       // The notice goes ten days late — the twelve months are already up.
       time.set(addDays(start, 375));
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).noticed).toBe(1);
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).converted).toBe(0);
+      // At least ours. 🔧 This read `toBe(1)` until 2026-09-14, which was only
+      // ever true because the database was dirty: every other provider this
+      // file creates was past the hundredth and so never on the introductory
+      // rate. From an empty database they are all inside the cohort and come
+      // due in the same sweep. The count is not the contract — the two
+      // assertions below are, and they name this provider.
+      expect(
+        (await app.subscriptions.runIntroductoryConversion(time.clock())).noticed,
+      ).toBeGreaterThanOrEqual(1);
+      // "Did *this* provider convert?" rather than "did nobody convert?" —
+      // 🔧 the second is not this test's claim and stopped being true on
+      // 2026-09-14, when runs began starting from an empty database and the
+      // other providers in this file fell inside the introductory cohort,
+      // each converting on its own schedule. Asked of the audit log, because
+      // a price that has not moved yet and a price that moved and moved back
+      // look identical from the status endpoint.
+      const convertedYet = async (): Promise<boolean> =>
+        (await app.deps.prisma.auditLogEntry.findFirst({
+          where: { action: 'provider.subscription_price.converted', targetId: p.profileId },
+        })) !== null;
+
+      await app.subscriptions.runIntroductoryConversion(time.clock());
+      expect(await convertedYet()).toBe(false);
 
       // Twenty-nine days after that notice: still the introductory rate.
       time.set(addDays(start, 404));
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).converted).toBe(0);
+      await app.subscriptions.runIntroductoryConversion(time.clock());
+      expect(await convertedYet()).toBe(false);
       expect((await readStatus(app, p.headers)).billing.priceLaari).toBe(INTRODUCTORY_PRICE_LAARI);
 
       time.set(addDays(start, 406));
-      expect((await app.subscriptions.runIntroductoryConversion(time.clock())).converted).toBe(1);
+      await app.subscriptions.runIntroductoryConversion(time.clock());
+      expect(await convertedYet()).toBe(true);
       expect((await readStatus(app, p.headers)).billing.priceLaari).toBe(STANDARD_PRICE_LAARI);
       time.set(start);
     });
