@@ -3,7 +3,8 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/domain/category.dart';
 
-/// `GET /v1/categories` (§Phase 4).
+/// `GET /v1/categories` (§Phase 4). 🔧 **Moved out of `features/explore/` by
+/// Phase 9**, whose wizard step 1 is its second consumer.
 ///
 /// Public: a signed-out guest gets the same list, which is what lets Explore
 /// render before anyone has an account. The order is the endpoint's own

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:raajjepro/core/categories/category_api.dart';
 import 'package:raajjepro/core/domain/category.dart';
-import 'package:raajjepro/features/explore/data/category_api.dart';
 
 // Riverpod 3's exponential-backoff auto-retry is off here for the same reason
 // the account controllers turn it off: the screen offers an explicit "Try
@@ -13,7 +13,13 @@ final categoriesControllerProvider =
       retry: _noRetry,
     );
 
-/// The catalogue behind the Explore grid.
+/// The catalogue behind the Explore grid — and, since Phase 9, behind the
+/// wizard's step 1 as well.
+///
+/// 🔧 **Moved here from `features/explore/` by Phase 9**, on its second
+/// consumer. `lib/README.md`: no feature may import another feature, they
+/// meet in `core/` — the same rule that moved `SettingsRow` in Phase 6 and
+/// `PhoneField` in Phase 6a. Nothing about it changed in the move.
 ///
 /// It holds no fallback list. A hardcoded twelve here would hide exactly the
 /// failure §Phase 4's Done-when is about — the grid must be the endpoint's

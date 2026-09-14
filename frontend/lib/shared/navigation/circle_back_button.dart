@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
 import 'package:raajjepro/core/theme/app_theme.dart';
-import 'package:raajjepro/shared/shared.dart';
+import 'package:raajjepro/shared/motion/pressable.dart';
 
-/// The bare 44 dp circular back control Register and Verify Email use
+/// The bare 44 dp circular back control Register, Verify Email, Forgot
+/// Password and — since Phase 9 — the service wizard use
 /// instead of [AppHeader] (`Register.dc.html` line 29, `Verify Email.dc.html`
 /// line ~29): white surface, a 1 px border, the ink-coloured arrow — no
 /// title bar sits above it, so it is not `AppHeader.page`. [Pressable]
 /// still gives it the 48 dp hit floor around the 44 dp visual.
+///
+/// 🔧 **Moved out of `features/auth/` by Phase 9**, on its fourth consumer and
+/// its second feature (`lib/README.md`: a widget a second feature needs moves
+/// to `shared/`; it is not copied).
 class CircleBackButton extends StatelessWidget {
   const CircleBackButton({
     required this.semanticLabel,

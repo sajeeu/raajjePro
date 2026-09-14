@@ -11,11 +11,13 @@ import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/crash/crash_reporter.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 import '../../core/auth/auth_controller_test.dart' show tokensJson, userJson;
 import '../../helpers/fake_api.dart';
 import '../../helpers/islands.dart';
+import '../../helpers/listings.dart';
 import '../../helpers/pump.dart';
 import '../profile/helpers.dart';
 
@@ -139,12 +141,27 @@ void main() {
   });
 
   group('the flow hands off into a fresh wizard draft', () {
-    testWidgets('finishing reaches the route §Phase 9 owns', (tester) async {
+    /// 🔧 **Closes ledger row P6A-2.** Until §Phase 9 existed this asserted
+    /// that `/services/new` resolved to the placeholder that owed the wizard —
+    /// the handoff was real but what it opened onto could not be checked,
+    /// because there was no wizard and no `Listing` table. Both exist now, so
+    /// the assertion is the one the row actually asked for.
+    testWidgets('step 1 opens a genuinely fresh draft, not the last one', (
+      tester,
+    ) async {
       api.on(
         'GET',
         '/v1/providers/me',
         (_) => profileJson(serviceAreas: [sampleIslands().first]),
       );
+      api.on('GET', '/v1/categories', (_) => {'_list': sampleCategories()});
+      api.on('POST', '/v1/providers/me/listings', (_) => listingJson());
+      api.on(
+        'PATCH',
+        '/v1/providers/me/listings/listing-1',
+        (_) => listingJson(serviceAreas: [sampleIslands().first]),
+      );
+
       await bootToProfile(tester, isProvider: true, onboardingComplete: false);
       await switchToProviding(tester);
 
@@ -153,14 +170,73 @@ void main() {
       await tester.tap(find.byKey(const Key('onboarding-start-service')));
       await settle(tester);
 
-      // The real route table's answer for `/services/new`, which is the
-      // wizard's step 1 once §Phase 9 builds it.
-      final wizard = tester.widget<UnbuiltScreen>(find.byType(UnbuiltScreen));
-      expect(wizard.title, 'New service');
-      expect(wizard.owedBy, 'Phase 9');
-      // "Pre-populated with nothing (a fresh draft)": the app carries no draft
-      // id or prefill into this route, so there is nothing for it to reopen.
+      // The real route table's answer for `/services/new` is now the wizard,
+      // opened on step 1.
+      expect(find.byType(ServiceWizardScreen), findsOneWidget);
+      expect(find.text('Step 1 of 7 · Details'), findsOneWidget);
       expect(find.byType(BecomeProviderScreen), findsNothing);
+
+      // **Fresh, not resumed.** The only listing call is the creation: nothing
+      // listed the provider's drafts and nothing read one by id, so there was
+      // no most-recent draft for it to reopen. The name field is empty for the
+      // same reason.
+      final listingCalls = api.calls
+          .where((c) => c.path.startsWith('/v1/providers/me/listings'))
+          .toList();
+      expect(listingCalls.first.method, 'POST');
+      expect(listingCalls.map((c) => c.method), isNot(contains('GET')));
+      final nameField = tester.widget<TextField>(
+        find.descendant(
+          of: find.byKey(const Key('wizard-name')),
+          matching: find.byType(TextField),
+        ),
+      );
+      expect(nameField.controller!.text, isEmpty);
+      // Five, not six: the progress framing §Phase 9 asks for, counting the
+      // island the pre-fill just satisfied.
+      expect(find.text('5 required fields left to publish'), findsOneWidget);
+    });
+
+    testWidgets('step 2 pre-fills from the account-level service areas', (
+      tester,
+    ) async {
+      api.on(
+        'GET',
+        '/v1/providers/me',
+        (_) => profileJson(serviceAreas: [sampleIslands().first]),
+      );
+      api.on('GET', '/v1/categories', (_) => {'_list': sampleCategories()});
+      api.on('POST', '/v1/providers/me/listings', (_) => listingJson());
+      api.on(
+        'PATCH',
+        '/v1/providers/me/listings/listing-1',
+        (_) => listingJson(serviceAreas: [sampleIslands().first]),
+      );
+
+      await bootToProfile(tester, isProvider: true, onboardingComplete: false);
+      await switchToProviding(tester);
+      await tester.tap(find.byKey(const Key('onboarding-finish')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('onboarding-start-service')));
+      await settle(tester);
+
+      // Copied across once, at creation, by **island id** — never by name
+      // (§0.0 item 12), and never by sharing the account-level rows: what is
+      // written is the listing's own set (ledger P7-3), which is what
+      // discovery will match on.
+      final patch = api.calls.firstWhere((c) => c.method == 'PATCH');
+      expect(patch.path, '/v1/providers/me/listings/listing-1');
+      expect((patch.body! as Map)['serviceAreaIslandIds'], [
+        sampleIslands().first['id'],
+      ]);
+
+      await tester.tap(find.text('Location'));
+      await settle(tester);
+      expect(find.text('Location & service area'), findsOneWidget);
+      expect(
+        find.text(sampleIslands().first['displayName']! as String),
+        findsWidgets,
+      );
     });
   });
 

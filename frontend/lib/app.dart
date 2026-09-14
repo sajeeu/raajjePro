@@ -24,6 +24,8 @@ import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.d
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
+import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// Root widget. Routing is a plain named-route table; the root route is the
@@ -119,12 +121,19 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         BecomeProviderScreen.routeName: (_) => const BecomeProviderScreen(),
         RoleSwitch.dashboardRoute: (_) =>
             const UnbuiltScreen(title: 'My Services', owedBy: 'Phase 10'),
+        AppRoutes.providerBilling: (_) =>
+            const UnbuiltScreen(title: 'Billing', owedBy: 'Phase 10a'),
 
-        // Where §Phase 6a hands off (its step 4): the wizard's step 1 on a
-        // fresh draft. Phase 9 replaces the placeholder; the handoff itself
-        // is built and asserted now.
-        AppRoutes.createService: (_) =>
-            const UnbuiltScreen(title: 'New service', owedBy: 'Phase 9'),
+        // Phase 9. Where §Phase 6a hands off (its step 4): the wizard's step
+        // 1 on a fresh draft. Arriving with **no arguments** is what makes it
+        // a fresh draft rather than the provider's most recent one; an
+        // id in the arguments resumes an existing listing, which is how
+        // §Phase 10's dashboard will open one.
+        AppRoutes.createService: (context) => ServiceWizardScreen(
+          args: ServiceWizardArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
       },
       onGenerateRoute: (settings) {
         if (settings.name == VerifyEmailScreen.routeName) {

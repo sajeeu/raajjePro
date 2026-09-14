@@ -5,7 +5,6 @@ import 'package:raajjepro/core/clock.dart';
 import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/verify_email_controller.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/circle_back_button.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/countdown_text.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/otp_code_entry.dart';

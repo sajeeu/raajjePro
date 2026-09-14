@@ -570,12 +570,83 @@ and two events have no §Phase 19 type at all) and **P8A-4** (the pause
 consequence in the toggle's own copy, which is a design round's).
 **P8A-1** is the plan's own row for the unbuilt appeal.
 
-**Next**: `/phase-9` — the Create/Edit Service Wizard. It wires the wizard to
-`/v1/providers/me/listings`, reads its chips from `Category.suggestedTags`
-rather than building a second copy of the map, renders the server's own
-`emergency.reason` on step 5 rather than recomputing the rule, and shows the
-over-cap refusal as an upgrade prompt — the cap it reads is now the live
-entitlement rather than a constant.
+**Phase 9 is built** — the Create/Edit Service Wizard, seven steps behind
+`/services/new`, wired to `/v1/providers/me/listings`.
+`docs/decisions/23-phase-9-service-wizard.md` carries the full record.
+
+**The offline queue is built once, in `core/offline/`, and it holds data
+rather than closures.** `PendingRequest` is `{method, path, body,
+idempotencyKey, mergeKey}`, which serialises — so a step survives not only a
+dropped connection but Android reclaiming the app, because the queue is
+written to a file and picked up on the next launch. Three rules, each tested:
+a refused write is recorded **before** the caller is told anything; once
+anything is queued later writes queue *behind* it rather than overtaking it;
+and a **server** refusal leaves the queue and surfaces where the user can see
+it, because retrying it forever would never succeed. Ten offline keystrokes
+merge into one PATCH on the `mergeKey`. §0.0 item 14 bounds who may use it —
+this phase, §Phase 17.1's accept prompt and §Phase 18's chat sends, and the
+emergency accept **never**, which the class comment says and gives the reason
+for. **Publish is not queued either**: telling a provider their service is
+live when the request never left the device is a lie.
+
+🔧 **"Never blocked" and "blocked until persisted" are about different gates.**
+Validation never blocks — Review is reachable from step 1 with nothing typed,
+and a step still missing a field gets an amber dot, not a lock. Persistence
+delays: `goTo` flushes the pending autosave first and Continue reads "Saving
+this step…" while it does. Offline that wait is instant, which is why the save
+pill's third state is **"Saved offline" and never "Not saved"** — an edit the
+queue accepted *is* saved, and saying otherwise makes a provider retype work
+that was never lost.
+
+**A server response is adopted only when nothing newer has been typed.** One
+counter, captured before the request goes out; if it has moved, only the save
+pill changes and the next PATCH brings the derived fields. This also decides a
+test rule worth knowing: a fake PATCH that replies with the original draft
+*undoes* every edit, and the wizard faithfully adopts it — the harness's
+`scriptEchoingPatch` behaves like the server instead.
+
+**The server decides; the wizard renders.** Step 5 prints
+`listing.emergency.reason` verbatim and compares no tier to any bar, and the
+response window is `category.emergencyAcceptWindowMinutes` — **a null window
+drops the sentence rather than printing a default**. `publish_gate.dart`
+mirrors the six-field rule for the header's counter only (invariant 4); when
+publish is refused, the review step renders the **server's** list. The two
+refusal codes stay two screens: `LISTING_INCOMPLETE` is a Fix row per field,
+`LISTING_CAP_REACHED` is the upgrade prompt, which says the draft is safe
+before it says anything else.
+
+**Step 2's pre-fill is a copy made once, at creation** — `POST` the draft,
+read `GET /v1/providers/me`, `PATCH` the island **ids** onto the listing. That
+is what makes it happen exactly once: a provider who clears every island does
+not find them silently restored. It is client-side because §Phase 8's
+`createDraft` does not do it and its Done-when does not ask it to.
+
+🔧 **`image_picker` is a new dependency and is deliberately not deferred.**
+Every other platform boundary here ships as a seam with nothing behind it
+because the vendor is procured at deployment — the photo library is not a
+vendor, and the cover image is one of the six required fields, so a wizard
+that cannot reach a photo cannot satisfy "a service can be created
+end-to-end". It sits behind `core/media/media_picker.dart`; the presigned PUT
+is its own seam and deliberately does **not** go through `ApiClient`.
+
+🔧 **Three things moved into `core/` and `shared/` on their second consumer**,
+which `lib/README.md` calls the convention rather than a refactor:
+`CategoryApi`/`CategoriesController` out of `features/explore/`,
+`CircleBackButton` out of `features/auth/`, and a new `prefix` slot on
+`AppTextField` for the price field's "MVR" chip.
+
+**Ledger row P6A-2 is closed** — the handoff now opens a genuinely fresh
+draft and step 2 pre-fills from the account-level service areas, both asserted
+through the real route table. **No new rows**: every Done-when line was
+testable now.
+
+**Next**: `/phase-9a` — Availability, Time Slots & Reservations. Note what
+this phase deliberately did not build toward it: step 5 collects a simple
+working window and says so in its own helper, because §1's mockup table warns
+that step 5 "is a toy version and will mislead if treated as the pattern".
+Phase 10's My Services dashboard is also still owed — the wizard resumes an
+existing listing when passed a `listingId`, and nothing reachable passes one
+yet.
 
 | | |
 |---|---|
@@ -585,7 +656,7 @@ entitlement rather than a constant.
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
 | `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished — `frontend/lib/README.md` lists every directory |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart` — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |

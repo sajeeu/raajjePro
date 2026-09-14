@@ -20,6 +20,14 @@ dependencies:
   # Android is a directory shared with other apps (final review #5).
   path_provider: 2.1.6
   sentry_flutter: 9.29.0
+  # Phase 9's media step. The cover image is one of the six fields required to
+  # publish (§0.2 item 4), so a wizard that cannot reach the photo library
+  # cannot create a service end-to-end — which is §Phase 9's first Done-when
+  # line. Unlike the push and crash vendors it needs no account and no
+  # per-project config file, so there is nothing to defer; it still sits
+  # behind `core/media/media_picker.dart` so tests never cross a platform
+  # channel.
+  image_picker: ^1.2.3
 
 dev_dependencies:
   flutter_test:

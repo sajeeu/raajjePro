@@ -7,7 +7,6 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/controller/register_controller.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
-import 'package:raajjepro/features/auth/presentation/widgets/circle_back_button.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/inline_notice.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/rate_limit_copy.dart';
 import 'package:raajjepro/features/auth/presentation/widgets/role_toggle.dart';

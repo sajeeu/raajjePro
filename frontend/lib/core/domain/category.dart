@@ -53,6 +53,7 @@ class ServiceCategory {
     required this.quoteApprovalMinutes,
     required this.callbackEligible,
     required this.occasionPresets,
+    required this.suggestedTags,
   });
 
   factory ServiceCategory.fromJson(Map<String, dynamic> json) =>
@@ -75,6 +76,7 @@ class ServiceCategory {
         quoteApprovalMinutes: (json['quoteApprovalMinutes'] as num?)?.toInt(),
         callbackEligible: json['callbackEligible'] as bool? ?? false,
         occasionPresets: _strings(json['occasionPresets']),
+        suggestedTags: _strings(json['suggestedTags']),
       );
 
   final String id;
@@ -115,6 +117,16 @@ class ServiceCategory {
   final bool callbackEligible;
 
   final List<String> occasionPresets;
+
+  /// §Phase 9 step 1's chips (§Phase 8 seeds them, Round 12 decided them).
+  ///
+  /// **The wizard renders these and holds no map of its own.** Typing a tag
+  /// from memory asks a provider to guess what customers search for; showing
+  /// the options turns it into recognition — and a second copy of the map in
+  /// Flutter would be a copy of a decision, which is the drift the plan
+  /// warns about. Suggestions only: a listing's `tags` are free text
+  /// underneath them and nothing validates one against this list.
+  final List<String> suggestedTags;
 
   static List<int> _ints(Object? raw) => raw is List
       ? raw.whereType<num>().map((n) => n.toInt()).toList(growable: false)

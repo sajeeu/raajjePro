@@ -36,6 +36,7 @@ class AppTextField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.prefixIcon,
+    this.prefix,
     this.suffix,
     this.autocorrect = true,
     this.textCapitalization = TextCapitalization.none,
@@ -73,6 +74,16 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final IconData? prefixIcon;
+
+  /// A control drawn **inside** the field, before the text.
+  ///
+  /// 🔧 **Added in Phase 9** — flagged rather than done silently, because this
+  /// is shared Phase 1 code. §Phase 9's price fields put an "MVR" chip inside
+  /// the box (`Create Service.dc.html` step 3), which [prefixIcon] cannot
+  /// express: it takes an `IconData`, and a currency is a word. Null draws
+  /// nothing, which is what every field built before this expects.
+  final Widget? prefix;
+
   final Widget? suffix;
   final bool autocorrect;
   final TextCapitalization textCapitalization;
@@ -287,7 +298,10 @@ class _AppTextFieldState extends State<AppTextField> {
                           ? CrossAxisAlignment.center
                           : CrossAxisAlignment.start,
                       children: [
-                        if (widget.prefixIcon != null) ...[
+                        if (widget.prefix != null) ...[
+                          widget.prefix!,
+                          const SizedBox(width: AppSpacing.sm + 2),
+                        ] else if (widget.prefixIcon != null) ...[
                           Icon(
                             widget.prefixIcon,
                             size: 18,

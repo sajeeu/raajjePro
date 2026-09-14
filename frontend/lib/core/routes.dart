@@ -50,4 +50,11 @@ abstract final class AppRoutes {
   /// the name is here rather than on the wizard's own screen because the
   /// screen does not exist yet and the handoff does.
   static const createService = '/services/new';
+
+  /// §Phase 10a's provider billing screen. Added by §Phase 9, which is the
+  /// first surface that has to reach it: the over-cap upgrade prompt's CTA
+  /// is "See what upgrading allows", and §Phase 9's own line calls for an
+  /// upgrade prompt rather than a generic error — a prompt whose only action
+  /// went nowhere would be the generic error with better wording.
+  static const providerBilling = '/provider/billing';
 }
