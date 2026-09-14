@@ -272,6 +272,48 @@ export class SubscriptionService {
   }
 
   /**
+   * 🔧 **A clock starts in the state the toggle already describes — decided
+   * 2026-09-14.**
+   *
+   * `acceptingNewCustomersChanged` above fires on a *transition*, which is
+   * right for a provider who reaches for the toggle. It leaves one case
+   * uncovered, and the case is reachable today: the toggle renders in §Phase
+   * 6a's onboarding step 2, where turning it off correctly does nothing —
+   * there is no clock to stop. When a trial or a paid period later begins, no
+   * transition happens, so the provider ends up `trialing`, **not accepting
+   * customers, and not paused** — burning trial days while taking no work,
+   * which is the one thing §1b's pause exists to prevent.
+   *
+   * §1b says "pause keys off the provider-level `acceptingNewCustomers`
+   * toggle", and a rule that keys off a value has to read the value, not only
+   * watch it change. So every place a clock starts calls this.
+   *
+   * **An exhausted allowance does not refuse the start.** `pause` throws
+   * `PAUSE_ALLOWANCE_EXHAUSTED` so §Phase 10a's billing screen can say why a
+   * provider's deliberate pause was refused; here nobody asked for a pause,
+   * and failing a trial start over it would be absurd. The provider runs
+   * unpaused, which is the only remaining option.
+   */
+  private async pauseIfNotAcceptingCustomers(providerProfileId: string, now: Date): Promise<void> {
+    const profile = await this.prisma.providerProfile.findUnique({
+      where: { id: providerProfileId },
+      select: { acceptingNewCustomers: true },
+    });
+    if (profile === null || profile.acceptingNewCustomers) return;
+    const row = await this.repo.find(providerProfileId);
+    if (row === null) return;
+    if (row.status !== 'trialing' && row.status !== 'active') return;
+    try {
+      const outcome = pause(row, now);
+      if (outcome.changed) await this.repo.update(providerProfileId, outcome.patch);
+    } catch (error) {
+      if (!(error instanceof BusinessRuleError) || error.code !== 'PAUSE_ALLOWANCE_EXHAUSTED') {
+        throw error;
+      }
+    }
+  }
+
+  /**
    * Who may call: the signed-in, non-frozen user, for themselves.
    *
    * §1b step 1–2: "provider initiates a payment intent in-app; app shows
@@ -553,6 +595,7 @@ export class SubscriptionService {
     // leaves listings hidden until the next lifecycle sweep, which reconciles
     // them — the wrong direction to fail in, and the recoverable one.
     await this.reconcileVisibility(profile.id, now);
+    await this.pauseIfNotAcceptingCustomers(profile.id, now);
     await this.notify('payment_submission_confirmed', profile, {
       amountLaari: row.amountLaari,
       invoiceNumber: invoice.invoiceNumber,
@@ -1068,6 +1111,8 @@ export class SubscriptionService {
     // A trial is a premium entitlement, so anything hidden over the free cap
     // comes back — the same reconcile a confirmed payment runs.
     await this.reconcileVisibility(providerProfileId, now);
+    // And the clock starts in the state the toggle already describes.
+    await this.pauseIfNotAcceptingCustomers(providerProfileId, now);
     return { started: true };
   }
 
