@@ -470,6 +470,17 @@ model ProviderProfile {
   /// §1b step 6's PDF invoices, one per confirmed payment.
   invoices Invoice[]
 
+  /// §Phase 9a. Rules and exceptions are listing-scoped but denormalise the
+  /// owner so the generator never joins; time off, slots and reservations are
+  /// provider-scoped by nature — a reservation holds the *person's* time, on
+  /// whichever listing, which is what makes the exclusion constraint work.
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
+  timeOff                ProviderTimeOff[]
+  timeSlots              TimeSlot[]
+  reservations           Reservation[]
+  slotStates             ListingSlotState[]
+
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
   @@index([suspendedAt, id])
@@ -1216,6 +1227,15 @@ model Listing {
 
   events ListingEvent[]
 
+  /// §Phase 9a. The availability model proper — `workingDays` /
+  /// `workingHoursFrom` / `workingHoursTo` above are the wizard's summary
+  /// window and are **not** what generates slots.
+  availabilityRules      AvailabilityRule[]
+  availabilityExceptions AvailabilityException[]
+  timeSlots              TimeSlot[]
+  reservations           Reservation[]
+  slotState              ListingSlotState?
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -1662,4 +1682,358 @@ model Invoice {
 
   @@index([providerProfileId, issuedAt])
   @@map("invoice")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 9a — availability, time slots & reservations
+// ---------------------------------------------------------------------------
+
+/// **Timezone convention for everything below (§Phase 9a).**
+///
+/// Every instant is stored UTC (`Timestamptz`) and presented in Maldives time,
+/// which is **UTC+5 with no DST and no history of one** — so the offset is a
+/// constant, not a lookup. `src/core/maldives-time.ts` owns every conversion
+/// and nothing else may do the arithmetic.
+///
+/// The boundary rule the plan asks to be stated: **a "day" is a Maldives
+/// calendar day**, `[date 00:00+05, date+1 00:00+05)` — which is
+/// `[date-1 19:00Z, date 19:00Z)`. Weekday membership, an exception's date
+/// range and a time-off range are all resolved on that day, never on the UTC
+/// date, so a 21:00 Malé slot belongs to the day the provider means and not to
+/// tomorrow.
+///
+/// Wall-clock columns (`startTime` / `endTime`) are `HH:MM` strings for the
+/// same reason `Listing.workingHoursFrom` is one: a recurring time with no
+/// date is not an instant, and a `time` column invites a conversion that has
+/// no meaning.
+
+enum TimeSlotStatus {
+  open
+  reserved
+  blocked
+
+  @@map("time_slot_status")
+}
+
+enum ReservationKind {
+  /// A held appointment — a slot booking, or an approved quote.
+  firm
+  /// §1c: a quote has been offered and the time is held while the customer
+  /// decides. Expires with the category's `quoteApprovalMinutes`.
+  provisional
+
+  @@map("reservation_kind")
+}
+
+enum ReservationReleaseReason {
+  cancelled
+  declined
+  /// A provisional hold whose `expiresAt` passed, swept by the job.
+  expired
+  /// Replaced by another reservation in the same transaction — a reschedule.
+  superseded
+
+  @@map("reservation_release_reason")
+}
+
+/// One line of a listing's weekly working pattern — the "Weekly hours" rows on
+/// `Availability.dc.html`, and what the slot generator expands.
+///
+/// **This is the availability model; `Listing.workingDays` /
+/// `workingHoursFrom` / `workingHoursTo` are not.** §Phase 9's step 5 collects
+/// a single simple window and its own helper says so; §1's mockup table warns
+/// it "will mislead if treated as the pattern". It stays as the wizard's
+/// summary of when the service is offered. Nothing reads it here except the
+/// rule editor, which offers it as the **default for a first rule** so the two
+/// do not contradict each other on screen.
+///
+/// Listing-scoped, because §Phase 9a's `TimeSlot` carries a `listingId` and is
+/// "generated from the listing's availability rules". A provider with a
+/// two-hour clean and a one-hour clean publishes different grids for each.
+model AvailabilityRule {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  /// Denormalised from the listing so the generator's per-provider queries and
+  /// the provider-scoped calendar never join. It is copied once at creation
+  /// and a listing never changes owner.
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// ISO weekday numbers, 1 = Monday — the same convention as
+  /// `Listing.workingDays`, so a reader never has to ask which Sunday is 0.
+  weekdays Int[]
+
+  /// `HH:MM`, Maldives wall clock. `endTime` is exclusive and must be strictly
+  /// greater than `startTime`: an overnight window is not specified anywhere
+  /// in the plan and a silently-wrapping one would generate slots on a day the
+  /// provider never picked.
+  startTime String @map("start_time") @db.VarChar(5)
+  endTime   String @map("end_time") @db.VarChar(5)
+
+  /// The "Each visit" control. Slots are laid end to end from `startTime`; a
+  /// trailing remainder shorter than one slot is not generated.
+  slotDurationMinutes Int @map("slot_duration_minutes")
+
+  /// Invariant 8. A removed rule stops generating and stays readable — the
+  /// slots it produced may still carry somebody's booking.
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The generator's only read of this table.
+  @@index([listingId, deletedAt])
+  @@map("availability_rule")
+}
+
+/// "Modified hours" on `Availability.dc.html` — a named date range that
+/// **changes** the hours the weekly rules produce. Ramadan is the case it was
+/// designed for.
+///
+/// It modifies; it never creates. On a date it covers, a weekday the rules do
+/// not work stays a non-working day — otherwise "Ramadan hours" would quietly
+/// add Fridays to a Sunday-to-Thursday week.
+///
+/// Deliberately **not** the same table as [ProviderTimeOff], which the two
+/// screens also keep apart and cross-link: this one is listing-scoped and
+/// carries hours, that one is provider-wide and all-day. One table would need
+/// a nullable `listingId` meaning "all" and nullable hours meaning "none",
+/// and every reader would have to know both conventions.
+model AvailabilityException {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// What the provider called it — "Ramadan hours". Shown back to them and to
+  /// nobody else.
+  name String
+
+  /// Maldives calendar dates, both **inclusive**. A `@db.Date` rather than a
+  /// timestamp precisely because the boundary rule above resolves it against
+  /// the Maldives day; storing an instant would make the reader guess which
+  /// midnight was meant.
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+
+  /// The replacement window, `HH:MM` Maldives wall clock, same rules as
+  /// [AvailabilityRule].
+  startTime String @map("start_time") @db.VarChar(5)
+  endTime   String @map("end_time") @db.VarChar(5)
+
+  /// Null keeps each rule's own "Each visit" length, which is what a change of
+  /// *hours* means. Set only when the provider also shortens the visit.
+  slotDurationMinutes Int? @map("slot_duration_minutes")
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The generator reads by listing and date range; ranges may not overlap
+  /// within a listing, which the service enforces rather than the index —
+  /// a range overlap is not expressible as a unique constraint.
+  @@index([listingId, deletedAt, startDate])
+  @@map("availability_exception")
+}
+
+/// "Time away" on `My Calendar.dc.html` — an all-day, **provider-wide**
+/// absence. A trip, a holiday, a closure.
+///
+/// Its effect is exactly what the screen promises: "Where you publish time
+/// slots, times on these dates are removed. Customers can still send requests
+/// for these dates" — so it is an input to slot generation and nothing else.
+/// It does not reserve, it does not block a request-based booking, and it
+/// never touches a time somebody has already booked.
+model ProviderTimeOff {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  name String
+
+  /// Maldives calendar dates, both inclusive. See the boundary rule above.
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([providerProfileId, deletedAt, startDate])
+  @@map("provider_time_off")
+}
+
+/// One bookable time on one listing (§Phase 9a).
+///
+/// **A slot is derived data, not a record.** It is the expansion of
+/// [AvailabilityRule] over the 60-day window, and §Phase 9a says an
+/// availability change "regenerates future unreserved slots only". A future
+/// slot nobody has taken is therefore **replaced** rather than soft-deleted —
+/// the exception to invariant 8's letter, taken deliberately and recorded in
+/// `docs/decisions/24-phase-9a-availability-and-reservations.md`. Nothing is
+/// lost, because the record of an *appointment* is the [Reservation], which is
+/// never deleted, and the record of the *pattern* is the rule, which is
+/// soft-deleted. Slots in the past and slots that are `reserved` are never
+/// touched by generation.
+model TimeSlot {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  startsAt DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt   DateTime @map("ends_at") @db.Timestamptz(6)
+
+  /// `blocked` is the plan's "individual override" — the provider tapped this
+  /// one time on `Availability.dc.html`. `reserved` is set inside the
+  /// reservation transaction and cleared when the reservation is released.
+  status TimeSlotStatus @default(open)
+
+  reservation Reservation?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// ⚠️ **This is a generation key, not the double-booking guard.** Root
+  /// `CLAUDE.md` and §Phase 9a both reject `UNIQUE (providerId, listingId,
+  /// startsAt)` *as a conflict constraint*, because it permits one provider
+  /// being booked three times at 10:00 across three listings and detects
+  /// nothing about overlapping durations. That guard is the `EXCLUDE USING
+  /// gist` on [Reservation] and is the only thing relied on for it. What this
+  /// does is make `createMany({ skipDuplicates: true })` idempotent, which is
+  /// what "re-running generation changes nothing" needs. It is scoped to one
+  /// listing and says nothing about the provider.
+  @@unique([listingId, startsAt])
+  /// The customer picker: one listing, `status = 'open'`, `startsAt` forward.
+  @@index([listingId, status, startsAt])
+  /// The provider's own grid and calendar, across every listing they own.
+  @@index([providerProfileId, startsAt])
+  @@map("time_slot")
+}
+
+/// **The hard guarantee against double-booking** (§Phase 9a, root `CLAUDE.md`
+/// invariant 1c).
+///
+/// Provider-scoped and range-based, backing *both* slot bookings and accepted
+/// request-based ones, so a plumbing quote for 11:00–13:00 and a cleaning slot
+/// at 10:00–12:00 on the same provider cannot both be held even though they
+/// are different listings with different booking modes:
+///
+/// ```sql
+/// EXCLUDE USING gist (provider_profile_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+///   WHERE (released_at IS NULL)
+/// ```
+///
+/// The `WHERE` is load-bearing: without it a cancelled booking's time could
+/// never be booked again, because invariant 8 keeps the released row forever.
+/// The constraint lives in the migration, not here — Prisma has no syntax for
+/// it — and `test/schema-phase9a.test.ts` asserts it against
+/// `pg_constraint` so it cannot be dropped by a later `migrate dev`.
+///
+/// **Emergency bookings take no reservation at all** (§1c): an emergency
+/// interrupts the published calendar rather than blocking it.
+model Reservation {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// Always present: a reservation is held for a service, and §Phase 8's
+  /// cascade table needs to know which listing's time this was.
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  /// Set for a slot booking, null for a request-based one — a customer's
+  /// proposed window never corresponded to a published slot.
+  timeSlotId String?   @unique @map("time_slot_id") @db.Uuid
+  timeSlot   TimeSlot? @relation(fields: [timeSlotId], references: [id])
+
+  startsAt DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt   DateTime @map("ends_at") @db.Timestamptz(6)
+
+  kind ReservationKind
+
+  /// §1c, provisional only: the quote's approval window, which is
+  /// **per-category** (`Category.quoteApprovalMinutes`, invariant 13) and is
+  /// computed by the caller offering the quote — never a flat 72 hours here.
+  /// §Phase 9a's own bullet still says "72-hour"; that is a pre-Round-15
+  /// residue and Round 15 replaced it, so the number is an input rather than a
+  /// constant. The sweep job releases whatever has passed.
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  /// Invariant 8's soft delete, and simultaneously the constraint's predicate:
+  /// a released reservation stops holding time the instant this is stamped.
+  releasedAt    DateTime?                 @map("released_at") @db.Timestamptz(6)
+  releaseReason ReservationReleaseReason? @map("release_reason")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The provider's calendar, and §Phase 8's "reserved slots stay reserved".
+  @@index([providerProfileId, releasedAt, startsAt])
+  /// The expiry sweep's whole WHERE, so it is one range scan over the handful
+  /// of rows that have actually expired rather than a scan of every hold.
+  @@index([kind, releasedAt, expiresAt])
+  @@map("reservation")
+}
+
+/// The slot generator's work list — one row per listing that publishes slots.
+///
+/// **This table is the reason the job is narrow.** §Phase 9a requires
+/// generation to be "incremental and per-provider, not a global nightly
+/// sweep", and the phase brief names the failure it is avoiding: §Phase 8a's
+/// `runLifecycle` selected every subscription row and then did a `findUnique`
+/// per candidate, and crossed five seconds at a thousand rows. So the job's
+/// entire condition is one indexed column here —
+/// `next_generation_at <= now()` — and a listing that needs nothing is never
+/// read at all, rather than read and skipped.
+///
+/// `nextGenerationAt` is **null when dormant**: no rules, not slot-mode, or
+/// deleted. Something changing sets it to now; a successful run sets it to the
+/// next Maldives midnight, which is when the rolling horizon next needs
+/// extending. The partial index below is therefore exactly the candidate set.
+model ListingSlotState {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @unique @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// When this listing next needs the generator. Null = dormant; see above.
+  nextGenerationAt DateTime? @map("next_generation_at") @db.Timestamptz(6)
+
+  /// The end of the window slots currently cover — the 60th Maldives day.
+  generatedThrough DateTime? @map("generated_through") @db.Timestamptz(6)
+
+  lastGeneratedAt DateTime? @map("last_generated_at") @db.Timestamptz(6)
+  /// What the last expansion cost, in milliseconds. The job's budget is stated
+  /// in `jobs/slot-generation.ts`; this is what an operator reads when the
+  /// overrun warning fires, and what §Phase 21 will chart.
+  lastRunMs       Int?      @map("last_run_ms")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The job's entire WHERE, in one range scan. A dormant listing's null
+  /// sorts to the end of the btree and is never `<= now()`, so it costs an
+  /// index entry and nothing else — deliberately a plain index rather than a
+  /// partial one, because Prisma cannot express `WHERE … IS NOT NULL` and a
+  /// hand-written partial index under this name would read as drift to the
+  /// next `migrate dev`.
+  @@index([nextGenerationAt])
+  @@map("listing_slot_state")
 }

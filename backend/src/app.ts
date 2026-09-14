@@ -30,6 +30,11 @@ import { CategoryService } from './modules/categories/service.js';
 import { serviceAreaExportContributor } from './modules/location/export.js';
 import { ListingEvents } from './modules/listings/events.js';
 import type { ProviderEntitlementReader } from './modules/listings/entitlements.js';
+import { AvailabilityRepository } from './modules/availability/repository.js';
+import { AvailabilityService } from './modules/availability/service.js';
+import { SlotGenerator } from './modules/availability/generation.js';
+import { ReservationService } from './modules/availability/reservations.js';
+import { registerAvailabilityRoutes } from './modules/availability/routes.js';
 import { registerListingRoutes } from './modules/listings/routes.js';
 import { ListingService } from './modules/listings/service.js';
 import { PUBLISHED_LISTINGS } from './modules/listings/visibility.js';
@@ -77,6 +82,7 @@ import {
   subscriptionTrialPromptJob,
 } from './jobs/subscription-lifecycle.js';
 import { listingCountRollupJob } from './jobs/listing-count-rollup.js';
+import { reservationExpiryJob, slotGenerationJob } from './jobs/slot-generation.js';
 import { notificationHealthJob } from './jobs/notification-health.js';
 import { pushFallbackJob } from './jobs/push-fallback.js';
 import { JobRunner } from './jobs/runner.js';
@@ -145,6 +151,8 @@ declare module 'fastify' {
     providers: ProviderProfileService;
     location: LocationService;
     listings: ListingService;
+    availability: AvailabilityService;
+    reservations: ReservationService;
     subscriptions: SubscriptionService;
     media: MediaService;
     exportContributors: ExportContributors;
@@ -324,6 +332,34 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
   app.decorate('listings', listings);
 
+  // Phase 9a. Availability rules, the 60-day rolling slot grid, and the
+  // provider-scoped reservation that is the hard guarantee against
+  // double-booking.
+  //
+  // `ReservationService` is decorated in its own right because it is
+  // **§Phase 17's seam, not an endpoint**: every method takes the caller's
+  // transaction so a booking row, its state transition and its hold land
+  // together or not at all (§Phase 9a: "reservations are created inside the
+  // booking transaction"). Nothing in this phase exposes it over HTTP —
+  // taking a time is a booking, and a booking is Phase 17.1.
+  const slotGenerator = new SlotGenerator({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    repo: new AvailabilityRepository(deps.prisma),
+    log: app.log,
+  });
+  const availability = new AvailabilityService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    providers,
+    generator: slotGenerator,
+  });
+  app.decorate('availability', availability);
+  app.decorate(
+    'reservations',
+    new ReservationService({ prisma: deps.prisma, clock: deps.clock, repo: availability.repo }),
+  );
+
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
   const devices = new DeviceTokenRepository(deps.prisma, deps.clock);
@@ -400,6 +436,10 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   jobs.register(subscriptionLifecycleJob(subscriptions, app.log));
   jobs.register(subscriptionTrialPromptJob(subscriptions, app.log));
   jobs.register(subscriptionIntroductoryConversionJob(subscriptions, app.log));
+  // Phase 9a: the incremental, per-listing slot generator with its stated
+  // wall-clock budget, and the provisional-hold expiry sweep.
+  jobs.register(slotGenerationJob(slotGenerator, app.log));
+  jobs.register(reservationExpiryJob(app.reservations, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -421,6 +461,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerProviderRoutes(app);
   registerLocationRoutes(app);
   registerListingRoutes(app);
+  registerAvailabilityRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);
   // The two routes the LOCAL media transport needs — this process playing the
