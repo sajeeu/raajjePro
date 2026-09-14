@@ -95,9 +95,19 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   /// PATCH would land on top of what the provider has since typed.
   int _edits = 0;
 
+  /// Set the moment this notifier starts being torn down. `ref.mounted` alone
+  /// is not enough: a save or an upload can land while the provider is
+  /// already on another screen, and Riverpod refuses a `state` write from
+  /// there. Same guard as [OfflineQueue]'s, for the same reason.
+  bool _disposed = false;
+
+  bool get _alive => !_disposed && ref.mounted && state.hasValue;
+
   @override
   Future<WizardView> build() async {
+    _disposed = false;
     ref.onDispose(() {
+      _disposed = true;
       _debounce?.cancel();
       _debounce = null;
     });
@@ -115,7 +125,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
       OfflineState? previous,
       OfflineState next,
     ) {
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       if (next.hasPending) {
         _set(_view.copyWith(save: SaveState.offline));
       } else if (_view.save == SaveState.offline) {
@@ -155,7 +165,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   WizardView get _view => state.requireValue;
 
   void _set(WizardView view) {
-    if (!ref.mounted || !state.hasValue) return;
+    if (!_alive) return;
     state = AsyncData(view);
   }
 
@@ -206,7 +216,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
     _debounce?.cancel();
     _debounce = null;
     await _inFlight;
-    if (_pending.isEmpty || !ref.mounted || !state.hasValue) return;
+    if (_pending.isEmpty || !_alive) return;
 
     final body = Map<String, dynamic>.of(_pending);
     _pending.clear();
@@ -229,7 +239,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   ) async {
     try {
       final saved = await ref.read(listingApiProvider).patch(listingId, body);
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       if (saved == null) {
         // Queued. The local state already carries the edit, and the queue
         // carries the write — nothing is lost and nothing is pretended.
@@ -248,7 +258,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
         _set(_view.copyWith(save: SaveState.saved));
       }
     } on ApiException catch (e) {
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       // The server refused the edit, so the screen and the row now disagree.
       // Re-read rather than guess: the provider needs to see what actually
       // stuck before they carry on.
@@ -268,10 +278,10 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   }
 
   Future<void> _resync() async {
-    if (!ref.mounted || !state.hasValue) return;
+    if (!_alive) return;
     try {
       final fresh = await ref.read(listingApiProvider).read(_view.listing.id);
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       _set(
         _view.copyWith(listing: fresh, missing: missingRequiredFields(fresh)),
       );
@@ -298,7 +308,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
     if (waiting) {
       _set(_view.copyWith(navWaiting: true));
       await flush();
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       _set(_view.copyWith(navWaiting: false));
     }
     _set(_view.copyWith(step: step, formError: null));
@@ -498,7 +508,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
       final media = await ref
           .read(listingApiProvider)
           .uploadImage(_view.listing.id, image);
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       _set(_view.copyWith(upload: null));
       if (target == MediaTarget.cover) {
         _edit(_view.listing.copyWith(coverMedia: media), {
@@ -524,7 +534,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   }
 
   void _failUpload(MediaTarget target, PickedImage image, String message) {
-    if (!ref.mounted || !state.hasValue) return;
+    if (!_alive) return;
     _set(
       _view.copyWith(
         upload: MediaUpload(target: target, image: image, failure: message),
@@ -548,7 +558,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
       final listing = await ref
           .read(listingApiProvider)
           .removeMedia(_view.listing.id, mediaId);
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       _set(
         _view.copyWith(
           listing: listing,
@@ -744,7 +754,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   /// error"). Collapsing them would make the second unanswerable.
   Future<void> publish() async {
     await flush();
-    if (!ref.mounted || !state.hasValue) return;
+    if (!_alive) return;
 
     if (_view.missing.isNotEmpty) {
       _set(
@@ -762,7 +772,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
       final published = await ref
           .read(listingApiProvider)
           .publish(_view.listing.id);
-      if (!ref.mounted || !state.hasValue) return;
+      if (!_alive) return;
       _set(
         _view.copyWith(
           listing: published,
@@ -786,7 +796,7 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   }
 
   void _handlePublishRefusal(ApiException e) {
-    if (!ref.mounted || !state.hasValue) return;
+    if (!_alive) return;
     switch (e.code) {
       case 'LISTING_INCOMPLETE':
         final details = e.details;
