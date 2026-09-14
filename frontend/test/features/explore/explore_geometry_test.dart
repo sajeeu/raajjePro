@@ -61,6 +61,11 @@ void main() {
       tester,
     ) async {
       await pump(tester);
+      // Measured at rest. The tiles enter with `fadeUp`, staggered, so during
+      // the first 350 ms each one is painted up to 14 dp above where it
+      // lives — and at different points, which is the stagger working. The
+      // claim here is about the grid's geometry, not its entrance.
+      await tester.pumpAndSettle();
       final tiles = find.byType(CategoryTile);
       final first = tester.getRect(tiles.at(0));
       final second = tester.getRect(tiles.at(1));

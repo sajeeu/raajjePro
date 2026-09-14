@@ -377,11 +377,19 @@ class _Grid extends StatelessWidget {
       ),
       gridDelegate: _gridDelegate(context),
       itemCount: categories.length,
-      itemBuilder: (context, i) => CategoryTile(
-        category: categories[i],
-        // Category results are Phase 15's surface; the tile is a real control
-        // with nothing behind it yet, so it stays inert rather than pretending.
-        onTap: null,
+      // `fadeUp`, staggered — the twelve tiles arrive as a run rather than a
+      // block (`motion.css`; `Discovery` staggers its rows the same way). The
+      // index is the grid's own, so the cap at six lands on the third row and
+      // nothing below it waits longer.
+      itemBuilder: (context, i) => FadeUp(
+        index: i,
+        child: CategoryTile(
+          category: categories[i],
+          // Category results are Phase 15's surface; the tile is a real
+          // control with nothing behind it yet, so it stays inert rather than
+          // pretending.
+          onTap: null,
+        ),
       ),
     );
   }

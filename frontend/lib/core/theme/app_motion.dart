@@ -41,6 +41,15 @@ abstract final class AppMotion {
   static const double sheetSlide = 64;
   static const double fadeUpSlide = 14;
 
+  /// 🔧 **The stagger, from the prototypes — 2026-09-14.** `My Bookings` and
+  /// `Discovery` delay each row by `calc(min(index, 6) * 30ms)`: a list
+  /// arrives as a run rather than a block, and the cap stops the seventh row
+  /// and everything after it from waiting on a queue that grows with the
+  /// data. Read through [ResolvedMotion.staggerFor], which returns zero under
+  /// reduced motion.
+  static const Duration staggerStep = Duration(milliseconds: 30);
+  static const int staggerCap = 6;
+
   /// Durations resolved against the OS reduced-motion setting.
   static ResolvedMotion of(BuildContext context) =>
       ResolvedMotion(reduced: MediaQuery.disableAnimationsOf(context));
@@ -66,4 +75,15 @@ class ResolvedMotion {
   double get sheetSlide => reduced ? 0 : AppMotion.sheetSlide;
   double get fadeUpSlide => reduced ? 0 : AppMotion.fadeUpSlide;
   double get pressScale => reduced ? 1 : AppMotion.pressScale;
+
+  /// The delay before item [index] of a list begins its entrance.
+  ///
+  /// Capped at [AppMotion.staggerCap] so a long list does not make its tail
+  /// wait — the last visible row should still be arriving while the first is
+  /// settling, not seconds later. Zero under reduced motion, which collapses
+  /// the run back into everything appearing at once.
+  Duration staggerFor(int index) => reduced
+      ? Duration.zero
+      : AppMotion.staggerStep *
+            (index < AppMotion.staggerCap ? index : AppMotion.staggerCap);
 }

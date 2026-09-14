@@ -18,6 +18,7 @@ export 'package:raajjepro/shared/inputs/phone_field.dart';
 export 'package:raajjepro/shared/location/island_multi_select.dart';
 export 'package:raajjepro/shared/location/island_picker_sheet.dart';
 export 'package:raajjepro/shared/location/island_search_list.dart';
+export 'package:raajjepro/shared/motion/fade_up.dart';
 export 'package:raajjepro/shared/motion/pressable.dart';
 export 'package:raajjepro/shared/navigation/animated_bottom_nav.dart';
 export 'package:raajjepro/shared/navigation/circle_back_button.dart';
