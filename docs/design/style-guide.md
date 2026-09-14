@@ -88,10 +88,12 @@ Corrected against the plan: **Gardening**, **Computer** and **Events** appeared 
 ### Geometry & motion
 
 - **Radii:** 10 · 12 · 14 (inputs) · 16 (buttons, small cards) · 20 · 24 (feature cards) · 28 (bottom sheets) · fully round (pills, avatars)
-- **Heights:** 52 inputs · 54 primary CTA · 44 icon buttons and minimum touch target · 38 filter chips · 26 checkboxes
+- **Heights:** 52 inputs · 54 primary CTA · 44 icon buttons · 38 filter chips · 26 checkboxes. 🔧 **The icon button is 44 and the minimum touch target is 48 — corrected 2026-09-14.** This line read "44 icon buttons and minimum touch target", which conflated the two and contradicted the accessibility baseline below. They are different things: 44 is how big the control *looks*, 48 is how big the area that responds to a finger must be, and the gap is invisible by design. Draw at 44; the implementation expands the hit area around it.
 - **Borders:** 1px dividers · 1.5px inputs and selectable cards · 2px selected states
 - **Screen padding:** 20px horizontal, consistently
-- **Motion:** screen transition 350ms `cubic-bezier(.2,.8,.3,1)` · element fade-up 200ms ease · bottom sheet 400ms `cubic-bezier(.2,.9,.3,1)` · toast 250ms ease · spinner 800ms linear
+- **Motion:** 🔧 **one scale, two curves — corrected 2026-09-14 against `motion.css`, which is the source.** `--m-fast` 120ms (hover, press, colour, border) · `--m-base` 200ms (in-place change, content swap, sheet OUT) · `--m-sheet` 300ms (sheets, overlays, dialogs IN) · `--m-page` 350ms (page and view transitions, **and `fadeUp`**). Two curves only: `--e-out` `cubic-bezier(.2,.8,.3,1)` entering and settling, `--e-in` `cubic-bezier(.4,0,1,1)` leaving. Ambient loops keep literal periods because they are not a response to a tap: shimmer 1400ms, spinner 800ms.
+  - **This line said something else until 2026-09-14**, and it had said it since before Round 40 built the scale: "element fade-up 200ms ease · bottom sheet 400ms `cubic-bezier(.2,.9,.3,1)` · toast 250ms ease". Three of those numbers are not tokens, and `.2,.9,.3,1` is a **third curve** in a system whose headline is *one scale, two curves*. A designer reading this would have specified motion the prototypes cannot express, and the Flutter implementation would have inherited it — `verify-dc.py` checks the artboards and `locked-rules.py` checks for retired *copy*, so neither was ever going to catch a stale number here.
+- **Haptics** 🔧 **(added 2026-09-14, owner's decision).** CSS cannot express it, so it is stated here rather than drawn: three events and no more. **Selection** when a choice changes · **commit** when something lands that cannot be quietly undone · **refused** when the app says no. Anything buzzing more often than that gets ignored, which costs the one channel that still works when nobody is looking at the screen.
 
 ## Components
 
