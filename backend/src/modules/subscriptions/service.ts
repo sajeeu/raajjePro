@@ -819,11 +819,20 @@ export class SubscriptionService {
       listingsRestored: 0,
     };
 
-    for (const row of await this.repo.findLifecycleCandidates()) {
-      const profile = await this.prisma.providerProfile.findUnique({
-        where: { id: row.providerProfileId },
-      });
-      if (profile === null) continue;
+    for (const row of await this.repo.findLifecycleCandidates(now)) {
+      // 🔧 **Read lazily — 2026-09-14.** The profile is needed only to address
+      // a notification, and most rows in any sweep send none, so fetching it
+      // up front was one query per candidate to answer a question nobody
+      // asked. `notifyFor` fetches at most once per row and only when there is
+      // something to say; a row whose profile has vanished sends nothing,
+      // which is the same outcome the eager `continue` produced.
+      let profile: ProviderProfile | null | undefined;
+      const notifyFor = async (event: BillingEvent, detail: Record<string, string>) => {
+        profile ??= await this.prisma.providerProfile.findUnique({
+          where: { id: row.providerProfileId },
+        });
+        if (profile !== null) await this.notify(event, profile, detail);
+      };
       let current = row;
 
       // 1. The pause cap. §1b: "at the cap, pause auto-ends and the clock
@@ -850,7 +859,7 @@ export class SubscriptionService {
         current = await this.repo.update(current.providerProfileId, {
           trialEndingNoticeAt: now,
         });
-        await this.notify('trial_ending_7d', profile, {
+        await notifyFor('trial_ending_7d', {
           endsAt: current.trialEndsAt?.toISOString() ?? '',
         });
         report.warned += 1;
@@ -864,7 +873,7 @@ export class SubscriptionService {
         current = await this.repo.update(current.providerProfileId, {
           periodEndingNoticeAt: now,
         });
-        await this.notify('subscription_ending_7d', profile, {
+        await notifyFor('subscription_ending_7d', {
           endsAt: current.currentPeriodEnd?.toISOString() ?? '',
         });
         report.warned += 1;
@@ -887,7 +896,7 @@ export class SubscriptionService {
           downgradedAt: now,
         });
         report.downgraded += 1;
-        await this.notify('downgraded_to_free', profile, {});
+        await notifyFor('downgraded_to_free', {});
       }
 
       // 5. §1b's win-back pair: "a downgraded provider receives a
@@ -897,12 +906,12 @@ export class SubscriptionService {
         const since = daysSince(current.downgradedAt, now);
         if (current.winbackDay7At === null && since >= WINBACK_DAY_7) {
           current = await this.repo.update(current.providerProfileId, { winbackDay7At: now });
-          await this.notify('winback_7d', profile, {});
+          await notifyFor('winback_7d', {});
           report.winbacks += 1;
         }
         if (current.winbackDay30At === null && since >= WINBACK_DAY_30) {
           current = await this.repo.update(current.providerProfileId, { winbackDay30At: now });
-          await this.notify('winback_30d', profile, {});
+          await notifyFor('winback_30d', {});
           report.winbacks += 1;
         }
       }

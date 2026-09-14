@@ -6,6 +6,7 @@ import type {
   ProviderSubscription,
 } from '../../generated/prisma/client.js';
 import type { PaymentPurpose, PaymentSubmissionStatus } from '../../generated/prisma/enums.js';
+import { ENDING_NOTICE_DAYS, addDays } from './period.js';
 
 /** A Prisma client or an open transaction — a confirmation writes four tables inside one. */
 export type Db = PrismaClient | Prisma.TransactionClient;
@@ -52,9 +53,52 @@ export class SubscriptionRepository {
   }
 
   /** Every subscription the lifecycle job might have work for. Sorted so a sweep is deterministic. */
-  findLifecycleCandidates(db: Db = this.prisma): Promise<ProviderSubscription[]> {
+  /**
+   * The rows §1b's lifecycle could do something to at `now` — **not every
+   * row**, which is what this asked for until 2026-09-14.
+   *
+   * The five statuses it listed are the whole enum, so the sweep read the
+   * entire table every hour and then decided, in TypeScript, that almost none
+   * of it had anything to do. Each branch below is one of `runLifecycle`'s own
+   * conditions moved into the WHERE, so the work is proportional to the rows
+   * that will actually change rather than to how many providers have ever
+   * signed up. `runLifecycle` still re-checks every condition — this narrows
+   * what it reads, never what it decides.
+   *
+   * Two deliberate imprecisions, both in the safe direction (a row included
+   * needlessly costs a no-op; a row excluded wrongly would silently stop
+   * billing someone):
+   *
+   *   - **`paused` comes back whole.** The forced-resume deadline is
+   *     `pausedAt` plus the unspent half of the allowance, which is
+   *     arithmetic across two columns that Prisma cannot express as a filter.
+   *     Paused rows are rare and bounded by the ten-day cap.
+   *   - **`expired` comes back whole**, because the grace deadline is derived
+   *     the same way from whichever clock expired.
+   *
+   * The `free` branch is the one that matters for cost. Every free provider
+   * needs their listings reconciled on every sweep — that is how "hides it
+   * the moment that booking completes" stays true — but a free provider with
+   * no listings has nothing to reconcile, and that is most of them. The
+   * relation filter rides `Listing`'s `(providerProfileId, status, visibility,
+   * deletedAt)` index.
+   */
+  findLifecycleCandidates(now: Date, db: Db = this.prisma): Promise<ProviderSubscription[]> {
+    const noticeHorizon = addDays(now, ENDING_NOTICE_DAYS);
     return db.providerSubscription.findMany({
-      where: { status: { in: ['trialing', 'active', 'paused', 'expired', 'free'] } },
+      where: {
+        OR: [
+          { status: 'paused' },
+          { status: 'expired' },
+          { status: 'trialing', trialEndsAt: { not: null, lte: noticeHorizon } },
+          { status: 'active', currentPeriodEnd: { not: null, lte: noticeHorizon } },
+          {
+            downgradedAt: { not: null },
+            OR: [{ winbackDay7At: null }, { winbackDay30At: null }],
+          },
+          { status: 'free', providerProfile: { listings: { some: { deletedAt: null } } } },
+        ],
+      },
       orderBy: { createdAt: 'asc' },
     });
   }
