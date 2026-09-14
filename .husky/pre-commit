@@ -1,3 +1,30 @@
 # Runs on every commit. Formats and lints only the staged files, per app
 # (see .lintstagedrc.json). Full checks are scripts/verify.sh and CI.
+
+# `dart format` runs on staged Dart files, and Flutter is not on the PATH a
+# git hook inherits — it lives at ~/flutter on this machine and is not linked
+# into /usr/local/bin. Without this, lint-staged fails to spawn the task and
+# reports "Reverting to original state because of errors", which reads like
+# data loss, aborts the commit, and says nothing about the cause. Guarded by
+# -x so a machine with dart already on PATH, or Flutter somewhere else, is
+# unaffected.
+if ! command -v dart >/dev/null 2>&1; then
+  for candidate in "$HOME/flutter/bin" "${FLUTTER_ROOT:-/nonexistent}/bin"; do
+    if [ -x "$candidate/dart" ]; then
+      PATH="$candidate:$PATH"
+      export PATH
+      break
+    fi
+  done
+fi
+
+# And if it is still missing while this commit carries Dart, say so plainly
+# rather than letting lint-staged fail with a spawn error.
+if ! command -v dart >/dev/null 2>&1 && git diff --cached --name-only | grep -q '\.dart$'; then
+  echo "pre-commit: this commit stages Dart files but 'dart' is not on PATH." >&2
+  echo "  Flutter is installed at ~/flutter here; add ~/flutter/bin to PATH," >&2
+  echo "  or set FLUTTER_ROOT. See HANDOVER.md." >&2
+  exit 1
+fi
+
 npx lint-staged

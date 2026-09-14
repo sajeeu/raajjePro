@@ -103,6 +103,40 @@ The backend block (typecheck, lint, tests) and the frontend block (`flutter anal
 
 The same three are VS Code tasks. **Ctrl/Cmd-Shift-P → Run Test Task** runs the lot; the individual ones are under **Run Task**.
 
+### Two sessions, one working tree
+
+The VS Code session and the terminal session share a checkout, which means
+they share **the index and the stash**, not only the files. Three rules, each
+of which has already been broken at least once:
+
+**Commit by pathspec, never `git add .`.** `git add` sweeps up whatever the
+other session has staged, and a bare `git commit` then carries their
+half-finished work under your message. Name your paths:
+
+```bash
+git commit -m "…" -- path/one path/two
+```
+
+That commits the working-tree content of exactly those paths and leaves the
+rest of the index alone. Check with `git show --stat HEAD` before pushing — if
+a file you did not touch is in there, you have just committed somebody's
+work-in-progress.
+
+**Read `git status` before you stage, not after.** The other session may have
+landed three commits since your last look. `git pull --ff-only origin main`
+first, and `git fetch` before every push.
+
+**Never bare `git stash` / `git stash pop`.** The stack is shared with every
+worktree, so `pop` can take an entry that is not yours. Prefer a throwaway WIP
+commit. If you must stash, tag it — `git stash push -u -m "<tag>"` — and
+recover it with `git stash apply <sha>` after finding it by tag.
+
+A red `scripts/verify.sh` in a shared tree is usually the *other* session
+mid-build. Confirm it before acting: run the individual checks rather than the
+whole gate, and read the whole output rather than the tail. Attributing a
+failure to the other session on a glance at the last six lines is how a
+typecheck error of mine reached CI.
+
 ### Why `locked-rules.py` exists
 
 `verify-dc.py` only ever reads `.dc.html`. Nothing read the files that tell you what to build — and they drifted. `frontend/CLAUDE.md` was still instructing Phase 1 to label slot cards `Book instantly` six rounds after Round 44 renamed it, and to render an `Emergency available` marker long after Round 23 deleted it. The style guide and the designer brief carried the same stale label, and `admin-panel-conventions` still described the three kill switches as SMS in a product with no SMS.

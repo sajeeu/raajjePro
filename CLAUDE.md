@@ -104,6 +104,14 @@ Never expose internal error details (stack traces, raw DB errors) in API respons
 
 **End of day:** `scripts/eod-push.sh` verifies the design prototypes, checks the remote, commits and pushes. A scheduled task runs it at 16:30 Maldives time as a backstop.
 
+**Two sessions share this checkout — and therefore the index and the stash.** Details in `HANDOVER.md`; the three rules:
+
+1. **Commit by pathspec.** `git commit -m "…" -- path/one path/two`. Never `git add .` and never a bare `git commit` — both sweep up whatever the other session has staged. Confirm with `git show --stat HEAD` before pushing.
+2. **`git pull --ff-only origin main` before you start, `git fetch` before you push.** The other session moves main while you work.
+3. **Never bare `git stash` / `git stash pop`** — the stack is shared, so `pop` can take an entry that is not yours. Use a throwaway WIP commit, or `git stash push -u -m "<tag>"` and `apply` by SHA.
+
+A red `scripts/verify.sh` in a shared tree is usually the other session mid-build. Read the whole output before concluding that, not the tail.
+
 # Working with Claude Design
 
 The app is being rebuilt as working `.dc.html` prototypes in the Claude Design project `065ca2ad-ff8f-4eac-a8f8-e860a77561ff`. `docs/design/redesign-plan.md` carries the thirteen-session sequence; `docs/design/sessions/` carries the prompts.
