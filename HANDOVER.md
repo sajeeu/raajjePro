@@ -164,6 +164,26 @@ git commit -F /tmp/msg -- path/one path/two
 The other session's staging survives untouched, because a soft reset restores
 the index rather than rebuilding it.
 
+🔧 **A new file has to be `git add`ed first, and the error does not say so.**
+`git commit -- <paths>` uses `--only` semantics, which can only narrow to paths
+git already knows. Give it a path that is untracked and you get:
+
+```
+error: pathspec 'frontend/test/helpers/a11y.dart' did not match any file(s) known to git
+```
+
+which reads like a typo or a wrong directory, and is neither — the file is
+right there. Stage the new file **by name** and then commit by pathspec as
+usual:
+
+```bash
+git add path/to/new-file            # this one path, never `git add .`
+git commit -m "…" -- path/one path/to/new-file
+```
+
+Staging one named path does not sweep the other session's work; it is the bare
+`git commit` afterwards that would. Both halves of the rule still hold.
+
 **Read `git status` before you stage, not after.** The other session may have
 landed three commits since your last look. `git pull --ff-only origin main`
 first, and `git fetch` before every push.
