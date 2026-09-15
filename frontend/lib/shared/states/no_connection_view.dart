@@ -97,7 +97,7 @@ class _NoConnectionViewState extends ConsumerState<NoConnectionView> {
               radius: AppRadius.feature,
               padding: const EdgeInsetsDirectional.fromSTEB(
                 AppSpacing.xxl,
-                AppSpacing.xxl + AppSpacing.xxs,
+                AppSpacing.n28,
                 AppSpacing.xxl,
                 AppSpacing.xxl,
               ),

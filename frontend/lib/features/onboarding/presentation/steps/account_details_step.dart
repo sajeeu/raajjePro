@@ -154,7 +154,7 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
         AppSpacing.xl,
         AppSpacing.xxs,
         AppSpacing.xl,
-        AppSpacing.xxl + AppSpacing.xxs,
+        AppSpacing.n28,
       ),
       // Enters as a run, like every other page. A form is the case the cap at
       // six was written for: the title, the subtitle, the section rule, the

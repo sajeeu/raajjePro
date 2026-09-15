@@ -189,7 +189,7 @@ class _Loaded extends StatelessWidget {
                 AppSpacing.screen,
                 AppSpacing.md2,
                 AppSpacing.screen,
-                AppSpacing.xxl + AppSpacing.xxxl,
+                AppSpacing.n56,
               ),
               child: FadeUpColumn(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

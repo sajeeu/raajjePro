@@ -37,7 +37,7 @@ class IntroStep extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.xxs,
         AppSpacing.xl,
-        AppSpacing.xxl + AppSpacing.xxs,
+        AppSpacing.n28,
       ),
       // The step enters the way `Explore` does — hero, heading, the mechanics
       // card, then whatever follows, each a step behind the last. The
@@ -156,7 +156,7 @@ class _Hero extends StatelessWidget {
           AppSpacing.xl2,
           AppSpacing.xxl2,
           AppSpacing.xl2,
-          AppSpacing.xxl + AppSpacing.xxs,
+          AppSpacing.n28,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

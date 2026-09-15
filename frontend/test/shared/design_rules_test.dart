@@ -198,7 +198,15 @@ void main() {
     const allowedOffGrid = 0;
 
     test('no new arithmetic on a spacing token', () {
-      final pattern = RegExp(r'AppSpacing\.([a-z0-9]+)\s*[-+]\s*[0-9.]+');
+      // 🔧 **Both forms, since 2026-09-15.** This read `token [+-] number`
+      // only, so `AppSpacing.xxl + AppSpacing.xxs` went through it untouched
+      // — eight sites across seven files, computing 28 and 56. Those are not
+      // nudges: 28 is the most common bottom padding in the artboards (53
+      // occurrences) and 56 appears 25 times, so they joined the traced group
+      // as `n28` and `n56` rather than being snapped to the scale.
+      final pattern = RegExp(
+        r'AppSpacing\.([a-z0-9]+)\s*[-+]\s*(?:[0-9.]+|AppSpacing\.[a-z0-9]+)',
+      );
       final hits = <String>[];
       for (final file in Directory(
         'lib',

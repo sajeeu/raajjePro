@@ -148,7 +148,7 @@ class _ExtrasStepState extends State<ExtrasStep> {
                 const SizedBox(width: AppSpacing.sm2),
                 Padding(
                   padding: const EdgeInsetsDirectional.only(
-                    top: AppSpacing.xxl + AppSpacing.xxs,
+                    top: AppSpacing.n28,
                   ),
                   child: AppButton.primary(
                     label: 'Add',

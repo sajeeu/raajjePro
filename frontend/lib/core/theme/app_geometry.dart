@@ -61,6 +61,15 @@ abstract final class AppSpacing {
   static const double n28 = 28;
   static const double n34 = 34;
 
+  /// 🔧 **Added 2026-09-15**, with the same provenance as the rest of this
+  /// group: 56 px appears 25 times across the artboards and 28 px is the most
+  /// common bottom padding in them, at 53. Eight call sites reached those two
+  /// values as `AppSpacing.xxl + AppSpacing.xxs` and `xxl + xxxl` — arithmetic
+  /// the ratchet did not catch, because it looked for a token plus a *number*
+  /// and these are a token plus a token. Same defect: a reader cannot tell 28
+  /// traced off an artboard from 24 with a nudge on it.
+  static const double n56 = 56;
+
   /// Horizontal screen padding — 20, consistently.
   static const double screen = xl;
 

@@ -185,7 +185,7 @@ class _DetailsStepState extends ConsumerState<DetailsStep> {
                     // Clears the field's own label row, so the button lines up
                     // with the input rather than with the label.
                     padding: const EdgeInsetsDirectional.only(
-                      top: AppSpacing.xxl + AppSpacing.xxs,
+                      top: AppSpacing.n28,
                     ),
                     child: AppButton.primary(
                       label: 'Add',

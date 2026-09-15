@@ -57,7 +57,7 @@ class ServiceAreasStep extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.xxs,
         AppSpacing.xl,
-        AppSpacing.xxl + AppSpacing.xxs,
+        AppSpacing.n28,
       ),
       // Enters as a run, like every other page (`Explore`'s grid is the
       // reference). The gaps between rows take no stagger step.
