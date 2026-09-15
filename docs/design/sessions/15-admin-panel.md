@@ -202,6 +202,87 @@ export of the current filtered view under rule 6.
 
 ---
 
+## Visual direction — 🔧 added 2026-09-15, at the owner's request
+
+**A reference screenshot is attached with this brief: a green-accented HR dashboard
+("HiveQ"). The owner wants the admin panel to look like it.** Take its *system* — the
+chrome, the density, the card language, the restraint with colour. Do not take its
+content, because most of its content is a claim this product cannot make.
+
+### Take these, closely
+
+- **The left sidebar, full height, pinned, with a collapse control.** Grouped nav with a
+  small caps section label above each group, one accent-tinted pill marking the current
+  screen, 24 px icons at the left of every row. Our groups: **Queues** (payments,
+  unmatched transactions, identity, `payment_unresolved`, disputes) · **Directory**
+  (users, bookings, payments) · **Configuration** (categories, kill switches, alerting,
+  launch-mode threshold) · **Records** (audit log) · **Overview** (the Phase 10c
+  dashboard). Every queue row carries its **live open-count badge**, right-aligned — the
+  reference has no equivalent and this is the single most important thing in our sidebar.
+- **The search field at the top of the sidebar with the `⌘K` chip inside it.** That is
+  literally §Phase 10b's command palette and the reference draws it exactly right.
+- **The workspace block pinned to the sidebar's bottom.** Ours is the signed-in admin —
+  name, role, sign out. Not a workspace switcher; there is one workspace.
+- **The card language**: white surface, 1 px hairline border, ~20 px radius, a very soft
+  shadow, generous internal padding, a quiet section title at top-left and a control at
+  top-right. This is already our mobile card scaled up and it should stay recognisably
+  the same product.
+- **The stat-card row** — icon in a tinted rounded square, large number, small label
+  under it, a "View details" link with a right arrow at the bottom. Use it for §Phase
+  10c's KPI cards **only**.
+- **The line chart with the hover tooltip** that names the date and breaks the value into
+  labelled components. Use it for §Phase 10c's two trend lines. The split-by-cohort
+  requirement means the tooltip must show **both cohorts at that date**, which is exactly
+  the shape the reference's tooltip already has.
+- **The date-range control** in the header, pill-shaped with a calendar icon. That is our
+  shared date-range control with presets, on every list screen.
+- **The colour discipline.** One accent doing the work, everything else grey, colour
+  reserved for meaning. Keep that and keep our palette rather than the reference's green:
+  `#2563EB` accent, `#1D4ED8` pressed, `#0F1B2D` primary text, `#5B6B84` secondary,
+  `#E9EFF7` hairlines, `#F2F6FB` page ground, white surfaces. Radii 20 for cards, 14 for
+  inputs, 999 for pills — the values the other 61 artboards already use.
+
+### Change these, because the reference is describing a different product
+
+- **No welcome banner.** "Welcome Back, Wolf Pixel 👋 — Your Team's Success Starts Here"
+  is onboarding copy for a product with new users. This one has the owner and later one
+  or two staff, opening it every day to clear work. The page title is the screen's name
+  and the number of open items. Nothing greets anybody.
+- **No avatar stack, no Share, no collaborator affordances** in the top bar. There is one
+  admin. Sharing a payment queue is not a thing that can happen, and drawing the control
+  advertises multi-user review — which is also **second-admin sign-off**, declined for v1
+  and listed below.
+- **No calendar in the right rail.** There is no admin calendar; nothing here is
+  scheduled. On the Phase 10c dashboard the rail carries the **recent-activity feed**
+  (latest audit-log entries: what was approved, rejected or resolved, and by whom), which
+  is the one thing in this product that genuinely reads as a timeline. On every other
+  screen **there is no rail** — a queue gets the full width, because the row a person is
+  reading is the work.
+- **No project list.** The sidebar's lower section in the reference is that product's
+  content; ours is the config group.
+- **The reference is a dashboard product and this is not.** Seventeen of these eighteen
+  screens are queues, records and switches. Only §Phase 10c is a dashboard. So the stat
+  cards and the chart appear **once**, on that one screen, and a queue screen is a dense
+  sortable table under a filter bar — not cards. If a screen looks like the reference's
+  home page and is not Phase 10c, it is wrong.
+
+### What the reference does not have, and we need most
+
+- **Severity and ageing, consistently coloured on every screen.** Anything past its SLA is
+  flagged the same way everywhere — the 5-business-day `payment_unresolved` target, a
+  queue over 25 items. The reference has no notion of an item going bad with time and
+  this product is mostly that.
+- **Density.** The reference is airy because it has little to say. A payments queue at 200
+  providers is long, and the costed load is 5.8 hours a month at 50 providers rising to
+  105.0 at 500. Rows should be compact and scannable: a person clearing forty items should
+  not scroll past decoration to do it.
+- **The advisory receipt analysis beside the proof image** (§Phase 10a, Round 29) has no
+  analogue in the reference at all. It is a short per-field list reading `matches` /
+  `does not match — <found vs expected>` / `couldn't read`, and it must never look like a
+  verdict: no green tick summarising it, no score, no pre-selected decision.
+
+---
+
 ## Do not design these — declined for v1, on the record
 
 Bulk queue actions and keyboard triage · a proactive risk-signal dashboard (Phase 22's
