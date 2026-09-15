@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createPrismaClient } from '../src/db/client.js';
 import { CATEGORY_SEED } from '../src/modules/categories/seed-data.js';
@@ -316,6 +316,18 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the seeded twelve', () =
    */
   describe('a category name is unique whatever its case', () => {
     const prisma = createPrismaClient(testConfig().databaseUrl);
+
+    // 🔧 These rows are deleted afterwards, which the rest of this suite
+    // deliberately does not do. The convention — write real rows, isolate by
+    // unique key, never clean up — holds while a test only cares about rows it
+    // can name. It does not hold for `sortOrder`, which is a **shared global
+    // ordering**: these clones sit at 9000+ and took the last position in the
+    // category grid away from §Phase 4's Done-when, which asserts a thirteenth
+    // category sorts after the seeded twelve. Parallel files made it a race —
+    // green locally, red in CI.
+    afterAll(async () => {
+      await prisma.category.deleteMany({ where: { seedKey: { startsWith: 'case-' } } });
+    });
 
     // Its own seed rather than the sibling describe's: a `-t` filter runs
     // this block without that one's `beforeAll`, and the failure then reads

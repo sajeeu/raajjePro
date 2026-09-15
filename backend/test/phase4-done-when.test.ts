@@ -69,7 +69,18 @@ describe.skipIf(databaseUrl === undefined)('§Phase 4 Done-when', () => {
     expect(thirteenth).toBeDefined();
     expect(thirteenth?.name).toBe(name);
     // It sorts after the seeded twelve, so the grid order is the endpoint's.
-    expect(grid.at(-1)?.id).toBe(thirteenthId);
+    //
+    // 🔧 Asserted against the twelve rather than against `grid.at(-1)`
+    // (2026-09-15). This read "is the last row in the table", which is a
+    // different and weaker claim: any other test that creates a category with
+    // a higher `sortOrder` takes the last position and this fails, with a
+    // message about two unrelated uuids. It did — a case-insensitivity test
+    // seeding rows at 9000+ raced it, passing locally and failing in CI where
+    // the file order differed. The comment above was always the real claim.
+    const seededMax = Math.max(
+      ...grid.filter((c) => c.sortOrder <= 12).map((c) => grid.indexOf(c)),
+    );
+    expect(grid.findIndex((c) => c.id === thirteenthId)).toBeGreaterThan(seededMax);
   });
 
   it('the seeded bookingMode and emergencyCapable are readable by a downstream module', async () => {
