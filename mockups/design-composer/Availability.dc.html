@@ -241,7 +241,9 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
 <script type="text/x-dc" data-dc-script data-props="{&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;populated&quot;,&quot;empty&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;populated&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;}}">
 class Component extends DCLogic {
   _close(p){ if(this._ct){return;} this.setState({ closing:true }); this._ct = setTimeout(() => { this._ct = null; if (typeof p === 'function') this.setState(st => ({ ...p(st), closing:false })); else this.setState({ ...p, closing:false }); }, 200); }
-  DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // ISO weekdays: index 1 = Mon … 7 = Sun (matches the API's 1..7 schema). Index 0 is unused.
+  DAY_NAMES = [null,'Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  isoDow(dt) { return ((dt.getDay() + 6) % 7) + 1; }
   state = {
     rules: [ { id:1, days:[1,2,3,4], from:9, to:17, dur:2 }, { id:2, days:[6], from:9, to:13, dur:2 } ],
     pending: null,
@@ -265,7 +267,7 @@ class Component extends DCLogic {
     const days = [];
     for (let i = 0; i < 5; i++) {
       const dt = new Date(start.getTime() + i * 86400000);
-      const dow = dt.getDay();
+      const dow = this.isoDow(dt);
       const label = (i === 0 ? 'Today · ' : i === 1 ? 'Tomorrow · ' : '') + this.DAY_NAMES[dow] + ' ' + dt.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()];
       let times = [];
       rules.forEach(r => { if (r.days.includes(dow)) { for (let h = r.from; h + r.dur <= r.to + 0.001; h += r.dur) times.push(this.fmtHour(h)); } });
@@ -339,9 +341,10 @@ class Component extends DCLogic {
       editorOpen: !!ed,
       editorTitle: ed && s.rules.some(r => r.id === ed.id) ? 'Edit weekly rule' : 'New weekly rule',
       closeEditor: () => this._close({ editor: null }),
-      dayBtns: this.DAY_NAMES.map((n, i) => {
+      dayBtns: [1,2,3,4,5,6,7].map(i => {
+        const n = this.DAY_NAMES[i];
         const on = ed ? ed.days.includes(i) : false;
-        return { n: n[0] + n[1], bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
+        return { n: n[0], bg: on ? '#2563EB' : '#fff', fg: on ? '#fff' : '#41526B', bd: on ? '#2563EB' : '#E3EAF3',
           tap: () => this.setState(st => ({ editor: { ...st.editor, days: on ? st.editor.days.filter(x => x !== i) : [...st.editor.days, i] } })) };
       }),
       hourOpts: Array.from({ length: 15 }, (_, i) => this.fmtHour(7 + i)),
