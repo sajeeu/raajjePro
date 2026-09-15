@@ -202,6 +202,37 @@ export of the current filtered view under rule 6.
 
 ---
 
+## 🔧 Six additions — owner's decisions, 2026-09-15 (plan revision 5.32)
+
+These are new since the screen list above was written. Fold them into the screens they belong
+to rather than adding screens for them, except where noted.
+
+1. **A "confirmed automatically" lane on the payments queue.** A full bank-statement match now
+   confirms without a human (§0.0 item 19). The queue therefore has two lanes: *needs you* and
+   *confirmed automatically*, the second newest-first and scannable a week at a time, every row
+   reversible. The lane must read as a record to review, not as an inbox — nothing in it is
+   waiting for anybody.
+2. **Rejection reasons are a picklist** with an optional free-text addition, not an empty box.
+   Five reasons: wrong amount · unreadable image · reference code missing or wrong · already
+   submitted for this period · account does not match.
+3. **An undo window, about ten seconds, on confirm, reject and reverse.** Design it once as a
+   shared pattern — a quiet strip, not a toast that covers the next row.
+4. **Saved views** in the sidebar: a named filter, sort and date range, per-admin.
+5. **"Who is due, and who is overdue"** on the Phase 10c dashboard. Anchors are per-provider and
+   shift when a provider pauses, so this cannot be a calendar. Each row carries that provider's
+   own price — the introductory and standard rates sit side by side and must never be averaged.
+6. **An in-flight emergency monitor**, also Phase 10c, and the one genuinely live surface in the
+   panel: broadcast time, providers reached, offers collected, the 90-second window, the
+   30-minute deadline counting down. **Read-only** — there is no admin action on a live
+   emergency and drawing one would imply an override that does not exist.
+
+**Still declined, and still not to be designed:** bulk queue actions, keyboard triage, and the
+proactive risk-signal dashboard. The first two were reconsidered on 2026-09-15 and left as they
+were — with the full-match auto-confirm taking the volume, the case for them is weaker than when
+they were first declined.
+
+---
+
 ## Visual direction — 🔧 added 2026-09-15, at the owner's request
 
 **A reference screenshot is attached with this brief: a green-accented HR dashboard
