@@ -174,6 +174,30 @@ export function registerListingRoutes(app: FastifyInstance): void {
     },
   );
 
+  // Who may call: the owner, for their own published listing. §1b's "the
+  // provider can override the choice from the dashboard" (§Phase 10).
+  //
+  // **It sets a pin; it does not set a visibility.** The handler is
+  // `subscriptions`' because the entitlement system owns `hidden_over_cap`
+  // and must stay its only writer (§1b, Round 17) — the path lives here
+  // because the provider is acting on a listing, and
+  // `docs/decisions/25-phase-10-two-questions-answered.md` records why the
+  // two-step hide-then-activate is not an acceptable substitute.
+  //
+  // No idempotency key: setting the same pin twice is the same pin.
+  r.post(
+    `${base}/:id/keep-visible`,
+    {
+      schema: { params: listingParams },
+      preValidation: [requireAuth, requireActiveAccount],
+      config: wizardRate,
+    },
+    async (request, reply) => {
+      await app.subscriptions.keepListingVisible(userOf(request).id, request.params.id);
+      return reply.send(ok(await app.listings.readOwn(userOf(request).id, request.params.id)));
+    },
+  );
+
   // Who may call: the owner. Invariant 8 — stamps `deletedAt`. The row, its
   // media, its service areas and its event log all stay, so a booking or a
   // review that referenced this listing still resolves.

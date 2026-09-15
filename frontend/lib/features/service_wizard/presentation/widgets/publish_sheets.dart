@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:raajjepro/core/listings/service_listing.dart';
 import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/service_wizard/controller/wizard_view.dart';
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// "Your service is live" — the end of the flow, and the one moment the

@@ -91,7 +91,10 @@ export async function applyEntitlementVisibility(
   );
 
   const unprotected = candidates.filter((c) => !protectedIds.has(c.id));
-  const ranked = await rankByPerformance(prisma, unprotected as Candidate[], now);
+  const ranked = pinnedFirst(
+    await rankByPerformance(prisma, unprotected as Candidate[], now),
+    await readPin(prisma, providerProfileId),
+  );
 
   // §1b: a protected listing "stays visible regardless of cap", so protected
   // rows are kept first and fill the cap before anything else. The slots left
@@ -132,6 +135,45 @@ export async function applyEntitlementVisibility(
     restored: toRestore.map((c) => c.id),
     protectedFromHiding: [...protectedIds],
   };
+}
+
+/**
+ * §1b's "**the provider can override the choice from the dashboard**", read
+ * from `ProviderProfile.keepVisibleListingId` (§Phase 10).
+ *
+ * It is deliberately read *here* rather than passed in by a caller. Every
+ * caller of `applyEntitlementVisibility` — a confirmation, a reversal, the
+ * lifecycle sweep, and eventually §Phase 17.1's booking termination — has to
+ * honour the same override, and a parameter is a thing three of the four
+ * would eventually forget to pass. §1b's guarantee is that one function
+ * decides; the pin is one of its inputs, not a variant of it.
+ */
+async function readPin(prisma: PrismaClient, providerProfileId: string): Promise<string | null> {
+  const profile = await prisma.providerProfile.findUnique({
+    where: { id: providerProfileId },
+    select: { keepVisibleListingId: true },
+  });
+  return profile?.keepVisibleListingId ?? null;
+}
+
+/**
+ * The pinned listing moves to the head of the ranking — and only if it is
+ * still in it.
+ *
+ * **A stale pin holds nothing.** `ranked` contains only the provider's
+ * currently publishable, unprotected listings, so a pin on a draft, a deleted
+ * listing, one the provider hid themselves, or one now protected by a
+ * committed booking simply does not match and the ranking is returned
+ * untouched. That is what stops a pin set months ago keeping a live listing
+ * hidden behind a listing that no longer exists.
+ *
+ * It ranks; it does not exempt. A pinned listing still loses to §1b's
+ * booking protection, because that protection is about a customer who has
+ * already committed.
+ */
+function pinnedFirst(ranked: string[], pinned: string | null): string[] {
+  if (pinned === null || !ranked.includes(pinned)) return ranked;
+  return [pinned, ...ranked.filter((id) => id !== pinned)];
 }
 
 /**

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:raajjepro/core/listings/service_listing.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/service_wizard/controller/wizard_view.dart';
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// The wizard's top chrome: the back control, the progress framing, the save

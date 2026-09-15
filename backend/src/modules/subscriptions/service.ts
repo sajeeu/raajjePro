@@ -1064,6 +1064,46 @@ export class SubscriptionService {
     );
   }
 
+  /**
+   * Who may call: the owner, for their own published listing.
+   *
+   * §1b: "**the provider can override the choice from the dashboard**"
+   * (§Phase 10). The write is a **pin**, not a visibility: `hidden_over_cap`
+   * is the entitlement system's value alone (§1b, Round 17), so the override
+   * changes what `applyEntitlementVisibility` ranks first and then re-runs
+   * it. The alternative — letting the provider hide the kept listing with
+   * `PATCH …/visibility` and activate the other — writes
+   * `hidden_by_provider` onto a listing the *system* hid, which makes "any
+   * confirmed payment restores everything" false for that listing.
+   *
+   * Refused on a draft: a listing that cannot be published cannot hold the
+   * one live slot, and accepting the pin silently would be worse than saying
+   * so. A deleted or later-unpublished listing needs no refusal — a pin that
+   * no longer matches a publishable listing is ignored by the ranking.
+   */
+  async keepListingVisible(userId: string, listingId: string): Promise<void> {
+    const profile = await this.ownProfileOr404(userId);
+    const listing = await this.prisma.listing.findFirst({
+      where: { id: listingId, providerProfileId: profile.id, deletedAt: null },
+      select: { id: true, status: true },
+    });
+    // Not-found covers "not yours", so listing ids cannot be probed from here.
+    if (listing === null) {
+      throw new NotFoundError('No such listing', 'LISTING_NOT_FOUND');
+    }
+    if (listing.status !== 'published') {
+      throw new BusinessRuleError(
+        'LISTING_NOT_PUBLISHED',
+        'Only a published service can be the one you keep visible',
+      );
+    }
+    await this.prisma.providerProfile.update({
+      where: { id: profile.id },
+      data: { keepVisibleListingId: listing.id },
+    });
+    await this.reconcileVisibility(profile.id);
+  }
+
   // -------------------------------------------------------------------------
   // Internals
   // -------------------------------------------------------------------------

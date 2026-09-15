@@ -682,13 +682,82 @@ draft and step 2 pre-fills from the account-level service areas, both asserted
 through the real route table. **No new rows**: every Done-when line was
 testable now.
 
-**Next**: `/phase-9a` — Availability, Time Slots & Reservations. Note what
-this phase deliberately did not build toward it: step 5 collects a simple
-working window and says so in its own helper, because §1's mockup table warns
-that step 5 "is a toy version and will mislead if treated as the pattern".
-Phase 10's My Services dashboard is also still owed — the wizard resumes an
-existing listing when passed a `listingId`, and nothing reachable passes one
-yet.
+**Phase 9a is built** — availability rules, exceptions, provider time off,
+the generated slot grid and reservations, backend and Flutter.
+`docs/decisions/24-phase-9a-availability-and-reservations.md` carries its full
+record, including the one exception to invariant 8 (§0.0 item 18) and why
+double-booking is prevented by a PostgreSQL exclusion constraint scoped to the
+provider rather than by a service method.
+
+**Phase 10 is built** — My Services, the provider's workspace, plus the one
+piece of backend §1b's override needed.
+`docs/decisions/26-phase-10-my-services-dashboard.md` carries the full record.
+
+**`/provider/services` is a real screen, and ledger row P6-1 closes with it.**
+§Phase 6's role switcher has pointed at that route since it was built and
+found an `UnbuiltScreen` there; `phase10_done_when_test.dart` now drives the
+real app through the switcher and asserts both branches in one place — a
+provider who completed onboarding lands on the dashboard, one mid-flow still
+goes back into onboarding.
+
+🔧 **§1b's over-cap override is a pin, not a visibility the provider writes.**
+This is the phase's only backend work and the thing to know about it:
+`hidden_over_cap` is set and cleared **only** by the entitlement system
+(§1b, Round 17), so "make this one live instead" cannot be the two-step
+hide-then-activate that `PATCH …/visibility` would allow — that writes
+`hidden_by_provider` onto a listing the system hid, and silently breaks "any
+confirmed payment restores everything" for the listing swapped out.
+`ProviderProfile.keepVisibleListingId` is a **ranking input**:
+`POST /v1/providers/me/listings/:id/keep-visible` sets it,
+`applyEntitlementVisibility` reads it itself — not as a parameter, because
+four callers have to honour it and a parameter is what three of them
+eventually forget — and ranks it ahead of §1b's bookings → views → recency.
+A stale pin holds nothing: it is promoted only if it is already in the ranked
+set, so a pin on a draft, a deleted listing or one the provider hid themselves
+simply does not match. `docs/decisions/25-phase-10-two-questions-answered.md`
+is the verification session's reading that settled it before the build.
+
+**"No manual refresh" is a property of the mutations.** Every context-menu
+action adopts the listing the server hands back rather than re-listing: the
+live toggle flips optimistically and rolls back **visibly** on the refusal
+that actually happens (a second listing live on the free tier), Remove drops
+the row the server will not return again, and only returning from the wizard
+refreshes — silently, because a skeleton over a screen already on display
+reads as a bug. The one exception is the override, which re-reads because the
+server has also changed a *second* listing and which one is §1b's ranking to
+decide.
+
+🔧 **Four departures from the artboard, all recorded.** The stats tile reads
+**"Live"** rather than "Published" — its number counts published-and-active
+and "Published" is a filter pill directly beneath it, so one word would be
+doing two jobs on one screen. The live toggle keeps a constant "Live" label
+instead of flipping to "Off", because `AppToggle` already announces its state
+and a flipping label makes a screen reader say "Off, off". The card carries no
+star rating (no `Review` until §Phase 11, and a blank star on your own listing
+reads as *nobody rated you*). And **the card is a container, not a button** —
+it was built tappable first, and `Pressable` wraps its child with
+`excludeSemantics: true`, so a tappable card erases the menu, the toggle and
+Finish & publish from the semantics tree. The artboard's card is not tappable
+either.
+
+**Three things moved into `core/` on their second consumer**, which
+`lib/README.md` calls the convention rather than a refactor: `ListingApi` and
+`ServiceListing` into `core/listings/`, `customerPricePreview` into
+`core/listings/listing_money.dart` — §Phase 9 shows it as *what the card will
+say*, which is only a promise if one function says it — and `relativeEdit`
+beside `relativeAge` in `core/format/`, whose first rung is "active now":
+right about a session, wrong about an edit.
+
+**No new ledger rows.** Every Done-when line was testable now and is tested.
+**P6-1 closes**; **P8A-4 is updated rather than closed** — the dashboard
+renders no `acceptingNewCustomers` toggle (the artboard draws none and
+§Phase 10's bullets ask for none), so §1b's pause sentence is owed by
+§Phase 10a's billing screen alone.
+
+**Next**: `/phase-10a` — Provider Billing UI & Admin Panel. Two things this
+phase leaves pointing at it: the over-cap card's **Upgrade** CTA and the
+provider nav's **Billing** tab both reach `/provider/billing`, which is still
+an `UnbuiltScreen` naming Phase 10a.
 
 | | |
 |---|---|
@@ -697,8 +766,8 @@ yet.
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart` — `frontend/lib/README.md` lists every directory |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs. Phase 10: one column and one endpoint — `ProviderProfile.keepVisibleListingId` and `POST /v1/providers/me/listings/:id/keep-visible`, §1b's over-cap override as a ranking input that leaves `applyEntitlementVisibility` the only writer of `hidden_over_cap` |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart`. Phase 10: `features/my_services/` — the My Services dashboard at `/provider/services`, and `core/listings/`, where the listing API, model and price string moved on their second consumer — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |

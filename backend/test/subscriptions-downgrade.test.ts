@@ -69,6 +69,10 @@ describe.skipIf(databaseUrl === undefined)('§1b downgrade and restore', () => {
     return made;
   }
 
+  // The envelope’s error code, typed — `res.json()` is `any`, and the lint
+  // rule that catches unsafe member access is right to.
+  const errorCode = (res: { json: () => { error: { code: string } } }) => res.json().error.code;
+
   function visibilityOf(id: string) {
     return app.deps.prisma.listing
       .findUniqueOrThrow({ where: { id }, select: { visibility: true, status: true } })
@@ -297,5 +301,142 @@ describe.skipIf(databaseUrl === undefined)('§1b downgrade and restore', () => {
       now,
     );
     expect(byRecency.keptVisible).toEqual([third]);
+  });
+  /**
+   * §1b: "**The provider can override the choice from the dashboard**"
+   * (§Phase 10), built as a pin rather than as a provider-written visibility.
+   * `docs/decisions/25-phase-10-two-questions-answered.md` records why the
+   * two-step hide-then-activate is not an acceptable substitute, and these
+   * assert the two properties that argument turns on: the swapped-out listing
+   * stays `hidden_over_cap`, so an upgrade restores it; and a pin that no
+   * longer names a publishable listing holds nothing.
+   */
+  describe('§1b\u2019s keep-visible override', () => {
+    it('ranks the pinned listing first, and the one it displaces stays the entitlement system\u2019s to restore', async () => {
+      const { user, profileId, listingIds } = await providerWithPublishedListings(2);
+      const [first, second] = listingIds;
+      if (first === undefined || second === undefined) throw new Error('fixture');
+      const now = new Date();
+
+      // The fixture publishes on premium so it can exceed the cap. Drop the
+      // subscription and the provider is on the free tier, which is where
+      // the override is the only way to choose.
+      await app.deps.prisma.providerSubscription.deleteMany({
+        where: { providerProfileId: profileId },
+      });
+
+      // Without a pin, \u00a71b\u2019s ranking decides: views break the all-zero tie.
+      await app.deps.prisma.listingEvent.createMany({
+        data: Array.from({ length: 3 }, () => ({ listingId: first, kind: 'view' as const })),
+      });
+      const ranked = await applyEntitlementVisibility(
+        app.deps.prisma,
+        bookings,
+        profileId,
+        FREE_TIER_ACTIVE_LISTING_CAP,
+        now,
+      );
+      expect(ranked.keptVisible).toEqual([first]);
+      expect(await visibilityOf(second)).toMatchObject({ visibility: 'hidden_over_cap' });
+
+      // The provider says otherwise, through the endpoint the dashboard calls.
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/providers/me/listings/${second}/keep-visible`,
+        headers: user.headers,
+      });
+      expect(res.statusCode).toBe(200);
+
+      expect(await visibilityOf(second)).toEqual({
+        visibility: 'active',
+        status: 'published',
+      });
+      // **The displaced listing is `hidden_over_cap`, not
+      // `hidden_by_provider`.** That is the whole point of the pin: the
+      // provider never writes a visibility, so "any confirmed payment
+      // restores everything" still holds for this listing.
+      expect(await visibilityOf(first)).toEqual({
+        visibility: 'hidden_over_cap',
+        status: 'published',
+      });
+
+      const up = await applyEntitlementVisibility(
+        app.deps.prisma,
+        bookings,
+        profileId,
+        PREMIUM_ACTIVE_LISTING_CAP,
+        now,
+      );
+      expect(up.restored).toEqual([first]);
+    });
+
+    it('holds nothing once the pinned listing is no longer publishable', async () => {
+      const { user, profileId, listingIds } = await providerWithPublishedListings(2);
+      const [first, second] = listingIds;
+      if (first === undefined || second === undefined) throw new Error('fixture');
+      const now = new Date();
+      await app.deps.prisma.providerSubscription.deleteMany({
+        where: { providerProfileId: profileId },
+      });
+      await app.deps.prisma.listingEvent.createMany({
+        data: Array.from({ length: 3 }, () => ({ listingId: first, kind: 'view' as const })),
+      });
+
+      const pinned = await app.inject({
+        method: 'POST',
+        url: `/v1/providers/me/listings/${second}/keep-visible`,
+        headers: user.headers,
+      });
+      expect(pinned.statusCode).toBe(200);
+
+      // The pinned listing goes away. The pin stays on the row — nothing
+      // cascades — and must simply stop counting, or it would keep the
+      // higher-performing listing hidden behind one that no longer exists.
+      const removed = await app.inject({
+        method: 'DELETE',
+        url: `/v1/providers/me/listings/${second}`,
+        headers: user.headers,
+      });
+      expect(removed.statusCode).toBe(200);
+
+      const after = await applyEntitlementVisibility(
+        app.deps.prisma,
+        bookings,
+        profileId,
+        FREE_TIER_ACTIVE_LISTING_CAP,
+        now,
+      );
+      expect(after.keptVisible).toEqual([first]);
+      expect(await visibilityOf(first)).toMatchObject({ visibility: 'active' });
+    });
+
+    it('refuses a draft, because a draft cannot hold the one live slot', async () => {
+      const user = await registerUser(app, { role: 'provider' });
+      const draft = await completeDraft(app, user.headers);
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/providers/me/listings/${draft.id}/keep-visible`,
+        headers: user.headers,
+      });
+      expect(res.statusCode).toBe(422);
+      expect(errorCode(res)).toBe('LISTING_NOT_PUBLISHED');
+    });
+
+    it('answers not-found for somebody else\u2019s listing, so ids cannot be probed', async () => {
+      const { listingIds } = await providerWithPublishedListings(1);
+      const [theirs] = listingIds;
+      if (theirs === undefined) throw new Error('fixture');
+      const stranger = await registerUser(app, { role: 'provider' });
+      await completeDraft(app, stranger.headers);
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/v1/providers/me/listings/${theirs}/keep-visible`,
+        headers: stranger.headers,
+      });
+      expect(res.statusCode).toBe(404);
+      expect(errorCode(res)).toBe('LISTING_NOT_FOUND');
+    });
   });
 });

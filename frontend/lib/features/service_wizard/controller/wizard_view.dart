@@ -1,6 +1,6 @@
 import 'package:raajjepro/core/domain/category.dart';
+import 'package:raajjepro/core/listings/service_listing.dart';
 import 'package:raajjepro/core/media/media_picker.dart';
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
 
 /// What the save pill says, top right of every step.
 enum SaveState {

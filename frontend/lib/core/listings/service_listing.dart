@@ -1,6 +1,19 @@
 import 'package:raajjepro/core/domain/category.dart';
 import 'package:raajjepro/core/domain/island.dart';
 
+/// 🔧 **Moved here from `features/service_wizard/data/` by Phase 10**, on its
+/// second consumer — `lib/README.md`'s rule, the same one that moved
+/// `CategoryApi` in Phase 9 and `SettingsRow` in Phase 6. §Phase 10's My
+/// Services dashboard reads the provider's own listings from the same
+/// endpoint the wizard writes them to, and no feature may import another.
+///
+/// Nothing about the wizard's reading of it changed in the move. What Phase 10
+/// **added** are the four fields a list of listings needs and a single one
+/// being edited does not: [ServiceListing.viewCount],
+/// [ServiceListing.bookingCount], [ServiceListing.updatedAt] and
+/// [ServiceListing.publishedAt] — all of them already on §Phase 8's wire, none
+/// of them previously parsed.
+
 /// The seven steps of the Create/Edit Service Wizard (§Phase 9).
 ///
 /// The names match §Phase 8's own ("Details, Location, Pricing, Media,
@@ -310,6 +323,10 @@ class ServiceListing {
     required this.visibility,
     required this.missingRequiredFields,
     required this.requiredFieldCount,
+    required this.viewCount,
+    required this.bookingCount,
+    required this.publishedAt,
+    required this.updatedAt,
   });
 
   factory ServiceListing.fromJson(Map<String, dynamic> json) => ServiceListing(
@@ -357,6 +374,10 @@ class ServiceListing {
     // Six (§0.2 item 4 added the cover image). Read from the wire so the
     // denominator is the server's, not a constant that can drift from it.
     requiredFieldCount: (json['requiredFieldCount'] as num?)?.toInt() ?? 6,
+    viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
+    bookingCount: (json['bookingCount'] as num?)?.toInt() ?? 0,
+    publishedAt: _dateOrNull(json['publishedAt']),
+    updatedAt: _dateOrNull(json['updatedAt']),
   );
 
   final String id;
@@ -417,7 +438,31 @@ class ServiceListing {
   final List<MissingField> missingRequiredFields;
   final int requiredFieldCount;
 
+  /// Rolled up from §Phase 8's event log by its own job, never incremented
+  /// per request — so two reads a second apart can report the same number
+  /// and that is correct rather than stale.
+  final int viewCount;
+  final int bookingCount;
+
+  /// Null on a listing that has never been published. §Phase 10's card shows
+  /// [updatedAt] rather than this one: "Updated 2 days ago" is the thing a
+  /// provider is looking for when they open the dashboard to find the draft
+  /// they were in the middle of.
+  final DateTime? publishedAt;
+  final DateTime? updatedAt;
+
   bool get isPublished => status == ListingStatus.published;
+
+  /// Live to customers: published **and** `active`. Any other visibility —
+  /// the provider's own pause, the entitlement cap, an admin's hand — means
+  /// the listing exists and nobody can find it (§1b, Round 17).
+  bool get isLive => isPublished && visibility == ListingVisibility.active;
+
+  /// Hidden by the entitlement system because the provider is over their
+  /// free-tier cap. Never something the provider did, and never something
+  /// they can undo by flipping the live toggle (§1b: `hidden_over_cap` is set
+  /// and cleared only by the entitlement system).
+  bool get isOverCap => visibility == ListingVisibility.hiddenOverCap;
 
   /// True where the cover exists **and its bytes actually arrived**. An
   /// abandoned upload is a missing cover, not a present one — which is the
@@ -507,9 +552,20 @@ class ServiceListing {
     visibility: visibility ?? this.visibility,
     missingRequiredFields: missingRequiredFields ?? this.missingRequiredFields,
     requiredFieldCount: requiredFieldCount,
+    viewCount: viewCount,
+    bookingCount: bookingCount,
+    publishedAt: publishedAt,
+    updatedAt: updatedAt,
   );
 
   static const _keep = Object();
+
+  /// A timestamp the server may legitimately not have — `publishedAt` on a
+  /// draft — or may add later. An unparseable one reads as absent rather than
+  /// throwing: the API is additive-only and an installed app must not crash
+  /// on a shape it does not recognise (`docs/api/versioning.md`).
+  static DateTime? _dateOrNull(Object? raw) =>
+      raw is String ? DateTime.tryParse(raw)?.toLocal() : null;
 
   static List<String> _strings(Object? raw) =>
       raw is List ? raw.whereType<String>().toList(growable: false) : const [];

@@ -165,6 +165,13 @@ Map<String, dynamic> listingJson({
   String status = 'draft',
   String visibility = 'active',
   List<Map<String, dynamic>> missingRequiredFields = allSixMissing,
+  // Rolled up from §Phase 8's event log, and what §Phase 10's stats row
+  // totals. Passed in rather than derived for the same reason as the rest of
+  // this fixture: they are the server's numbers.
+  int viewCount = 0,
+  int bookingCount = 0,
+  String? publishedAt,
+  String updatedAt = '2026-09-14T06:00:00.000Z',
 }) => {
   'id': id,
   'providerProfileId': 'provider-1',
@@ -205,14 +212,14 @@ Map<String, dynamic> listingJson({
   'callbackAvailable': callbackAvailable,
   'status': status,
   'visibility': visibility,
-  'publishedAt': null,
-  'firstPublishedAt': null,
+  'publishedAt': publishedAt,
+  'firstPublishedAt': publishedAt,
   'missingRequiredFields': missingRequiredFields,
   'requiredFieldCount': 6,
-  'viewCount': 0,
-  'bookingCount': 0,
+  'viewCount': viewCount,
+  'bookingCount': bookingCount,
   'createdAt': '2026-09-14T06:00:00.000Z',
-  'updatedAt': '2026-09-14T06:00:00.000Z',
+  'updatedAt': updatedAt,
 };
 
 /// A draft with all six required fields filled — what the review step calls

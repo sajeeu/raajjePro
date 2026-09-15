@@ -7,14 +7,15 @@ import 'package:raajjepro/core/categories/categories_controller.dart';
 import 'package:raajjepro/core/domain/category.dart';
 import 'package:raajjepro/core/domain/island.dart';
 import 'package:raajjepro/core/feedback/app_haptics.dart';
+import 'package:raajjepro/core/listings/listing_api.dart';
+import 'package:raajjepro/core/listings/listing_money.dart';
+import 'package:raajjepro/core/listings/service_listing.dart';
 import 'package:raajjepro/core/location/account_service_areas.dart';
 import 'package:raajjepro/core/media/media_picker.dart';
 import 'package:raajjepro/core/media/media_uploader.dart';
 import 'package:raajjepro/core/offline/offline_queue.dart';
 import 'package:raajjepro/features/service_wizard/controller/wizard_view.dart';
-import 'package:raajjepro/features/service_wizard/data/listing_api.dart';
 import 'package:raajjepro/features/service_wizard/data/publish_gate.dart';
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
 
 /// Up to 10 (§Phase 8's schema, and step 1's own helper line).
 const int maxListingTags = 10;
@@ -867,33 +868,4 @@ class ServiceWizardController extends AsyncNotifier<WizardView> {
   void dismissSheet() => _set(_view.copyWith(sheet: PublishSheet.none));
 
   void clearFormError() => _set(_view.copyWith(formError: null));
-}
-
-/// MVR as typed → integer laari (invariant 7: MVR 150 = 15000 laari). Money
-/// never touches a double on the way through.
-int? laariFromMvr(String value) {
-  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-  if (digits.isEmpty) return null;
-  final rufiyaa = int.tryParse(digits);
-  return rufiyaa == null ? null : rufiyaa * 100;
-}
-
-/// Whole rufiyaa for an input field. The wizard collects whole MVR, so this
-/// never renders a fraction.
-String mvrFromLaari(int? laari) => laari == null ? '' : '${laari ~/ 100}';
-
-/// "MVR 450/visit", "MVR 300–900/hr", "Price on request" — what the card will
-/// say, shown on step 3 so a provider sees it before a customer does.
-String customerPricePreview(ServiceListing listing) {
-  final model = listing.pricingModel;
-  if (model == PricingModel.quote) return 'Price on request';
-  final suffix = listing.priceUnit?.suffix ?? '';
-  if (model == PricingModel.range) {
-    final from = listing.priceMinLaari;
-    final to = listing.priceMaxLaari;
-    if (from == null || to == null) return 'MVR —$suffix';
-    return 'MVR ${mvrFromLaari(from)}–${mvrFromLaari(to)}$suffix';
-  }
-  final price = listing.priceLaari;
-  return price == null ? 'MVR —$suffix' : 'MVR ${mvrFromLaari(price)}$suffix';
 }

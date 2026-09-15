@@ -9,6 +9,7 @@ import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/device_name.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/crash/crash_reporter.dart';
+import 'package:raajjepro/features/my_services/presentation/my_services_screen.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
@@ -241,19 +242,39 @@ void main() {
   });
 
   group('a provider who already completed onboarding never sees it again', () {
+    /// 🔧 **Updated by §Phase 10, 2026-09-15.** This asserted the
+    /// `UnbuiltScreen` that owed My Services, and the screen now exists — the
+    /// tripwire goes with the wiring, which is what those placeholders are
+    /// for. It also asserted that the switch *did not read the provider
+    /// profile*, which was a claim about the routing decision rather than
+    /// about the destination: the dashboard reads `/v1/providers/me` itself,
+    /// for §1e's badge. That claim still has a home — `RoleSwitch
+    /// .destinationFor` is a pure function of `onboardingComplete` and
+    /// `phase6_done_when_test.dart` asserts it directly.
     testWidgets('goes straight to the dashboard', (tester) async {
+      api.on('GET', '/v1/providers/me', (_) => profileJson());
+      api.on(
+        'GET',
+        '/v1/providers/me/subscription',
+        (_) => {
+          'tier': 'free',
+          'status': 'none',
+          'entitlements': {'activeListingCap': 1},
+        },
+      );
+      api.on(
+        'GET',
+        '/v1/providers/me/listings?limit=50',
+        (_) => {'_list': <Object>[], '_meta': <String, dynamic>{}},
+      );
+      api.on('GET', '/v1/categories', (_) => {'_list': sampleCategories()});
+
       await bootToProfile(tester, isProvider: true, onboardingComplete: true);
       await switchToProviding(tester);
 
-      final dashboard = tester.widget<UnbuiltScreen>(
-        find.byType(UnbuiltScreen),
-      );
-      expect(dashboard.title, 'My Services');
-      expect(dashboard.owedBy, 'Phase 10');
+      expect(find.byType(MyServicesScreen), findsOneWidget);
+      expect(find.byType(UnbuiltScreen), findsNothing);
       expect(find.byType(BecomeProviderScreen), findsNothing);
-      // And it did not even read the provider profile to find that out — the
-      // one `profile-summary` call already carried the answer.
-      expect(api.calls.map((c) => c.path), isNot(contains('/v1/providers/me')));
     });
 
     testWidgets('but one who stopped mid-flow resumes where they left off', (

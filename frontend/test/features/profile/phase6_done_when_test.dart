@@ -11,6 +11,7 @@ import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/crash/crash_reporter.dart';
 import 'package:raajjepro/features/account/presentation/account_settings_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
+import 'package:raajjepro/features/my_services/presentation/my_services_screen.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
@@ -233,11 +234,31 @@ void main() {
     testWidgets('a returning provider reaches the dashboard directly', (
       tester,
     ) async {
+      // 🔧 **Updated by §Phase 10, 2026-09-15**: this asserted the
+      // `UnbuiltScreen` that owed My Services, and the screen now exists. The
+      // dashboard's own four reads are scripted because reaching it is the
+      // assertion — what it renders is §Phase 10's test's business.
+      api.on('GET', '/v1/providers/me', (_) => {'verificationTier': 'none'});
+      api.on(
+        'GET',
+        '/v1/providers/me/subscription',
+        (_) => {
+          'tier': 'free',
+          'status': 'none',
+          'entitlements': {'activeListingCap': 1},
+        },
+      );
+      api.on(
+        'GET',
+        '/v1/providers/me/listings?limit=50',
+        (_) => {'_list': <Object>[], '_meta': <String, dynamic>{}},
+      );
+      api.on('GET', '/v1/categories', (_) => {'_list': <Object>[]});
+
       await bootToProfile(tester, isProvider: true, onboardingComplete: true);
       await switchToProviding(tester);
-      final screen = tester.widget<UnbuiltScreen>(find.byType(UnbuiltScreen));
-      expect(screen.title, 'My Services');
-      expect(screen.owedBy, 'Phase 10');
+      expect(find.byType(MyServicesScreen), findsOneWidget);
+      expect(find.byType(UnbuiltScreen), findsNothing);
       // §Phase 6a's Done-when: a provider who has completed it never sees the
       // flow again.
       expect(find.byType(BecomeProviderScreen), findsNothing);

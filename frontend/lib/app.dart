@@ -27,8 +27,8 @@ import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.dart';
+import 'package:raajjepro/features/my_services/presentation/my_services_screen.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
-import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
 import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
@@ -125,8 +125,11 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // Phase 6a. The onboarding flow itself — three steps behind one
         // route, resuming from whichever the provider left off on.
         BecomeProviderScreen.routeName: (_) => const BecomeProviderScreen(),
-        RoleSwitch.dashboardRoute: (_) =>
-            const UnbuiltScreen(title: 'My Services', owedBy: 'Phase 10'),
+        // Phase 10. What §Phase 6's role switcher has been pointing at
+        // since it was built, and what closes ledger row **P6-1**: a
+        // provider who completed onboarding switches straight into their
+        // own workspace, one action from Profile.
+        MyServicesScreen.routeName: (_) => const MyServicesScreen(),
         AppRoutes.providerBilling: (_) =>
             const UnbuiltScreen(title: 'Billing', owedBy: 'Phase 10a'),
 

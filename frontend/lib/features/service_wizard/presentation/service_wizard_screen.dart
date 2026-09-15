@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:raajjepro/core/api/api_client.dart';
+import 'package:raajjepro/core/listings/service_listing.dart';
 import 'package:raajjepro/core/offline/offline_queue.dart';
 import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
 import 'package:raajjepro/features/service_wizard/controller/wizard_view.dart';
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
 import 'package:raajjepro/features/service_wizard/presentation/steps/availability_step.dart';
 import 'package:raajjepro/features/service_wizard/presentation/steps/details_step.dart';
 import 'package:raajjepro/features/service_wizard/presentation/steps/extras_step.dart';

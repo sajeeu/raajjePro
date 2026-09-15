@@ -10,6 +10,33 @@ String relativeAge(DateTime when, DateTime now) {
   return d.inDays == 1 ? '1 day ago' : '${d.inDays} days ago';
 }
 
+/// "Just now" · "12 minutes ago" · "3 hours ago" · "2 days ago" ·
+/// "3 weeks ago" · `12 Aug 2026` — what §Phase 10's service card prints after
+/// "Updated".
+///
+/// Deliberately not [relativeAge], whose first rung is "active now": that
+/// reads correctly about a *session* and wrongly about an *edit*. Past a
+/// month it falls back to the date, because "9 weeks ago" is a number a
+/// reader has to convert and a date is not.
+String relativeEdit(DateTime when, DateTime now) {
+  final d = now.difference(when);
+  if (d.isNegative || d.inMinutes < 1) return 'Just now';
+  if (d.inHours < 1) {
+    return d.inMinutes == 1 ? '1 minute ago' : '${d.inMinutes} minutes ago';
+  }
+  if (d.inDays < 1) {
+    return d.inHours == 1 ? '1 hour ago' : '${d.inHours} hours ago';
+  }
+  if (d.inDays < 7) {
+    return d.inDays == 1 ? '1 day ago' : '${d.inDays} days ago';
+  }
+  if (d.inDays < 30) {
+    final weeks = d.inDays ~/ 7;
+    return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
+  }
+  return shortDate(when);
+}
+
 /// `Jan 2026` — the Profile hero's "Member since" line (plan §Phase 6).
 /// Month and year only: the exact day a customer signed up is not something
 /// the screen has any reason to state.

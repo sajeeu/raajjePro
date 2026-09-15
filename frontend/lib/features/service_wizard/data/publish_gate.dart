@@ -1,4 +1,4 @@
-import 'package:raajjepro/features/service_wizard/data/service_listing.dart';
+import 'package:raajjepro/core/listings/service_listing.dart';
 
 /// The six required fields, computed locally so the header's counter is true
 /// the instant a field changes — including while a save is still queued

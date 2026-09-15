@@ -440,6 +440,24 @@ model ProviderProfile {
   /// provider — `updateOwnProfile` cannot write it.
   maldivianOwned Boolean? @map("maldivian_owned")
 
+  /// §1b's "**the provider can override the choice from the dashboard**"
+  /// (§Phase 10), and nothing more than that: the listing this provider would
+  /// rather keep visible when their entitlement cap cannot hold all of them.
+  ///
+  /// **A ranking input, never a visibility value.** Round 17 reserves
+  /// `hidden_over_cap` to the entitlement system and `hidden_by_provider` to
+  /// the provider, so the override cannot be expressed by letting the provider
+  /// write a visibility — that is the conflation the split exists to prevent,
+  /// and it would break "any confirmed payment restores everything" for the
+  /// listing swapped out. `applyEntitlementVisibility` reads this and ranks
+  /// the pinned listing first; it remains the only writer of
+  /// `hidden_over_cap`.
+  ///
+  /// Deliberately **not** a relation: a pin on a listing that is no longer
+  /// publishable is ignored rather than enforced, so a deleted or unpublished
+  /// listing can never hold a slot open, and nothing has to cascade.
+  keepVisibleListingId String? @map("keep_visible_listing_id") @db.Uuid
+
   /// §1a: suspension is an INPUT to derived visibility, not a second filter
   /// reimplemented per query — `findVisibleProviders` reads it so one change
   /// covers search, Home and the public profile. Phase 10b owns the admin
