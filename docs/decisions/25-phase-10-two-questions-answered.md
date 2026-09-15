@@ -55,9 +55,11 @@ writer of `hidden_over_cap`. Two things to get right:
 
 **Answer: drop it from the menu.**
 
-Nothing is owed. The plan specifies no duplicate action anywhere — the three
-occurrences of the word are a duplicated FAQ accordion to delete (§Phase 9), a
-payment-fraud signal (§Phase 10a) and alert de-duplication (§Phase 21).
+Nothing is owed. The plan specifies no duplicate action anywhere — its four
+occurrences of the word cover three concepts, none of them a listing: a
+duplicated FAQ accordion to delete (§Phase 9), a payment-fraud signal
+(§Phase 10a), and alert de-duplication (§Phase 21), which appears twice
+because §0.0's Round 8 corrections summary restates it.
 §Phase 10's bullet asks for "service cards with context menu" and enumerates
 no actions, and its Done-when — "every context-menu action performs a real
 mutation" — constrains whichever actions exist rather than requiring this one.
