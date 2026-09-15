@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/shared.dart';
 
+import '../helpers/a11y.dart';
+
 /// The product rules the shared widgets carry (root `CLAUDE.md` invariants,
 /// `frontend/CLAUDE.md` → Design System). Each test asserts the rule, not
 /// the implementation — a wrong implementation must fail it.
@@ -231,6 +233,93 @@ void main() {
             'and lower this number when the artboard is corrected.\n'
             '${hits.join('\n')}',
       );
+    });
+  });
+
+  group('a tappable card swallows the controls inside it', () {
+    /// Found in §Phase 10's service card, 2026-09-15, and worth pinning as an
+    /// executable fact rather than a paragraph: making the whole card tappable
+    /// erased its overflow menu, its live toggle and its Finish & publish
+    /// button from the semantics tree at once. A screen-reader user had a
+    /// summary and no controls. Nothing failed — the card was fixed only
+    /// because a test finder could not locate the menu.
+    ///
+    /// `Pressable`'s `excludeSemantics: true` is right: a card should announce
+    /// as one thing, not as five nodes. It is simply total, and the type
+    /// system cannot see the difference between decoration and a control.
+    testWidgets(
+      'the mechanism — an inner control is erased, not merely quiet',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          host(
+            Pressable(
+              onTap: () {},
+              semanticLabel: 'the card',
+              builder: (context, state) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('title'),
+                  Pressable(
+                    onTap: () {},
+                    semanticLabel: 'the inner menu',
+                    builder: (context, s) => const Icon(Icons.more_horiz),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        expect(find.bySemanticsLabel('the card'), findsOneWidget);
+        // Not "unlabelled", not "nested" — absent. There is nothing for a
+        // screen reader to reach.
+        expect(find.bySemanticsLabel('the inner menu'), findsNothing);
+        handle.dispose();
+      },
+    );
+
+    testWidgets('the guard catches it, and names the control it lost', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          Pressable(
+            onTap: () {},
+            semanticLabel: 'the card',
+            builder: (context, state) => Pressable(
+              onTap: () {},
+              semanticLabel: 'the inner menu',
+              builder: (context, s) => const Icon(Icons.more_horiz),
+            ),
+          ),
+        ),
+      );
+      expect(
+        () => expectNoSwallowedControls(tester),
+        throwsA(isA<TestFailure>()),
+      );
+    });
+
+    testWidgets('and passes a card that is a container, which is the fix', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('title'),
+              Pressable(
+                onTap: () {},
+                semanticLabel: 'the inner menu',
+                builder: (context, s) => const Icon(Icons.more_horiz),
+              ),
+            ],
+          ),
+        ),
+      );
+      expectNoSwallowedControls(tester);
     });
   });
 

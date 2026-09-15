@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/features/my_services/presentation/widgets/service_card.dart';
 import 'package:raajjepro/shared/shared.dart';
 
+import '../../helpers/a11y.dart';
 import '../../helpers/listings.dart';
 import '../../helpers/pump.dart';
 import 'harness.dart';
@@ -125,6 +126,19 @@ void main() {
   });
 
   group('the card', () {
+    testWidgets('is a container, so the controls on it still exist', (
+      tester,
+    ) async {
+      // The regression this screen was built through: a tappable card excludes
+      // its descendants from the semantics tree, which erased the overflow
+      // menu, the live toggle and Finish & publish in one go. `AppCard` with
+      // an `onTap` here would put them back out of reach.
+      h.script(listings: [livePublished()], categories: sampleCategories());
+      await h.pump(tester);
+
+      expectNoSwallowedControls(tester);
+    });
+
     testWidgets('prints the category, the status and the price a customer '
         'will read', (tester) async {
       h.script(listings: [livePublished()], categories: sampleCategories());

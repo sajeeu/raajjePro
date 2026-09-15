@@ -10,6 +10,7 @@ import 'package:raajjepro/features/profile/presentation/widgets/profile_hero.dar
 import 'package:raajjepro/features/profile/presentation/widgets/profile_wave_band.dart';
 import 'package:raajjepro/shared/shared.dart';
 
+import '../../helpers/a11y.dart';
 import '../../helpers/fake_api.dart';
 import '../../helpers/pump.dart';
 import 'helpers.dart';
@@ -371,6 +372,17 @@ void main() {
   });
 
   group('accessibility and geometry', () {
+    testWidgets('no tappable card has swallowed a control inside it', (
+      tester,
+    ) async {
+      // The role-switch row is a tappable `AppCard`, so this screen is one of
+      // the two that could lose a control the way §Phase 10's service card
+      // did. Its children are decoration, and this is what keeps them that
+      // way.
+      await pump(tester);
+      expectNoSwallowedControls(tester);
+    });
+
     testWidgets('nothing overflows or clips at 200% text', (tester) async {
       // The 2 × 2 tile grid exists because a four-across row does not survive
       // this (Round 48 §2), and the hero is the tallest fixed block on the
