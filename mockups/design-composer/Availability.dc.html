@@ -84,22 +84,9 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
         </div>
       </div>
 
-      <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#FEF3DC;border:1px solid #F3E2B8;border-radius:18px;padding:13px 15px;display:flex;flex-direction:column;gap:10px;animation:fadeIn var(--m-page) var(--e-out) both">
-          <div style="display:flex;align-items:flex-start;gap:9px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.4v.1"></path></svg>
-            <span style="font-size:12.5px;line-height:1.5;color:#8A5A08;text-wrap:pretty"><b>Preview updated — not saved yet.</b> {{ deltaLine }}</span>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button onClick="{{ askSave }}" style="height:38px;padding:0 16px;border:none;border-radius:999px;background:#0F1B2D;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">Save changes</button>
-            <button onClick="{{ discard }}" style="height:38px;padding:0 14px;border:1.5px solid #E3D3A8;border-radius:999px;background:transparent;color:#8A5A08;font-size:12.5px;font-weight:700;cursor:pointer">Discard</button>
-          </div>
-        </div>
-      </sc-if>
-
       <div style="background:#fff;border:1px solid #E9EFF7;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:13px;box-shadow:0 1px 3px rgba(15,27,45,.04)">
         <div style="display:flex;flex-direction:column;gap:3px">
-          <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">{{ previewTitle }}</span>
+          <span style="font-size:15px;font-weight:800;letter-spacing:-.01em;color:#0F1B2D">Your times</span>
           <span style="font-size:12px;line-height:1.45;color:#5B6B84;text-wrap:pretty">Tap an open time to block it. Reserved times belong to bookings and can't be changed.</span>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -186,10 +173,10 @@ button,select{font-family:inherit}button:focus,select:focus{outline:none}
           </select>
         </label>
       </div>
-      <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">This updates the preview first — nothing changes for customers until you save.</span>
+      <span style="font-size:11.5px;line-height:1.5;color:#5B6B84;text-wrap:pretty">You'll confirm before anything changes. Times already booked are never touched.</span>
       <div style="display:flex;gap:10px">
         <button onClick="{{ closeEditor }}" style="flex:1;height:48px;border:1.5px solid #E3EAF3;border-radius:14px;background:#fff;color:#41526B;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>
-        <button onClick="{{ applyRule }}" style="flex:1;height:48px;border:none;border-radius:14px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Update preview</button>
+        <button onClick="{{ applyRule }}" style="flex:1;height:48px;border:none;border-radius:14px;background:#2563EB;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Save rule</button>
       </div>
     </div>
   </sc-if>
@@ -257,7 +244,7 @@ class Component extends DCLogic {
   DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   state = {
     rules: [ { id:1, days:[1,2,3,4], from:9, to:17, dur:2 }, { id:2, days:[6], from:9, to:13, dur:2 } ],
-    draftRules: null,
+    pending: null,
     exceptions: [
       { id:'ram', name:'Ramadan hours', detail:'10:00–15:00 only · 18 Feb – 19 Mar', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z' }
     ],
@@ -297,11 +284,11 @@ class Component extends DCLogic {
   renderVals() {
     const p = this.props, s = this.state;
     const state = p.state ?? 'populated';
-    const effRules = s.draftRules ?? s.rules;
-    const dirty = !!s.draftRules;
-    const savedCount = this.countTimes(s.rules), draftCount = this.countTimes(effRules);
-    const added = Math.max(0, draftCount - savedCount), removed = Math.max(0, savedCount - draftCount);
-    const deltaLine = dirty ? ('in the next 5 days alone: ' + (added ? added + ' times added' : '') + (added && removed ? ', ' : '') + (removed ? removed + ' times removed' : '') + (!added && !removed ? 'same times, new pattern' : '') + '. Booked times stay.') : '';
+    const effRules = s.rules;
+    const pend = s.pending;
+    const savedCount = this.countTimes(s.rules), pendCount = pend ? this.countTimes(pend.rules) : savedCount;
+    const added = Math.max(0, pendCount - savedCount), removed = Math.max(0, savedCount - pendCount);
+    const deltaLine = pend ? ('in the next 5 days alone: ' + (added ? added + ' times added' : '') + (added && removed ? ', ' : '') + (removed ? removed + ' times removed' : '') + (!added && !removed ? 'same times, new pattern' : '') + '. Booked times stay.') : '';
     const days = this.genTimes(effRules).map((d, i) => {
       const exc = s.exceptions.find(e => e.covers && e.covers.includes(i)) || this.AWAY.find(a => a.covers.includes(i));
       return {
@@ -337,11 +324,10 @@ class Component extends DCLogic {
       addFirstRule: () => this.toastMsg('Switch the state tweak to “populated” to explore rules'),
       rules: effRules.map(r => ({ ...this.ruleLabel(r),
         edit: () => openEditor(r),
-        remove: () => { this.setState({ draftRules: effRules.filter(x => x.id !== r.id) }); this.toastMsg('Rule removed in preview — save to apply'); }
+        remove: () => this.setState({ pending: { rules: effRules.filter(x => x.id !== r.id), editor: null } })
       })),
       addRule: () => openEditor(null),
-      dirty, deltaLine,
-      previewTitle: dirty ? 'Preview — what your new rules produce' : 'Bookable times these rules produce',
+      deltaLine,
       days, horizonDate: 'Mon 26 Oct',
       exceptions: s.exceptions.map(e => ({ ...e, remove: () => { this.setState(st => ({ exceptions: st.exceptions.filter(x => x.id !== e.id) })); this.toastMsg('Exception removed — those times reopen (booked times were never touched)'); } })),
       noExceptions: s.exceptions.length === 0,
@@ -351,7 +337,7 @@ class Component extends DCLogic {
         { name:'Shorter hours', detail:'Keep only part of the day, for a season', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z', tap: () => { this.setState(st => ({ excOpen:false, exceptions: [...st.exceptions, { id:'s'+Date.now(), name:'Shorter hours', detail:'10:00–15:00 only · 1 – 30 Nov', d:'M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z' }] })); this.toastMsg('Exception added — mornings and evenings removed for Nov'); } }
       ],
       editorOpen: !!ed,
-      editorTitle: ed && s.rules.concat(s.draftRules || []).some(r => r.id === ed.id) ? 'Edit weekly rule' : 'New weekly rule',
+      editorTitle: ed && s.rules.some(r => r.id === ed.id) ? 'Edit weekly rule' : 'New weekly rule',
       closeEditor: () => this._close({ editor: null }),
       dayBtns: this.DAY_NAMES.map((n, i) => {
         const on = ed ? ed.days.includes(i) : false;
@@ -365,14 +351,14 @@ class Component extends DCLogic {
       setDur: (e) => this.setState(st => ({ editor: { ...st.editor, dur: parseFloat(e.target.value) } })),
       applyRule: () => {
         if (!ed || ed.days.length === 0 || ed.to <= ed.from) { this.toastMsg('Pick at least one day, and an end after the start'); return; }
-        const cur = s.draftRules ?? s.rules;
+        const cur = s.rules;
         const exists = cur.some(r => r.id === ed.id);
-        this.setState({ draftRules: exists ? cur.map(r => r.id === ed.id ? ed : r) : [...cur, ed], editor: null });
+        // Save goes straight to the confirmation sheet; the grid shows what the server saved.
+        this.setState({ pending: { rules: exists ? cur.map(r => r.id === ed.id ? ed : r) : [...cur, ed], editor: ed }, editor: null });
       },
-      askSave: () => this.setState({ saveOpen: true }), closeSave: () => this._close({ saveOpen: false }),
-      saveOpen: s.saveOpen,
-      doSave: () => { this._close(st => ({ rules: st.draftRules, draftRules: null, saveOpen: false })); this.toastMsg('Saved — booked times untouched, future times updated'); },
-      discard: () => { this.setState({ draftRules: null }); this.toastMsg('Changes discarded'); },
+      closeSave: () => { const back = pend && pend.editor; this._close({ pending: null, editor: back || null }); },
+      saveOpen: !!pend,
+      doSave: () => { this._close(st => ({ rules: st.pending ? st.pending.rules : st.rules, pending: null })); this.toastMsg('Saved — booked times untouched, future times updated'); },
       resOpen: !!s.resFor,
       resWhen: s.resFor ? s.resFor.when : '',
       resDetail: s.resFor ? ('Booked by ' + s.resFor.who + ' · ' + s.resFor.listing + ' · booking ' + s.resFor.ref + (s.resFor.other ? ' — a booking on another of your listings.' : '.')) : '',

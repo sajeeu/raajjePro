@@ -31,22 +31,27 @@ class AvailabilityArgs {
 /// `Availability.dc.html` — a listing's weekly hours, the grid they produce,
 /// and the modified-hours exceptions that bend them.
 ///
-/// ## One departure from the artboard, deliberately
+/// ## A rule saves in one step, and the artboard now agrees
 ///
-/// The artboard edits a rule into a **local preview** ("Preview updated — not
-/// saved yet") and commits it with a second action. Building that means
-/// expanding rules into times in Dart — a second implementation of the
+/// This began as a departure. The artboard edited a rule into a **local
+/// preview** — "Preview updated — not saved yet", with Save changes and
+/// Discard beside it — and committed it with a second action. Building that
+/// means expanding rules into times in Dart: a second implementation of the
 /// server's `expandSlots`, which also folds in exceptions, time off, the lead
-/// boundary and what is already reserved. Two implementations of that will
-/// disagree, and the one on screen would be the one a provider trusts.
+/// boundary and what is already reserved on *other* listings. Two
+/// implementations of that will disagree, and the one on screen is the one a
+/// provider would trust.
 ///
 /// So a rule saves in one step, behind the artboard's own confirmation and
 /// its exact reassurance — *"Times someone has already booked stay exactly as
 /// they are. Only future, unbooked times change."* — and the grid then shows
-/// what the server actually did. What is lost is seeing the new grid before
-/// committing; what is kept is that the grid is never a guess. Flagged in
-/// `docs/decisions/24-phase-9a-availability-and-reservations.md` and carried
-/// back to the design in `docs/design/sessions/`.
+/// what the server actually did. 🔧 **Round 57 took the preview out of the
+/// artboard** (imported 2026-09-15), so the source and this screen now say
+/// the same thing and the grid is titled "Your times" in both. If the
+/// interaction is ever wanted back, the way to build it is a server-side dry
+/// run — one implementation, asked "what would these rules produce?" — which
+/// Round 57 names as the open option. Recorded in
+/// `docs/decisions/24-phase-9a-availability-and-reservations.md`.
 ///
 /// ## Time away is not edited here
 ///
@@ -167,7 +172,7 @@ class _AvailabilityBody extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
         FadeUp(
           index: 3,
-          child: _GridPreview(slots: state.slots, notifier: notifier),
+          child: _PublishedGrid(slots: state.slots, notifier: notifier),
         ),
         const SizedBox(height: AppSpacing.lg),
         FadeUp(
@@ -482,8 +487,8 @@ class _ExceptionRow extends StatelessWidget {
 }
 
 /// The first five days of the generated grid, which is what the artboard shows.
-class _GridPreview extends StatelessWidget {
-  const _GridPreview({required this.slots, required this.notifier});
+class _PublishedGrid extends StatelessWidget {
+  const _PublishedGrid({required this.slots, required this.notifier});
 
   static const _daysShown = 5;
 
