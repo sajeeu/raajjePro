@@ -594,6 +594,36 @@ void main() {
   });
 
   group('design rules', () {
+    /// 🔧 Revision 5.32 gave confirmation a second path: a full bank-statement
+    /// match confirms with **no admin involved**. Two sentences on this screen
+    /// still named one as the actor — the reference code was "how an admin
+    /// matches your transfer", and the receipt "goes only to the admin who
+    /// confirms it". Both described the slow path as if it were the only one,
+    /// and the second named a person who, on the common path, never opens the
+    /// photo at all.
+    ///
+    /// Naming an admin is still right where a human really is the actor — a
+    /// rejection reason, an appeal — and those live on the rejected state,
+    /// not here.
+    testWidgets('nothing before submission names an admin as the confirmer', (
+      tester,
+    ) async {
+      scriptOpenIntent();
+      await pumpPay(tester);
+
+      final rendered = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .join(' ');
+
+      expect(rendered, contains('what matches your transfer to your account'));
+      expect(rendered, contains('only ever seen by an admin reviewing'));
+      // The two phrasings that read as "a person is doing this", which is
+      // no longer true of the path most payments take.
+      expect(rendered, isNot(contains('how an admin matches')));
+      expect(rendered, isNot(contains('the admin who confirms')));
+    });
+
     testWidgets('no control is swallowed by a tappable wrapper', (
       tester,
     ) async {

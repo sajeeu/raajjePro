@@ -252,8 +252,12 @@ class _FormView extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'This code is how an admin matches your transfer to your '
-                'account. Without it, confirmation takes longer.',
+                // 🔧 Actor-free since revision 5.32: the reference code is
+                // what the *statement matcher* keys on, and a full match now
+                // confirms with no admin involved at all. Naming one here
+                // described the slow path as if it were the only path.
+                'This code is what matches your transfer to your account. '
+                'Without it, confirmation takes longer.',
                 style: type.caption.copyWith(color: colors.textSecondary),
               ),
             ],
@@ -284,8 +288,12 @@ class _FormView extends ConsumerWidget {
                 _ProofRow(proof: proof, onRemove: notifier.removeProof),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Uploaded, never linked — the photo goes only to the admin who '
-                'confirms it.',
+                // 🔧 Revision 5.32: where the bank statement matches, nobody
+                // opens the receipt at all, so "the admin who confirms it"
+                // named a person who often does not exist. The privacy claim
+                // is the part that matters and it is unchanged.
+                'Uploaded, never linked — the photo is only ever seen by an '
+                'admin reviewing your payment.',
                 style: type.caption.copyWith(color: colors.textSecondary),
               ),
             ],
