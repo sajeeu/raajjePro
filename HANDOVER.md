@@ -146,6 +146,24 @@ rest of the index alone. Check with `git show --stat HEAD` before pushing — if
 a file you did not touch is in there, you have just committed somebody's
 work-in-progress.
 
+🔧 **`git add <paths>` is not the same rule, and it is how this was broken a
+second time (2026-09-15).** Staging your own paths looks like committing by
+pathspec and is not: the `git commit` that follows takes **the whole index**,
+including whatever the other session staged before you started. It swept up two
+of their renames, which moved two files out from under eleven committed imports
+and left `main` unable to compile. The `--` form is the one that matters —
+`git commit` with paths uses `--only` semantics and never reads the rest of the
+index. If it has already happened and you have not pushed:
+
+```bash
+git log -1 --format=%B > /tmp/msg          # keep your message
+git reset --soft HEAD~1                    # index goes back exactly as it was
+git commit -F /tmp/msg -- path/one path/two
+```
+
+The other session's staging survives untouched, because a soft reset restores
+the index rather than rebuilding it.
+
 **Read `git status` before you stage, not after.** The other session may have
 landed three commits since your last look. `git pull --ff-only origin main`
 first, and `git fetch` before every push.
