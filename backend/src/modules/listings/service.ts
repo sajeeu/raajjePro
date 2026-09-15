@@ -174,10 +174,17 @@ export class ListingService {
     const category = categoryId === null ? null : await this.requireCategory(categoryId);
 
     const data: Prisma.ListingUncheckedUpdateInput = {};
+    // The loop writes through a plain record rather than indexing the generated
+    // update input by a runtime key. Asserting a value into
+    // `keyof Prisma.ListingUncheckedUpdateInput` makes type-aware lint weigh the
+    // assertion against the union of every field's update-operation type, which
+    // grew with §Phase 9a's models and took `eslint` past 4 GB on this one file.
+    // `data` keeps Prisma's type, so the call site below is still checked.
+    const patch: Record<string, unknown> = data;
     for (const [key, value] of Object.entries(body)) {
       if (value === undefined) continue;
       if (key === 'serviceAreaIslandIds' || key === 'galleryMediaIds') continue;
-      data[key as keyof Prisma.ListingUncheckedUpdateInput] = value as never;
+      patch[key] = value;
     }
 
     // Changing the category re-defaults the booking mode, unless the same

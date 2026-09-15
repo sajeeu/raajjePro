@@ -60,6 +60,24 @@ fi
 
 if [[ -f frontend/pubspec.yaml ]]; then
   echo "Frontend"
+  # Flutter is not on the PATH every shell inherits — it lives at ~/flutter on
+  # this machine and is not linked into /usr/local/bin. Without this, both
+  # frontend steps fail with "flutter: command not found" and the gate reports
+  # a red frontend on a tree whose tests all pass. Same resolution as
+  # .husky/pre-commit, and a no-op where flutter is already on PATH.
+  if ! command -v flutter >/dev/null 2>&1; then
+    for candidate in "$HOME/flutter/bin" "${FLUTTER_ROOT:-/nonexistent}/bin"; do
+      if [[ -x "$candidate/flutter" ]]; then
+        PATH="$candidate:$PATH"
+        export PATH
+        break
+      fi
+    done
+  fi
+  if ! command -v flutter >/dev/null 2>&1; then
+    echo "  Flutter is not on PATH. It is installed at ~/flutter here; add"
+    echo "  ~/flutter/bin to PATH, or set FLUTTER_ROOT. See HANDOVER.md."
+  fi
   # Flutter resolves the project from the working directory, so run inside it.
   run "analyze" bash -c 'cd frontend && flutter analyze --no-pub'
   run "tests"   bash -c 'cd frontend && flutter test'
