@@ -34,6 +34,30 @@ void main() {
     routes: routes,
   );
 
+  group('the page enters as a run, the way Explore does', () {
+    /// Reported 2026-09-15: "I don't see that in the profile page." The
+    /// screen *had* an entrance — it handed `FadeUpColumn` its two
+    /// **containers**, the hero and the padded body, so the stagger was one
+    /// step and the whole page arrived as a block. The mechanism was present
+    /// and the effect was not, which is why this asserts the run and not the
+    /// presence of a widget.
+    testWidgets('every row takes its own step, gaps take none', (tester) async {
+      await pump(tester);
+
+      final steps = tester
+          .widgetList<FadeUp>(find.byType(FadeUp))
+          .map((f) => f.index)
+          .toList();
+
+      // The hero, the section heading, the booking tiles, five settings rows,
+      // the role switch and sign out.
+      expect(steps.length, greaterThanOrEqualTo(9));
+      // A run, not a block: consecutive from the hero, each row one behind
+      // the last, with no step spent on a `SizedBox`.
+      expect(steps, List.generate(steps.length, (i) => i));
+    });
+  });
+
   group('the four states', () {
     testWidgets('populated: the hero, the tiles, the rows and the switcher', (
       tester,

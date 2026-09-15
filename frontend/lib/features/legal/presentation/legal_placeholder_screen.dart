@@ -23,7 +23,9 @@ class LegalPlaceholderScreen extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: AppSpacing.screenInsets,
-              children: [
+              // The pending-review notice first, then each section heading and
+              // its paragraph, one step behind the last.
+              children: fadeUpAll([
                 Container(
                   padding: const EdgeInsetsDirectional.all(AppSpacing.md),
                   decoration: BoxDecoration(
@@ -52,7 +54,7 @@ class LegalPlaceholderScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                 ],
-              ],
+              ]),
             ),
           ),
         ],

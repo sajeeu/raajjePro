@@ -39,7 +39,11 @@ class IntroStep extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.xxl + AppSpacing.xxs,
       ),
-      child: Column(
+      // The step enters the way `Explore` does — hero, heading, the mechanics
+      // card, then whatever follows, each a step behind the last. The
+      // `AnimatedSwitcher` above crossfades between steps; this is what
+      // happens inside the one arriving.
+      child: FadeUpColumn(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _Hero(),

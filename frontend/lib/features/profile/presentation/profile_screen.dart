@@ -118,13 +118,22 @@ class _ProfileBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final type = context.type;
 
+    // One entrance down the whole page, the way `Explore`'s grid enters: the
+    // hero, then the section heading, the booking tiles, each settings row,
+    // the role switch and sign out — ten steps, capped at six. The column
+    // used to hand `FadeUpColumn` its two *containers*, which is a stagger of
+    // one step and reads as a single block arriving; the hero is outside the
+    // padded body, so the body continues the run at `startIndex: 1` rather
+    // than starting a second one.
     return SingleChildScrollView(
-      child: FadeUpColumn(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProfileHero(
-            fullName: summary.fullName,
-            memberSince: summary.memberSince,
+          FadeUp(
+            child: ProfileHero(
+              fullName: summary.fullName,
+              memberSince: summary.memberSince,
+            ),
           ),
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(
@@ -133,7 +142,8 @@ class _ProfileBody extends ConsumerWidget {
               AppSpacing.xl,
               AppSpacing.xxl2,
             ),
-            child: Column(
+            child: FadeUpColumn(
+              startIndex: 1,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(

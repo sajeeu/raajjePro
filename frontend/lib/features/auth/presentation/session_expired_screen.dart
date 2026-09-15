@@ -17,7 +17,8 @@ class SessionExpiredScreen extends StatelessWidget {
         child: Padding(
           padding: AppSpacing.screenInsets,
           child: AppCard(
-            child: Column(
+            // The card's contents enter as a run, like every other page.
+            child: FadeUpColumn(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(

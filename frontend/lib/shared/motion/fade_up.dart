@@ -142,9 +142,13 @@ class FadeUpColumn extends StatelessWidget {
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.mainAxisAlignment = MainAxisAlignment.start,
     this.mainAxisSize = MainAxisSize.max,
+    this.startIndex = 0,
   });
 
   final List<Widget> children;
+
+  /// See [fadeUpAll] — where this run picks up from.
+  final int startIndex;
   final CrossAxisAlignment crossAxisAlignment;
   final MainAxisAlignment mainAxisAlignment;
   final MainAxisSize mainAxisSize;
@@ -154,7 +158,7 @@ class FadeUpColumn extends StatelessWidget {
     crossAxisAlignment: crossAxisAlignment,
     mainAxisAlignment: mainAxisAlignment,
     mainAxisSize: mainAxisSize,
-    children: fadeUpAll(children),
+    children: fadeUpAll(children, startIndex: startIndex),
   );
 }
 
@@ -164,6 +168,28 @@ class FadeUpColumn extends StatelessWidget {
 /// stagger is a helper rather than a convention: `children.indexed` is easy
 /// to get subtly wrong when a list is filtered or reordered, and an entrance
 /// that starts from the wrong index reads as a stutter.
-List<Widget> fadeUpAll(List<Widget> children) => [
-  for (final (i, child) in children.indexed) FadeUp(index: i, child: child),
-];
+///
+/// [startIndex] continues a run that began outside this list — a full-bleed
+/// hero above a padded body is one entrance, not two, and restarting at zero
+/// would land the hero and the first row on the same step.
+List<Widget> fadeUpAll(List<Widget> children, {int startIndex = 0}) {
+  var step = startIndex;
+  return [
+    for (final child in children)
+      if (_isSpacing(child)) child else FadeUp(index: step++, child: child),
+  ];
+}
+
+/// Whether a child is blank space rather than content.
+///
+/// A spacer has nothing to fade, and — this is the part that matters — it must
+/// not take a stagger step. `Profile` is where this was found: its column
+/// alternates rows and [SizedBox] gaps, so counting every child would have put
+/// the sign-out button eleven steps down a run capped at six, and every row
+/// below the third would have arrived together anyway. Skipping the gaps makes
+/// the visible rows 0..9 and the cap land where the artboards put it.
+///
+/// Deliberately narrow: a [SizedBox] **with no child**, and [Spacer]. A
+/// [Divider] is a drawn line and enters with everything else.
+bool _isSpacing(Widget child) =>
+    child is Spacer || (child is SizedBox && child.child == null);

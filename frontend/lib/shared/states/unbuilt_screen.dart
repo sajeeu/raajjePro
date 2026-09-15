@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/shared/headers/app_header.dart';
+import 'package:raajjepro/shared/motion/fade_up.dart';
 import 'package:raajjepro/shared/states/empty_state.dart';
 
 /// Where a route lands while the phase that owns its screen has not built it.
@@ -41,16 +42,20 @@ class UnbuiltScreen extends StatelessWidget {
             child: Center(
               child: Padding(
                 padding: AppSpacing.screenInsets,
-                child: EmptyState(
-                  icon: Icons.construction_outlined,
-                  title: '$title is not built yet',
-                  // Names the phase rather than a date: a date would be a
-                  // promise this screen has no way to keep.
-                  body:
-                      'This part of the app is still being built ($owedBy). '
-                      'Nothing you have done is lost — go back and carry on.',
-                  actionLabel: 'Go back',
-                  onAction: () => Navigator.of(context).maybePop(),
+                // One element, so one step — but it still rises in rather
+                // than appearing, like every other page.
+                child: FadeUp(
+                  child: EmptyState(
+                    icon: Icons.construction_outlined,
+                    title: '$title is not built yet',
+                    // Names the phase rather than a date: a date would be a
+                    // promise this screen has no way to keep.
+                    body:
+                        'This part of the app is still being built ($owedBy). '
+                        'Nothing you have done is lost — go back and carry on.',
+                    actionLabel: 'Go back',
+                    onAction: () => Navigator.of(context).maybePop(),
+                  ),
                 ),
               ),
             ),

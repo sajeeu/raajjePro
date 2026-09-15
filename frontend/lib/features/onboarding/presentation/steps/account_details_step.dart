@@ -156,7 +156,12 @@ class AccountDetailsStepState extends State<AccountDetailsStep> {
         AppSpacing.xl,
         AppSpacing.xxl + AppSpacing.xxs,
       ),
-      child: Column(
+      // Enters as a run, like every other page. A form is the case the cap at
+      // six was written for: the title, the subtitle, the section rule, the
+      // photo row and the first fields arrive in sequence and the rest of the
+      // form — most of it below the fold on a phone — arrives with them
+      // rather than trickling for a second and a half.
+      child: FadeUpColumn(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Tell us about you', style: type.screenTitle),

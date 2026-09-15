@@ -51,7 +51,10 @@ class ActiveSessionsScreen extends ConsumerWidget {
                   AppSpacing.xl,
                   AppSpacing.xxl,
                 ),
-                children: [
+                // The explanatory line, then each device, one step behind
+                // the last — `Explore`'s entrance, on a list instead of a
+                // grid. The gaps are skipped, so the rows are 1..n.
+                children: fadeUpAll([
                   Text(
                     "Everywhere you're signed in. Revoking a device signs out only that device.",
                     style: type.secondary.copyWith(color: colors.textSecondary),
@@ -67,7 +70,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
                     _SessionRow(session: s, now: now),
                     const SizedBox(height: AppSpacing.md),
                   ],
-                ],
+                ]),
               ),
             ),
           ),

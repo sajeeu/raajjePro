@@ -88,4 +88,47 @@ void main() {
       expect(reduced.staggerFor(6), Duration.zero);
     });
   });
+
+  group('a run of siblings', () {
+    /// The index each child was given, in order — the run as the screen
+    /// actually receives it.
+    List<int> stepsOf(List<Widget> wrapped) =>
+        wrapped.whereType<FadeUp>().map((f) => f.index).toList();
+
+    test('a gap between rows takes no step', () {
+      // `Profile` is where this was found. Its column alternates rows and
+      // `SizedBox` gaps; counting the gaps put the sign-out button eleven
+      // steps down a run capped at six, so everything below the third row
+      // arrived at the same time and the page read as one block.
+      final wrapped = fadeUpAll(const [
+        Text('hero'),
+        SizedBox(height: 8),
+        Text('heading'),
+        SizedBox(height: 8),
+        Text('row'),
+      ]);
+      expect(stepsOf(wrapped), [0, 1, 2]);
+      // And the gaps are still there, unwrapped — the layout does not move.
+      expect(wrapped.length, 5);
+      expect(wrapped[1], isA<SizedBox>());
+      expect(wrapped[3], isA<SizedBox>());
+    });
+
+    test('a SizedBox that holds something is content, and takes its step', () {
+      final wrapped = fadeUpAll(const [
+        Text('row'),
+        SizedBox(height: 40, child: Text('also a row')),
+      ]);
+      expect(stepsOf(wrapped), [0, 1]);
+    });
+
+    test('startIndex continues a run that began outside the list', () {
+      // A full-bleed hero above a padded body is one entrance, not two.
+      final wrapped = fadeUpAll(const [
+        Text('heading'),
+        Text('row'),
+      ], startIndex: 1);
+      expect(stepsOf(wrapped), [1, 2]);
+    });
+  });
 }

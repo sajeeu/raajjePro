@@ -226,6 +226,67 @@ void main() {
     });
   });
 
+  group('every screen enters', () {
+    /// `frontend/CLAUDE.md`: content enters with `FadeUp`. 52 of the 61
+    /// artboards specify `fadeUp` and the app shipped without it, so this is
+    /// the guard that stops the next screen shipping without it too.
+    ///
+    /// **What this can and cannot see.** It sees absence. It does not see a
+    /// *shallow* entrance — `Profile` handed `FadeUpColumn` its two
+    /// containers rather than its ten rows, which is a stagger of one step
+    /// and reads as the whole page arriving at once. The mechanism was there
+    /// and the effect was not, and only the screen's own test caught it. So
+    /// when you add a screen: hand the run the rows a reader sees, not the
+    /// boxes they are inside.
+    ///
+    /// A screen whose content lives in separate step widgets satisfies this
+    /// through them, which is why the scan follows the feature directory
+    /// rather than the single file.
+    const exempt = {
+      // The component gallery is a developer surface reached by route in
+      // debug, not a page of the product. It exists to show widgets at rest.
+      'lib/features/gallery/presentation/gallery_screen.dart',
+    };
+
+    test('no screen renders its content without an entrance', () {
+      final flat = <String>[];
+      for (final file in Directory(
+        'lib',
+      ).listSync(recursive: true).whereType<File>()) {
+        final path = file.path;
+        if (!path.endsWith('_screen.dart')) continue;
+        if (exempt.contains(path)) continue;
+
+        // The screen itself, or any widget in the same feature that it
+        // composes its content from (a wizard's steps, a flow's pages).
+        final dir = Directory(path).parent;
+        final enters = dir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))
+            .any((f) {
+              final src = f.readAsStringSync();
+              // `FadeUp`, `FadeUpColumn` — and `fadeUpAll`, which a screen
+              // handing a `ListView` its children uses and which does not
+              // share the capital.
+              return src.contains('FadeUp') || src.contains('fadeUpAll');
+            });
+        if (!enters) flat.add(path);
+      }
+
+      expect(
+        flat,
+        isEmpty,
+        reason:
+            'These screens draw their content with no entrance. Wrap the rows '
+            'a reader sees in `FadeUp`, or hand them to `FadeUpColumn` / '
+            '`fadeUpAll` — the gaps between them take no stagger step, so a '
+            'column of rows and `SizedBox`es can go in as it stands.\n'
+            '${flat.join('\n')}',
+      );
+    });
+  });
+
   group('Pressable — the 48 dp floor', () {
     testWidgets('a 20 dp child gets a 48 dp hit area', (tester) async {
       var taps = 0;

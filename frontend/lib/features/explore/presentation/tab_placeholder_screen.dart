@@ -23,14 +23,18 @@ class TabPlaceholderScreen extends StatelessWidget {
             child: Center(
               child: Padding(
                 padding: AppSpacing.screenInsets,
-                child: EmptyState(
-                  icon: Icons.construction_outlined,
-                  title: '$tab is not built yet',
-                  body:
-                      'This part of the app is still being built. Explore works today — '
-                      'browse the categories and come back to this tab later.',
-                  actionLabel: 'Back to Explore',
-                  onAction: () => Navigator.of(context).pop(),
+                // One element, so one step — but it still rises in rather
+                // than appearing, like every other page.
+                child: FadeUp(
+                  child: EmptyState(
+                    icon: Icons.construction_outlined,
+                    title: '$tab is not built yet',
+                    body:
+                        'This part of the app is still being built. Explore works today — '
+                        'browse the categories and come back to this tab later.',
+                    actionLabel: 'Back to Explore',
+                    onAction: () => Navigator.of(context).pop(),
+                  ),
                 ),
               ),
             ),

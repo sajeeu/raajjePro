@@ -59,7 +59,9 @@ class ServiceAreasStep extends StatelessWidget {
         AppSpacing.xl,
         AppSpacing.xxl + AppSpacing.xxs,
       ),
-      child: Column(
+      // Enters as a run, like every other page (`Explore`'s grid is the
+      // reference). The gaps between rows take no stagger step.
+      child: FadeUpColumn(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Where do you usually work?', style: type.screenTitle),
