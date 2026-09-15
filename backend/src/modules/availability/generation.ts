@@ -239,7 +239,8 @@ export class SlotGenerator {
   ): Promise<{ created: number; removed: number }> {
     const existing = await this.deps.repo.findFutureSlots(listingId, now, tx);
     const ids = existing.filter((s) => s.status !== 'reserved').map((s) => s.id);
-    const { count } = ids.length === 0 ? { count: 0 } : await this.deps.repo.deleteSlots(ids, tx);
+    const { count } =
+      ids.length === 0 ? { count: 0 } : await this.deps.repo.deleteSlots(ids, now, tx);
     await this.deps.repo.recordGeneration(
       listingId,
       { nextGenerationAt: null, generatedThrough: null, lastGeneratedAt: now, lastRunMs: 0 },
@@ -276,7 +277,7 @@ export class SlotGenerator {
       .filter((slot) => slot.status !== 'reserved' && !desiredKeys.has(keyOf(slot)))
       .map((slot) => slot.id);
     const removed =
-      staleIds.length === 0 ? 0 : (await this.deps.repo.deleteSlots(staleIds, tx)).count;
+      staleIds.length === 0 ? 0 : (await this.deps.repo.deleteSlots(staleIds, now, tx)).count;
 
     const fresh = desired.filter((slot) => !existingKeys.has(keyOf(slot)));
     const created =

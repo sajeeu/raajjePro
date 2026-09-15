@@ -577,4 +577,54 @@ describe.skipIf(databaseUrl === undefined)('availability rules and slot generati
       });
     });
   });
+
+  /**
+   * §Phase 9a takes an explicit exception to invariant 8 — a future,
+   * unreserved `TimeSlot` is removed rather than stamped, because a slot is
+   * the expansion of a rule and not a record of anything. The exception is
+   * only defensible while it stays inside those two bounds, so the bounds are
+   * asserted against the repository directly, with ids the callers would
+   * never pass. A guard that lives only in the caller is a guard the next
+   * caller has to remember.
+   */
+  describe('the one deletion in this codebase, and what it refuses', () => {
+    it('refuses a past slot and a reserved one, and takes the future unreserved one beside them', async () => {
+      const { user, listingId, providerProfileId } = await providerWithSlotListing(app);
+      await addRule(app, user, listingId);
+
+      const prisma = app.deps.prisma;
+      const future = firstOf(await ownSlots(app, user, listingId), 'a generated slot');
+
+      // A slot in the past, and a reserved one — neither reachable through
+      // the rules, both reachable by id.
+      const past = await prisma.timeSlot.create({
+        data: {
+          providerProfileId,
+          listingId,
+          startsAt: new Date(START.getTime() - 48 * 60 * 60 * 1000),
+          endsAt: new Date(START.getTime() - 46 * 60 * 60 * 1000),
+          status: 'open',
+        },
+      });
+      const held = await prisma.timeSlot.create({
+        data: {
+          providerProfileId,
+          listingId,
+          startsAt: new Date(START.getTime() + 96 * 60 * 60 * 1000),
+          endsAt: new Date(START.getTime() + 98 * 60 * 60 * 1000),
+          status: 'reserved',
+        },
+      });
+
+      const { count } = await app.availability.repo.deleteSlots(
+        [past.id, held.id, future.id],
+        START,
+      );
+
+      expect(count).toBe(1);
+      expect(await prisma.timeSlot.findUnique({ where: { id: past.id } })).not.toBeNull();
+      expect(await prisma.timeSlot.findUnique({ where: { id: held.id } })).not.toBeNull();
+      expect(await prisma.timeSlot.findUnique({ where: { id: future.id } })).toBeNull();
+    });
+  });
 });

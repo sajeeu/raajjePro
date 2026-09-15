@@ -231,13 +231,22 @@ export class AvailabilityRepository {
     return db.timeSlot.createMany({ data: rows, skipDuplicates: true });
   }
 
-  deleteSlots(ids: string[], db: Db = this.prisma): Promise<{ count: number }> {
+  deleteSlots(ids: string[], after: Date, db: Db = this.prisma): Promise<{ count: number }> {
     // The one place in this codebase that removes rows rather than stamping a
-    // column, and only ever for **future, unreserved** slots the caller has
-    // already filtered. `TimeSlot`'s schema comment carries the reasoning and
+    // column, and only ever for **future, unreserved** slots. `TimeSlot`'s
+    // schema comment carries the reasoning and
     // `docs/decisions/24-phase-9a-availability-and-reservations.md` records
     // the decision as an explicit, bounded exception to invariant 8.
-    return db.timeSlot.deleteMany({ where: { id: { in: ids } } });
+    //
+    // Both bounds are repeated here on purpose. Both callers already filter
+    // for them, and an exception to invariant 8 should not rest on every
+    // future caller remembering to: a past slot is somebody's history and a
+    // reserved one is somebody's booking, and neither may be removed by a
+    // caller that passes the wrong ids. The clause is the boundary; the
+    // callers' filters are an optimisation that keeps the id list short.
+    return db.timeSlot.deleteMany({
+      where: { id: { in: ids }, startsAt: { gt: after }, status: { not: 'reserved' } },
+    });
   }
 
   /**
