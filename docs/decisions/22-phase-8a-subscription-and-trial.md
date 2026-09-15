@@ -416,6 +416,13 @@ clock. Both expiries are their own phases' rules and are tested there.
   `PATCH …/visibility` (hide the kept listing, activate the other), and a
   dedicated action would be inventing a surface for a screen that does not
   exist. §Phase 10 should decide whether the two-step sequence is good enough.
+  🔧 **Answered 2026-09-15: it is not** — the two-step path makes the provider
+  write `hidden_by_provider` onto a listing the entitlement system hid, which
+  is exactly the conflation Round 17 split the values to prevent, and it
+  breaks §1b's "any confirmed payment restores everything" for the swapped
+  listing. §Phase 10 gets a keep-visible pin instead, and the entitlement
+  system stays the only writer of `hidden_over_cap`. See
+  `docs/decisions/25-phase-10-two-questions-answered.md`.
 - **No credit wallet and no advertising.** Cut post-v1; `purpose` stays open
   so they slot back in additively, which is why the enum already carries
   `emergency_dispatch_fee`.
