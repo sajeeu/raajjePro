@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { createPrismaClient } from '../src/db/client.js';
@@ -302,4 +304,56 @@ describe.skipIf(databaseUrl === undefined)('Phase 4 — the seeded twelve', () =
    * §Phase 8 (2026-09-10) added `suggestedTags` and made it the one column
    * this seed rewrites on an existing row.
    */
+
+  /**
+   * The schema comment on `Category.name` has promised this since §Phase 4 —
+   * unique, "and unique case-insensitively as well (a functional index, added
+   * in the migration)" — and no migration added it until 2026-09-15. It was
+   * unreachable while the twelve were seeded and nothing else wrote a name;
+   * §Phase 10b's admin rename is what makes names user-supplied, and this is
+   * here so that endpoint meets a database that already refuses the collision
+   * rather than one that has to be remembered about.
+   */
+  describe('a category name is unique whatever its case', () => {
+    const prisma = createPrismaClient(testConfig().databaseUrl);
+
+    // Its own seed rather than the sibling describe's: a `-t` filter runs
+    // this block without that one's `beforeAll`, and the failure then reads
+    // as a broken constraint instead of an empty table. `seedCategories` is
+    // idempotent, which the block above asserts.
+    beforeAll(async () => {
+      await seedCategories(prisma);
+    });
+
+    /// A copy of a real seeded row, so this test never has to be revisited
+    /// when §Phase 4's table gains a column. Only the three fields under
+    /// test are replaced.
+    const clone = async (name: string, sortOrder: number) => {
+      const {
+        id: _id,
+        createdAt: _c,
+        updatedAt: _u,
+        ...rest
+      } = await prisma.category.findFirstOrThrow();
+      return prisma.category.create({
+        data: { ...rest, name, seedKey: `case-${randomUUID().slice(0, 8)}`, sortOrder },
+      });
+    };
+
+    it('refuses a second row that differs only in case', async () => {
+      const name = `Case ${randomUUID().slice(0, 8)}`;
+      const created = await clone(name, 9000);
+      expect(created.name).toBe(name);
+
+      await expect(clone(name.toLowerCase(), 9001)).rejects.toThrow(
+        /Unique constraint|category_name_lower_key/i,
+      );
+    });
+
+    it('still allows two genuinely different names', async () => {
+      const stem = randomUUID().slice(0, 8);
+      await clone(`Case ${stem} One`, 9002);
+      await clone(`Case ${stem} Two`, 9003);
+    });
+  });
 });

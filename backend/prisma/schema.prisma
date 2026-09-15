@@ -773,8 +773,18 @@ model Category {
   id             String  @id @default(uuid()) @db.Uuid
   /// Tile-short, and admin-editable — Round 25 renamed Computer to Appliance
   /// Repair, so a rename is a thing that really happens. Unique, and unique
-  /// case-insensitively as well (a functional index, added in the migration):
-  /// "plumbing" beside "Plumbing" would render as two tiles.
+  /// case-insensitively as well — `category_name_lower_key`, a unique
+  /// functional index on `lower(name)` that Prisma cannot express and the
+  /// migration creates by hand. "plumbing" beside "Plumbing" would render as
+  /// two tiles, two sets of listings, and one of them unreachable from the
+  /// other.
+  ///
+  /// 🔧 **This comment described the index for four days before one existed**
+  /// (added 2026-09-15, migration `category_name_case_insensitive`). Nothing
+  /// could reach the collision while the twelve were seeded and no endpoint
+  /// wrote a name; §Phase 10b's admin rename is what makes names
+  /// user-supplied, so the constraint lands before the thing that can break
+  /// it. `test/categories-seed.test.ts` asserts the refusal.
   ///
   /// The *identifier* everything else references is the UUID (Phase 8's
   /// listings, Phase 7's service areas), never this.

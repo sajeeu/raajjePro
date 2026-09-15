@@ -1,0 +1,18 @@
+-- `Category.name`'s schema comment has promised this since §Phase 4: unique,
+-- "and unique case-insensitively as well (a functional index, added in the
+-- migration)". No migration added it. The plain `category_name_key` is a
+-- btree on the raw string, so "plumbing" and "Plumbing" are two rows, two
+-- tiles on Explore, and two sets of listings that should have been one.
+--
+-- Nothing has been able to create that collision yet — the twelve categories
+-- are seeded and §Phase 10b builds the admin rename that first makes names
+-- user-supplied. This lands before that endpoint exists rather than after it
+-- has been used, and it puts the rule in the database, where invariant 4 says
+-- a rule lives, instead of in the handler that happens to write the row.
+--
+-- Case folding only. The name is Latin-script admin-entered copy — Dhivehi
+-- rendering is `displayName`'s job elsewhere in this schema — so `lower()` is
+-- the whole of the comparison and no accent or apostrophe folding belongs
+-- here (that rule exists for `Island`, is search-time, and is not a
+-- constraint).
+CREATE UNIQUE INDEX "category_name_lower_key" ON "category" (lower("name"));

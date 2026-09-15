@@ -26,7 +26,16 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       // Unused parameters prefixed with `_` are a deliberate signature match.
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // 🔧 `varsIgnorePattern` and `ignoreRestSiblings` extend the same
+      // convention to the one other place a name is deliberately unused:
+      // `const { id: _id, ...rest } = row`, which is how you copy a row
+      // without its key. Without them the idiom is an error and the
+      // alternative is to list every column by hand, which goes stale the
+      // next time the model gains one.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
     },
   },
   {
