@@ -4,7 +4,12 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ok } from '../../core/envelope.js';
 import { requestMeta } from '../admin-auth/routes.js';
 import { requireActiveAccount, requireAuth, userOf } from '../auth/guards.js';
-import { invoiceListQuery, paymentProofBody, paymentSubmissionParams } from './schema.js';
+import {
+  appealSubmissionBody,
+  invoiceListQuery,
+  paymentProofBody,
+  paymentSubmissionParams,
+} from './schema.js';
 
 /**
  * The provider's billing surface (§Phase 8a: "endpoints: upgrade-request,
@@ -181,6 +186,35 @@ export function registerSubscriptionRoutes(app: FastifyInstance): void {
     async (request, reply) => {
       return reply.send(
         ok(await app.subscriptions.submitProof(userOf(request).id, request.params.id)),
+      );
+    },
+  );
+
+  // Who may call: the owner of a rejected submission. §1b step 5's "appeal
+  // for re-review" — stamps the row and puts it back in front of an admin;
+  // changes no status and grants nothing (§Phase 10a part 1, closing ledger
+  // row P8A-1).
+  //
+  // Idempotency key required: it is a creation-shaped POST on a money row,
+  // and a double tap must read as one appeal rather than as
+  // PAYMENT_APPEAL_ALREADY_FILED the second time.
+  r.post(
+    '/v1/providers/me/payment-submissions/:id/appeal',
+    {
+      schema: { params: paymentSubmissionParams, body: appealSubmissionBody },
+      preValidation: [requireAuth, requireActiveAccount],
+      config: { idempotency: { operation: 'payment-submission.appeal' }, ...billingRate },
+    },
+    async (request, reply) => {
+      return reply.send(
+        ok(
+          await app.subscriptions.appealSubmission(
+            userOf(request).id,
+            request.params.id,
+            request.body?.note,
+            requestMeta(request),
+          ),
+        ),
       );
     },
   );

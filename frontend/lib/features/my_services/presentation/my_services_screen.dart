@@ -233,7 +233,7 @@ class _Dashboard extends ConsumerWidget {
       // is per listing and a request-based one has no grid for it to draw.
       if (slotListings.isNotEmpty) ...[
         AppCard.row(
-          leading: const _RowIcon(icon: Icons.schedule_rounded),
+          leading: const RowIcon(icon: Icons.schedule_rounded),
           title: 'Availability & time slots',
           subtitle: slotListings.length == 1
               ? slotListings.single.name ?? 'Your bookable times'
@@ -243,7 +243,7 @@ class _Dashboard extends ConsumerWidget {
         const SizedBox(height: AppSpacing.sm),
       ],
       AppCard.row(
-        leading: const _RowIcon(icon: Icons.calendar_month_outlined),
+        leading: const RowIcon(icon: Icons.calendar_month_outlined),
         title: 'My Calendar',
         subtitle: 'Every commitment across your services',
         onTap: () =>
@@ -251,7 +251,7 @@ class _Dashboard extends ConsumerWidget {
       ),
       const SizedBox(height: AppSpacing.sm),
       AppCard.row(
-        leading: const _RowIcon(icon: Icons.verified_user_outlined),
+        leading: const RowIcon(icon: Icons.verified_user_outlined),
         title: 'Verification',
         subtitle: 'Your badge and the checks behind it',
         onTap: () => Navigator.of(context).push(
@@ -292,7 +292,7 @@ class _Dashboard extends ConsumerWidget {
                     bottom: AppSpacing.sm,
                   ),
                   child: AppCard.row(
-                    leading: const _RowIcon(icon: Icons.schedule_rounded),
+                    leading: const RowIcon(icon: Icons.schedule_rounded),
                     title: listing.name ?? 'Untitled service',
                     subtitle: 'Weekly hours and the times they publish',
                     onTap: () => Navigator.of(sheetContext).pop(listing),
@@ -784,27 +784,6 @@ class _AddAnother extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _RowIcon extends StatelessWidget {
-  const _RowIcon({required this.icon});
-
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      width: AppSizes.iconDisc,
-      height: AppSizes.iconDisc,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.accentTint,
-        borderRadius: BorderRadius.circular(AppRadius.compact),
-      ),
-      child: Icon(icon, color: colors.accentText, size: AppSizes.iconLg),
     );
   }
 }

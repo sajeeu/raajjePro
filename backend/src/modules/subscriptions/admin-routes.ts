@@ -90,8 +90,9 @@ export function registerSubscriptionAdminRoutes(app: FastifyInstance): void {
 
   // Who may call: an enrolled, MFA-verified admin. §1b step 4–5: reason
   // required, and the provider sees it and may resubmit immediately — no
-  // cooldown, and no appeal action (ledger row **P8A-1**: no section of the
-  // plan says what an appeal changes, so nothing here invents one).
+  // cooldown — or appeal for re-review through
+  // `POST /v1/providers/me/payment-submissions/:id/appeal` (§Phase 10a part
+  // 1). The admin outcomes on an appealed row are §Phase 10a part 2's.
   r.post(
     `${base}/:id/reject`,
     {

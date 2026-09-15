@@ -67,6 +67,23 @@ export interface SubscriptionStatusDto {
     introductory: boolean;
     /** When §1b's 12-month introductory honouring ends and the standard rate applies. */
     introductoryConvertsAt: string | null;
+    /**
+     * 🔧 **Added by §Phase 10a part 1.** When §1b's seven days of grace run
+     * out — the date the downgrade lands if nothing is confirmed — measured
+     * from the later of the period end and the trial end. Null with no
+     * clock. The billing screen prints it in the expired state ("without a
+     * confirmed payment by 6 Sep…"); computing it in Flutter would be a
+     * second copy of `graceEnd`.
+     */
+    graceEndsAt: string | null;
+    /**
+     * 🔧 **Added by §Phase 10a part 1.** The 30-day period the next confirmed
+     * payment would buy, by the same rule the confirmation applies. What the
+     * pay screen prints as "Premium · 13 Sep – 12 Oct" when it resumes an
+     * intent it already holds, rather than creating a new one to learn the
+     * dates.
+     */
+    nextPeriod: { start: string; end: string };
   };
   pause: {
     paused: boolean;
@@ -87,6 +104,15 @@ export interface SubscriptionStatusDto {
   downgradedAt: string | null;
   /** The provider's most recent payment submission — what §Phase 10a's pending and rejected states render. */
   latestSubmission: PaymentSubmissionDto | null;
+  /**
+   * 🔧 **Added by §Phase 10a part 1.** RaajjePro's own account (§1b step 2),
+   * the same object `UpgradeRequestDto` carries. Here so the pay screen can
+   * resume an intent the provider already opened — the reference code they
+   * may already have written on a transfer — without creating a second one
+   * to see where to send the money. Null when unconfigured, which only
+   * development can be.
+   */
+  bankTransfer: BillingBankDetails | null;
 }
 
 export interface PaymentSubmissionDto {
@@ -100,6 +126,14 @@ export interface PaymentSubmissionDto {
   rejectionReason: string | null;
   reviewedAt: string | null;
   reversedAt: string | null;
+  /**
+   * §1b step 5's "appeal for re-review", filed against this rejected row.
+   * Set means the provider asked an admin to look again and nobody has yet;
+   * the row is still `rejected`, because an appeal is a request and not a
+   * state (ledger row P8A-1, closed by §Phase 10a part 1).
+   */
+  appealedAt: string | null;
+  appealNote: string | null;
   /** Whether any bytes have actually arrived — a target issued and abandoned reads false. */
   proofUploaded: boolean;
   /** Short-lived and re-issued on every read; never the stored object key. */
@@ -136,6 +170,16 @@ export interface UpgradeRequestDto {
    * provider who transfers to a made-up number has lost the money.
    */
   bankTransfer: BillingBankDetails | null;
+  /**
+   * 🔧 **The 30-day period this payment would buy — added by §Phase 10a part
+   * 1.** `Pay by Bank Transfer.dc.html` prints "Premium · 13 Sep – 12 Oct",
+   * and §1b's anchor is explicitly not a calendar month: it starts from the
+   * later of the current period end, the trial end and now, and pause
+   * shifts it. Computed here by the same rule the confirmation will apply
+   * (invariant 4), so the app renders what the invoice will eventually say
+   * rather than a second copy of the arithmetic.
+   */
+  period: { start: string; end: string };
 }
 
 export interface InvoiceDto {
@@ -168,6 +212,8 @@ export function toPaymentSubmissionDto(
     rejectionReason: row.rejectionReason,
     reviewedAt: iso(row.reviewedAt),
     reversedAt: iso(row.reversedAt),
+    appealedAt: iso(row.appealedAt),
+    appealNote: row.appealNote,
     proofUploaded: row.proofByteSize !== null,
     proofUrl: row.proofObjectKey === null ? null : readUrl(row.proofObjectKey),
     createdAt: row.createdAt.toISOString(),
@@ -216,7 +262,10 @@ export interface StatusInput {
   /** What the next period costs, from `priceForProvider` — the provider's own rate, or §1b's cohort rule. */
   nextPayment: { amountLaari: number; introductory: boolean };
   introductoryConvertsAt: Date | null;
+  graceEndsAt: Date | null;
+  nextPeriod: { start: Date; end: Date };
   latestSubmission: PaymentSubmission | null;
+  bankTransfer: BillingBankDetails | null;
   now: Date;
 }
 
@@ -256,6 +305,11 @@ export function toSubscriptionStatusDto(
       priceLaari: profile.subscriptionPriceLaari,
       introductory: input.nextPayment.introductory,
       introductoryConvertsAt: iso(input.introductoryConvertsAt),
+      graceEndsAt: iso(input.graceEndsAt),
+      nextPeriod: {
+        start: input.nextPeriod.start.toISOString(),
+        end: input.nextPeriod.end.toISOString(),
+      },
     },
     pause: {
       paused: subscription?.status === 'paused',
@@ -269,6 +323,7 @@ export function toSubscriptionStatusDto(
       input.latestSubmission === null
         ? null
         : toPaymentSubmissionDto(input.latestSubmission, readUrl),
+    bankTransfer: input.bankTransfer,
   };
 }
 

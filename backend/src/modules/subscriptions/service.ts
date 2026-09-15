@@ -328,7 +328,10 @@ export class SubscriptionService {
    */
   async requestUpgrade(userId: string): Promise<UpgradeRequestDto> {
     const profile = await this.ownProfileOr404(userId);
-    const price = await priceForProvider(this.prisma, profile.id);
+    const [price, existing] = await Promise.all([
+      priceForProvider(this.prisma, profile.id),
+      this.repo.find(profile.id),
+    ]);
     const submission = await this.repo.createSubmission({
       payerId: userId,
       purpose: 'subscription',
@@ -337,10 +340,87 @@ export class SubscriptionService {
       status: 'pending',
       submittedAt: null,
     });
+    // The period this payment would buy, by the rule `confirmSubmission`
+    // applies — one function, so what the screen shows is what the invoice
+    // will say. A quote, not a reservation: the real period is fixed at
+    // confirmation, from the clock then.
+    const period = this.periodAPaymentWouldBuy(existing, this.clock());
     return {
       submission: this.submissionDto(submission),
       bankTransfer: this.bankDetails,
+      period: { start: period.start.toISOString(), end: period.end.toISOString() },
     };
+  }
+
+  /**
+   * Who may call: the owner of a **rejected** submission. §1b step 5: "on
+   * rejection the provider sees the reason and may resubmit immediately — no
+   * cooldown — or **appeal for re-review**."
+   *
+   * 🔧 **An appeal is a re-review request, not a state — decided 2026-09-15,
+   * closing ledger row P8A-1.** Nothing here changes `status`: the row stays
+   * `rejected`, the entitlement stays exactly what it was, and §Phase 10a
+   * part 2's admin queue lists it as "Appealed" until an admin either
+   * confirms it after all or upholds the rejection. What a provider gets is
+   * a promise that a person will read the same receipt again — so there is
+   * no field for a new amount, code or proof, and a corrected transfer is a
+   * fresh submission instead.
+   *
+   * One appeal per submission. A reversal lands the row as `rejected` with
+   * its own stamps, and is appealable the same way.
+   */
+  async appealSubmission(
+    userId: string,
+    submissionId: string,
+    note: string | undefined,
+    meta?: RequestMeta,
+  ): Promise<PaymentSubmissionDto> {
+    const row = await this.repo.findOwnedSubmission(submissionId, userId);
+    // Not-found covers "not yours", so submission ids cannot be probed.
+    if (row === null) throw new NotFoundError('No such payment submission');
+    if (row.status !== 'rejected') {
+      throw new BusinessRuleError(
+        'PAYMENT_SUBMISSION_NOT_REJECTED',
+        row.status === 'confirmed'
+          ? 'This payment was confirmed — there is nothing to appeal'
+          : 'This payment has not been decided yet — an appeal is for a rejection',
+        { status: row.status },
+      );
+    }
+    if (row.appealedAt !== null) {
+      throw new BusinessRuleError(
+        'PAYMENT_APPEAL_ALREADY_FILED',
+        'You have already asked for this payment to be looked at again',
+        { appealedAt: row.appealedAt.toISOString() },
+      );
+    }
+    const now = this.clock();
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const stamped = await this.repo.updateSubmission(
+        row.id,
+        { appealedAt: now, appealNote: note ?? null },
+        tx,
+      );
+      await this.audit.record(tx, {
+        actorType: 'user',
+        actorId: userId,
+        action: 'payment_submission.appealed',
+        targetType: 'payment_submission',
+        targetId: row.id,
+        reason: 'provider requested re-review of a rejected payment',
+        // IDs, enums and amounts only — the note itself is on the row and is
+        // the provider's own words, not audit metadata.
+        metadata: {
+          purpose: row.purpose,
+          amountLaari: row.amountLaari,
+          reversed: row.reversedAt !== null,
+          hasNote: note !== undefined,
+        },
+        ...(meta === undefined ? {} : { requestId: meta.requestId, ipAddress: meta.ip }),
+      });
+      return stamped;
+    });
+    return this.submissionDto(updated);
   }
 
   /**
@@ -481,12 +561,9 @@ export class SubscriptionService {
     const existing = await this.repo.find(profile.id);
     const now = this.clock();
 
-    // The period this payment covers. From the later of the current period
-    // end and the trial end, so a provider who pays mid-trial keeps the days
-    // they still have — §1b has no rule for that case, and the alternative
-    // silently charges for time they already had.
-    const from = latest([existing?.currentPeriodEnd ?? null, existing?.trialEndsAt ?? null, now]);
-    const period = periodFor(from, now);
+    // The period this payment covers — the same rule `requestUpgrade` quoted
+    // from, so the screen and the invoice agree.
+    const period = this.periodAPaymentWouldBuy(existing, now);
 
     // Reserved and rendered **before** the transaction: a storage failure must
     // abort the confirmation, not commit an invoice row whose document does
@@ -609,10 +686,9 @@ export class SubscriptionService {
    * (reason required)", and step 5: "on rejection the provider sees the
    * reason and may **resubmit immediately** — no cooldown".
    *
-   * There is no cooldown to implement and no appeal to implement — see ledger
-   * row **P8A-1**: no section of the plan says what an appeal changes, so
-   * inventing a status for it would put semantics in the schema that no
-   * decision backs.
+   * There is no cooldown to implement. The appeal §1b step 5 offers is
+   * `appealSubmission` — a re-review request stamped on this same row, built
+   * by §Phase 10a part 1 and closing ledger row **P8A-1**.
    */
   async rejectSubmission(
     submissionId: string,
@@ -1165,6 +1241,25 @@ export class SubscriptionService {
     return { started: true };
   }
 
+  /**
+   * The 30-day period a payment confirmed at `now` would cover. From the later
+   * of the current period end and the trial end, so a provider who pays
+   * mid-trial keeps the days they still have — §1b has no rule for that case,
+   * and the alternative silently charges for time they already had.
+   *
+   * One function for the quote (`requestUpgrade`) and the fact
+   * (`confirmSubmission`): §1b's anchor is not a calendar month and pause
+   * shifts it, so a second copy of this — least of all one in Flutter — would
+   * drift from the invoice the first time anyone paused.
+   */
+  private periodAPaymentWouldBuy(
+    existing: ProviderSubscription | null,
+    now: Date,
+  ): { start: Date; end: Date } {
+    const from = latest([existing?.currentPeriodEnd ?? null, existing?.trialEndsAt ?? null, now]);
+    return periodFor(from, now);
+  }
+
   private async statusFor(
     profile: ProviderProfile,
     userId: string,
@@ -1186,7 +1281,10 @@ export class SubscriptionService {
           profile.subscriptionPriceLaari === INTRODUCTORY_PRICE_LAARI
             ? introductoryEnd(subscription.billingAnchorAt)
             : null,
+        graceEndsAt: subscription === null ? null : graceEnd(subscription),
+        nextPeriod: this.periodAPaymentWouldBuy(subscription, this.clock()),
         latestSubmission,
+        bankTransfer: this.bankDetails,
         now: this.clock(),
       },
       (key) => this.media.readUrl(key),

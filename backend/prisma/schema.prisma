@@ -1658,6 +1658,19 @@ model PaymentSubmission {
   reversedByAdminId String?   @map("reversed_by_admin_id") @db.Uuid
   reversalReason    String?   @map("reversal_reason")
 
+  /// §1b step 5: a rejected provider "may resubmit immediately — no cooldown
+  /// — or **appeal for re-review**". 🔧 **An appeal is a re-review request on
+  /// this row, not a status** (decided 2026-09-15, closing ledger row P8A-1):
+  /// the row stays `rejected` until an admin acts on it again, and §Phase 10a
+  /// part 2's queue lists a rejected row with `appealedAt` set as "Appealed".
+  /// One appeal per submission — a second re-review request has nothing new
+  /// to say. A reversed payment lands as `rejected` and is appealable the
+  /// same way, because a provider may disagree with a reversal too.
+  appealedAt DateTime? @map("appealed_at") @db.Timestamptz(6)
+  /// What the provider wants the re-reviewer to know. Optional: "please look
+  /// again" is a complete appeal when the receipt already says everything.
+  appealNote String?   @map("appeal_note")
+
   invoice Invoice?
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

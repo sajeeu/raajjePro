@@ -23,6 +23,9 @@ import 'package:raajjepro/features/auth/presentation/verify_email_screen.dart';
 import 'package:raajjepro/features/availability/presentation/availability_screen.dart';
 import 'package:raajjepro/features/availability/presentation/my_calendar_screen.dart';
 import 'package:raajjepro/features/availability/presentation/slot_picker_screen.dart';
+import 'package:raajjepro/features/billing/presentation/billing_screen.dart';
+import 'package:raajjepro/features/billing/presentation/invoices_screen.dart';
+import 'package:raajjepro/features/billing/presentation/pay_by_bank_transfer_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
@@ -130,8 +133,12 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // provider who completed onboarding switches straight into their
         // own workspace, one action from Profile.
         MyServicesScreen.routeName: (_) => const MyServicesScreen(),
-        AppRoutes.providerBilling: (_) =>
-            const UnbuiltScreen(title: 'Billing', owedBy: 'Phase 10a'),
+        // Phase 10a part 1. Billing & subscription, and the two screens that
+        // hang off it — the bank-transfer payment and the invoice list.
+        BillingScreen.routeName: (_) => const BillingScreen(),
+        PayByBankTransferScreen.routeName: (_) =>
+            const PayByBankTransferScreen(),
+        InvoicesScreen.routeName: (_) => const InvoicesScreen(),
 
         // Phase 9. Where §Phase 6a hands off (its step 4): the wizard's step
         // 1 on a fresh draft. Arriving with **no arguments** is what makes it

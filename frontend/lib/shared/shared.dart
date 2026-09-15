@@ -6,6 +6,7 @@ export 'package:raajjepro/shared/badges/status_badge.dart';
 export 'package:raajjepro/shared/badges/verification_badge.dart';
 export 'package:raajjepro/shared/buttons/app_button.dart';
 export 'package:raajjepro/shared/cards/app_card.dart';
+export 'package:raajjepro/shared/cards/row_icon.dart';
 export 'package:raajjepro/shared/cards/stat_mini_card.dart';
 export 'package:raajjepro/shared/chips/app_chip.dart';
 export 'package:raajjepro/shared/feedback/app_spinner.dart';

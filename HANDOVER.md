@@ -774,10 +774,66 @@ renders no `acceptingNewCustomers` toggle (the artboard draws none and
 §Phase 10's bullets ask for none), so §1b's pause sentence is owed by
 §Phase 10a's billing screen alone.
 
-**Next**: `/phase-10a` — Provider Billing UI & Admin Panel. Two things this
-phase leaves pointing at it: the over-cap card's **Upgrade** CTA and the
-provider nav's **Billing** tab both reach `/provider/billing`, which is still
-an `UnbuiltScreen` naming Phase 10a.
+**Phase 10a part 1 is built** — the provider's billing surface: Billing &
+subscription, Pay by bank transfer, and Invoices, plus the backend that half
+of the phase needed. `docs/decisions/27-phase-10a-part-1-provider-billing.md`
+carries the full record.
+
+🔧 **Part 2, the admin panel, was not built — the owner paused it on
+2026-09-15.** So **§Phase 10a is still open**, and §Phase 10b does not start
+off the back of this. Four of its six Done-when clauses are Part 2's and
+nothing here asserts them: an admin confirming, the CSV import's matches, the
+three XSS payloads, and the aged `payment_unresolved` alert. Ledger row
+**P10A-1** holds them. The two that are Part 1's are met end to end through
+the real route table.
+
+**An appeal is a re-review request, and ledger row P8A-1 closes.** §1b step 5
+offers a rejected provider "resubmit immediately — no cooldown — or **appeal
+for re-review**", and no section said what an appeal *changes*; the answer,
+settled by the owner, is **nothing about the payment**.
+`POST /v1/providers/me/payment-submissions/:id/appeal` stamps `appealedAt` and
+an optional note on the **rejected** row, the status is untouched, the
+entitlement is untouched, and Part 2's queue lists it as appealed. One per
+submission; a reversal is appealable too; resubmit and appeal are independent.
+**P8A-4 closes with it** — the pause card carries the sentence it owed: the
+pause is the same switch as `acceptingNewCustomers`, the ten days do not
+refill, and the billing anchor moves.
+
+🔧 **No billing rule is evaluated in Flutter, and two fields were added to the
+server to keep it that way.** Round 19 (§Phase 23) makes that a build
+requirement on this phase — a web port must cost a port, not a rewrite — and
+invariant 4 says it anyway. `billing.nextPeriod` (the 30-day period the next
+payment would buy) and `billing.graceEndsAt` are now on the wire, because the
+artboards print both and §1b's anchor is **not** a calendar month and **pause
+shifts it**: a period computed in Dart would drift from the invoice the first
+time anyone paused. The quote and the confirmation share one function, and a
+test pays the quoted period and reads the same dates back off the invoice.
+
+🔧 **Nothing on the pay screen is queued offline.** `Pay by Bank Transfer.dc.html`
+draws a "Saved on this phone — sends on reconnect" state; §0.0 item 14 bounds
+the queue to three surfaces and a payment is none of them, and the copy is a
+promise about money that nothing keeps. Offline the form stays as it was with
+the receipt still attached and a live retry — the test asserts the absence of
+that sentence, not only the presence of the notice.
+
+**Three artboard claims were checked against the plan and not built**, and go
+back as `docs/design/sessions/round-59-billing-corrections.md` rather than
+being fixed in the prototype: "Same page on the web" (a web billing page
+exists only as §Phase 23's App Store contingency), "a second person looks at
+it" (second-admin sign-off is out of v1 scope by name), and `MVR 150` printed
+beside the introductory rate (§1b: the price is per-provider and never a
+global constant). 🔧 **A fourth correction came from the plan moving
+mid-build**: revision 5.32's §0.0 item 19 makes a full bank-statement match
+confirm **without a human**, so the copy no longer names the reviewer —
+"Pending confirmation", not "Pending admin confirmation".
+
+New ledger rows **P10A-1** (Part 2's half of the Done-when), **P10A-2** (the
+invoice PDF from a real object store, sharing L13's blocker) and **P10A-3**
+(the receipt picker and the presigned PUT on a device, which is P9-2's pass in
+a second place).
+
+**Next**: `/phase-10a` part 2 when the owner calls it — the admin panel, whose
+stack proposal is still owed. Otherwise `/phase-11`.
 
 | | |
 |---|---|
@@ -786,8 +842,8 @@ an `UnbuiltScreen` naming Phase 10a.
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs. Phase 10: one column and one endpoint — `ProviderProfile.keepVisibleListingId` and `POST /v1/providers/me/listings/:id/keep-visible`, §1b's over-cap override as a ranking input that leaves `applyEntitlementVisibility` the only writer of `hidden_over_cap` |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart`. Phase 10: `features/my_services/` — the My Services dashboard at `/provider/services`, and `core/listings/`, where the listing API, model and price string moved on their second consumer — `frontend/lib/README.md` lists every directory |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs. Phase 10: one column and one endpoint — `ProviderProfile.keepVisibleListingId` and `POST /v1/providers/me/listings/:id/keep-visible`, §1b's over-cap override as a ranking input that leaves `applyEntitlementVisibility` the only writer of `hidden_over_cap`. Phase 10a part 1: §1b step 5's appeal (`appealedAt`/`appealNote` and its endpoint, changing no status), and the quoted billing period and grace end on the subscription DTO so no billing arithmetic reaches Flutter |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart`. Phase 10: `features/my_services/` — the My Services dashboard at `/provider/services`, and `core/listings/`, where the listing API, model and price string moved on their second consumer. Phase 10a part 1: `features/billing/` — Billing & subscription, Pay by bank transfer and Invoices, with every billing rule left on the server; `core/files/` and `core/format/money.dart`, moved there on their second consumer — `frontend/lib/README.md` lists every directory |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |

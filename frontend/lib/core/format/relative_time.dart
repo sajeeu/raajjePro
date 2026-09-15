@@ -44,6 +44,10 @@ String monthAndYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
 
 String shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]} ${d.year}';
 
+/// `13 Sep` — one end of a period range, where the year is the same at both
+/// ends and would only repeat (§Phase 10a's "Premium · 13 Sep – 12 Oct").
+String dayAndMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+
 const _months = [
   'Jan',
   'Feb',

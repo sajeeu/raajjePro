@@ -2,12 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/clock.dart';
+import 'package:raajjepro/core/files/share_file.dart';
 import 'package:share_plus/share_plus.dart';
+
+export 'package:raajjepro/core/files/share_file.dart'
+    show shareProvider, tempDirProvider;
 
 // `retry: null` (via the callback below) turns off riverpod 3's built-in
 // exponential-backoff auto-retry on a failed `build()`. Left at its default,
@@ -111,24 +114,9 @@ class SessionActionController extends Notifier<SessionActionState> {
   }
 }
 
-/// Injectable so tests never open a real share sheet.
-final shareProvider = Provider<Future<void> Function(XFile file)>(
-  (_) => (file) async {
-    await SharePlus.instance.share(
-      ShareParams(files: [file], subject: 'Your RaajjePro data export'),
-    );
-  },
-);
-
-/// Where the export is written before being handed to the share sheet.
-/// `getTemporaryDirectory()` (path_provider), never `Directory.systemTemp` —
-/// on Android that is a directory other apps can read, not app-private
-/// (final review #5). Injectable so tests never cross a real platform
-/// channel; overridden with a plain `Directory.systemTemp` getter in tests,
-/// which is a perfectly good stand-in for "some writable temp dir" there.
-final tempDirProvider = Provider<Future<Directory> Function()>(
-  (_) => getTemporaryDirectory,
-);
+// `shareProvider` and `tempDirProvider` live in `core/files/share_file.dart`
+// since §Phase 10a, on their second consumer (the invoice PDF). Re-exported
+// so this controller's callers and tests read as they always did.
 
 class DownloadState {
   const DownloadState({

@@ -87,6 +87,20 @@ export const confirmSubmissionBody = z
   .object({ note: z.string().trim().min(1).max(500).optional() })
   .optional();
 
+/**
+ * §1b step 5's appeal. The note is optional — a provider whose receipt already
+ * shows the full amount has nothing to add beyond "look again" — and capped
+ * so the admin queue renders it inline. There is no field for a new amount, a
+ * new reference code or a new proof: an appeal asks for the *same* submission
+ * to be re-read, and a corrected transfer is a resubmission (a new intent),
+ * not an appeal.
+ */
+export const appealSubmissionBody = z
+  .object({ note: z.string().trim().min(1).max(500).optional() })
+  // `nullish`, not `optional`: a POST with no body reaches Fastify as
+  // `null`, and "look again" needs no body at all.
+  .nullish();
+
 export type PaymentProofBody = z.infer<typeof paymentProofBody>;
 export type AdminSubmissionListQuery = z.infer<typeof adminSubmissionListQuery>;
 export type InvoiceListQuery = z.infer<typeof invoiceListQuery>;
