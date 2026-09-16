@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,8 +39,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _reveal2 = false;
   bool _terms = false;
 
+  /// The two legal links are spans inside the consent sentence, not buttons
+  /// beside it, so they need recognizers this State owns and disposes.
+  late final TapGestureRecognizer _tosTap;
+  late final TapGestureRecognizer _privacyTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _tosTap = TapGestureRecognizer()
+      ..onTap = () => Navigator.of(context).pushNamed('/legal/terms');
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => Navigator.of(context).pushNamed('/legal/privacy');
+  }
+
   @override
   void dispose() {
+    _tosTap.dispose();
+    _privacyTap.dispose();
     for (final c in [
       _name,
       _email,
@@ -272,64 +289,116 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
+              // 🔧 Rebuilt 2026-09-16, for two defects that shared one cause.
+              //
+              // The legal links were `AppButton.text` compacts — 44 dp tall —
+              // sitting in a `Wrap` beside a 26 dp checkbox aligned to
+              // `start`. That made the first line 44 dp, centred the words
+              // inside it, and left the checkbox stranded 11 dp above them.
+              // Worse, they were *controls inside a tappable row*: `Pressable`
+              // wraps its child in `Semantics(excludeSemantics: true)`, so
+              // both links vanished from the semantics tree and a screen
+              // reader was asked to consent to two documents it could not
+              // open.
+              //
+              // `Register.dc.html` draws one flowing span with inline `<a>`s,
+              // which is the shape that fixes both: the line is the text's own
+              // 18.75 dp, and nothing interactive nests inside anything else.
+              // The links are spans with recognizers — `RenderParagraph` gives
+              // each its own semantics node — and the row keeps the tap that
+              // toggles consent.
               Pressable(
                 key: const Key('reg-terms'),
-                semanticLabel:
-                    'I agree to the Terms of Service and Privacy Policy${_terms ? ', checked' : ', not checked'}',
+                // Returns the child unwrapped, which is the whole point: the
+                // consent semantics are declared below, so the link spans
+                // inside the sentence are not swallowed with them.
+                excludeSemantics: true,
+                semanticLabel: '',
                 onTap: () {
                   setState(() => _terms = !_terms);
                   ctrl.clear('acceptTerms');
                 },
                 toggled: _terms,
-                builder: (context, state) => Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: AppSizes.checkbox,
-                      height: AppSizes.checkbox,
-                      decoration: BoxDecoration(
-                        color: _terms ? colors.primary : colors.surface,
-                        borderRadius: AppRadius.circular(AppRadius.pill),
-                        border: Border.all(
-                          color: _terms ? colors.primary : colors.neutralBorder,
-                          width: AppSizes.inputStroke,
+                builder: (context, state) => Semantics(
+                  container: true,
+                  // Without this the consent node *merges* its descendants,
+                  // which put the two link spans back out of reach by a second
+                  // route — measured, not assumed: they read as 0 reachable
+                  // until this was added.
+                  explicitChildNodes: true,
+                  checked: _terms,
+                  label:
+                      "I agree to RaajjePro's Terms of Service and "
+                      'Privacy Policy',
+                  onTap: () {
+                    setState(() => _terms = !_terms);
+                    ctrl.clear('acceptTerms');
+                  },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Centred on the first line rather than pinned to the
+                      // top of the block, so a sentence that wraps to two
+                      // lines does not drag the checkbox upward.
+                      SizedBox(
+                        height:
+                            type.secondary.fontSize! * type.secondary.height!,
+                        child: Center(
+                          child: Container(
+                            width: AppSizes.checkbox,
+                            height: AppSizes.checkbox,
+                            decoration: BoxDecoration(
+                              color: _terms ? colors.primary : colors.surface,
+                              borderRadius: AppRadius.circular(AppRadius.pill),
+                              border: Border.all(
+                                color: _terms
+                                    ? colors.primary
+                                    : colors.neutralBorder,
+                                width: AppSizes.inputStroke,
+                              ),
+                            ),
+                            child: _terms
+                                ? Icon(
+                                    Icons.check_rounded,
+                                    size: AppSizes.iconMd,
+                                    color: colors.onPrimary,
+                                  )
+                                : null,
+                          ),
                         ),
                       ),
-                      child: _terms
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: AppSizes.iconMd,
-                              color: colors.onPrimary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            "I agree to RaajjePro's ",
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text.rich(
+                          TextSpan(
                             style: type.secondary,
+                            children: [
+                              const TextSpan(text: "I agree to RaajjePro's "),
+                              TextSpan(
+                                text: 'Terms of Service',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.primary,
+                                ),
+                                recognizer: _tosTap,
+                                semanticsLabel: 'Terms of Service',
+                              ),
+                              const TextSpan(text: ' and '),
+                              TextSpan(
+                                text: 'Privacy Policy',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: colors.primary,
+                                ),
+                                recognizer: _privacyTap,
+                                semanticsLabel: 'Privacy Policy',
+                              ),
+                            ],
                           ),
-                          AppButton.text(
-                            label: 'Terms of Service',
-                            size: AppButtonSize.compact,
-                            onPressed: () =>
-                                Navigator.of(context).pushNamed('/legal/terms'),
-                          ),
-                          Text(' and ', style: type.secondary),
-                          AppButton.text(
-                            label: 'Privacy Policy',
-                            size: AppButtonSize.compact,
-                            onPressed: () =>
-                                Navigator.of(context)
-                                    .pushNamed('/legal/privacy'),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               if (s.fieldErrors['acceptTerms'] != null)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/device_name.dart';
@@ -6,6 +7,7 @@ import 'package:raajjepro/core/auth/token_store.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/auth/presentation/register_screen.dart';
 
+import '../../helpers/a11y.dart';
 import '../../helpers/fake_api.dart';
 import '../../helpers/pump.dart';
 
@@ -135,4 +137,92 @@ void main() {
       }
     },
   );
+
+  group('the consent row — 🔧 rebuilt 2026-09-16', () {
+    /// Reported as "the radio button and the accompanying text is not
+    /// correctly aligned". It was, by 11 dp — and the cause turned out to
+    /// carry a second, worse defect with it.
+    ///
+    /// The legal links were `AppButton.text` compacts, 44 dp tall, in a `Wrap`
+    /// beside a 26 dp checkbox aligned to `start`. That made the first line
+    /// 44 dp, centred the words in it, and stranded the checkbox above them.
+    /// And because they were controls *inside* a tappable `Pressable`, which
+    /// wraps its child in `Semantics(excludeSemantics: true)`, both links were
+    /// erased from the semantics tree — a screen reader was asked to consent
+    /// to two documents it could not open.
+    ///
+    /// `Register.dc.html` draws one flowing span with inline links, which is
+    /// the shape that fixes both at once.
+    testWidgets('the checkbox is centred on the first line of the sentence', (
+      tester,
+    ) async {
+      await pump(tester);
+      final row = find.byKey(const Key('reg-terms'));
+      await tester.ensureVisible(row);
+      await settle(tester);
+
+      final box = tester.getRect(
+        find.descendant(of: row, matching: find.byType(Container)).first,
+      );
+      final text = tester.getRect(
+        find.descendant(of: row, matching: find.byType(RichText)).first,
+      );
+      // `secondary` is 12.5 at height 1.5, so one line is 18.75 — the
+      // artboard's own 12.5px/1.55. Measured against the FIRST line, not the
+      // block: the sentence wraps to two at 412, and a block-centred checkbox
+      // would drift as the copy changes length.
+      const line = 18.75;
+      expect(box.height, line, reason: 'the checkbox box is one line tall');
+      expect(
+        box.center.dy - (text.top + line / 2),
+        closeTo(0, 0.5),
+        reason: 'checkbox centre against first-line centre; was -10.9 dp',
+      );
+    });
+
+    testWidgets('both legal links are reachable, and so is the consent toggle', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester);
+      await tester.ensureVisible(find.byKey(const Key('reg-terms')));
+      await settle(tester);
+
+      // Walked rather than found: `find.bySemanticsLabel` matches widgets, and
+      // an inline link is a span inside one `RichText`, so the finder reports
+      // zero for links that are in fact present. That cost a wrong conclusion
+      // once already.
+      final labels = <String>[];
+      void walk(SemanticsNode n) {
+        final d = n.getSemanticsData();
+        if (d.label.isNotEmpty && d.hasAction(SemanticsAction.tap)) {
+          labels.add(d.label);
+        }
+        n.visitChildren((c) {
+          walk(c);
+          return true;
+        });
+      }
+
+      // Rooted at the row's own node — no pipeline owner, and scoped to
+      // the thing under test rather than the whole screen.
+      walk(tester.getSemantics(find.byKey(const Key('reg-terms'))));
+
+      expect(labels, contains('Terms of Service'));
+      expect(labels, contains('Privacy Policy'));
+      expect(
+        labels.any((l) => l.startsWith("I agree to RaajjePro's")),
+        isTrue,
+        reason: 'the consent control still announces itself',
+      );
+      handle.dispose();
+    });
+
+    testWidgets('no control is swallowed by the tappable row', (tester) async {
+      await pump(tester);
+      await tester.ensureVisible(find.byKey(const Key('reg-terms')));
+      await settle(tester);
+      expectNoSwallowedControls(tester);
+    });
+  });
 }
