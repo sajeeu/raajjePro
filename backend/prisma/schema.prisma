@@ -315,6 +315,12 @@ model User {
   /// than the provider profile for exactly that reason.
   paymentSubmissions PaymentSubmission[]
 
+  /// §Phase 17.1. The customer side of a booking; the provider side hangs off
+  /// [ProviderProfile], because that is what a listing belongs to.
+  bookings     Booking[] @relation("BookingCustomer")
+  /// §Phase 22's minimal insert. Null reporter = the system filed it.
+  reportsFiled Report[]  @relation("ReportReporter")
+
   @@index([phoneE164])
   @@index([status, deletionDeadlineAt])
   @@map("app_user")
@@ -498,6 +504,10 @@ model ProviderProfile {
   timeSlots              TimeSlot[]
   reservations           Reservation[]
   slotStates             ListingSlotState[]
+  /// §Phase 17.1. Denormalised from the listing at creation — a listing
+  /// never changes owner, and every provider-side booking query is
+  /// provider-scoped.
+  bookings               Booking[]
 
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
@@ -956,6 +966,8 @@ model Island {
   /// §Phase 8's per-listing areas (ledger P7-3) — a different table from the
   /// account-level one above, and the one discovery matches on.
   listingServiceAreas ListingServiceArea[]
+  /// §Phase 17.1. Where the job is — **by id, never by name** (§0.0 item 12).
+  bookings            Booking[]
 
   /// The natural key, so two rows cannot claim the same island of the same atoll.
   @@unique([atollAbbr, name])
@@ -1264,8 +1276,11 @@ model Listing {
   reservations           Reservation[]
   slotState              ListingSlotState?
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  /// §Phase 17.1. §1b's protected-listing rule reads these by status and
+  /// `scheduledFor`; nothing counts them for display.
+  bookings  Booking[]
 
   /// §1a's derived visibility resolves through this composite: the
   /// published-listing count is `(providerProfileId, status, visibility,
@@ -1946,6 +1961,9 @@ model TimeSlot {
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  /// §Phase 17.1. The booking that took this slot, where one did. The
+  /// [Reservation] holds the time; the booking is what agreed to pay for it.
+  booking   Booking?
 
   /// ⚠️ **This is a generation key, not the double-booking guard.** Root
   /// `CLAUDE.md` and §Phase 9a both reject `UNIQUE (providerId, listingId,
@@ -2021,6 +2039,10 @@ model Reservation {
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  /// §Phase 17.1, and the back half of ledger row **P9A-2**: the hold and
+  /// the booking are created in one transaction, so this is set for a
+  /// booking-taken reservation and null for one taken any other way.
+  booking   Booking?
 
   /// The provider's calendar, and §Phase 8's "reserved slots stay reserved".
   @@index([providerProfileId, releasedAt, startsAt])
@@ -2077,4 +2099,502 @@ model ListingSlotState {
   /// next `migrate dev`.
   @@index([nextGenerationAt])
   @@map("listing_slot_state")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 17.1 — bookings: the core machine, payment attestation, the locked
+// agreement
+// ---------------------------------------------------------------------------
+
+/// §1c's status machine, in full.
+///
+/// **Every value the plan names is here, including the three no 17.1 edge
+/// reaches.** `awaiting_quote` and `quote_offered` are §Phase 17.2's and
+/// `emergency_offered` is §Phase 17.3's; naming them now costs one migration
+/// instead of three and makes the machine readable as a whole rather than as
+/// the part built first. `transitions.ts` is where the edges live, and it has
+/// none into those three — a later slice adds the edge, not the value.
+///
+/// Three of these are **not terminal** even though they read as endings
+/// (§1c): `payment_unresolved` is resolved by an admin to `confirmed` or
+/// `cancelled`; `disputed` is resolved to `dispute_resolved`; and
+/// `payment_claimed` can go *back* to `awaiting_payment` when the customer
+/// withdraws an unanswered claim (Round 24).
+enum BookingStatus {
+  requested
+  /// §Phase 17.2.
+  awaiting_quote
+  /// §Phase 17.2.
+  quote_offered
+  /// §Phase 17.3 — "offers are collecting and awaiting the customer", never
+  /// "one provider has claimed this".
+  emergency_offered
+  accepted
+  awaiting_payment
+  payment_claimed
+  confirmed
+  completed
+  cancelled
+  declined
+  disputed
+  dispute_resolved
+  payment_unresolved
+
+  @@map("booking_status")
+}
+
+/// Round 17. What the customer reads beside the number they are about to
+/// transfer — **derived, never separately set**, one value per path that can
+/// produce an `agreedAmount` (§Phase 8's `pricingModel`).
+///
+/// The labels are the frontend's and are written once there. The derivation
+/// is `pricing.ts`, and it is the only place a `PricingModel` becomes one of
+/// these.
+enum AmountKind {
+  fixed_price
+  hourly_total
+  daily_total
+  /// Always the source for `range` and `quote` listings (§1c step 3) — a
+  /// range is advertising, never a bookable amount. §Phase 17.2.
+  quoted
+  /// §Phase 17.3.
+  callout_fee
+
+  @@map("amount_kind")
+}
+
+/// §1c step 10. A two-sided completion and a timed-out one are the same
+/// status and a different fact, and the analytics and trust value is entirely
+/// in telling them apart.
+enum BookingCompletedVia {
+  confirmed
+  unconfirmed
+
+  @@map("booking_completed_via")
+}
+
+/// Who caused a transition. The booking detail screen's status timeline
+/// renders this ("you", "the provider", "automatically"), and §1f's
+/// cancellation rate needs to know whether a cancellation was the provider's
+/// or the customer's — "customer cancellations never count against a
+/// provider".
+enum BookingActorRole {
+  customer
+  provider
+  admin
+  /// A scheduled job. The three 17.1 jobs are the auto-decline, the
+  /// payment-silence escalation and the completion timeout.
+  system
+
+  @@map("booking_actor_role")
+}
+
+/// §1c Disputes: "an outcome from a fixed enumeration". v3 recorded "an
+/// outcome" with no enumeration, "which would have produced an unstructured
+/// audit log you could not measure fairness against".
+enum DisputeOutcome {
+  resolved_for_customer
+  resolved_for_provider
+  inconclusive
+  fraud_confirmed
+  withdrawn
+
+  @@map("dispute_outcome")
+}
+
+/// §1h. An amendment is proposed by one party and accepted or rejected by the
+/// other; **every attempt is recorded whether accepted or not**, which is what
+/// makes "a provider who routinely revises upward on site has a number that
+/// says so" true.
+///
+/// `withdrawn` is the proposer taking it back, and it is still an attempt —
+/// nothing here deletes a row, and §1f counts proposals, not survivors.
+enum BookingAmendmentStatus {
+  proposed
+  accepted
+  rejected
+  withdrawn
+
+  @@map("booking_amendment_status")
+}
+
+/// §Phase 22's `targetType`, seeded with the values that phase enumerates so
+/// its queue extends this table rather than replacing it.
+enum ReportTargetType {
+  listing
+  review
+  user
+  booking
+  message
+  photo
+
+  @@map("report_target_type")
+}
+
+/// §Phase 22, Round 17: "`reason` enumerated **and scoped by `targetType`**".
+/// The scoping is `reports.ts`'s — a Prisma enum cannot express it — and
+/// every value that phase lists is here so the queue it builds reads one set.
+///
+/// §Phase 17.1 files only the four `booking` reasons.
+enum ReportReason {
+  // listing
+  misleading_description
+  wrong_category
+  contact_details_in_listing
+  prohibited_service
+  not_the_real_provider
+  // review
+  fake_review
+  abusive_language
+  not_about_this_service
+  // user
+  harassment
+  impersonation
+  fraud
+  repeated_no_show
+  // booking
+  work_not_done
+  price_changed_on_site
+  unsafe_work
+  payment_dispute
+  // message
+  contact_solicitation
+  spam
+  abusive_content
+  // photo
+  not_own_work
+  inappropriate_content
+  contains_contact_details
+
+  @@map("report_reason")
+}
+
+/// §Phase 22: "`resolved` and `dismissed` both require a resolution reason;
+/// neither is reachable without one" — enforced in `reports.ts`, because a
+/// conditional NOT NULL is not expressible here.
+enum ReportStatus {
+  open
+  under_review
+  resolved
+  dismissed
+
+  @@map("report_status")
+}
+
+/// One booking (§Phase 17, §1c).
+///
+/// **A booking is not a reservation.** [Reservation] holds the *time* and is
+/// what the exclusion constraint guards; this holds the *agreement*. A slot
+/// booking has both, an emergency booking has only this one (§1c: "an
+/// emergency is understood as an interruption to the published calendar, not
+/// a block on it"), and the reservation is taken **inside this row's own
+/// transaction** so a booking and its hold land together or neither does
+/// (§Phase 9a, ledger row **P9A-2**).
+///
+/// **No column here carries a phone number, and none ever may** (§1c). The
+/// one endpoint in this system that returns one is
+/// `POST /v1/bookings/:id/reveal-contact` (§Phase 17.3), which reads the
+/// `User` row under its seven conditions and stores nothing.
+///
+/// Invariant 8: nothing is deleted. A cancelled or declined booking keeps its
+/// row and its whole [BookingStatusEvent] trail.
+model Booking {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Human-quotable, and what a customer reads out in a dispute. Short,
+  /// unambiguous alphabet (no O/0/I/1), generated once and never reused.
+  reference String @unique @db.VarChar(12)
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  customerId String @map("customer_id") @db.Uuid
+  customer   User   @relation("BookingCustomer", fields: [customerId], references: [id])
+
+  /// Denormalised from the listing at creation, like [AvailabilityRule]'s: a
+  /// listing never changes owner, and every provider-side query — the accept
+  /// prompt, My Bookings as a provider, §1f's conduct window — is
+  /// provider-scoped rather than listing-scoped.
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// Copied from the listing at creation and **never re-read from it**
+  /// (§1c: `bookingMode` is "defaulted by category, editable per listing").
+  /// A provider switching a listing from `slot` to `request` must not change
+  /// what an in-flight booking is, and the accept window, the picker that
+  /// produced it and the machine's own edges all depend on this.
+  ///
+  /// `emergency` is deliberately **not** a [BookingMode] value: §Phase 8's
+  /// enum is the listing's two modes, and emergency is a capability layered
+  /// on top of a `request` listing (§1c). So it is a third value here and a
+  /// third value only here.
+  bookingMode BookingKind @map("booking_mode")
+
+  status BookingStatus @default(requested)
+
+  /// Set for a slot booking; null for a request-based or emergency one.
+  timeSlotId String?   @unique @map("time_slot_id") @db.Uuid
+  timeSlot   TimeSlot? @relation(fields: [timeSlotId], references: [id])
+
+  /// §Phase 9a's hold. Null for emergency, and null for a request-based
+  /// booking until a quote is offered (§Phase 17.2).
+  reservationId String?      @unique @map("reservation_id") @db.Uuid
+  reservation   Reservation? @relation(fields: [reservationId], references: [id])
+
+  /// Integer laari (invariant 7), null until `accepted`. **No booking reaches
+  /// `awaiting_payment` without one** (§1c step 3), enforced in the machine.
+  agreedAmountLaari Int?        @map("agreed_amount_laari")
+  amountKind        AmountKind? @map("amount_kind")
+  /// What a provider proposed before the customer approved it — §Phase 17.2's
+  /// quote. Retained after approval: it is the "original terms" half of §1h's
+  /// "the original and the amendment are both retained".
+  quotedAmountLaari Int?        @map("quoted_amount_laari")
+  /// §1c, emergency only, and **required to complete one** — "the real
+  /// settled total once parts and labour were added to the callout fee".
+  /// §1f's price adherence is `finalAmount <= agreedAmount`, so a null here
+  /// on a non-emergency booking means the agreed amount stood.
+  finalAmountLaari  Int?        @map("final_amount_laari")
+  amountSetAt       DateTime?   @map("amount_set_at") @db.Timestamptz(6)
+
+  /// When the job is. Locked at `accepted` (§1h) and movable only through an
+  /// accepted [BookingAmendment] or §Phase 17.4's reschedule. For an
+  /// emergency booking §1c sets it to the acceptance timestamp, so the
+  /// completion timeout can fire at all.
+  scheduledFor DateTime? @map("scheduled_for") @db.Timestamptz(6)
+
+  /// The request-based path's "preferred date/time window" (§1c) — free text
+  /// underneath the quick-pick chips, plus the chip's own resolved range
+  /// where one was tapped. §Phase 17.2 reads them; 17.1 stores nothing here
+  /// because a slot booking has a concrete time instead.
+  preferredWindowText String?   @map("preferred_window_text") @db.VarChar(300)
+  preferredWindowFrom DateTime? @map("preferred_window_from") @db.Timestamptz(6)
+  preferredWindowTo   DateTime? @map("preferred_window_to") @db.Timestamptz(6)
+
+  /// Round 25. One of the category's `occasionPresets`, request mode only,
+  /// never required, "rendered as the booking record's subtitle". No
+  /// state-machine change anywhere depends on it.
+  occasion String? @db.VarChar(80)
+
+  /// What the customer wrote on `Pick a Time.dc.html` — the job description,
+  /// and the "scope" half of §1h's locked agreement.
+  jobNotes String? @map("job_notes") @db.VarChar(2000)
+
+  /// Where the job is. An island **by id**, never by name (§0.0 item 12), plus
+  /// the free-text detail a customer types under it.
+  islandId      String? @map("island_id") @db.Uuid
+  island        Island? @relation(fields: [islandId], references: [id])
+  addressDetail String? @map("address_detail") @db.VarChar(300)
+
+  // -- Attestation and completion timestamps --------------------------------
+
+  /// §1c step 7. Cleared by a withdrawal (Round 24), which is why the
+  /// `withdrawnPaymentClaimAt` stamp below is separate — the two together are
+  /// what make "once per booking" enforceable after the first is cleared.
+  paymentClaimedAt        DateTime? @map("payment_claimed_at") @db.Timestamptz(6)
+  /// Round 24, and the "once per booking" guard: set by the first withdrawal
+  /// and never cleared, so a second attempt is refused whatever the status.
+  paymentClaimWithdrawnAt DateTime? @map("payment_claim_withdrawn_at") @db.Timestamptz(6)
+  /// When the provider said the money arrived (§1c step 8). Named for what it
+  /// is — an attestation, not a verification. Nothing in this system can see
+  /// a bank transfer.
+  paymentAttestedAt       DateTime? @map("payment_attested_at") @db.Timestamptz(6)
+
+  completedAt  DateTime?            @map("completed_at") @db.Timestamptz(6)
+  completedVia BookingCompletedVia? @map("completed_via")
+
+  /// §1c step 10's "Did this happen?" prompt. Set when the 7-day job asks;
+  /// the 3-day grace is measured from it, not from `scheduledFor`, so a late
+  /// prompt does not shorten the grace.
+  completionPromptedAt DateTime? @map("completion_prompted_at") @db.Timestamptz(6)
+
+  /// §1f's cancellation rate: "provider-initiated cancellations after
+  /// `accepted` ÷ accepted. Customer cancellations never count against a
+  /// provider." Also what §1h's replacement prefill keys on — a customer
+  /// whose provider cancelled is dropped back into the booking flow, and one
+  /// who cancelled themselves is not.
+  cancelledAt        DateTime?         @map("cancelled_at") @db.Timestamptz(6)
+  cancelledByRole    BookingActorRole? @map("cancelled_by_role")
+  /// Free text the canceller wrote. Shown to the counterparty; never used to
+  /// compute anything.
+  cancellationReason String?           @map("cancellation_reason") @db.VarChar(500)
+
+  declinedAt DateTime? @map("declined_at") @db.Timestamptz(6)
+
+  disputedAt        DateTime?       @map("disputed_at") @db.Timestamptz(6)
+  disputeOutcome    DisputeOutcome? @map("dispute_outcome")
+  disputeResolvedAt DateTime?       @map("dispute_resolved_at") @db.Timestamptz(6)
+
+  /// §Phase 8a's third trial trigger fires on **the transition into
+  /// `confirmed`**, from either door — `confirm-payment-received` or an admin
+  /// resolving `payment_unresolved` to `confirmed` (§Phase 17 item 20). This
+  /// records that the hook ran, so the second door cannot fire it twice.
+  trialHookFiredAt DateTime? @map("trial_hook_fired_at") @db.Timestamptz(6)
+
+  statusHistory BookingStatusEvent[]
+  amendments    BookingAmendment[]
+  reports       Report[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// `GET /v1/users/me/bookings?role=customer&status=…`, newest first.
+  @@index([customerId, status, createdAt])
+  /// The same read as a provider, and §1f's conduct window over 90 days.
+  @@index([providerProfileId, status, createdAt])
+  /// §1b's protected-listing rule: "a listing with a booking in
+  /// `accepted` … and a **future `scheduledFor`** stays visible regardless of
+  /// cap". One indexed query over the candidate listings.
+  @@index([listingId, status, scheduledFor])
+  /// The three scheduled jobs, each of which is a status plus one timestamp
+  /// range. Kept as one composite because all three lead with `status`.
+  @@index([status, createdAt])
+  @@map("booking")
+}
+
+/// The third booking mode.
+///
+/// §Phase 8's [BookingMode] is the **listing's** axis and has two values;
+/// §1c's emergency is a capability layered on a `request` listing, not a third
+/// kind of listing. A booking, though, really is one of three things, and the
+/// machine's edges differ by all three — so the third value lives here, where
+/// it describes a booking, and [BookingMode] is left exactly as §Phase 8 built
+/// it.
+enum BookingKind {
+  slot
+  request
+  emergency
+
+  @@map("booking_kind")
+}
+
+/// One transition, with who caused it and when — §Phase 17's "status timeline
+/// showing when each transition happened and who caused it".
+///
+/// Append-only and never deleted, which is what makes Round 24's rule
+/// checkable: "both transitions stay in `statusHistory` — a withdrawal hides
+/// nothing, it corrects the record."
+model BookingStatusEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  /// Null on the first event: a created booking came from nowhere.
+  fromStatus BookingStatus? @map("from_status")
+  toStatus   BookingStatus  @map("to_status")
+
+  actorRole   BookingActorRole @map("actor_role")
+  /// Null when `actorRole` is `system`. An admin's id goes here too — the
+  /// role is what tells the reader which table it points into.
+  actorUserId String?          @map("actor_user_id") @db.Uuid
+
+  /// The machine's own name for the edge — `accept`, `claim-payment`,
+  /// `withdraw-payment-claim`. Rendered by the timeline and grepped by tests;
+  /// deliberately not an enum, because every slice adds edges and a migration
+  /// per edge buys nothing.
+  transition String @db.VarChar(60)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([bookingId, createdAt])
+  @@map("booking_status_event")
+}
+
+/// §1h's locked agreement, and the record of every attempt to move it.
+///
+/// "At `accepted`, the agreed price, date, time and scope are locked. Neither
+/// party can alter them unilaterally. Any change requires an explicit in-app
+/// amendment the other party accepts. The original terms and the amendment
+/// are both retained. **Every amendment attempt is recorded, accepted or
+/// not**, and feeds price adherence."
+///
+/// So this table is written on *proposal*, not on acceptance, and a rejected
+/// or withdrawn row is as load-bearing as an accepted one. §Phase 11 reads it.
+///
+/// **This is not escrow.** Nothing here holds money; the immovability of the
+/// agreement is what replaces holding it (§1h, invariant 12).
+model BookingAmendment {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  proposedByRole   BookingActorRole @map("proposed_by_role")
+  proposedByUserId String           @map("proposed_by_user_id") @db.Uuid
+
+  /// What the terms were when this was proposed — the "original" half the
+  /// plan requires retained. Copied rather than joined, because the booking's
+  /// live values move when an amendment is accepted and a later reader must
+  /// still see what was being changed *from*.
+  previousAmountLaari  Int?      @map("previous_amount_laari")
+  previousScheduledFor DateTime? @map("previous_scheduled_for") @db.Timestamptz(6)
+  previousScopeNote    String?   @map("previous_scope_note") @db.VarChar(2000)
+
+  /// Null means "unchanged". At least one of the three must be present, which
+  /// `amendments.ts` enforces — an amendment that changes nothing is not a
+  /// proposal, it is noise in a metric.
+  proposedAmountLaari  Int?      @map("proposed_amount_laari")
+  proposedScheduledFor DateTime? @map("proposed_scheduled_for") @db.Timestamptz(6)
+  proposedScopeNote    String?   @map("proposed_scope_note") @db.VarChar(2000)
+
+  /// Why, in the proposer's words. Shown to the counterparty deciding.
+  reason String? @db.VarChar(500)
+
+  status BookingAmendmentStatus @default(proposed)
+
+  respondedByUserId String?   @map("responded_by_user_id") @db.Uuid
+  respondedAt       DateTime? @map("responded_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The booking detail's amendment history, and the one open proposal the
+  /// service refuses a second of.
+  @@index([bookingId, status, createdAt])
+  @@map("booking_amendment")
+}
+
+/// §Phase 22's queue, as the **minimal insert** §4 Sequencing asks §Phase 17
+/// to build: "Phase 17 and Phase 22 retain a soft circular reference
+/// (disputes and escalations file Reports); build 17 first with a minimal
+/// Report insert, 22 makes the queue real."
+///
+/// The columns are §Phase 22's own list — reporterId, targetType, targetId,
+/// reason, status, reviewedBy, reviewedAt, resolution reason — so that phase
+/// extends this rather than replacing it. What is deliberately absent is
+/// everything that phase owns: the queue, the actioning, the appeal path, the
+/// aggregates. Nothing here hides content.
+model Report {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Null when the system filed it — §1c step 9's 7-day escalation has no
+  /// human reporter, and recording one would be a lie about who complained.
+  reporterId String? @map("reporter_id") @db.Uuid
+  reporter   User?   @relation("ReportReporter", fields: [reporterId], references: [id])
+
+  targetType ReportTargetType @map("target_type")
+  targetId   String           @map("target_id") @db.Uuid
+
+  /// Set when `targetType` is `booking`, so §Phase 22 can show "both parties'
+  /// history shown together" without parsing `targetId` by type.
+  bookingId String?  @map("booking_id") @db.Uuid
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  reason ReportReason
+  /// What the reporter wrote. Never used to compute anything.
+  note   String?      @db.VarChar(1000)
+
+  status ReportStatus @default(open)
+
+  reviewedByAdminId String?   @map("reviewed_by_admin_id") @db.Uuid
+  reviewedAt        DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  /// §Phase 22: `resolved` and `dismissed` are unreachable without one.
+  resolutionReason  String?   @map("resolution_reason") @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("report")
 }

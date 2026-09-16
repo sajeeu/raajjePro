@@ -16,7 +16,6 @@ import type { PrismaClient } from './generated/prisma/client.js';
 import {
   AccountAnonymiser,
   AnonymisationHooks,
-  neverBlocks,
   type DeletionBlocker,
 } from './modules/account/anonymise.js';
 import { ExportContributors } from './modules/account/export.js';
@@ -35,6 +34,11 @@ import { AvailabilityService } from './modules/availability/service.js';
 import { SlotGenerator } from './modules/availability/generation.js';
 import { ReservationService } from './modules/availability/reservations.js';
 import { registerAvailabilityRoutes } from './modules/availability/routes.js';
+import { BookingRepository } from './modules/bookings/repository.js';
+import { registerBookingRoutes } from './modules/bookings/routes.js';
+import { BookingService } from './modules/bookings/service.js';
+import { loggingBookingNotifier, type BookingNotifier } from './modules/bookings/notifications.js';
+import { bookingDeletionBlocker, bookingSubscriptionSource } from './modules/bookings/seams.js';
 import { registerListingRoutes } from './modules/listings/routes.js';
 import { ListingService } from './modules/listings/service.js';
 import { PUBLISHED_LISTINGS } from './modules/listings/visibility.js';
@@ -77,6 +81,11 @@ import { FallbackSweep } from './modules/push/sweep.js';
 import type { PushTransport } from './modules/push/types.js';
 import { anonymiseAccountsJob } from './jobs/anonymise-accounts.js';
 import {
+  bookingAcceptTimeoutJob,
+  bookingCompletionTimeoutJob,
+  bookingPaymentSilenceJob,
+} from './jobs/booking-lifecycle.js';
+import {
   subscriptionIntroductoryConversionJob,
   subscriptionLifecycleJob,
   subscriptionTrialPromptJob,
@@ -100,7 +109,13 @@ export interface AppDeps {
   snsValidator: SnsMessageValidator;
   /** GETs an SNS SubscribeURL to confirm a subscription. Optional so production can default to a real fetch while tests observe the call. */
   confirmSubscription?: (url: string) => Promise<void>;
-  /** Phase 17 supplies the real check; until then nothing blocks anonymisation. */
+  /**
+   * 🔧 **§Phase 17.1 filled this seam.** The default is now the real
+   * non-terminal-booking check over the `booking` table, not `neverBlocks`,
+   * and `AccountAnonymiser` did not change — the interface is what survived
+   * (ledger rows **P1** and **P2**). A test may still inject a blocker to hold or
+   * release a freeze without building a booking.
+   */
   deletionBlocker?: DeletionBlocker;
   /**
    * §1a's published-listing predicate. Phase 8 supplies the real one over the
@@ -120,9 +135,11 @@ export interface AppDeps {
    */
   entitlements?: ProviderEntitlementReader;
   /**
-   * §Phase 17.1 supplies the real one. Until `Booking` exists, no provider
-   * has a booking and no listing is protected by one — which is the true
-   * answer rather than a stub (`modules/subscriptions/bookings.ts`).
+   * 🔧 **§Phase 17.1 filled this seam.** The default is now the real pair of
+   * queries over the `booking` table rather than `NO_BOOKINGS`, so §Phase 8a's
+   * third trial trigger and §1b's protected-listing rule both see real rows.
+   * No caller in `modules/subscriptions/` changed — which is the fourth time
+   * that file's own note has been right about this pattern.
    */
   subscriptionBookings?: SubscriptionBookingSource;
   /**
@@ -132,6 +149,13 @@ export interface AppDeps {
   billingNotifier?: BillingNotifier;
   /** Phase 11 supplies §1f's computed conduct metrics; until then no rate is computable. */
   providerConduct?: ProviderConductSource;
+  /**
+   * §Phase 19 owns notification content; until then the default logs that a
+   * booking event fired and that nothing delivered it. The one exception is
+   * the provider's accept prompt, which goes through §Phase 3c's dispatcher
+   * directly because that phase built it a `NotificationKind` of its own.
+   */
+  bookingNotifier?: BookingNotifier;
   /**
    * Test seam: when present, pino writes to this stream instead of stdout, so
    * a test can capture every log line a real run produces (the §Phase 3
@@ -154,6 +178,7 @@ declare module 'fastify' {
     availability: AvailabilityService;
     reservations: ReservationService;
     subscriptions: SubscriptionService;
+    bookings: BookingService;
     media: MediaService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
@@ -299,6 +324,13 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // service's entitlement reader; the dependency runs one way, and the
   // downgrade reads listing rows through the `visibility.ts` fragments rather
   // than through `ListingService`, which is what keeps it one-way.
+  // Phase 17.1's repository is built here rather than beside its service,
+  // because §Phase 8a's booking source is answered from it. Both questions are
+  // pure reads, so they need no rules and no service — which is what keeps the
+  // dependency one-way: subscriptions reads bookings, and `BookingService`
+  // (constructed below) reads subscriptions for the trial hook.
+  const bookingRepo = new BookingRepository(deps.prisma);
+
   const subscriptions = new SubscriptionService({
     prisma: deps.prisma,
     providers,
@@ -306,7 +338,10 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     audit,
     clock: deps.clock,
     bankDetails: config.billing.bankDetails,
-    ...(deps.subscriptionBookings === undefined ? {} : { bookings: deps.subscriptionBookings }),
+    // 🔧 **§Phase 17.1 filled this seam.** `NO_BOOKINGS` was the true answer
+    // while no `Booking` existed; these are the real queries and no rule in
+    // `modules/subscriptions/` changed.
+    bookings: deps.subscriptionBookings ?? bookingSubscriptionSource(bookingRepo, deps.clock),
     ...(deps.billingNotifier === undefined ? {} : { notifier: deps.billingNotifier }),
     log: app.log,
   });
@@ -355,10 +390,12 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     generator: slotGenerator,
   });
   app.decorate('availability', availability);
-  app.decorate(
-    'reservations',
-    new ReservationService({ prisma: deps.prisma, clock: deps.clock, repo: availability.repo }),
-  );
+  const reservations = new ReservationService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    repo: availability.repo,
+  });
+  app.decorate('reservations', reservations);
 
   // Phase 3c. `PushService` is the one sender every later module calls;
   // `NotificationDispatcher` is the only place the fallback rungs are written.
@@ -390,6 +427,33 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
   app.decorate('notificationHealth', notificationHealth);
 
+  // Phase 17.1. The core booking machine, §1c's payment attestation and §1h's
+  // locked agreement.
+  //
+  // It is constructed **after** the notification dispatcher and **before** the
+  // anonymiser and the job runner, because it supplies one and is registered
+  // with the other. `ReservationService` goes in as §Phase 9a built it — every
+  // method taking the caller's transaction — so a booking row, its first
+  // status event and its hold land together or not at all (ledger **P9A-2**).
+  //
+  // 🔧 `onConfirmed` is §Phase 8a's trial trigger, wired as a callback rather
+  // than an endpoint call because §Phase 17 item 20 requires it to fire "on
+  // the state transition into `confirmed`, not from one endpoint" — so both
+  // `confirm-payment-received` and an admin resolving `payment_unresolved`
+  // reach it through one place.
+  const bookings = new BookingService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    repo: bookingRepo,
+    reservations,
+    providers,
+    notifier: deps.bookingNotifier ?? loggingBookingNotifier(app.log),
+    dispatcher: notifications,
+    onConfirmed: (providerProfileId) => subscriptions.onBookingConfirmed(providerProfileId),
+    log: app.log,
+  });
+  app.decorate('bookings', bookings);
+
   const anonymisation = new AnonymisationHooks();
   // A deleted account must stop receiving pushes. Revoking inside the
   // anonymisation transaction means a hook failure leaves the user frozen and
@@ -413,7 +477,17 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
   app.decorate('anonymiser', anonymiser);
   const jobs = new JobRunner({ prisma: deps.prisma, clock: deps.clock, log: app.log });
-  jobs.register(anonymiseAccountsJob(anonymiser, deps.deletionBlocker ?? neverBlocks, app.log));
+  // 🔧 **§Phase 3's `DeletionBlocker`, filled.** `neverBlocks` was the true
+  // answer while no booking existed; now §Phase 3's "anonymisation executes
+  // automatically once non-terminal bookings terminate" is enforced against
+  // real rows, and the 30-day backstop inside the anonymiser is unchanged.
+  jobs.register(
+    anonymiseAccountsJob(
+      anonymiser,
+      deps.deletionBlocker ?? bookingDeletionBlocker(bookingRepo),
+      app.log,
+    ),
+  );
   jobs.register(
     pushFallbackJob(
       new FallbackSweep({
@@ -440,6 +514,13 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // wall-clock budget, and the provisional-hold expiry sweep.
   jobs.register(slotGenerationJob(slotGenerator, app.log));
   jobs.register(reservationExpiryJob(app.reservations, app.log));
+  // Phase 17.1: §1c's three flat clocks — the 24-hour accept window, the
+  // 7-day payment silence, and the completion prompt with its 3-day grace.
+  // The per-category ones belong to the slices that own them: §Phase 17.2's
+  // `quoteApprovalMinutes` and §Phase 17.3's `emergencyAcceptWindowMinutes`.
+  jobs.register(bookingAcceptTimeoutJob(bookings, app.log));
+  jobs.register(bookingPaymentSilenceJob(bookings, app.log));
+  jobs.register(bookingCompletionTimeoutJob(bookings, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -462,6 +543,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerLocationRoutes(app);
   registerListingRoutes(app);
   registerAvailabilityRoutes(app);
+  registerBookingRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);
   // The two routes the LOCAL media transport needs — this process playing the
