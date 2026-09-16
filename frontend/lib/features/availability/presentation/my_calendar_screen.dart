@@ -258,17 +258,45 @@ class _CommitmentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AppCard(
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(maldivesClock(commitment.startsAt), style: context.type.cardTitle),
         const SizedBox(width: AppSpacing.lg),
         Expanded(
-          child: Text(
-            '${maldivesClock(commitment.startsAt)}–'
-            '${maldivesClock(commitment.endsAt)}',
-            style: context.type.body,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${maldivesClock(commitment.startsAt)}–'
+                '${maldivesClock(commitment.endsAt)}',
+                style: context.type.body,
+              ),
+              // 🔧 **The customer, the reference and the mode** — the three
+              // fields `My Calendar.dc.html` draws and §Phase 9a could not
+              // supply, because they live on a `Booking` (ledger P9A-1). A
+              // hold with no booking behind it still renders the time, which
+              // is what §Phase 9a's designed empty row already was.
+              if (commitment.customerName != null)
+                Text(
+                  commitment.customerName ?? '',
+                  style: context.type.secondary.copyWith(
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              if (commitment.bookingReference != null)
+                Text(
+                  commitment.bookingReference ?? '',
+                  style: context.type.caption.copyWith(
+                    color: context.colors.textTertiary,
+                  ),
+                ),
+            ],
           ),
         ),
-        if (commitment.provisional)
+        if (commitment.bookingMode != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          AppChip.label(label: _modeLabel(commitment.bookingMode ?? '')),
+        ] else if (commitment.provisional)
           // A quote is offered and the customer has not answered — the time is
           // held, but it is not yet an appointment, and saying so is the
           // difference between a provider planning their day and being
@@ -282,6 +310,14 @@ class _CommitmentRow extends StatelessWidget {
       ],
     ),
   );
+
+  /// The mode chip, in the words the rest of the app uses for it (Round 44:
+  /// "Pick a time", never "Book instantly").
+  static String _modeLabel(String mode) => switch (mode) {
+    'request' => 'Requested time',
+    'emergency' => 'Emergency',
+    _ => 'Picked time',
+  };
 }
 
 class _TimeAwayRow extends StatelessWidget {

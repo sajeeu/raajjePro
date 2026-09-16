@@ -263,6 +263,42 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.1 — Done when', () => {
     });
   });
 
+  describe('ledger P9A-1: a booked slot appears on the provider\u2019s calendar', () => {
+    it('carries the customer, the reference and the mode — the three fields a Reservation has not', async () => {
+      const { customer, provider, listingId, slotId } = await bookableListing(app);
+      const booking = await bookSlot(app, customer, listingId, slotId);
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/v1/providers/me/calendar',
+        headers: provider.headers,
+        remoteAddress: freshIp(),
+      });
+
+      expect(res.statusCode).toBe(200);
+      const body = res.json<{
+        data: {
+          commitments: {
+            bookingId: string | null;
+            bookingReference: string | null;
+            bookingMode: string | null;
+            customerName: string | null;
+          }[];
+        };
+      }>().data;
+      const row = body.commitments.find((c) => c.bookingId === booking.id);
+      expect(row).toBeDefined();
+      expect(row?.bookingReference).toBe(booking.reference);
+      expect(row?.bookingMode).toBe('slot');
+      expect(row?.customerName).toBe('Aishath Test');
+
+      // And still no phone number, on the one endpoint that now joins a
+      // `User` row to answer this.
+      expect(res.body).not.toContain('+960');
+      expect(/"phone/i.test(res.body)).toBe(false);
+    });
+  });
+
   describe('6. no response shape in the module carries a phone number', () => {
     /**
      * Two properties, checked together over **every** response this module

@@ -307,18 +307,41 @@ export class AvailabilityRepository {
    * booking modes. What `overlapsAny` filters against, and what makes a
    * cleaning slot disappear while a plumbing quote is outstanding.
    */
-  findHeldReservations(
-    providerProfileId: string,
-    from: Date,
-    to: Date,
-    db: Db = this.prisma,
-  ): Promise<Reservation[]> {
+  /**
+   * The provider's own calendar — every time they are currently holding.
+   *
+   * 🔧 **The booking comes with it, since §Phase 17.1** (ledger row P9A-1).
+   * `My Calendar.dc.html`'s "Upcoming commitments" renders a customer name, a
+   * booking reference and a mode chip, none of which live on a `Reservation`;
+   * §Phase 9a rendered its designed empty state instead, which was correct
+   * then and is not now. The join is a Prisma relation rather than a call into
+   * the bookings module — a reservation knows its booking, and this file
+   * already knows the reservation.
+   *
+   * A reservation with no booking is still a real row (a provisional hold
+   * taken before §Phase 17.2's quote is accepted), which is why it is
+   * `booking: null` rather than an inner join.
+   */
+  findHeldReservations(providerProfileId: string, from: Date, to: Date, db: Db = this.prisma) {
     return db.reservation.findMany({
       where: {
         providerProfileId,
         releasedAt: null,
         startsAt: { lt: to },
         endsAt: { gt: from },
+      },
+      include: {
+        booking: {
+          select: {
+            id: true,
+            reference: true,
+            bookingMode: true,
+            status: true,
+            // A name and nothing else. There is no phone number in this
+            // projection and there may never be one (§1c).
+            customer: { select: { fullName: true } },
+          },
+        },
       },
       orderBy: { startsAt: 'asc' },
     });

@@ -327,6 +327,11 @@ export class AvailabilityService {
       startsAt: string;
       endsAt: string;
       kind: string;
+      /// 🔧 §Phase 17.1 (ledger P9A-1). Null on a hold with no booking yet.
+      bookingId: string | null;
+      bookingReference: string | null;
+      bookingMode: string | null;
+      customerName: string | null;
     }[];
     timeOff: TimeOffDto[];
   }> {
@@ -344,6 +349,10 @@ export class AvailabilityService {
         startsAt: r.startsAt.toISOString(),
         endsAt: r.endsAt.toISOString(),
         kind: r.kind,
+        bookingId: r.booking?.id ?? null,
+        bookingReference: r.booking?.reference ?? null,
+        bookingMode: r.booking?.bookingMode ?? null,
+        customerName: r.booking?.customer.fullName ?? null,
       })),
       timeOff: timeOff.map(toTimeOffDto),
     };

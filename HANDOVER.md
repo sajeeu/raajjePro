@@ -832,8 +832,83 @@ invoice PDF from a real object store, sharing L13's blocker) and **P10A-3**
 (the receipt picker and the presigned PUT on a device, which is P9-2's pass in
 a second place).
 
-**Next**: `/phase-10a` part 2 when the owner calls it — the admin panel, whose
-stack proposal is still owed. Otherwise `/phase-11`.
+**Phase 17.1 is built** — the core booking machine, §1c's payment attestation
+and §1h's locked agreement, backend and Flutter.
+`docs/decisions/28-phase-17-1-bookings.md` carries the full record.
+
+🔧 **It was built out of the plan's numbered order, and §4 Sequencing allows
+it.** The hard prerequisites §4 names for §Phase 17 are §Phase 3c, §Phase 9a
+and §Phase 4's seed, and all three are built; §Phases 11–16 are not
+prerequisites for any of them. What this does mean is that the booking flow's
+*entry points* belong to phases that do not exist yet — §Phase 12's Service
+Preview owns the way into `BookSlotScreen`, and §Phase 16's Home the way into
+the Bookings tab — so today the flow is reached from §Phase 6's Profile tiles,
+which is a real route rather than a placeholder.
+
+**One slice, and the other three refuse by name.** `POST /v1/listings/:id/
+bookings` answers `BOOKING_MODE_NOT_AVAILABLE` on a request-mode listing and
+`accept` answers `EMERGENCY_USES_ITS_OWN_ACCEPT` on an emergency booking —
+§0.0 item 15's own correction, at the endpoint rather than in a comment. The
+`BookingStatus` enum carries all fourteen values including the three no 17.1
+edge reaches, so §Phases 17.2 and 17.3 add rows to `transitions.ts` rather
+than a migration each.
+
+**The machine is a table of edges, checked twice.** Once in
+`assertTransition`, and again by the database: every write carries the status
+the booking was read at in its own `WHERE`, so two taps from two devices
+resolve to one winner with no row lock. The actor is part of the edge because
+§1f depends on it — a 24-hour auto-decline and a provider saying no are the
+same status and different facts, and "timeouts feed response rate, not
+acceptance rate" is only computable because the machine wrote down which.
+
+🔧 **Which clocks are constants here, and which are never.** The three the
+brief forbids hardcoding are per-category and appear nowhere in this slice:
+`emergencyAcceptWindowMinutes` (17.3), `quoteExpiryMinutes` and
+`quoteApprovalMinutes` (17.2) — the accept-timeout job's candidate query
+excludes emergency bookings outright rather than trusting a later filter.
+`windows.ts` holds only the set §1c states flat for every category: 24 hours
+to accept, 7 days of payment silence, 7 days to the completion prompt and 3
+more of grace.
+
+**Payment attestation is two humans, and the copy never pretends otherwise.**
+Nothing writes `PaymentSubmission` — a test asserts the count is unchanged —
+and seven days of provider silence reaches `payment_unresolved`, not
+`confirmed`, which is asserted by the *absence* of the trial hook and the
+attestation stamp rather than only by the status. Round 24's withdrawal is
+allowed once, only while unanswered, files no Report and moves no conduct
+metric; both transitions stay in `statusHistory`.
+
+🔧 **§1h's agreement is written on proposal, not on acceptance.** A rejected
+attempt is as load-bearing as an accepted one — §Phase 11 counts proposals —
+and accepting one that moves the time calls §Phase 9a's `reschedule` **inside
+the same transaction**, so the provider is never both blocked at the old time
+and free at the new. This is not §Phase 17 item 16's reschedule, which is
+17.4's and is a different mechanism.
+
+**Two seams filled, neither interface changed.** §Phase 3's `DeletionBlocker`
+and §Phase 8a's `SubscriptionBookingSource` now answer over the real table,
+and no caller in `modules/account/` or `modules/subscriptions/` moved — the
+fifth time that pattern has held. They sit on the **repository** rather than
+the service, because the service needs `subscriptions.onBookingConfirmed` and
+routing both through it would be a cycle. Ledger rows **P2**, **P9A-1** and
+**P9A-2** close; new rows **P17-1** (nobody is told yet — §Phase 19 owns
+content), **P17-2** (the accept prompt on a real device) and **P17-3** (the
+offline accept surviving a cold start) open.
+
+🔧 **Two defects the phase's own tests found.** `BookingApi.list` parsed
+`data` where `ApiClient` unwraps a list payload as `_list`, so My Bookings
+would have been permanently empty against a perfectly good response — the
+comment in `ListingApi.listOwn` saying exactly this has now earned its place
+twice. And a class named `_RoleSwitch` in a file that calls `pushNamed` tripped
+`no_booking_notification_toggle_test`'s grep; the guard is right, the name was
+wrong, and two chips are not a switch.
+
+**Next**: `/phase-17-2` — the request-with-quote path, which plugs into the
+machine this slice built: `awaiting_quote` → `quote_offered` → `accepted`, the
+provisional reservation §Phase 9a already supports, and the quote-approval job
+on the category's `quoteApprovalMinutes` at **both** ends of the split.
+`/phase-10a` part 2 (the admin panel) is still paused by the owner, and
+`/phase-11` is still unstarted.
 
 | | |
 |---|---|
@@ -842,8 +917,8 @@ stack proposal is still owed. Otherwise `/phase-11`.
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
 | `mockups/*.jpg` | The seventeen originally-delivered screens. Provenance only; a prototype beats an image |
-| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs. Phase 10: one column and one endpoint — `ProviderProfile.keepVisibleListingId` and `POST /v1/providers/me/listings/:id/keep-visible`, §1b's over-cap override as a ranking input that leaves `applyEntitlementVisibility` the only writer of `hidden_over_cap`. Phase 10a part 1: §1b step 5's appeal (`appealedAt`/`appealNote` and its endpoint, changing no status), and the quoted billing period and grace end on the subscription DTO so no billing arithmetic reaches Flutter |
-| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart`. Phase 10: `features/my_services/` — the My Services dashboard at `/provider/services`, and `core/listings/`, where the listing API, model and price string moved on their second consumer. Phase 10a part 1: `features/billing/` — Billing & subscription, Pay by bank transfer and Invoices, with every billing rule left on the server; `core/files/` and `core/format/money.dart`, moved there on their second consumer — `frontend/lib/README.md` lists every directory |
+| `backend/` | TypeScript · Prisma 7 · PostgreSQL 18. Phases 0–2: Fastify under `/v1`, the envelope and error hierarchy, rate limiting, idempotency, admin identity with TOTP MFA, the audit log, and SES email with bounce handling. Phase 3: register/login, JWT sessions, email OTP, account settings, data export, the deletion pipeline and its job runner. Phase 3b: password reset. Phase 3c: `PushSender` and the transport boundary, device registration, the fallback chain, the two notification jobs and the admin message log. Phase 4: the category catalogue, its seed CLI and the admin CRUD behind `requireAdmin`. Phase 5: provider profiles, `getOrCreateProviderProfile`, §1a's `findVisibleProviders` gate and §1f's conduct read surface, both over seams Phases 8 and 11 fill. Phase 6: `profile-summary` and `PATCH /v1/users/me` on the existing account module. Phase 7: the island register and its seed, `ProviderServiceArea`, the public unpaged island search and the two provider service-area writes. Phase 6a: `providerType`, and the derived `isOnboardingComplete` that `profile-summary` and the own-provider read both answer from — no new endpoint. Phase 8: service listings under `/v1/providers/me/listings` — draft-save, the per-step PATCH, the six-field publish gate with the entitlement-cap seam, provider visibility, soft delete, per-listing service areas, the `MediaStorage` boundary with EXIF stripping, and the listing event log with its rollup job. Phase 8a: `ProviderSubscription`, the generic `PaymentSubmission` and `Invoice`; `getProviderEntitlements` filling Phase 8's cap seam, the two trial triggers and the 7-day prompt, the shared pause behind the `acceptingNewCustomers` toggle, §1b's downgrade/restore reconcile, the admin confirm/reject/reverse endpoints with their audit trail, the written PDF invoice, and three hourly lifecycle jobs. Phase 10: one column and one endpoint — `ProviderProfile.keepVisibleListingId` and `POST /v1/providers/me/listings/:id/keep-visible`, §1b's over-cap override as a ranking input that leaves `applyEntitlementVisibility` the only writer of `hidden_over_cap`. Phase 10a part 1: §1b step 5's appeal (`appealedAt`/`appealNote` and its endpoint, changing no status), and the quoted billing period and grace end on the subscription DTO so no billing arithmetic reaches Flutter. Phase 17.1: `modules/bookings/` — the `Booking`, `BookingStatusEvent`, `BookingAmendment` and §Phase 22's minimal `Report`; the edge table every transition is checked against; slot creation inside one transaction with §Phase 9a's reservation; §1c's payment attestation with Round 24's withdrawal; §1h's amendments, which move the hold with the time; disputes and the admin resolution that reaches §Phase 8a's trial hook from either door; three scheduled jobs on §1c's flat clocks; and the two seams §Phases 3 and 8a built against, filled |
+| `frontend/` | Flutter 3.47, Android + iOS, bundle id `mv.raajjepro.app`. Phases 0–1: the design system is in `lib/core/theme/` and `lib/shared/`, the gallery at `/gallery` (linked from Home in debug builds). Phase 3: Sign In, Register, Verify Email, Session expired, Account Settings and its sub-screens. Phase 3b: Forgot password. Phase 3c: the `PushMessaging` seam in `lib/core/push/` (no vendor SDK is a dependency) and the persistent enable-notifications reminder. Phase 4: Explore, its endpoint-driven grid and the inert chrome around it. Phase 6: Profile, the role switcher, `LegalIndexScreen`, and `UnbuiltScreen` for the routes later phases owe. Phase 7: `core/location/` and `shared/location/` — the reusable island multi-select, the header picker sheet, and the session-scoped browsing island. Phase 6a: `features/onboarding/` — Become a Provider's three steps, resuming from whatever the server says was finished. Phase 9: `features/service_wizard/` — the seven-step Create/Edit Service Wizard, `core/offline/`'s queue-and-replay, `core/media/`'s picker and presigned-PUT seams, and `shared/states/no_connection_view.dart`. Phase 10: `features/my_services/` — the My Services dashboard at `/provider/services`, and `core/listings/`, where the listing API, model and price string moved on their second consumer. Phase 10a part 1: `features/billing/` — Billing & subscription, Pay by bank transfer and Invoices, with every billing rule left on the server; `core/files/` and `core/format/money.dart`, moved there on their second consumer — `frontend/lib/README.md` lists every directory. Phase 17.1: `features/bookings/` — My Bookings and its filter pills, the booking detail with §Phase 17's status timeline, the payment step and the provider's receipt answer, mark-complete, "Did this happen?", cancel, report a problem, propose an amendment, the provider accept prompt with its 24-hour countdown and its offline queue, and `BookSlotScreen`, which is the rest of `Pick a Time` |
 | `docker-compose.yml` · `infra/postgres/` | The local database image: pg_cron preloaded, WAL archived every 5 min |
 | `scripts/db/` | `base-backup.sh`, `pitr-status.sh`, and the restore procedure |
 | `.github/` | CI workflow and Dependabot |

@@ -217,6 +217,10 @@ class Commitment {
     required this.startsAt,
     required this.endsAt,
     required this.provisional,
+    required this.bookingId,
+    required this.bookingReference,
+    required this.bookingMode,
+    required this.customerName,
   });
 
   factory Commitment.fromJson(Map<String, dynamic> json) => Commitment(
@@ -225,6 +229,10 @@ class Commitment {
     startsAt: DateTime.parse(json['startsAt'] as String),
     endsAt: DateTime.parse(json['endsAt'] as String),
     provisional: json['kind'] == 'provisional',
+    bookingId: json['bookingId'] as String?,
+    bookingReference: json['bookingReference'] as String?,
+    bookingMode: json['bookingMode'] as String?,
+    customerName: json['customerName'] as String?,
   );
 
   final String id;
@@ -232,6 +240,18 @@ class Commitment {
   final DateTime startsAt;
   final DateTime endsAt;
   final bool provisional;
+
+  /// 🔧 **The four fields §Phase 17.1 filled in** (ledger P9A-1). All null on
+  /// a hold with no booking behind it — a provisional one taken when a quote
+  /// was offered — so the row degrades to what §Phase 9a already drew rather
+  /// than showing an empty name.
+  ///
+  /// **A customer's name and nothing else.** There is no phone number on this
+  /// shape and there may never be one (§1c).
+  final String? bookingId;
+  final String? bookingReference;
+  final String? bookingMode;
+  final String? customerName;
 }
 
 @immutable
