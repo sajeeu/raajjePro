@@ -26,6 +26,15 @@ import 'package:raajjepro/features/availability/presentation/slot_picker_screen.
 import 'package:raajjepro/features/billing/presentation/billing_screen.dart';
 import 'package:raajjepro/features/billing/presentation/invoices_screen.dart';
 import 'package:raajjepro/features/billing/presentation/pay_by_bank_transfer_screen.dart';
+import 'package:raajjepro/features/bookings/controller/bookings_controller.dart';
+import 'package:raajjepro/features/bookings/presentation/book_slot_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
+import 'package:raajjepro/features/bookings/presentation/booking_detail_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/my_bookings_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/payment_step_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/propose_amendment_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/provider_accept_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/provider_receipt_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
@@ -166,6 +175,69 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
 
         AppRoutes.createService: (context) => ServiceWizardScreen(
           args: ServiceWizardArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+
+        // Phase 17.1. The booking machine's screens. Every one of them takes
+        // its arguments untyped, so §Phase 12's Service Preview and §Phase
+        // 16's Home can reach the booking flow without importing this
+        // feature — the shape `VerifyEmailArgs` established.
+        //
+        // `/bookings` is what §Phase 6's Profile tile and the nav bar point
+        // at; everything under it is reached from a booking.
+        MyBookingsScreen.routeName: (context) => MyBookingsScreen(
+          initialFilter: bookingFilterFromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        BookSlotScreen.routeName: (context) => BookSlotScreen(
+          args: BookSlotArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        BookingDetailScreen.routeName: (context) => BookingDetailScreen(
+          args: BookingDetailArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        PaymentStepScreen.routeName: (context) => PaymentStepScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        ProviderReceiptScreen.routeName: (context) => ProviderReceiptScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        ProviderAcceptScreen.routeName: (context) => ProviderAcceptScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        MarkCompleteScreen.routeName: (context) => MarkCompleteScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        DidThisHappenScreen.routeName: (context) => DidThisHappenScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        CancelBookingScreen.routeName: (context) => CancelBookingScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        RaiseDisputeScreen.routeName: (context) => RaiseDisputeScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        ProposeAmendmentScreen.routeName: (context) => ProposeAmendmentScreen(
+          args: BookingActionArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),

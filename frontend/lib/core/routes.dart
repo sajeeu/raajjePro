@@ -33,6 +33,12 @@ abstract final class AppRoutes {
   static const savedPreferences = '/saved-preferences';
   static const help = '/help';
 
+  /// 🔧 **Added by Phase 17.1**, and the reason is the rule this file states:
+  /// §Phase 6's Profile draws four booking tiles and may not import the
+  /// bookings feature to reach them. The screen keeps its own `routeName`;
+  /// this is the copy Profile references.
+  static const bookings = '/bookings';
+
   // Phase 4.
   static const explore = '/explore';
 

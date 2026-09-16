@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/profile/presentation/widgets/profile_hero.dart';
@@ -228,20 +229,34 @@ void main() {
       tester,
     ) async {
       // The defect Round 48 §2 fixed was four labels reaching one screen.
-      // §Phase 17 has not built My Bookings, so each tile lands on a
-      // placeholder that names *its* tab — the distinction survives the
-      // placeholder rather than being reintroduced by it.
-      await pump(tester);
+      //
+      // 🔧 **Rewritten by §Phase 17.1**, which built My Bookings and so made
+      // this test's premise — "each tile lands on a placeholder" — false. The
+      // *rule* is unchanged and is what is asserted: each tile still carries
+      // its own destination, now as the pill it names in the arguments. A
+      // stub route records them, so this file still does not import the
+      // bookings feature.
+      final seen = <Object?>[];
+      await pump(
+        tester,
+        routes: {
+          AppRoutes.bookings: (context) {
+            seen.add(ModalRoute.of(context)?.settings.arguments);
+            return const Scaffold(body: Center(child: Text('Bookings stub')));
+          },
+        },
+      );
       for (final label in ['All', 'Upcoming', 'Active', 'Completed']) {
         await tester.ensureVisible(find.text(label));
         await tester.tap(find.text(label));
         await settle(tester);
-        final screen = tester.widget<UnbuiltScreen>(find.byType(UnbuiltScreen));
-        expect(screen.title, '$label bookings', reason: label);
-        expect(screen.owedBy, 'Phase 17', reason: label);
-        await tester.tap(find.text('Go back'));
+        expect(seen.last, {'filter': label}, reason: label);
+        Navigator.of(tester.element(find.text('Bookings stub'))).pop();
         await settle(tester);
       }
+      expect(seen, hasLength(4));
+      // Four distinct destinations, not one shared screen.
+      expect(seen.toSet(), hasLength(4));
     });
 
     testWidgets('take their colours from the state each one names', (

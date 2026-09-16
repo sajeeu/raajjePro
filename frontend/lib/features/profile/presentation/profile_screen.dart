@@ -157,16 +157,15 @@ class _ProfileBody extends ConsumerWidget {
                   ),
                 ),
                 BookingTilesCard(
-                  onSelected: (tile) => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      // Each tile keeps its own destination: the placeholder
-                      // names the tab, so the four are not four labels for
-                      // one screen (Round 48 §2).
-                      builder: (_) => UnbuiltScreen(
-                        title: '${tile.label} bookings',
-                        owedBy: 'Phase 17',
-                      ),
-                    ),
+                  // 🔧 **Phase 17.1 gave these a destination.** Each tile
+                  // still keeps its own — Round 48 §2's whole point was that
+                  // four labels sharing one screen is a defect — so the tile
+                  // that was tapped selects the pill it names, by label,
+                  // through untyped arguments (this feature may not import
+                  // the bookings one).
+                  onSelected: (tile) => Navigator.of(context).pushNamed(
+                    AppRoutes.bookings,
+                    arguments: {'filter': tile.label},
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
