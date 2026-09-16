@@ -823,7 +823,7 @@ exists only as §Phase 23's App Store contingency), "a second person looks at
 it" (second-admin sign-off is out of v1 scope by name), and `MVR 150` printed
 beside the introductory rate (§1b: the price is per-provider and never a
 global constant). 🔧 **A fourth correction came from the plan moving
-mid-build**: revision 5.32's §0.0 item 19 makes a full bank-statement match
+mid-build**: revision 5.33's §0.0 item 19 makes a full bank-statement match
 confirm **without a human**, so the copy no longer names the reviewer —
 "Pending confirmation", not "Pending admin confirmation".
 
@@ -837,7 +837,7 @@ stack proposal is still owed. Otherwise `/phase-11`.
 
 | | |
 |---|---|
-| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.32. Every product decision. Read §0.0 first — it is a precedence rule |
+| `01_Development_Plan_v5.md` | **The single source of truth**, revision 5.33. Every product decision. Read §0.0 first — it is a precedence rule |
 | `CLAUDE.md` | Architectural invariants Claude must never violate. Loaded automatically |
 | `docs/design/` | The design system: style guide, page briefs, session prompts, the plan for the rebuild |
 | `mockups/design-composer/` | **61 working prototypes** — the current design reference |
