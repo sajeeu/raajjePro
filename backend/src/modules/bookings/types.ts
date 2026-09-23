@@ -1,3 +1,4 @@
+import type { BookingChatState } from './chat.js';
 import type {
   AmountKind,
   BookingActorRole,
@@ -131,7 +132,45 @@ export interface BookingDto {
   durationMinutes: number | null;
 
   preferredWindowText: string | null;
+  /**
+   * §Phase 17.2. The chip's resolved range where the customer tapped one, null
+   * where they typed instead — a preference, never a constraint (§1c: "this is
+   * a preference, not a slot"). The provider's proposed time is what every
+   * clock downstream uses.
+   */
+  preferredWindowFrom: string | null;
+  preferredWindowTo: string | null;
   occasion: string | null;
+
+  // -- §Phase 17.2's quote, as both parties see it --------------------------
+
+  /**
+   * When the provider must have quoted by — the deadline
+   * `Request a Time.dc.html` renders as "until 12:30 today". Null once they
+   * have, and null on every mode but `request`.
+   */
+  quoteDueAt: string | null;
+  /** When the live quote was sent. Non-null is what "the chat has opened" means (§0.0 item 7). */
+  quoteOfferedAt: string | null;
+  /**
+   * When the customer's approval window closes — what
+   * `Quote Received.dc.html` counts down to. Read from the category's
+   * `quoteApprovalMinutes`, never a flat 72 hours (invariant 13).
+   */
+  quoteExpiresAt: string | null;
+  /** The provider's note on the quote — "Ibrahim's note", and the agreed scope once approved. */
+  quoteNote: string | null;
+
+  /**
+   * Whether the `booking`-type thread takes messages right now.
+   *
+   * §Phase 17.2 owns this state and §Phase 18 owns the thread itself. It is
+   * **derived** (`chat.ts`), so nothing can stamp it into disagreement with
+   * the status: `open` from the moment a quote is offered on the request path
+   * and from `accepted` on the others, `locked` seven days after completion
+   * (Round 27), and `not_open` before either door.
+   */
+  chatState: BookingChatState;
   jobNotes: string | null;
   islandId: string | null;
   /** §0.0 item 12's convention, rendered server-side: `Dh. Meedhoo` or `Kulhudhuffushi`. */

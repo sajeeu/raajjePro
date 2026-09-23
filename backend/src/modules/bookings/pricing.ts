@@ -112,3 +112,25 @@ export function deriveSlotAmount(
 export function durationMinutes(startsAt: Date, endsAt: Date): number {
   return Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000);
 }
+
+/**
+ * The amount a **request-based** booking is accepted at (§1c step 3: "from the
+ * accepted quote for request-based" — and Round 16: `range` and `quote`
+ * listings "can only be request-based, so their `agreedAmount` always comes
+ * from the accepted quote; a range is advertising, never a bookable amount").
+ *
+ * Still derived rather than set, exactly as Round 17 requires: the one number
+ * it can come from is the quote the provider offered and the customer
+ * approved. The listing's own `pricingModel` is not consulted — a plumber
+ * advertising "from MVR 350" who quotes 500 for this job is quoting 500, and
+ * the label the customer reads is "Quoted price" in every case.
+ */
+export function deriveQuotedAmount(quotedAmountLaari: number): DerivedAmount {
+  if (quotedAmountLaari <= 0) {
+    throw new AmountNotDerivableError(
+      'QUOTE_HAS_NO_AMOUNT',
+      'This quote has no price on it and cannot be approved',
+    );
+  }
+  return { amountLaari: quotedAmountLaari, amountKind: 'quoted' };
+}

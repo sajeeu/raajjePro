@@ -16,10 +16,10 @@ import type { BookingActorRole, BookingStatus } from '../../generated/prisma/enu
  *
  * ## What is deliberately absent
  *
- * There is no edge into `awaiting_quote`, `quote_offered` or
- * `emergency_offered`. Those statuses exist (the enum is the machine's whole
- * vocabulary, §Phase 17's item 1) and §Phases 17.2 and 17.3 add the edges that
- * reach them. A slice adds rows to this table; it never adds a second table.
+ * There is no edge into `emergency_offered`. That status exists (the enum is
+ * the machine's whole vocabulary, §Phase 17's item 1) and §Phase 17.3 adds the
+ * edges that reach it. A slice adds rows to this table; it never adds a second
+ * table — §Phase 17.2 added the quote edges below exactly that way.
  */
 export interface Edge {
   /** The machine's own name for this edge. Stored on every status event. */
@@ -57,7 +57,7 @@ export const EDGES: readonly Edge[] = [
   },
   {
     transition: 'decline',
-    from: ['requested'],
+    from: ['requested', 'awaiting_quote'],
     to: 'declined',
     actors: ['provider'],
   },
@@ -72,6 +72,91 @@ export const EDGES: readonly Edge[] = [
     transition: 'accept-timeout',
     from: ['requested'],
     to: 'declined',
+    actors: ['system'],
+  },
+
+  // -- §Phase 17.2, the request-with-quote path ------------------------------
+  //
+  // §1c: "Request-based / quote-priced listings insert `awaiting_quote →
+  // quote_offered → accepted` before the diagram above." All three edges are
+  // here, and the mode never touches `requested`: a request booking is
+  // awaiting a *quote*, on the category's own `quoteExpiryMinutes` clock,
+  // which is a different fact and a different clock from a slot booking
+  // awaiting an *accept* on the flat 24-hour one.
+  {
+    transition: 'create-request',
+    from: [],
+    to: 'awaiting_quote',
+    actors: ['customer'],
+  },
+  {
+    transition: 'offer-quote',
+    from: ['awaiting_quote'],
+    to: 'quote_offered',
+    actors: ['provider'],
+  },
+  /**
+   * The negotiation case, and §1c names it: "the provider proposes Tuesday 2pm
+   * at a price and the customer wants Tuesday 3pm — an earlier revision left
+   * it with no channel at all, so the customer's only levers were approve or
+   * reject as offered, forcing the provider to guess again from scratch."
+   * The chat is that channel (it opens at `quote_offered`), and this is what
+   * the provider does at the end of the conversation: a revised quote, which
+   * moves the hold and restarts the customer's approval clock.
+   */
+  {
+    transition: 'revise-quote',
+    from: ['quote_offered'],
+    to: 'quote_offered',
+    actors: ['provider'],
+  },
+  {
+    transition: 'approve-quote',
+    from: ['quote_offered'],
+    to: 'accepted',
+    actors: ['customer'],
+  },
+  /**
+   * `Quote Received.dc.html`'s "Decline this quote".
+   *
+   * **`cancelled`, never `declined`.** §1f defines acceptance rate as
+   * "accepted ÷ (accepted + declined) — explicit responses only", which is a
+   * measure of what the *provider* did; a customer turning down a price landing
+   * in `declined` would count against the provider who answered promptly and
+   * quoted honestly. `cancelledByRole: 'customer'` is then the row §1f's
+   * cancellation rate explicitly never counts ("customer cancellations never
+   * count against a provider").
+   */
+  {
+    transition: 'decline-quote',
+    from: ['quote_offered'],
+    to: 'cancelled',
+    actors: ['customer'],
+  },
+  /**
+   * §1c step 4's first clause, for request mode: the provider never quoted.
+   * `declined` with a `system` actor, exactly as `accept-timeout` is — §1f
+   * reads the actor to tell a timeout from an explicit refusal, so this feeds
+   * response rate and not acceptance rate.
+   */
+  {
+    transition: 'quote-request-timeout',
+    from: ['awaiting_quote'],
+    to: 'declined',
+    actors: ['system'],
+  },
+  /**
+   * §1c step 4's third clause: "quote expires, provisional reservation
+   * releases, booking closes", on the category's `quoteApprovalMinutes`.
+   *
+   * `cancelled` for the same reason `decline-quote` is — the party who did not
+   * act is the customer — and `cancelledByRole` is left **null**, because
+   * nobody cancelled: a clock ran out. §1f counts neither.
+   */
+  {
+    transition: 'quote-approval-timeout',
+    from: ['quote_offered'],
+    to: 'cancelled',
     actors: ['system'],
   },
 
@@ -148,7 +233,7 @@ export const EDGES: readonly Edge[] = [
    */
   {
     transition: 'cancel',
-    from: ['requested', 'accepted', 'awaiting_payment'],
+    from: ['requested', 'awaiting_quote', 'accepted', 'awaiting_payment'],
     to: 'cancelled',
     actors: ['customer'],
   },

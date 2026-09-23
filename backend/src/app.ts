@@ -84,6 +84,8 @@ import {
   bookingAcceptTimeoutJob,
   bookingCompletionTimeoutJob,
   bookingPaymentSilenceJob,
+  bookingQuoteApprovalTimeoutJob,
+  bookingQuoteRequestTimeoutJob,
 } from './jobs/booking-lifecycle.js';
 import {
   subscriptionIntroductoryConversionJob,
@@ -521,6 +523,10 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   jobs.register(bookingAcceptTimeoutJob(bookings, app.log));
   jobs.register(bookingPaymentSilenceJob(bookings, app.log));
   jobs.register(bookingCompletionTimeoutJob(bookings, app.log));
+  // Phase 17.2's two ends of the quote clock, each on the category's own
+  // value (invariant 13) rather than a constant in the job.
+  jobs.register(bookingQuoteRequestTimeoutJob(bookings, app.log));
+  jobs.register(bookingQuoteApprovalTimeoutJob(bookings, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {

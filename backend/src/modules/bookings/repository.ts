@@ -35,7 +35,22 @@ const BOOKING_FIELDS = {
         pricingModel: true,
         priceLaari: true,
         bookingMode: true,
-        category: { select: { id: true, name: true, callbackEligible: true } },
+        /**
+         * 🔧 §Phase 17.2 added three of these. Every rule that reads a number
+         * per category reads it from here — invariant 13's two quote clocks
+         * and Round 14's lead time — so no clock in this module is ever a
+         * literal. `callbackEligible` is §Phase 17.4's and was already here.
+         */
+        category: {
+          select: {
+            id: true,
+            name: true,
+            callbackEligible: true,
+            quoteExpiryMinutes: true,
+            quoteApprovalMinutes: true,
+            minimumLeadTimeMinutes: true,
+          },
+        },
       },
     },
     customer: { select: { id: true, fullName: true } },
@@ -149,12 +164,57 @@ export class BookingRepository {
       where: {
         status: 'requested',
         createdAt: { lte: before },
-        // §Phase 17.3 owns the emergency window and reads it from the
-        // category; this job must never answer for one.
-        bookingMode: { in: ['slot', 'request'] },
+        /**
+         * 🔧 **`slot` alone as of §Phase 17.2** — this read `['slot',
+         * 'request']` while no request booking could exist to be found.
+         *
+         * A request booking never reaches `requested`: it is created at
+         * `awaiting_quote` and swept by [findQuoteRequestTimeouts] on its
+         * category's own `quoteExpiryMinutes`, which is 2 hours for the
+         * household trades rather than the flat 24 this job applies
+         * (invariant 13, Round 15). The same reasoning already excluded
+         * emergency, whose window §Phase 17.3 reads from the category too:
+         * a per-category clock does not belong to a job with one constant.
+         */
+        bookingMode: 'slot',
       },
       select: { id: true },
       orderBy: { createdAt: 'asc' },
+      take: limit,
+    });
+  }
+
+  /**
+   * §Phase 17.2, §1c step 4: a request whose provider never quoted, past the
+   * deadline stamped at creation from the category's `quoteExpiryMinutes`.
+   *
+   * The deadline is a column rather than a join, so this is one index scan on
+   * `(status, quote_due_at)` — and a request keeps the window it was made
+   * under even if an admin edits the category later.
+   */
+  findQuoteRequestTimeouts(now: Date, limit: number): Promise<{ id: string }[]> {
+    return this.prisma.booking.findMany({
+      where: { status: 'awaiting_quote', quoteDueAt: { not: null, lte: now } },
+      select: { id: true },
+      orderBy: { quoteDueAt: 'asc' },
+      take: limit,
+    });
+  }
+
+  /**
+   * §Phase 17.2, §1c step 4: a quote the customer never answered, past
+   * `quoteOfferedAt + quoteApprovalMinutes`.
+   *
+   * Measured from the quote, never from booking creation — "an earlier
+   * revision's job auto-declined `quote_offered` 24 hours after *booking
+   * creation*, which would have killed quotes the provider submitted at hour
+   * 23 before the customer ever saw them."
+   */
+  findQuoteApprovalTimeouts(now: Date, limit: number): Promise<{ id: string }[]> {
+    return this.prisma.booking.findMany({
+      where: { status: 'quote_offered', quoteExpiresAt: { not: null, lte: now } },
+      select: { id: true },
+      orderBy: { quoteExpiresAt: 'asc' },
       take: limit,
     });
   }

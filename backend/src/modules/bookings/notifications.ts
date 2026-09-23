@@ -25,6 +25,24 @@
 export type BookingNotification =
   /** §1c step 4: the 24-hour auto-decline. To the customer. */
   | 'accept_timed_out'
+  /** §Phase 17.2: the provider proposed a time and a price. To the customer. */
+  | 'quote_offered'
+  /** §Phase 17.2: the customer approved it, and the job is on. To the provider. */
+  | 'quote_approved'
+  /** §Phase 17.2: the customer turned the quote down. To the provider. */
+  | 'quote_declined'
+  /**
+   * §Phase 17.2, §1c step 4: the provider never quoted, on the category's
+   * `quoteExpiryMinutes`. To the customer — `Request a Time.dc.html` promised
+   * them "if he doesn't, the request expires and you owe nothing".
+   */
+  | 'quote_request_timed_out'
+  /**
+   * §Phase 17.2, §1c step 4: the approval window closed unanswered, on the
+   * category's `quoteApprovalMinutes`. **To both parties** — the customer lost
+   * the quote and the provider got their time back.
+   */
+  | 'quote_expired'
   /** The provider said no. To the customer. */
   | 'declined'
   /** §1c step 3: accepted, amount set, pay now. To the customer. */

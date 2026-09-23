@@ -6,6 +6,7 @@ import type { PrismaClient } from '../../src/generated/prisma/client.js';
 import type { BookingDto } from '../../src/modules/bookings/types.js';
 import { freshIp } from './app.js';
 import { addRule, ownSlots, providerWithSlotListing } from './availability.js';
+import { categoryByName, completeDraft, publish } from './listings.js';
 import { registerUser, type RegisteredUser } from './users.js';
 
 interface Envelope<T> {
@@ -108,6 +109,107 @@ export async function bookSlot(
   return res.json<Envelope<BookingDto>>().data;
 }
 
+/**
+ * A published **request-mode** listing and a customer who can book it.
+ *
+ * The category is named because §1c's clocks differ by it, and the two ends of
+ * invariant 13's split are what §Phase 17.2's Done-when asks to see: `Plumbing`
+ * quotes on 120/240 and `Boat Charter` on 1440/4320. Nothing here states
+ * either number — the seed does, and the tests read it back from the row.
+ */
+export async function requestListing(
+  app: FastifyInstance,
+  options: { categoryName?: string } = {},
+): Promise<{
+  provider: RegisteredUser;
+  customer: RegisteredUser;
+  listingId: string;
+  providerProfileId: string;
+  category: {
+    quoteExpiryMinutes: number;
+    quoteApprovalMinutes: number;
+    minimumLeadTimeMinutes: number;
+  };
+}> {
+  const categoryName = options.categoryName ?? 'Plumbing';
+  const provider = await registerUser(app, { role: 'provider' });
+  const draft = await completeDraft(app, provider.headers, { categoryName });
+  const published = await publish(app, provider.headers, draft.id);
+  if (published.statusCode !== 200) {
+    throw new Error(`publish: ${String(published.statusCode)} ${published.body}`);
+  }
+
+  const prisma: PrismaClient = app.deps.prisma;
+  const listing = await prisma.listing.findUniqueOrThrow({
+    where: { id: draft.id },
+    select: { providerProfileId: true, bookingMode: true },
+  });
+  if (listing.bookingMode !== 'request') {
+    // The mode is defaulted from the category (§1c), so a category that is not
+    // request-based is a fixture mistake rather than a product one.
+    throw new Error(`${categoryName} is not a request-mode category`);
+  }
+  const category = await categoryByName(prisma, categoryName);
+  if (category.quoteExpiryMinutes === null || category.quoteApprovalMinutes === null) {
+    throw new Error(`${categoryName} has no quote window seeded`);
+  }
+
+  return {
+    provider,
+    customer: await verifiedCustomer(app),
+    listingId: draft.id,
+    providerProfileId: listing.providerProfileId,
+    category: {
+      quoteExpiryMinutes: category.quoteExpiryMinutes,
+      quoteApprovalMinutes: category.quoteApprovalMinutes,
+      minimumLeadTimeMinutes: category.minimumLeadTimeMinutes,
+    },
+  };
+}
+
+/** Creates a request booking and unwraps it, throwing on anything but 201. */
+export async function bookRequest(
+  app: FastifyInstance,
+  customer: RegisteredUser,
+  listingId: string,
+  body: Record<string, unknown> = {},
+): Promise<BookingDto> {
+  const res = await createBooking(app, customer, listingId, {
+    preferredWindowChip: 'tomorrow_morning',
+    jobNotes: 'Steady leak under the kitchen sink',
+    ...body,
+  });
+  if (res.statusCode !== 201) {
+    throw new Error(`bookRequest: ${String(res.statusCode)} ${res.body}`);
+  }
+  return res.json<Envelope<BookingDto>>().data;
+}
+
+/**
+ * A request booking with a live quote on it — the state both ends of §Phase
+ * 17.2's Done-when start from.
+ *
+ * The proposed time clears the category's own `minimumLeadTimeMinutes` by a
+ * day, so a lead time that changes in the seed cannot make this fixture fail
+ * for a reason the test is not about.
+ */
+export async function quotedBooking(
+  app: FastifyInstance,
+  options: { categoryName?: string; amountLaari?: number } = {},
+) {
+  const fixture = await requestListing(app, options);
+  const booking = await bookRequest(app, fixture.customer, fixture.listingId);
+  const scheduledFor = new Date(
+    Date.now() + (fixture.category.minimumLeadTimeMinutes + 24 * 60) * 60_000,
+  );
+  const quoted = await actOk(app, fixture.provider, booking.id, 'quote', {
+    scheduledFor: scheduledFor.toISOString(),
+    amountLaari: options.amountLaari ?? 65_000,
+    note: 'Replace joint, reseal line — parts included',
+  });
+  return { ...fixture, booking: quoted, scheduledFor };
+}
+
 export async function act(
   app: FastifyInstance,
   user: RegisteredUser,
@@ -118,7 +220,12 @@ export async function act(
   return app.inject({
     method: 'PATCH',
     url: `/v1/bookings/${bookingId}/${action}`,
-    headers: user.headers,
+    // A fresh key on every call. Only one action here takes one — §Phase
+    // 17.2's `quote`, which carries a price and a time — and the header is
+    // ignored by the rest, so this keeps every test about the rule it is
+    // testing rather than about the middleware. The requirement itself is
+    // asserted once, deliberately, with a raw inject.
+    headers: { 'idempotency-key': randomUUID(), ...user.headers },
     remoteAddress: freshIp(),
     ...(payload === undefined ? {} : { payload }),
   });

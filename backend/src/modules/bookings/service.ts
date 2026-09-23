@@ -12,7 +12,15 @@ import type { NotificationDispatcher } from '../push/dispatcher.js';
 import type { ProviderProfileService } from '../providers/service.js';
 import { islandDisplayName, toBookingDto } from './mapper.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
-import { deriveSlotAmount, durationMinutes } from './pricing.js';
+import { deriveQuotedAmount, deriveSlotAmount, durationMinutes } from './pricing.js';
+import {
+  chipLabel,
+  QuoteWindowsMissingError,
+  readQuoteWindows,
+  REQUEST_HOLD_MINUTES,
+  resolveWindowChip,
+  type WindowChip,
+} from './quotes.js';
 import { generateBookingReference } from './reference.js';
 import { assertReasonAllowed } from './reports.js';
 import type { BookingRepository, BookingRow, Db } from './repository.js';
@@ -28,6 +36,7 @@ import {
   COMPLETION_GRACE_DAYS,
   COMPLETION_PROMPT_AFTER_DAYS,
   daysBefore,
+  minutesFrom,
   PAYMENT_SILENCE_DAYS,
 } from './windows.js';
 
@@ -57,6 +66,30 @@ export interface CreateSlotBookingInput {
   jobNotes?: string | undefined;
   islandId?: string | undefined;
   addressDetail?: string | undefined;
+}
+
+/**
+ * §Phase 17.2's creation input — `Request a Time.dc.html`.
+ *
+ * The window arrives as the chip the customer tapped, the text they typed, or
+ * both; `quotes.ts` resolves a chip to a Maldives-time range and the text is
+ * stored verbatim. Neither is a constraint on anything — §1c: "this is a
+ * preference, not a slot", and the provider answers with a concrete time.
+ */
+export interface CreateRequestBookingInput {
+  preferredWindowChip?: WindowChip | undefined;
+  preferredWindowText?: string | undefined;
+  occasion?: string | undefined;
+  jobNotes?: string | undefined;
+  islandId?: string | undefined;
+  addressDetail?: string | undefined;
+}
+
+/** `Propose Time and Price.dc.html` — a concrete time, a price, and a note. */
+export interface OfferQuoteInput {
+  scheduledFor: Date;
+  amountLaari: number;
+  note?: string | undefined;
 }
 
 export interface ProposeAmendmentInput {
@@ -165,6 +198,7 @@ export class BookingService {
     userId: string,
     query: ListBookingsQuery,
   ): Promise<{ bookings: BookingDto[]; nextCursor: string | null }> {
+    const now = this.clock();
     const providerProfileId =
       query.role === 'provider' ? await this.providerProfileIdOf(userId) : null;
 
@@ -180,7 +214,7 @@ export class BookingService {
     const page = rows.slice(0, query.limit);
     const last = page.at(-1);
     return {
-      bookings: page.map((row) => toBookingDto(row)),
+      bookings: page.map((row) => toBookingDto(row, now)),
       nextCursor:
         rows.length > query.limit && last !== undefined
           ? encodeCursor(last.createdAt, last.id)
@@ -209,7 +243,7 @@ export class BookingService {
       ? await this.providers.paymentDetailsForBooking(booking.providerProfileId)
       : undefined;
 
-    return toBookingDto(booking, {
+    return toBookingDto(booking, this.clock(), {
       statusHistory,
       ...(paymentDetails === undefined ? {} : { paymentDetails }),
       includeReplacement: this.offersReplacement(booking, caller.role),
@@ -248,44 +282,7 @@ export class BookingService {
     input: CreateSlotBookingInput,
   ): Promise<BookingDto> {
     const now = this.clock();
-    const listing = await this.prisma.listing.findFirst({
-      where: { id: listingId, status: 'published', visibility: 'active', deletedAt: null },
-      select: {
-        id: true,
-        providerProfileId: true,
-        bookingMode: true,
-        pricingModel: true,
-        priceLaari: true,
-        categoryId: true,
-        providerProfile: {
-          select: { id: true, userId: true, suspendedAt: true, acceptingNewCustomers: true },
-        },
-      },
-    });
-    if (listing === null) throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
-
-    if (listing.providerProfile.userId === userId) {
-      throw new BusinessRuleError('CANNOT_BOOK_OWN_LISTING', 'You cannot book your own service');
-    }
-    if (listing.providerProfile.suspendedAt !== null) {
-      // §1a: suspension is an input to visibility. A suspended provider's
-      // listing should already be invisible; refusing here as well means a
-      // stale screen cannot book one.
-      throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
-    }
-    if (!listing.providerProfile.acceptingNewCustomers) {
-      throw new BusinessRuleError(
-        'PROVIDER_NOT_ACCEPTING_BOOKINGS',
-        'This provider is not taking new bookings right now',
-      );
-    }
-    if (listing.bookingMode !== 'slot') {
-      throw new BusinessRuleError(
-        'BOOKING_MODE_NOT_AVAILABLE',
-        'This service is booked by request rather than by picking a time',
-        { bookingMode: listing.bookingMode },
-      );
-    }
+    const listing = await this.bookableListing(listingId, userId, 'slot');
 
     const slot = await this.prisma.timeSlot.findUnique({
       where: { id: input.timeSlotId },
@@ -343,7 +340,110 @@ export class BookingService {
 
     const row = await this.mustFind(created.id);
     await this.sendAcceptPrompt(row);
-    return toBookingDto(row);
+    return toBookingDto(row, now);
+  }
+
+  /**
+   * `POST /v1/listings/:id/bookings` on a **`request`** listing — §Phase
+   * 17.2's creation, and the refusal §Phase 17.1 left by name.
+   *
+   * ## What opens here
+   *
+   * Nine of the twelve seeded categories are `request` mode (§1c), so until
+   * this method existed three-quarters of the catalogue could be published,
+   * found and priced but not booked. §Phase 17.1's `BOOKING_MODE_NOT_AVAILABLE`
+   * was that refusal; `bookableListing` now routes by mode instead.
+   *
+   * ## `awaiting_quote`, not `requested`
+   *
+   * §1c's status machine: "Request-based / quote-priced listings insert
+   * `awaiting_quote → quote_offered → accepted` before the diagram above."
+   * The booking lands on the first of those three, because that is the state
+   * it is actually in — the provider owes a **quote**, on the category's own
+   * `quoteExpiryMinutes` clock, which is a different fact and a different
+   * clock from a slot booking's wait for an accept on the flat 24 hours.
+   *
+   * 🔧 **This is the one place §Phase 17.2 had to choose between two sentences
+   * of §1c**, and `docs/decisions/29-phase-17-2-quotes.md` records it: step 1
+   * says every mode's creation lands on `requested`, and the machine section
+   * says request mode inserts `awaiting_quote` first. Nothing could move
+   * `requested → awaiting_quote` — no endpoint in the plan's list does it and
+   * no screen offers it — so reading step 1 literally would leave a status the
+   * plan puts in the machine permanently unreachable.
+   *
+   * ## No reservation yet
+   *
+   * There is no time to hold: a preferred window "is a preference, not a slot"
+   * (§1c, and `Request a Time.dc.html` says it in those words). The hold is
+   * taken when the provider proposes a concrete time — [offerQuote] — which is
+   * exactly §1c's provisional reservation.
+   */
+  async createRequestBooking(
+    userId: string,
+    listingId: string,
+    input: CreateRequestBookingInput,
+  ): Promise<BookingDto> {
+    const now = this.clock();
+    const listing = await this.bookableListing(listingId, userId, 'request');
+
+    // Invariant 13, read and never hardcoded: 120/240 for the household
+    // trades, 1440/4320 where planning happens. A category with neither set
+    // is refused rather than defaulted — a default here would be the flat
+    // 24h/72h that Round 15 removed, reappearing through a fallback.
+    const windows = readQuoteWindows(listing.category);
+
+    const occasion = this.validateOccasion(listing.category, input.occasion);
+    const window = this.resolvePreferredWindow(input, now);
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const booking = await this.createWithReference(tx, {
+        listingId: listing.id,
+        customerId: userId,
+        providerProfileId: listing.providerProfileId,
+        bookingMode: 'request',
+        status: 'awaiting_quote',
+        // Null on purpose, both of them: no slot was picked and no time is
+        // held. `scheduledFor` is null too — §1h locks a date at `accepted`,
+        // and there is no date to lock until the customer approves a quote.
+        timeSlotId: null,
+        reservationId: null,
+        scheduledFor: null,
+        preferredWindowText: window.text,
+        preferredWindowFrom: window.from,
+        preferredWindowTo: window.to,
+        occasion,
+        // The clock `Request a Time.dc.html` shows the customer as "until
+        // 12:30 today". Stored rather than recomputed per read, so an admin
+        // editing the category later cannot move a deadline somebody is
+        // already counting down.
+        quoteDueAt: minutesFrom(now, windows.expiryMinutes),
+        jobNotes: input.jobNotes ?? null,
+        islandId: input.islandId ?? null,
+        addressDetail: input.addressDetail ?? null,
+        createdAt: now,
+      });
+
+      await this.repo.recordStatusEvent(
+        {
+          bookingId: booking.id,
+          fromStatus: null,
+          toStatus: 'awaiting_quote',
+          actorRole: 'customer',
+          actorUserId: userId,
+          transition: 'create-request',
+          at: now,
+        },
+        tx,
+      );
+      return booking;
+    });
+
+    const row = await this.mustFind(created.id);
+    // The same prompt a slot booking sends — §1c step 2's "job details and the
+    // customer's name only". What the provider does with it differs (quote,
+    // not accept) and the notification carries neither verb.
+    await this.sendAcceptPrompt(row);
+    return toBookingDto(row, now);
   }
 
   // =========================================================================
@@ -454,6 +554,264 @@ export class BookingService {
     });
 
     await this.notify('declined', booking.id, booking.customer.id);
+    return this.reread(booking.id);
+  }
+
+  // =========================================================================
+  // §Phase 17.2 — the quote, at both ends
+  // =========================================================================
+
+  /**
+   * `PATCH /v1/bookings/:id/quote` — §Phase 17 item 5, and
+   * `Propose Time and Price.dc.html`.
+   *
+   * §1c: "Provider reviews via the same accept prompt and **responds with a
+   * proposed concrete date/time and price**. This reuses the quote mechanism
+   * (`awaiting_quote` → `quote_offered`)."
+   *
+   * ## The provisional reservation, and why it is in this transaction
+   *
+   * §1c: "**Offering a quote creates a provisional reservation** on the
+   * proposed time, expiring with the quote's approval window. Without this,
+   * the provider could sell that time to someone else in the interim and the
+   * customer's approval would fail on a constraint violation after they had
+   * already agreed a price."
+   *
+   * So the hold and the status move together or not at all — the property
+   * §Phase 17.1 proved for the firm hold (ledger row **P9A-2**), asserted here
+   * for the provisional one in both directions: a time that is already taken
+   * leaves the booking at `awaiting_quote`, and a failure after the hold is
+   * taken leaves no hold.
+   *
+   * ## Two edges, one endpoint
+   *
+   * From `awaiting_quote` this is `offer-quote`. From `quote_offered` it is
+   * `revise-quote` — the negotiation §1c describes, where "the provider
+   * proposes Tuesday 2pm at a price and the customer wants Tuesday 3pm". The
+   * revision releases the old hold and takes a new one in the same
+   * transaction, and **restarts the customer's approval clock**, because the
+   * terms they are being asked to consider are new.
+   */
+  async offerQuote(userId: string, bookingId: string, input: OfferQuoteInput): Promise<BookingDto> {
+    const now = this.clock();
+    const { booking } = await this.authorize(userId, bookingId, 'provider');
+
+    if (booking.bookingMode !== 'request') {
+      // A slot booking has a published time and a derived price; an emergency
+      // one is answered with a callout fee and an arrival estimate (§Phase
+      // 17.3). Neither is quoted.
+      throw new BusinessRuleError(
+        'BOOKING_MODE_HAS_NO_QUOTE',
+        booking.bookingMode === 'emergency'
+          ? 'An emergency request is answered with your callout fee, not a quote'
+          : 'This booking is for a published time — accept or decline it',
+        { bookingMode: booking.bookingMode },
+      );
+    }
+
+    const transition = booking.status === 'quote_offered' ? 'revise-quote' : 'offer-quote';
+    assertTransition(transition, booking.status, 'provider');
+
+    const category = booking.listing.category;
+    if (category === null) throw new QuoteWindowsMissingError();
+    const windows = readQuoteWindows(category);
+
+    // Round 14's lead time, read from the category exactly as the slot picker
+    // reads it. A plumber quoting a time twenty minutes out is proposing
+    // something the catalogue says nobody can commit to.
+    const earliest = minutesFrom(now, category.minimumLeadTimeMinutes);
+    if (input.scheduledFor < earliest) {
+      throw new BusinessRuleError(
+        'QUOTE_TIME_TOO_SOON',
+        'That time is sooner than this category allows — propose a later one',
+        { earliest: earliest.toISOString() },
+      );
+    }
+
+    // The customer's clock, and the hold's, are the same instant written
+    // twice — §1c's "expiring with the quote's approval window".
+    const expiresAt = minutesFrom(now, windows.approvalMinutes);
+    const endsAt = minutesFrom(input.scheduledFor, REQUEST_HOLD_MINUTES);
+
+    await this.prisma.$transaction(async (tx) => {
+      // A revision's old hold goes first: the provider may be moving the quote
+      // by an hour, and the new range would otherwise collide with their own
+      // outstanding one.
+      if (booking.reservationId !== null) {
+        await this.reservations.release(tx, booking.reservationId, 'superseded', now);
+      }
+
+      const reservation = await this.reservations.reserveWindow(
+        tx,
+        {
+          providerProfileId: booking.providerProfileId,
+          listingId: booking.listingId,
+          startsAt: input.scheduledFor,
+          endsAt,
+          kind: 'provisional',
+          expiresAt,
+        },
+        now,
+      );
+
+      const moved = await this.repo.transition(
+        booking.id,
+        booking.status,
+        {
+          status: 'quote_offered',
+          reservationId: reservation.id,
+          // The proposed time, which is not yet locked — §1h locks it at
+          // `accepted`. Written here so the customer's screen and the
+          // provider's calendar read the same time as the hold.
+          scheduledFor: input.scheduledFor,
+          quotedAmountLaari: input.amountLaari,
+          quoteNote: input.note ?? null,
+          quoteOfferedAt: now,
+          quoteExpiresAt: expiresAt,
+          // Cleared: the provider has answered, so their own deadline is spent.
+          // A revision does not restore it.
+          quoteDueAt: null,
+        },
+        tx,
+      );
+      if (!moved) throw staleBooking();
+
+      await this.event(tx, booking, 'quote_offered', transition, 'provider', userId, now);
+    });
+
+    // §0.0 item 7 and 17.2's Done-when: the `booking` chat opens **here**, not
+    // at `accepted`. `chat.ts` derives that state from `quoteOfferedAt`, which
+    // the transition above has just stamped; §Phase 18 builds the thread on it.
+    await this.notify('quote_offered', booking.id, booking.customer.id);
+    return this.reread(booking.id);
+  }
+
+  /**
+   * `PATCH /v1/bookings/:id/approve-quote` — §1c: "Customer approves or
+   * rejects. **Approval converts the provisional reservation to a firm one**
+   * and transitions to `accepted`."
+   *
+   * From here the booking is indistinguishable from a slot booking that was
+   * accepted: §1c, "everything downstream is identical to the slot-based flow
+   * from `accepted` onward". So the two status events §Phase 17.1 writes on
+   * accept are written here too — `accepted`, where §1h's terms lock, then
+   * `awaiting_payment`, because §1c step 3 lets no booking reach the payment
+   * prompt without an amount and this one now has one.
+   */
+  async approveQuote(userId: string, bookingId: string): Promise<BookingDto> {
+    const now = this.clock();
+    const { booking } = await this.authorize(userId, bookingId, 'customer');
+    assertTransition('approve-quote', booking.status, 'customer');
+
+    // The sweep runs every five minutes, so a quote can be seconds past its
+    // deadline and still be on screen. Refusing it here is not a substitute
+    // for the job (backend/CLAUDE.md: a timed transition is made by a job) —
+    // it is what stops the customer approving terms whose hold is already
+    // expiring underneath them.
+    if (booking.quoteExpiresAt !== null && now >= booking.quoteExpiresAt) {
+      throw new BusinessRuleError('QUOTE_EXPIRED', 'This quote has expired — ask for a new one', {
+        expiredAt: booking.quoteExpiresAt.toISOString(),
+      });
+    }
+    if (booking.reservationId === null) {
+      // Unreachable: `quote_offered` is only ever entered with a hold. A quote
+      // whose hold has gone is not approvable, because the time it named is no
+      // longer held for anyone.
+      throw new ConflictError(
+        'QUOTE_HOLD_GONE',
+        'The time this quote held is no longer reserved — ask for a new quote',
+      );
+    }
+
+    const amount = deriveQuotedAmount(booking.quotedAmountLaari ?? 0);
+    const reservationId = booking.reservationId;
+
+    await this.prisma.$transaction(async (tx) => {
+      // §1c: the hold is converted, never re-taken — so there is no instant in
+      // which the time is free and a stranger could win it.
+      await this.reservations.makeFirm(tx, reservationId);
+
+      const moved = await this.repo.transition(
+        booking.id,
+        booking.status,
+        {
+          status: 'accepted',
+          agreedAmountLaari: amount.amountLaari,
+          amountKind: amount.amountKind,
+          amountSetAt: now,
+          // The customer answered, so the approval clock is spent. The quote's
+          // own numbers stay: `quotedAmountLaari` is the "original terms" half
+          // of §1h's retained pair, and `quoteOfferedAt` is what `chat.ts`
+          // reads to know the thread opened.
+          quoteExpiresAt: null,
+        },
+        tx,
+      );
+      if (!moved) throw staleBooking();
+      await this.event(tx, booking, 'accepted', 'approve-quote', 'customer', userId, now);
+
+      assertTransition('amount-set', 'accepted', 'customer');
+      const paid = await this.repo.transition(
+        booking.id,
+        'accepted',
+        { status: 'awaiting_payment' },
+        tx,
+      );
+      if (!paid) throw staleBooking();
+      await this.event(
+        tx,
+        { ...booking, status: 'accepted' },
+        'awaiting_payment',
+        'amount-set',
+        'customer',
+        userId,
+        now,
+      );
+    });
+
+    await this.notify('quote_approved', booking.id, booking.providerProfile.user.id);
+    return this.reread(booking.id);
+  }
+
+  /**
+   * `PATCH /v1/bookings/:id/decline-quote` — the other half of §1c's
+   * "customer approves or rejects", and `Quote Received.dc.html`'s "Decline
+   * this quote".
+   *
+   * **Lands on `cancelled`, never `declined`.** §1f defines acceptance rate as
+   * "accepted ÷ (accepted + declined) — explicit responses only", a measure of
+   * what the provider did; a customer turning a price down must not count
+   * against the provider who answered promptly. `cancelledByRole: 'customer'`
+   * is then the row §1f's cancellation rate explicitly never counts.
+   *
+   * The screen's own way back is a **new request** ("Send a new request"),
+   * not a re-quote of this one: a declined quote is a closed booking, and the
+   * negotiation case is served by the chat while the quote is still live.
+   */
+  async declineQuote(userId: string, bookingId: string, reason?: string): Promise<BookingDto> {
+    const now = this.clock();
+    const { booking } = await this.authorize(userId, bookingId, 'customer');
+    assertTransition('decline-quote', booking.status, 'customer');
+
+    await this.prisma.$transaction(async (tx) => {
+      const moved = await this.repo.transition(
+        booking.id,
+        booking.status,
+        {
+          status: 'cancelled',
+          cancelledAt: now,
+          cancelledByRole: 'customer',
+          cancellationReason: reason ?? null,
+          quoteExpiresAt: null,
+        },
+        tx,
+      );
+      if (!moved) throw staleBooking();
+      await this.releaseHold(tx, booking, 'cancelled', now);
+      await this.event(tx, booking, 'cancelled', 'decline-quote', 'customer', userId, now);
+    });
+
+    await this.notify('quote_declined', booking.id, booking.providerProfile.user.id);
     return this.reread(booking.id);
   }
 
@@ -1097,6 +1455,99 @@ export class BookingService {
   }
 
   /**
+   * §1c step 4's first clause for request mode: the provider never quoted.
+   *
+   * 🔧 **This runs on the category's `quoteExpiryMinutes`, not on the flat 24
+   * hours** — invariant 13, Round 15: "2 hours to quote" for the household
+   * trades and 24 for the long-lead ones. `Request a Time.dc.html` promises it
+   * to the customer in those words: "Ibrahim has 2 hours — until 12:30 today —
+   * to reply with a time and price. **If he doesn't, the request expires and
+   * you owe nothing.**"
+   *
+   * The deadline is already on the row (`quoteDueAt`, stamped at creation), so
+   * this is one indexed range scan and no join through the category — and a
+   * request keeps the deadline it was created under even if an admin edits the
+   * category afterwards.
+   *
+   * `declined` with a **`system`** actor, exactly as the slot window's
+   * `accept-timeout` is: §1f reads the actor to tell a timeout from an
+   * explicit refusal, so this feeds response rate and never acceptance rate.
+   */
+  async runQuoteRequestTimeouts(now: Date, limit = 200): Promise<{ declined: number }> {
+    const due = await this.repo.findQuoteRequestTimeouts(now, limit);
+    let declined = 0;
+    for (const { id } of due) {
+      const booking = await this.repo.findById(id);
+      if (booking?.status !== 'awaiting_quote') continue;
+      const done = await this.prisma.$transaction(async (tx) => {
+        const moved = await this.repo.transition(
+          booking.id,
+          'awaiting_quote',
+          { status: 'declined', declinedAt: now },
+          tx,
+        );
+        if (!moved) return false;
+        // Nothing is normally held at `awaiting_quote` — the hold arrives with
+        // the quote — but releasing is a no-op where there is nothing, and
+        // assuming otherwise is how a provider's calendar stays blocked.
+        await this.releaseHold(tx, booking, 'declined', now);
+        await this.event(tx, booking, 'declined', 'quote-request-timeout', 'system', null, now);
+        return true;
+      });
+      if (done) {
+        declined += 1;
+        await this.notify('quote_request_timed_out', booking.id, booking.customer.id);
+      }
+    }
+    return { declined };
+  }
+
+  /**
+   * §1c step 4's third clause: "**Customer quote-approval:** the category's
+   * `quoteApprovalMinutes` from the quote being *offered* (its own clock) —
+   * 240 minutes for the household trades, 4320 for the long-lead ones; the
+   * flat 72 hours this line used to name is the long-lead figure and was never
+   * the rule after Round 15 → **quote expires, provisional reservation
+   * releases, booking closes**."
+   *
+   * All three effects are here, and the third is `cancelled` rather than
+   * `declined` for the reason `transitions.ts` records: the party who did not
+   * act is the customer, and a provider's acceptance rate must not move
+   * because somebody stopped reading their phone. `cancelledByRole` is left
+   * **null** — nobody cancelled, a clock ran out — so §1f counts neither.
+   */
+  async runQuoteApprovalTimeouts(now: Date, limit = 200): Promise<{ expired: number }> {
+    const due = await this.repo.findQuoteApprovalTimeouts(now, limit);
+    let expired = 0;
+    for (const { id } of due) {
+      const booking = await this.repo.findById(id);
+      if (booking?.status !== 'quote_offered') continue;
+      const done = await this.prisma.$transaction(async (tx) => {
+        const moved = await this.repo.transition(
+          booking.id,
+          'quote_offered',
+          { status: 'cancelled', cancelledAt: now },
+          tx,
+        );
+        if (!moved) return false;
+        // The hold goes with it, in the same transaction — the second half of
+        // 17.2's Done-when clause: created inside the quote transaction and
+        // "released in one".
+        await this.releaseHold(tx, booking, 'cancelled', now);
+        await this.event(tx, booking, 'cancelled', 'quote-approval-timeout', 'system', null, now);
+        return true;
+      });
+      if (done) {
+        expired += 1;
+        // Both parties: the customer lost the quote and the provider got their
+        // time back, and each needs to know which.
+        await this.notifyBoth('quote_expired', booking);
+      }
+    }
+    return { expired };
+  }
+
+  /**
    * §1c step 9: seven days of provider silence on a payment claim →
    * `payment_unresolved`, **not** `confirmed`.
    *
@@ -1281,6 +1732,128 @@ export class BookingService {
     return { booking, caller: { userId, role } };
   }
 
+  /**
+   * The gate every creation path passes, and the one place the mode is routed.
+   *
+   * Order matters and each refusal is §1c's or §1a's:
+   *  - a listing that is not published, active and undeleted is **not found**,
+   *    never "forbidden" — a hidden listing's existence is not a caller's to
+   *    learn;
+   *  - a suspended provider's listing is *also* not found (§1a: suspension is
+   *    an input to visibility, so a stale screen cannot book one);
+   *  - `acceptingNewCustomers` off is a refusal the customer can act on;
+   *  - and the **mode** is last, so a caller reaching the wrong path is told
+   *    which one this listing takes.
+   *
+   * 🔧 The mode refusal is what §Phase 17.1 left for this slice. It read "this
+   * service is booked by request rather than by picking a time" for every
+   * `request` listing; now each mode has a path and only `emergency` — §Phase
+   * 17.3's, and never a *listing's* mode (§1c: emergency is a capability
+   * layered on a `request` listing) — is still refused by name.
+   */
+  private async bookableListing(listingId: string, userId: string, expect: 'slot' | 'request') {
+    const listing = await this.prisma.listing.findFirst({
+      where: { id: listingId, status: 'published', visibility: 'active', deletedAt: null },
+      select: {
+        id: true,
+        providerProfileId: true,
+        bookingMode: true,
+        pricingModel: true,
+        priceLaari: true,
+        categoryId: true,
+        // §Phase 17.2 reads four of these: both quote clocks (invariant 13),
+        // Round 14's lead time and Round 25's occasion presets. None of them
+        // is ever a literal in this module.
+        category: {
+          select: {
+            id: true,
+            name: true,
+            quoteExpiryMinutes: true,
+            quoteApprovalMinutes: true,
+            minimumLeadTimeMinutes: true,
+            occasionPresets: true,
+          },
+        },
+        providerProfile: {
+          select: { id: true, userId: true, suspendedAt: true, acceptingNewCustomers: true },
+        },
+      },
+    });
+    if (listing === null) throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
+
+    if (listing.providerProfile.userId === userId) {
+      throw new BusinessRuleError('CANNOT_BOOK_OWN_LISTING', 'You cannot book your own service');
+    }
+    if (listing.providerProfile.suspendedAt !== null) {
+      throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
+    }
+    if (!listing.providerProfile.acceptingNewCustomers) {
+      throw new BusinessRuleError(
+        'PROVIDER_NOT_ACCEPTING_BOOKINGS',
+        'This provider is not taking new bookings right now',
+      );
+    }
+    if (listing.bookingMode !== expect) {
+      throw new BusinessRuleError(
+        'BOOKING_MODE_NOT_AVAILABLE',
+        listing.bookingMode === 'request'
+          ? 'This service is booked by request — send a preferred time instead'
+          : 'This service is booked by picking a published time',
+        { bookingMode: listing.bookingMode },
+      );
+    }
+    if (listing.category === null) {
+      // Unreachable: §Phase 8 requires a category to publish. A booking is a
+      // commitment and this is not the place to assume.
+      throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
+    }
+    return { ...listing, category: listing.category };
+  }
+
+  /**
+   * Round 25: the occasion is "one of the category's `occasionPresets`",
+   * request mode only, never required.
+   *
+   * Checked against the seeded list rather than accepted as free text, because
+   * the whole value of the field is that it aggregates — "Wedding — 26 Aug" as
+   * a booking subtitle is only meaningful while everybody's weddings say
+   * "Wedding". A category with no presets (every one but Photography and Boat
+   * Charter) accepts no occasion at all.
+   */
+  private validateOccasion(
+    category: { name: string; occasionPresets: string[] },
+    occasion: string | undefined,
+  ): string | null {
+    if (occasion === undefined) return null;
+    if (!category.occasionPresets.includes(occasion)) {
+      throw new BusinessRuleError(
+        'OCCASION_NOT_IN_CATEGORY',
+        `"${occasion}" is not one of the occasions ${category.name} offers`,
+        { allowed: category.occasionPresets },
+      );
+    }
+    return occasion;
+  }
+
+  /**
+   * §1c's preferred window, as stored.
+   *
+   * The text is what a human reads and the range is the machine-readable
+   * restatement. Where the customer typed something, **their words win** —
+   * they tapped a chip and then said "Thursday after 16:00", and the specific
+   * one is the one the provider should read. The chip's range is still stored
+   * in that case, because it is the only structured form either input has.
+   */
+  private resolvePreferredWindow(
+    input: CreateRequestBookingInput,
+    now: Date,
+  ): { text: string | null; from: Date | null; to: Date | null } {
+    const chip = input.preferredWindowChip;
+    const range = chip === undefined ? null : resolveWindowChip(chip, now);
+    const text = input.preferredWindowText ?? (chip === undefined ? null : chipLabel(chip));
+    return { text, from: range?.from ?? null, to: range?.to ?? null };
+  }
+
   private async mustFind(id: string): Promise<BookingRow> {
     const booking = await this.repo.findById(id);
     if (booking === null) throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');
@@ -1288,7 +1861,7 @@ export class BookingService {
   }
 
   private async reread(id: string): Promise<BookingDto> {
-    return toBookingDto(await this.mustFind(id));
+    return toBookingDto(await this.mustFind(id), this.clock());
   }
 
   /**

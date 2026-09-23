@@ -102,12 +102,18 @@ describe('Phase 17.1 — the status machine, at its edges', () => {
     }
   });
 
-  it('has no edge into the three statuses later slices own', () => {
+  it('has no edge into the status the remaining slice owns', () => {
     // The vocabulary is complete; the edges are not, and that is the slice
     // boundary rather than an omission.
+    //
+    // 🔧 **Two of the three came in with §Phase 17.2.** This test named three
+    // statuses while `awaiting_quote` and `quote_offered` were still nobody's;
+    // the quote path reaches both now, and asserting otherwise would be
+    // asserting that 17.2 was not built. `emergency_offered` is §Phase 17.3's
+    // and is the one the boundary still holds for.
     const reachable = new Set(EDGES.map((e) => e.to));
-    expect(reachable.has('awaiting_quote')).toBe(false);
-    expect(reachable.has('quote_offered')).toBe(false);
+    expect(reachable.has('awaiting_quote')).toBe(true);
+    expect(reachable.has('quote_offered')).toBe(true);
     expect(reachable.has('emergency_offered')).toBe(false);
   });
 

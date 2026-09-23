@@ -1,5 +1,6 @@
 import type { BookingAmendment, BookingStatusEvent } from '../../generated/prisma/client.js';
 import type { PaymentDetailsDto as ProviderPaymentDetailsDto } from '../providers/types.js';
+import { bookingChatState } from './chat.js';
 import type { BookingRow } from './repository.js';
 import type {
   BookingAmendmentDto,
@@ -96,7 +97,18 @@ export interface BookingDtoExtras {
   includeReplacement?: boolean;
 }
 
-export function toBookingDto(row: BookingRow, extras: BookingDtoExtras = {}): BookingDto {
+/**
+ * @param now the caller's clock. 🔧 **Required as of §Phase 17.2**, and
+ *   required rather than defaulted because the one field it feeds — Round 27's
+ *   `chatState` lock, seven days after completion — is a rule, and a mapper
+ *   that reached for `new Date()` would be the one place in this codebase
+ *   where a rule read a clock nobody injected.
+ */
+export function toBookingDto(
+  row: BookingRow,
+  now: Date,
+  extras: BookingDtoExtras = {},
+): BookingDto {
   const dto: BookingDto = {
     id: row.id,
     reference: row.reference,
@@ -128,7 +140,17 @@ export function toBookingDto(row: BookingRow, extras: BookingDtoExtras = {}): Bo
         : Math.round((row.timeSlot.endsAt.getTime() - row.timeSlot.startsAt.getTime()) / 60_000),
 
     preferredWindowText: row.preferredWindowText,
+    preferredWindowFrom: iso(row.preferredWindowFrom),
+    preferredWindowTo: iso(row.preferredWindowTo),
     occasion: row.occasion,
+
+    quoteDueAt: iso(row.quoteDueAt),
+    quoteOfferedAt: iso(row.quoteOfferedAt),
+    quoteExpiresAt: iso(row.quoteExpiresAt),
+    quoteNote: row.quoteNote,
+    // Derived, and from the caller's own clock — §Phase 18 compares the same
+    // rule against its own. `chat.ts` is the single place the rule is written.
+    chatState: bookingChatState(row, now),
     jobNotes: row.jobNotes,
     islandId: row.islandId,
     islandDisplayName: row.island === null ? null : islandDisplayName(row.island),

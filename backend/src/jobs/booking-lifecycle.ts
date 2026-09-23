@@ -4,6 +4,8 @@ import type { JobDefinition, JobLogger } from './runner.js';
 export const BOOKING_ACCEPT_TIMEOUT_JOB_NAME = 'booking-accept-timeout';
 export const BOOKING_PAYMENT_SILENCE_JOB_NAME = 'booking-payment-silence';
 export const BOOKING_COMPLETION_TIMEOUT_JOB_NAME = 'booking-completion-timeout';
+export const BOOKING_QUOTE_REQUEST_TIMEOUT_JOB_NAME = 'booking-quote-request-timeout';
+export const BOOKING_QUOTE_APPROVAL_TIMEOUT_JOB_NAME = 'booking-quote-approval-timeout';
 
 /**
  * §Phase 17's scheduled work, on the runner rather than checked on read
@@ -11,12 +13,11 @@ export const BOOKING_COMPLETION_TIMEOUT_JOB_NAME = 'booking-completion-timeout';
  * happen by a job, never check-on-read"). A booking that timed out has timed
  * out whether or not anybody opens it.
  *
- * **Three jobs rather than one**, because §Phase 17 item 7 names three
- * distinct conditions and they run on different clocks — and because a failure
- * sweeping payment silence must not stop the accept window from expiring. The
- * fourth condition item 7 lists, `quote_offered` on the category's
- * `quoteApprovalMinutes`, is §Phase 17.2's and is not here; the emergency
- * window is §Phase 17.3's.
+ * **Five jobs rather than one**, because §Phase 17 item 7 names distinct
+ * conditions that run on different clocks — and because a failure sweeping
+ * payment silence must not stop the accept window from expiring. Three are
+ * §Phase 17.1's and the two quote sweeps are §Phase 17.2's; the emergency
+ * window is §Phase 17.3's and is not here.
  *
  * ## Why these cadences
  *
@@ -92,6 +93,65 @@ export function bookingCompletionTimeoutJob(
       const report = await bookings.runCompletionTimeouts(now);
       if (report.prompted > 0 || report.autoCompleted > 0) {
         log.info({ job: BOOKING_COMPLETION_TIMEOUT_JOB_NAME, ...report }, 'completion sweep ran');
+      }
+    },
+  };
+}
+
+/**
+ * §Phase 17.2, §1c step 4: a request the provider never quoted, on **the
+ * category's `quoteExpiryMinutes`** — 2 hours for the household trades, 24 for
+ * the long-lead ones (invariant 13). Never the flat 24 hours this file's other
+ * accept job applies to slot bookings.
+ *
+ * Five minutes, matching the accept sweep: the shortest window in the split is
+ * two hours, so a request expiring a few minutes late is indistinguishable to
+ * everyone involved, and the deadline is already a column so the scan is cheap.
+ */
+export function bookingQuoteRequestTimeoutJob(
+  bookings: BookingService,
+  log: JobLogger,
+): JobDefinition {
+  return {
+    name: BOOKING_QUOTE_REQUEST_TIMEOUT_JOB_NAME,
+    everyMs: EVERY_FIVE_MINUTES,
+    async run(now) {
+      const { declined } = await bookings.runQuoteRequestTimeouts(now);
+      if (declined > 0) {
+        log.info(
+          { job: BOOKING_QUOTE_REQUEST_TIMEOUT_JOB_NAME, declined },
+          'unquoted requests expired',
+        );
+      }
+    },
+  };
+}
+
+/**
+ * §Phase 17.2, §1c step 4: a quote the customer never answered, on **the
+ * category's `quoteApprovalMinutes`** measured from the quote being offered —
+ * 240 minutes or 4320, never a flat 72 hours.
+ *
+ * Its own job rather than a second condition inside the one above, for the
+ * reason the three §Phase 17.1 jobs are separate: the two ends of the quote
+ * fail differently. One releases nothing and declines; the other releases a
+ * provisional hold that is blocking a provider's calendar, and that must not
+ * be left waiting on a sweep that died on somebody else's row.
+ */
+export function bookingQuoteApprovalTimeoutJob(
+  bookings: BookingService,
+  log: JobLogger,
+): JobDefinition {
+  return {
+    name: BOOKING_QUOTE_APPROVAL_TIMEOUT_JOB_NAME,
+    everyMs: EVERY_FIVE_MINUTES,
+    async run(now) {
+      const { expired } = await bookings.runQuoteApprovalTimeouts(now);
+      if (expired > 0) {
+        log.info(
+          { job: BOOKING_QUOTE_APPROVAL_TIMEOUT_JOB_NAME, expired },
+          'quotes expired and their holds released',
+        );
       }
     },
   };

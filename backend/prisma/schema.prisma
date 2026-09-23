@@ -2375,6 +2375,49 @@ model Booking {
   /// state-machine change anywhere depends on it.
   occasion String? @db.VarChar(80)
 
+  // -- §Phase 17.2's two quote clocks ---------------------------------------
+  //
+  // Both are **stored deadlines** rather than recomputed from the category on
+  // every read, and the reason is that each one is a promise already made to
+  // somebody. `Request a Time.dc.html` tells the customer "Ibrahim has 2
+  // hours — until 12:30 today"; `Quote Received.dc.html` counts down to the
+  // second. An admin editing `Category.quoteExpiryMinutes` in §Phase 10b must
+  // move the deadline for the *next* request, never for one whose countdown a
+  // customer is already watching. They are also what makes each sweep one
+  // indexed range scan instead of a join through the category table.
+
+  /// When the provider must have sent a quote by — set at creation to
+  /// `createdAt + Category.quoteExpiryMinutes` (invariant 13: 120 for the
+  /// household trades, 1440 for Photography, Moving and Boat Charter). Never a
+  /// flat 24 hours. Null on every mode but `request`.
+  quoteDueAt DateTime? @map("quote_due_at") @db.Timestamptz(6)
+
+  /// When the live quote was sent. §1c step 4's clock runs "from the quote
+  /// being *offered* (its own clock)" — "an earlier revision's job
+  /// auto-declined `quote_offered` 24 hours after *booking creation*, which
+  /// would have killed quotes the provider submitted at hour 23 before the
+  /// customer ever saw them". Reset by a revised quote, because the customer's
+  /// window to consider it starts again when the terms change.
+  quoteOfferedAt DateTime? @map("quote_offered_at") @db.Timestamptz(6)
+
+  /// When the customer's approval window closes — `quoteOfferedAt +
+  /// Category.quoteApprovalMinutes` (240 or 4320, invariant 13; never a flat
+  /// 72 hours). The provisional [Reservation]'s own `expiresAt` is set to the
+  /// same instant, so §1c's "expiring with the quote's approval window" is one
+  /// value written twice rather than two clocks that can drift.
+  quoteExpiresAt DateTime? @map("quote_expires_at") @db.Timestamptz(6)
+
+  /// What the provider wrote with the quote — `Propose Time and Price.dc.html`'s
+  /// "Note" field, rendered to the customer as "Ibrahim's note" and, once
+  /// approved, as the agreed scope on `Quote Received.dc.html`.
+  ///
+  /// Deliberately **not** written into `jobNotes`: that field holds the
+  /// customer's own description of the job, it is what §1h's amendment reads
+  /// as the previous scope, and overwriting it with the provider's text would
+  /// destroy the customer's words at the moment they matter most — a dispute
+  /// about what was agreed.
+  quoteNote String? @map("quote_note") @db.VarChar(2000)
+
   /// What the customer wrote on `Pick a Time.dc.html` — the job description,
   /// and the "scope" half of §1h's locked agreement.
   jobNotes String? @map("job_notes") @db.VarChar(2000)
@@ -2448,6 +2491,11 @@ model Booking {
   /// The three scheduled jobs, each of which is a status plus one timestamp
   /// range. Kept as one composite because all three lead with `status`.
   @@index([status, createdAt])
+  /// §Phase 17.2's two sweeps. Separate composites rather than riding the one
+  /// above because each is a different timestamp column, and a sweep that
+  /// cannot use an index scans every booking ever made.
+  @@index([status, quoteDueAt])
+  @@index([status, quoteExpiresAt])
   @@map("booking")
 }
 

@@ -10,18 +10,27 @@ import {
   cancelBody,
   completeBody,
   completionAnswerBody,
-  createSlotBookingBody,
+  createBookingBody,
   declineBody,
+  declineQuoteBody,
   disputeBody,
   listBookingsQuery,
   listingParams,
+  offerQuoteBody,
   proposeAmendmentBody,
   resolveDisputeBody,
   respondToAmendmentBody,
 } from './schema.js';
 
 /**
- * §Phase 17.1's route table.
+ * §Phases 17.1 and 17.2's route table.
+ *
+ * 🔧 §Phase 17.2 adds three routes — `quote`, `approve-quote`,
+ * `decline-quote` — and widens the creation body to the two shapes a listing
+ * can take. Every rule below is unchanged and applies to them, including the
+ * last one: **none of the three new responses carries a phone number**, which
+ * `test/phase17-2-done-when.test.ts` re-checks over them the way §Phase
+ * 17.1's test does over its own.
  *
  * ## Authorization, and the guard that is stricter than the usual one
  *
@@ -78,16 +87,19 @@ export function registerBookingRoutes(app: FastifyInstance): void {
   r.post(
     '/v1/listings/:id/bookings',
     {
-      schema: { params: listingParams, body: createSlotBookingBody },
+      schema: { params: listingParams, body: createBookingBody },
       preValidation: [requireAuth, requireEmailVerified, requireActiveAccount],
       config: { idempotency: { operation: 'booking.create' }, ...bookingRate },
     },
     async (request, reply) => {
-      const booking = await app.bookings.createSlotBooking(
-        userOf(request).id,
-        request.params.id,
-        request.body,
-      );
+      const body = request.body;
+      // One route, two shapes, and the **listing** decides which is valid —
+      // the service refuses a mismatch by name (`BOOKING_MODE_NOT_AVAILABLE`).
+      // Reading `timeSlotId` here only routes the call; it grants nothing.
+      const booking =
+        'timeSlotId' in body
+          ? await app.bookings.createSlotBooking(userOf(request).id, request.params.id, body)
+          : await app.bookings.createRequestBooking(userOf(request).id, request.params.id, body);
       return reply.code(201).send(ok(booking));
     },
   );
@@ -145,6 +157,65 @@ export function registerBookingRoutes(app: FastifyInstance): void {
     async (request, reply) =>
       reply.send(
         ok(await app.bookings.decline(userOf(request).id, request.params.id, request.body.reason)),
+      ),
+  );
+
+  // -- §Phase 17.2, the request-with-quote path ------------------------------
+
+  // Who may call: the provider on this booking, on a `request` booking at
+  // `awaiting_quote` (a first quote) or `quote_offered` (a revision after
+  // negotiating in chat). §1c: the quote creates the provisional reservation.
+  //
+  // An idempotency key, unlike `accept`: this call carries a **price and a
+  // time**, so a replay is not self-evidently the same intention as the
+  // original — and a revision is a legitimate second call to the same path
+  // with a different body. The key is what tells the two apart.
+  r.patch(
+    '/v1/bookings/:id/quote',
+    {
+      schema: { params: bookingParams, body: offerQuoteBody },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'booking.quote' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.send(
+        ok(
+          await app.bookings.offerQuote(userOf(request).id, request.params.id, {
+            scheduledFor: new Date(request.body.scheduledFor),
+            amountLaari: request.body.amountLaari,
+            ...(request.body.note === undefined ? {} : { note: request.body.note }),
+          }),
+        ),
+      ),
+  );
+
+  // Who may call: the customer on this booking, while the quote is live.
+  // Converts the provisional hold to firm and lands on `awaiting_payment`.
+  r.patch(
+    '/v1/bookings/:id/approve-quote',
+    { schema: { params: bookingParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.bookings.approveQuote(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the customer on this booking. `Quote Received.dc.html`'s
+  // "Decline this quote" — `cancelled`, never `declined` (§1f).
+  r.patch(
+    '/v1/bookings/:id/decline-quote',
+    {
+      schema: { params: bookingParams, body: declineQuoteBody },
+      preValidation: requireAuth,
+      config: bookingRate,
+    },
+    async (request, reply) =>
+      reply.send(
+        ok(
+          await app.bookings.declineQuote(
+            userOf(request).id,
+            request.params.id,
+            request.body.reason,
+          ),
+        ),
       ),
   );
 
