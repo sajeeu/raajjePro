@@ -186,6 +186,33 @@ class BookingActionsController extends Notifier<BookingActionState> {
     () => ref.read(bookingApiProvider).decline(bookingId, reason: reason),
   );
 
+  /// §Phase 17.2. The provider's quote — a time and a price together, which
+  /// is what §1c asks a request-based provider to answer with.
+  ///
+  /// The same call sends a first quote and a revision; the server reads the
+  /// booking's status to know which. Not queued — see [BookingApi.offerQuote].
+  Future<bool> offerQuote({
+    required DateTime scheduledFor,
+    required int amountLaari,
+    String? note,
+  }) => _run(
+    () => ref
+        .read(bookingApiProvider)
+        .offerQuote(
+          bookingId,
+          scheduledFor: scheduledFor,
+          amountLaari: amountLaari,
+          note: note,
+        ),
+  );
+
+  Future<bool> approveQuote() =>
+      _run(() => ref.read(bookingApiProvider).approveQuote(bookingId));
+
+  Future<bool> declineQuote({String? reason}) => _run(
+    () => ref.read(bookingApiProvider).declineQuote(bookingId, reason: reason),
+  );
+
   Future<bool> claimPayment() =>
       _run(() => ref.read(bookingApiProvider).claimPayment(bookingId));
 

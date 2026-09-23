@@ -76,6 +76,80 @@ class BookingApi {
     return Booking.fromJson(response);
   }
 
+  /// §Phase 17.2's request creation — `Request a Time`.
+  ///
+  /// The window is the chip the customer tapped, the text they typed, or both;
+  /// the server resolves a chip to a concrete range and decides which text to
+  /// keep. Nothing about the category's clocks is computed here — the booking
+  /// comes back carrying `quoteDueAt`, and the screen renders that.
+  ///
+  /// Not queued, for the same reason slot creation is not: there is nothing
+  /// honest to show for a request that has not reached the provider, and the
+  /// two-hour clock on it starts server-side when it arrives.
+  Future<Booking> createRequestBooking({
+    required String listingId,
+    String? preferredWindowChip,
+    String? preferredWindowText,
+    String? occasion,
+    String? jobNotes,
+    String? islandId,
+    String? addressDetail,
+  }) async {
+    final response = await _api.post(
+      '/v1/listings/$listingId/bookings',
+      body: {
+        'preferredWindowChip': ?preferredWindowChip,
+        'preferredWindowText': ?_blankToNull(preferredWindowText),
+        'occasion': ?occasion,
+        'jobNotes': ?_blankToNull(jobNotes),
+        'islandId': ?islandId,
+        'addressDetail': ?_blankToNull(addressDetail),
+      },
+      headers: {'idempotency-key': _queue.newIdempotencyKey('booking.create')},
+    );
+    return Booking.fromJson(response);
+  }
+
+  /// §Phase 17.2's quote — `Propose Time and Price`.
+  ///
+  /// The same call sends a first quote and a revised one; the server decides
+  /// which edge that is from the booking's status. Offering it is what opens
+  /// the chat (§0.0 item 7) and what takes the provisional hold on the
+  /// proposed time.
+  ///
+  /// **Not queued**, and deliberately. §Phase 17's offline queue covers the
+  /// slot/request *accept* prompt — a tap with no content — and §0.0 item 14
+  /// already excludes the emergency accept for carrying a price and an arrival
+  /// promise. A quote carries a price and a time too: replaying one on
+  /// reconnect would commit a provider to a number they chose against a
+  /// calendar that has since moved.
+  Future<Booking> offerQuote(
+    String bookingId, {
+    required DateTime scheduledFor,
+    required int amountLaari,
+    String? note,
+  }) async => Booking.fromJson(
+    await _api.patch(
+      '$_bookings/$bookingId/quote',
+      body: {
+        'scheduledFor': scheduledFor.toUtc().toIso8601String(),
+        'amountLaari': amountLaari,
+        'note': ?_blankToNull(note),
+      },
+      headers: {'idempotency-key': _queue.newIdempotencyKey('booking.quote')},
+    ),
+  );
+
+  /// §1c: approval converts the provisional hold to a firm one and lands the
+  /// booking on the payment step.
+  Future<Booking> approveQuote(String bookingId) =>
+      _patch(bookingId, 'approve-quote', null);
+
+  /// `Quote Received`'s "Decline this quote". The booking closes and the way
+  /// back is a new request, not a re-quote of this one.
+  Future<Booking> declineQuote(String bookingId, {String? reason}) =>
+      _patch(bookingId, 'decline-quote', {'reason': ?_blankToNull(reason)});
+
   /// One booking, with its status timeline and — where the caller is the
   /// customer and the booking is at the payment step — the provider's bank
   /// details.

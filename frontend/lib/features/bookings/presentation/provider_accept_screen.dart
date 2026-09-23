@@ -11,6 +11,7 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/bookings/controller/bookings_controller.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
+import 'package:raajjepro/features/bookings/presentation/propose_quote_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/widgets/booking_pieces.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -30,10 +31,13 @@ const acceptWindow = Duration(hours: 24);
 ///
 /// ## The countdown matches the mode's actual window
 ///
-/// 24 hours for slot and request. §Phase 17 asks for "a countdown matching the
-/// mode's actual window (30 min / 24 h)" and the 30-minute one is emergency's,
-/// which §Phase 17.3 builds with the category's own field. Counting down to a
-/// window this screen invented would be worse than no countdown.
+/// 24 hours for a **slot** booking, and for a **request** the deadline the
+/// server already computed from the category's `quoteExpiryMinutes` and put on
+/// the booking as `quoteDueAt` — 🔧 **§Phase 17.2**, and never the flat 24,
+/// which would promise a plumber twenty-two hours they do not have. The
+/// emergency window is §Phase 17.3's and is read from its own category field.
+/// Counting down to a window this screen invented would be worse than no
+/// countdown, which is why neither number is written here.
 ///
 /// ## Offline, the tap is kept
 ///
@@ -139,7 +143,14 @@ class _ProviderAcceptScreenState extends ConsumerState<ProviderAcceptScreen> {
     final now = ref.read(clockProvider)();
     final queued = action.phase == BookingActionPhase.queued;
 
-    if (booking.status != BookingStatus.requested) {
+    // 🔧 **`awaiting_quote` joins `requested` here — §Phase 17.2.** A request
+    // booking never passes through `requested`: it is created awaiting a
+    // quote, and this guard read it as "moved on" and showed the provider an
+    // "already answered" card for a job nobody had answered.
+    final unanswered =
+        booking.status == BookingStatus.requested ||
+        booking.status == BookingStatus.awaitingQuote;
+    if (!unanswered) {
       return const Padding(
         padding: AppSpacing.screenInsets,
         child: EmptyState(
@@ -152,7 +163,15 @@ class _ProviderAcceptScreenState extends ConsumerState<ProviderAcceptScreen> {
       );
     }
 
-    final deadline = booking.createdAt?.add(acceptWindow);
+    // 🔧 The countdown is the **mode's own** window (§Phase 17 frontend item
+    // 2: "a countdown matching the mode's actual window"). A slot booking runs
+    // on the flat 24 hours; a request runs on the category's
+    // `quoteExpiryMinutes`, which the server already resolved into
+    // `quoteDueAt` — 2 hours on a blocked drain. Counting 24 down at a plumber
+    // would promise them 22 hours they do not have.
+    final deadline = booking.bookingMode == BookingKind.request
+        ? booking.quoteDueAt
+        : booking.createdAt?.add(acceptWindow);
     final left = deadline?.difference(now);
 
     return ListView(
@@ -233,7 +252,12 @@ class _ProviderAcceptScreenState extends ConsumerState<ProviderAcceptScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Accepting locks the terms', style: type.bodyStrong),
+              Text(
+                booking.bookingMode == BookingKind.request
+                    ? 'Your quote locks the terms when they accept it'
+                    : 'Accepting locks the terms',
+                style: type.bodyStrong,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 'The price, the date, the time and the scope stop being '
@@ -247,17 +271,33 @@ class _ProviderAcceptScreenState extends ConsumerState<ProviderAcceptScreen> {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        AppButton.primary(
-          label: queued ? 'Waiting to send' : 'Accept',
-          expand: true,
-          loading: action.isWorking,
-          onPressed: action.isWorking || queued
-              ? null
-              : () async {
-                  final done = await controller.accept();
-                  if (done) AppHaptics.commit();
-                },
-        ),
+        // §Phase 17.2. A `request` booking is **not** accepted — §1c has the
+        // provider answer with a concrete time and a price, and the server
+        // refuses a bare accept by name (`REQUEST_BOOKING_NEEDS_A_QUOTE`).
+        // The quote is not queued either: it carries a price and a time, which
+        // is the reason §0.0 item 14 keeps the emergency accept out of the
+        // queue, and the same reasoning applies here.
+        if (booking.bookingMode == BookingKind.request)
+          AppButton.primary(
+            label: 'Propose a time & price',
+            expand: true,
+            onPressed: () => Navigator.of(context).pushNamed(
+              ProposeQuoteScreen.routeName,
+              arguments: {'bookingId': booking.id},
+            ),
+          )
+        else
+          AppButton.primary(
+            label: queued ? 'Waiting to send' : 'Accept',
+            expand: true,
+            loading: action.isWorking,
+            onPressed: action.isWorking || queued
+                ? null
+                : () async {
+                    final done = await controller.accept();
+                    if (done) AppHaptics.commit();
+                  },
+          ),
         const SizedBox(height: AppSpacing.sm2),
         // Not queued, deliberately — see the class note.
         AppButton.secondary(

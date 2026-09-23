@@ -72,7 +72,16 @@ abstract class ApiClient {
     Object? body,
     Map<String, String>? headers,
   });
-  Future<Map<String, dynamic>> patch(String path, {Object? body});
+
+  /// 🔧 `headers` added by §Phase 17.2, which is the first PATCH in the app
+  /// that takes an idempotency key — `booking.quote` carries a price and a
+  /// time, so a double submit must not become a second quote with a second
+  /// hold and a restarted clock.
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Object? body,
+    Map<String, String>? headers,
+  });
 
   /// A whole-resource replacement, as distinct from [patch]'s partial update.
   /// Added by §Phase 9a, whose availability-rule editor opens with every field
@@ -120,8 +129,11 @@ class HttpApiClient implements ApiClient {
   }) => _send('POST', path, body: body, extraHeaders: headers);
 
   @override
-  Future<Map<String, dynamic>> patch(String path, {Object? body}) =>
-      _send('PATCH', path, body: body);
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Object? body,
+    Map<String, String>? headers,
+  }) => _send('PATCH', path, body: body, extraHeaders: headers);
 
   @override
   Future<Map<String, dynamic>> put(String path, {Object? body}) =>

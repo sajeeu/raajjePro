@@ -34,16 +34,31 @@ class AmountBlock extends StatelessWidget {
     final amount = booking.displayAmountLaari;
     final kind = booking.amountKind;
 
-    // Before the provider accepts there is no agreed amount. What the listing
-    // would come to is shown, labelled as an estimate rather than as agreed —
-    // §1c sets the amount *at* acceptance, and a number that reads as agreed
-    // before anyone agreed it is the thing §1h exists to prevent.
+    // Before the amount is set there is no agreed one. What exists is shown,
+    // labelled as a proposal rather than as agreed — §1c sets the amount *at*
+    // acceptance, and a number that reads as agreed before anyone agreed it is
+    // the thing §1h exists to prevent.
+    //
+    // 🔧 **Who does the accepting differs by mode — §Phase 17.2.** On a slot
+    // booking the *provider* accepts a listed price; on a request booking the
+    // *customer* accepts a quoted one. This read "when the provider accepts"
+    // for both, which on the quote path names the wrong person at the moment
+    // the number stops being a proposal.
+    final quoted = booking.status == BookingStatus.quoteOffered;
     final label = booking.isAgreed
         ? (kind?.label ?? 'Agreed price')
+        : quoted
+        ? 'Quoted price'
         : 'Listed price';
     final caution = booking.isAgreed
         ? kind?.caution
-        : 'Not agreed yet — it becomes the agreed price when the provider accepts.';
+        : quoted
+        ? 'Not agreed yet — it becomes the agreed price when you accept this '
+              'quote.'
+        : booking.bookingMode == BookingKind.request
+        ? 'No price yet — the provider replies with one for this job.'
+        : 'Not agreed yet — it becomes the agreed price when the provider '
+              'accepts.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

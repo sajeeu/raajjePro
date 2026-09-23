@@ -148,6 +148,24 @@ enum BookingAmendmentStatus {
   };
 }
 
+/// Whether the `booking`-type thread takes messages right now.
+///
+/// **Derived by the server and read here** (§Phase 17.2 owns the state,
+/// §Phase 18 owns the thread). The client never works it out from the status:
+/// the rule has three doors and a seven-day tail, and a second copy of it here
+/// would be the copy that drifts.
+enum BookingChatState {
+  notOpen,
+  open,
+  locked;
+
+  static BookingChatState parse(String? wire) => switch (wire) {
+    'open' => open,
+    'locked' => locked,
+    _ => notOpen,
+  };
+}
+
 /// One row of §Phase 17's "status timeline showing when each transition
 /// happened and who caused it".
 @immutable
@@ -337,6 +355,12 @@ class Booking {
     required this.finalAmountLaari,
     required this.scheduledFor,
     required this.durationMinutes,
+    required this.preferredWindowText,
+    required this.quoteDueAt,
+    required this.quoteOfferedAt,
+    required this.quoteExpiresAt,
+    required this.quoteNote,
+    required this.chatState,
     required this.occasion,
     required this.jobNotes,
     required this.islandDisplayName,
@@ -373,6 +397,15 @@ class Booking {
     scheduledFor: DateTime.tryParse(json['scheduledFor'] as String? ?? '')
         ?.toLocal(),
     durationMinutes: json['durationMinutes'] as int?,
+    preferredWindowText: json['preferredWindowText'] as String?,
+    quoteDueAt: DateTime.tryParse(json['quoteDueAt'] as String? ?? '')
+        ?.toLocal(),
+    quoteOfferedAt: DateTime.tryParse(json['quoteOfferedAt'] as String? ?? '')
+        ?.toLocal(),
+    quoteExpiresAt: DateTime.tryParse(json['quoteExpiresAt'] as String? ?? '')
+        ?.toLocal(),
+    quoteNote: json['quoteNote'] as String?,
+    chatState: BookingChatState.parse(json['chatState'] as String?),
     occasion: json['occasion'] as String?,
     jobNotes: json['jobNotes'] as String?,
     islandDisplayName: json['islandDisplayName'] as String?,
@@ -428,6 +461,28 @@ class Booking {
   final int? finalAmountLaari;
   final DateTime? scheduledFor;
   final int? durationMinutes;
+
+  /// What the customer asked for, in their own words or the chip's — "Tomorrow
+  /// morning", "Thursday after 16:00". A preference, never a slot (§1c).
+  final String? preferredWindowText;
+
+  /// The provider's deadline to quote — the category's `quoteExpiryMinutes`,
+  /// which `Request a Time` renders as "until 12:30 today". Null once quoted.
+  final DateTime? quoteDueAt;
+
+  /// When the live quote was sent. Non-null is what "the chat has opened"
+  /// means on the request path (§0.0 item 7).
+  final DateTime? quoteOfferedAt;
+
+  /// The customer's deadline to approve — the category's
+  /// `quoteApprovalMinutes`, and what `Quote Received` counts down to. **Never
+  /// a flat 72 hours** (invariant 13); the client only ever renders it.
+  final DateTime? quoteExpiresAt;
+
+  /// The provider's note on the quote, and the agreed scope once approved.
+  final String? quoteNote;
+
+  final BookingChatState chatState;
   final String? occasion;
   final String? jobNotes;
   final String? islandDisplayName;
@@ -462,4 +517,25 @@ class Booking {
   /// §1c step 10's prompt is showing and unanswered.
   bool get awaitsCompletionAnswer =>
       status == BookingStatus.confirmed && completionPromptedAt != null;
+
+  /// A live quote the customer still has to answer.
+  bool get hasLiveQuote => status == BookingStatus.quoteOffered;
+
+  /// The thread is reachable — §Phase 18 builds it; this is what decides
+  /// whether a screen offers the way in.
+  bool get canMessage => chatState == BookingChatState.open;
+
+  /// How long is left on whichever of the two quote clocks is running, or null
+  /// where neither is. The **server's** deadline, counted down locally — the
+  /// client never computes a window from a category.
+  Duration? quoteTimeLeft(DateTime now) {
+    final deadline = switch (status) {
+      BookingStatus.awaitingQuote => quoteDueAt,
+      BookingStatus.quoteOffered => quoteExpiresAt,
+      _ => null,
+    };
+    if (deadline == null) return null;
+    final left = deadline.difference(now);
+    return left.isNegative ? Duration.zero : left;
+  }
 }

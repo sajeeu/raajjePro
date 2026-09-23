@@ -11,7 +11,9 @@ import 'package:raajjepro/features/bookings/data/booking_models.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
 import 'package:raajjepro/features/bookings/presentation/payment_step_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/propose_amendment_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/propose_quote_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/provider_receipt_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/quote_received_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/widgets/booking_pieces.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -270,6 +272,17 @@ class _DetailBody extends ConsumerWidget {
             .pushNamed(route, arguments: {'bookingId': booking.id});
 
     if (isCustomer) {
+      // §Phase 17.2. A live quote is the one thing on this booking waiting on
+      // the customer, and its own screen carries the countdown.
+      if (booking.status == BookingStatus.quoteOffered) {
+        actions.add(
+          AppButton.primary(
+            label: 'See the quote',
+            expand: true,
+            onPressed: () => push(QuoteReceivedScreen.routeName),
+          ),
+        );
+      }
       if (booking.status == BookingStatus.awaitingPayment) {
         actions.add(
           AppButton.primary(
@@ -289,17 +302,35 @@ class _DetailBody extends ConsumerWidget {
         );
       }
       if (booking.status == BookingStatus.requested ||
+          // §Phase 17.2: `Request a Time`'s own "Cancel this request".
+          booking.status == BookingStatus.awaitingQuote ||
           booking.status == BookingStatus.accepted ||
           booking.status == BookingStatus.awaitingPayment) {
         actions.add(
           AppButton.text(
-            label: 'Cancel this booking',
+            label: booking.status == BookingStatus.awaitingQuote
+                ? 'Cancel this request'
+                : 'Cancel this booking',
             expand: true,
             onPressed: () => push(CancelBookingScreen.routeName),
           ),
         );
       }
     } else {
+      // §Phase 17.2. The provider's answer to a request is a time and a price
+      // together — never a bare accept, which the server refuses by name.
+      if (booking.status == BookingStatus.awaitingQuote ||
+          booking.status == BookingStatus.quoteOffered) {
+        actions.add(
+          AppButton.primary(
+            label: booking.status == BookingStatus.quoteOffered
+                ? 'Revise your quote'
+                : 'Propose a time & price',
+            expand: true,
+            onPressed: () => push(ProposeQuoteScreen.routeName),
+          ),
+        );
+      }
       if (booking.status == BookingStatus.paymentClaimed) {
         actions.add(
           AppButton.primary(

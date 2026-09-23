@@ -33,8 +33,11 @@ import 'package:raajjepro/features/bookings/presentation/booking_detail_screen.d
 import 'package:raajjepro/features/bookings/presentation/my_bookings_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/payment_step_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/propose_amendment_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/propose_quote_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/provider_accept_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/provider_receipt_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/quote_received_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/request_time_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/gallery/presentation/gallery_screen.dart';
 import 'package:raajjepro/features/legal/presentation/legal_index_screen.dart';
@@ -237,6 +240,22 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
           ),
         ),
         ProposeAmendmentScreen.routeName: (context) => ProposeAmendmentScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        // §Phase 17.2 — the request-with-quote path.
+        RequestTimeScreen.routeName: (context) => RequestTimeScreen(
+          args: RequestTimeArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        ProposeQuoteScreen.routeName: (context) => ProposeQuoteScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        QuoteReceivedScreen.routeName: (context) => QuoteReceivedScreen(
           args: BookingActionArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),

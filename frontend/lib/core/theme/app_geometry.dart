@@ -124,6 +124,11 @@ abstract final class AppSizes {
   static const double avatarMedium = 36;
   static const double avatarSmall = 22;
 
+  /// The numbered step bullet in a "what happens next" list
+  /// (`Request a Time.dc.html`, 22 dp). Added by §Phase 17.2 — the scale had
+  /// no 22 outside [avatarSmall], and a step number is not an avatar.
+  static const double stepBullet = 22;
+
   /// The icon disc atop a settings/confirmation card (`Account Settings.dc.html`).
   static const double iconDisc = 46;
 

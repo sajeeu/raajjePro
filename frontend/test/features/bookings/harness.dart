@@ -89,6 +89,12 @@ Map<String, dynamic> bookingJson({
   String? completionPromptedAt,
   String? cancelledByRole,
   String? occasion,
+  String? preferredWindowText,
+  String? quoteDueAt,
+  String? quoteOfferedAt,
+  String? quoteExpiresAt,
+  String? quoteNote,
+  String chatState = 'not_open',
   List<Map<String, dynamic>> amendments = const [],
   List<Map<String, dynamic>> statusHistory = const [],
   Map<String, dynamic>? paymentDetails,
@@ -112,7 +118,14 @@ Map<String, dynamic> bookingJson({
   'scheduledFor': scheduledFor,
   'timeSlotId': 'slot-1',
   'durationMinutes': 120,
-  'preferredWindowText': null,
+  'preferredWindowText': preferredWindowText,
+  'preferredWindowFrom': null,
+  'preferredWindowTo': null,
+  'quoteDueAt': quoteDueAt,
+  'quoteOfferedAt': quoteOfferedAt,
+  'quoteExpiresAt': quoteExpiresAt,
+  'quoteNote': quoteNote,
+  'chatState': chatState,
   'occasion': occasion,
   'jobNotes': 'Two bedrooms and kitchen — keys with the caretaker',
   'islandId': 'island-1',
@@ -170,6 +183,32 @@ Map<String, dynamic> eventJson(
   'transition': transition,
   'at': '2026-09-14T03:00:00.000Z',
 };
+
+/// A request booking with a live quote on it — the state both quote screens
+/// start from.
+///
+/// The approval deadline is **four hours out**, which is Plumbing's
+/// `quoteApprovalMinutes` as the server would have computed it. The app never
+/// derives that number; the fixture states it here precisely because the
+/// screen's whole job is to render a deadline it was given.
+Map<String, dynamic> quotedBookingJson({
+  String status = 'quote_offered',
+  int? quotedAmountLaari = 65000,
+  String? quoteExpiresAt = '2026-09-15T07:00:00.000Z',
+  String chatState = 'open',
+}) => bookingJson(
+  status: status,
+  bookingMode: 'request',
+  agreedAmountLaari: status == 'quote_offered' ? null : quotedAmountLaari,
+  amountKind: status == 'quote_offered' ? null : 'quoted',
+  quotedAmountLaari: quotedAmountLaari,
+  scheduledFor: '2026-09-25T09:00:00.000Z',
+  preferredWindowText: 'Tomorrow morning',
+  quoteOfferedAt: '2026-09-15T03:00:00.000Z',
+  quoteExpiresAt: quoteExpiresAt,
+  quoteNote: 'Replace joint, reseal line — parts included',
+  chatState: chatState,
+);
 
 const bankDetails = {
   'bankName': 'Bank of Maldives',
