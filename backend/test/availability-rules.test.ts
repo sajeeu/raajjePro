@@ -453,6 +453,26 @@ describe.skipIf(databaseUrl === undefined)('availability rules and slot generati
   });
 
   describe('the scheduled generator', () => {
+    /// 🔧 Puts this test's listing at the front of the work list (2026-09-24).
+    ///
+    /// `findGenerationCandidates` is `nextGenerationAt <= now`, ordered ascending,
+    /// with a `take` — a batch bound for the job, not part of the rule being
+    /// tested. The suite shares one database and never truncates, so once more
+    /// than fifty listings are due at the same instant, a test's own listing
+    /// falls off the first page and the job never reaches it. That is what turned
+    /// this file red when §Phase 17.2 added one more slot-mode fixture, and it
+    /// would have happened again to whoever added the next one.
+    ///
+    /// Back-dating by an hour keeps the row *due* — which is the property under
+    /// test — while making it strictly earlier than every sibling parked at the
+    /// same midnight, so the ordering guarantees it is on the first page no
+    /// matter how many others accumulate.
+    const beFirstInLine = (listingId: string) =>
+      app.deps.prisma.listingSlotState.update({
+        where: { listingId },
+        data: { nextGenerationAt: new Date('2026-09-14T18:00:00.000Z') },
+      });
+
     it('reads only listings that have something to do', async () => {
       const { user, listingId } = await providerWithSlotListing(app);
       await addRule(app, user, listingId);
@@ -464,11 +484,15 @@ describe.skipIf(databaseUrl === undefined)('availability rules and slot generati
         where: { listingId },
       });
       expect(parked.nextGenerationAt?.toISOString()).toBe('2026-09-14T19:00:00.000Z');
-      expect(
-        await app.availability.repo.findGenerationCandidates(clock.clock(), 50),
-      ).not.toContainEqual(expect.objectContaining({ listingId }));
+      // Asserted against the row, not against absence from a page: a listing
+      // pushed off the first page by unrelated fixtures is also "not in the
+      // list", so the page form of this passes whether the rule works or not.
+      // `?? 0` rather than a non-null assertion: a null would land at zero and
+      // fail this, which is the right answer for a row that is not parked.
+      expect(parked.nextGenerationAt?.getTime() ?? 0).toBeGreaterThan(clock.clock().getTime());
 
-      // Once the horizon has moved on, it is.
+      // Once the horizon has moved on, it is a candidate.
+      await beFirstInLine(listingId);
       clock.set(new Date('2026-09-15T00:00:00Z'));
       const due = await app.availability.repo.findGenerationCandidates(clock.clock(), 50);
       expect(due.map((c) => c.listingId)).toContain(listingId);
@@ -479,6 +503,7 @@ describe.skipIf(databaseUrl === undefined)('availability rules and slot generati
       await addRule(app, user, listingId, { weekdays: [1, 2, 3, 4, 5, 6, 7] });
       expect((await readAvailability(app, user, listingId)).horizonDate).toBe('2026-11-12');
 
+      await beFirstInLine(listingId);
       clock.set(new Date('2026-09-15T00:00:00Z')); // 05:00 Malé, the next day
       expect(await app.jobs.runOnce(SLOT_GENERATION_JOB_NAME, clock.clock())).toBe('ran');
 
