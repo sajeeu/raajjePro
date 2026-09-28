@@ -37,6 +37,9 @@ import { registerAvailabilityRoutes } from './modules/availability/routes.js';
 import { BookingRepository } from './modules/bookings/repository.js';
 import { registerBookingRoutes } from './modules/bookings/routes.js';
 import { BookingService } from './modules/bookings/service.js';
+import { ContactRevealService, databaseKillSwitches } from './modules/bookings/contact-reveal.js';
+import { DispatchFeeService } from './modules/bookings/dispatch-fee.js';
+import { EmergencyService } from './modules/bookings/emergency.js';
 import { loggingBookingNotifier, type BookingNotifier } from './modules/bookings/notifications.js';
 import { bookingDeletionBlocker, bookingSubscriptionSource } from './modules/bookings/seams.js';
 import { registerListingRoutes } from './modules/listings/routes.js';
@@ -86,6 +89,8 @@ import {
   bookingPaymentSilenceJob,
   bookingQuoteApprovalTimeoutJob,
   bookingQuoteRequestTimeoutJob,
+  emergencyOfferChoiceTimeoutJob,
+  emergencyWindowTimeoutJob,
 } from './jobs/booking-lifecycle.js';
 import {
   subscriptionIntroductoryConversionJob,
@@ -181,6 +186,9 @@ declare module 'fastify' {
     reservations: ReservationService;
     subscriptions: SubscriptionService;
     bookings: BookingService;
+    emergency: EmergencyService;
+    contactReveal: ContactRevealService;
+    dispatchFees: DispatchFeeService;
     media: MediaService;
     exportContributors: ExportContributors;
     adminAuth: AdminAuthService;
@@ -443,14 +451,54 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // the state transition into `confirmed`, not from one endpoint" — so both
   // `confirm-payment-received` and an admin resolving `payment_unresolved`
   // reach it through one place.
+  // Phase 17.3. Emergency dispatch and offer collection, the contact reveal
+  // and the dispatch fee. `EmergencyService` is constructed first and handed
+  // to `BookingService`, never the other way round: the detail read and an
+  // emergency provider's cancellation reach it, and it reaches nothing of
+  // theirs. The kill-switch reader is the runtime check §Phase 10b's screen
+  // will flip (§0.0 item 20).
+  const bookingNotifier = deps.bookingNotifier ?? loggingBookingNotifier(app.log);
+  const killSwitches = databaseKillSwitches(deps.prisma);
+  const emergency = new EmergencyService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    repo: bookingRepo,
+    providers,
+    notifier: bookingNotifier,
+    dispatcher: notifications,
+    killSwitches,
+    log: app.log,
+  });
+  app.decorate('emergency', emergency);
+  app.decorate(
+    'contactReveal',
+    new ContactRevealService({
+      prisma: deps.prisma,
+      clock: deps.clock,
+      repo: bookingRepo,
+      notifier: bookingNotifier,
+      killSwitches,
+      log: app.log,
+    }),
+  );
+  app.decorate(
+    'dispatchFees',
+    new DispatchFeeService({
+      prisma: deps.prisma,
+      subscriptions,
+      bankDetails: config.billing.bankDetails,
+    }),
+  );
+
   const bookings = new BookingService({
     prisma: deps.prisma,
     clock: deps.clock,
     repo: bookingRepo,
     reservations,
     providers,
-    notifier: deps.bookingNotifier ?? loggingBookingNotifier(app.log),
+    notifier: bookingNotifier,
     dispatcher: notifications,
+    emergency,
     onConfirmed: (providerProfileId) => subscriptions.onBookingConfirmed(providerProfileId),
     log: app.log,
   });
@@ -527,6 +575,11 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // value (invariant 13) rather than a constant in the job.
   jobs.register(bookingQuoteRequestTimeoutJob(bookings, app.log));
   jobs.register(bookingQuoteApprovalTimeoutJob(bookings, app.log));
+  // Phase 17.3's two emergency clocks: the category's
+  // `emergencyAcceptWindowMinutes` over the whole request, and the customer's
+  // five minutes to choose between offers.
+  jobs.register(emergencyWindowTimeoutJob(emergency, app.log));
+  jobs.register(emergencyOfferChoiceTimeoutJob(emergency, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {

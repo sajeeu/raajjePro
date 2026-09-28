@@ -4,6 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ok } from '../../core/envelope.js';
 import { principalOf, requireAdmin } from '../admin-auth/guards.js';
 import { requireActiveAccount, requireAuth, requireEmailVerified, userOf } from '../auth/guards.js';
+import { paymentProofBody } from '../subscriptions/schema.js';
 import {
   amendmentParams,
   bookingParams,
@@ -13,7 +14,10 @@ import {
   createBookingBody,
   declineBody,
   declineQuoteBody,
+  dispatchFeeParams,
   disputeBody,
+  emergencyAcceptBody,
+  emergencyOfferResponseBody,
   listBookingsQuery,
   listingParams,
   offerQuoteBody,
@@ -57,8 +61,9 @@ import {
  * Structurally (see `types.ts` and `repository.ts`), and asserted over this
  * route table by `test/phase17-1-done-when.test.ts`. §1c allows exactly one
  * endpoint in the system to return one and it is §Phase 17.3's
- * `POST /v1/bookings/:id/reveal-contact`. `GET /v1/bookings/:id/contact-info`
- * does not exist here and must never be created.
+ * `POST /v1/bookings/:id/reveal-contact`, **below, and the only exception**.
+ * `GET /v1/bookings/:id/contact-info` does not exist here and must never be
+ * created.
  */
 export function registerBookingRoutes(app: FastifyInstance): void {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -96,10 +101,16 @@ export function registerBookingRoutes(app: FastifyInstance): void {
       // One route, two shapes, and the **listing** decides which is valid —
       // the service refuses a mismatch by name (`BOOKING_MODE_NOT_AVAILABLE`).
       // Reading `timeSlotId` here only routes the call; it grants nothing.
+      const userId = userOf(request).id;
       const booking =
         'timeSlotId' in body
-          ? await app.bookings.createSlotBooking(userOf(request).id, request.params.id, body)
-          : await app.bookings.createRequestBooking(userOf(request).id, request.params.id, body);
+          ? await app.bookings.createSlotBooking(userId, request.params.id, body)
+          : 'emergency' in body
+            ? // §Phase 17.3. The same route and the same guards — email
+              // verified, not frozen, idempotency key — plus the emergency
+              // rate limit, which is a business rule and lives in the service.
+              await app.emergency.create(userId, request.params.id, body)
+            : await app.bookings.createRequestBooking(userId, request.params.id, body);
       return reply.code(201).send(ok(booking));
     },
   );
@@ -217,6 +228,149 @@ export function registerBookingRoutes(app: FastifyInstance): void {
           ),
         ),
       ),
+  );
+
+  // -- §Phase 17.3, emergency dispatch ----------------------------------------
+
+  // Who may call: a provider the broadcast reaches — capable category, the
+  // category's own tier bar, a live emergency listing on the job's island,
+  // taking new customers, not excluded. Everyone else gets 404, or the tier
+  // refusal by name where they have a listing here but not the tier.
+  //
+  // An idempotency key, like `quote`: the call carries a price and an arrival
+  // promise. And **not** in the offline queue (§0.0 item 14) — a replayed offer
+  // would commit a provider to numbers worked out somewhere else.
+  r.patch(
+    '/v1/bookings/:id/emergency-accept',
+    {
+      schema: { params: bookingParams, body: emergencyAcceptBody },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'booking.emergency-accept' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.send(
+        ok(await app.emergency.offer(userOf(request).id, request.params.id, request.body)),
+      ),
+  );
+
+  // Who may call: the customer on this emergency, once the collection window
+  // has closed and inside their five minutes. Selecting incurs the dispatch fee.
+  r.patch(
+    '/v1/bookings/:id/emergency-offer-response',
+    {
+      schema: { params: bookingParams, body: emergencyOfferResponseBody },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'booking.emergency-offer-response' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.send(
+        ok(await app.emergency.respond(userOf(request).id, request.params.id, request.body)),
+      ),
+  );
+
+  // Who may call: the customer on this emergency, once the category's answer
+  // window has passed since they chose. No admin in the loop (Round 15).
+  r.patch(
+    '/v1/bookings/:id/provider-not-arrived',
+    { schema: { params: bookingParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.markNotArrived(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: a provider, for the open emergencies they may answer now.
+  r.get(
+    '/v1/providers/me/emergency-requests',
+    { preValidation: requireAuth, config: bookingRate },
+    async (request, reply) => reply.send(ok(await app.emergency.inbox(userOf(request).id))),
+  );
+
+  // Who may call: a provider the request reaches, or one who already offered
+  // on it — so a provider who was not chosen can see that they were released.
+  r.get(
+    '/v1/providers/me/emergency-requests/:id',
+    { schema: { params: bookingParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.readForProvider(userOf(request).id, request.params.id))),
+  );
+
+  // 🔧 **THE ONE ROUTE IN THIS SYSTEM THAT RETURNS A PHONE NUMBER** (§1c).
+  //
+  // Who may call: the customer on an emergency booking at `accepted` or
+  // later, to start it; the provider on it, only after the customer has.
+  // Every one of the seven conditions is checked in `contact-reveal.ts`, and
+  // the runtime kill switch before them. A tighter rate than the rest of the
+  // module: a legitimate caller needs this once or twice per job, and each
+  // call is logged as a moderation signal.
+  r.post(
+    '/v1/bookings/:id/reveal-contact',
+    {
+      schema: { params: bookingParams },
+      preValidation: requireAuth,
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute',
+          keyGenerator: (req: { principal?: { id: string }; ip: string }) =>
+            `user:${req.principal?.id ?? req.ip}`,
+        },
+      },
+    },
+    async (request, reply) =>
+      reply.send(ok(await app.contactReveal.reveal(userOf(request).id, request.params.id))),
+  );
+
+  // -- §1c's dispatch fee, settled by the customer ---------------------------
+
+  // Who may call: the signed-in user, for their own dispatch fees — and the
+  // RaajjePro bank account to pay them into.
+  r.get(
+    '/v1/users/me/dispatch-fees',
+    { preValidation: requireAuth, config: bookingRate },
+    async (request, reply) => reply.send(ok(await app.dispatchFees.listOwn(userOf(request).id))),
+  );
+
+  // Who may call: the customer who owes it. Step 1 of §Phase 8a's upload.
+  // Not `requireActiveAccount`: a customer mid-deletion may still settle a
+  // debt, and refusing would leave it owed forever.
+  r.post(
+    '/v1/users/me/dispatch-fees/:id/proof',
+    {
+      schema: { params: dispatchFeeParams, body: paymentProofBody },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'dispatch-fee.proof' }, ...bookingRate },
+    },
+    async (request, reply) => {
+      const created = await app.dispatchFees.createProofUpload(
+        userOf(request).id,
+        request.params.id,
+        request.body.contentType,
+      );
+      return reply.code(201).send(
+        ok({
+          submission: created.submission,
+          upload: {
+            url: created.upload.url,
+            method: created.upload.method,
+            headers: created.upload.headers,
+            expiresAt: created.upload.expiresAt.toISOString(),
+            maxBytes: created.upload.maxBytes,
+          },
+        }),
+      );
+    },
+  );
+
+  // Who may call: the customer who owes it. §1c: submitting **is** what lifts
+  // the new-booking block — "not when an admin confirms it".
+  r.post(
+    '/v1/users/me/dispatch-fees/:id/submit',
+    {
+      schema: { params: dispatchFeeParams },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'dispatch-fee.submit' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.send(ok(await app.dispatchFees.submitProof(userOf(request).id, request.params.id))),
   );
 
   // -- Payment attestation --------------------------------------------------

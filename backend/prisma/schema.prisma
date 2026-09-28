@@ -508,6 +508,7 @@ model ProviderProfile {
   /// never changes owner, and every provider-side booking query is
   /// provider-scoped.
   bookings               Booking[]
+  emergencyOffers        EmergencyOffer[]
 
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
@@ -1233,7 +1234,9 @@ model Listing {
   /// are what a customer's island filter reads. `ProviderServiceArea` is the
   /// account-level *default* the wizard pre-fills from and nothing more; the
   /// two must never be conflated, and nothing here matches on a name.
-  serviceAreas ListingServiceArea[]
+  serviceAreas    ListingServiceArea[]
+  /// §Phase 17.3. The listing an offer was made through.
+  emergencyOffers EmergencyOffer[]
 
   // -- Step 7, Meta ---------------------------------------------------------
 
@@ -1687,6 +1690,10 @@ model PaymentSubmission {
   appealNote String?   @map("appeal_note")
 
   invoice Invoice?
+
+  /// §Phase 17.3: the emergency this dispatch fee was incurred on. Null on
+  /// every subscription payment.
+  dispatchFeeFor Booking?
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -2257,6 +2264,10 @@ enum ReportReason {
   price_changed_on_site
   unsafe_work
   payment_dispute
+  /// §Phase 17 item 21: a provider's tier fell below the category's bar
+  /// with an emergency booking already paid. System-filed, never chosen by a
+  /// person — so it is not among the four a dispute may be raised under.
+  provider_verification_revoked
   // message
   contact_solicitation
   spam
@@ -2473,6 +2484,51 @@ model Booking {
   /// records that the hook ran, so the second door cannot fire it twice.
   trialHookFiredAt DateTime? @map("trial_hook_fired_at") @db.Timestamptz(6)
 
+  // -- §Phase 17.3's emergency dispatch -------------------------------------
+  //
+  // Every clock below is a **stored deadline**, for §Phase 17.2's reason: each
+  // one is a countdown somebody is already watching (`Emergency Flow.dc.html`
+  // shows the customer both), and an admin editing
+  // `Category.emergencyAcceptWindowMinutes` later must move the next request's
+  // window, never the one on a customer's screen.
+
+  /// The overall answer window — `createdAt + Category.emergencyAcceptWindowMinutes`
+  /// (30 for all four capable categories, Round 22; read, never a literal).
+  /// §1c: "offer rejections and expiries do **not** reset this clock". A
+  /// re-dispatch after a no-show or a provider cancellation opens a fresh one,
+  /// because by then the original has long run out and re-broadcasting into a
+  /// spent window would decline the request on arrival.
+  emergencyWindowEndsAt DateTime? @map("emergency_window_ends_at") @db.Timestamptz(6)
+
+  /// When the current round's 90-second collection window closes — set by the
+  /// first offer of a round, cleared when the round ends (selection,
+  /// reject-all, expiry). The customer's 5-minute choice runs from here.
+  offerCollectionClosesAt DateTime? @map("offer_collection_closes_at") @db.Timestamptz(6)
+
+  /// Open offers in the current round. The atomic gate for §1c's "at most
+  /// three": an offer is admitted by a conditional increment on this column,
+  /// so four providers answering in the same instant produce three offers and
+  /// one clear refusal — without a row lock and without raw SQL.
+  emergencyOfferCount Int @default(0) @map("emergency_offer_count")
+
+  /// §Phase 17 item 4's name. Every provider this request must never return
+  /// to: everyone whose offer the customer rejected (reject-all), a provider
+  /// marked as not arrived, and one who cancelled after being chosen (§1h).
+  ///
+  /// Defaulted to empty rather than left nullable: a NULL array makes
+  /// `NOT (rejected_provider_ids @> ...)` NULL, which silently drops every
+  /// untouched request from a provider's inbox.
+  rejectedProviderIds String[] @default([]) @map("rejected_provider_ids") @db.Uuid
+
+  /// §1c's MVR 200 dispatch fee, recorded as owed the moment the customer
+  /// selects an offer. One emergency, one fee: a re-dispatch finds this set
+  /// and creates no second one.
+  dispatchFeeSubmissionId String?            @unique @map("dispatch_fee_submission_id") @db.Uuid
+  dispatchFeeSubmission   PaymentSubmission? @relation(fields: [dispatchFeeSubmissionId], references: [id])
+
+  emergencyOffers EmergencyOffer[]
+  contactReveals  ContactRevealEvent[]
+
   statusHistory BookingStatusEvent[]
   amendments    BookingAmendment[]
   reports       Report[]
@@ -2496,6 +2552,9 @@ model Booking {
   /// cannot use an index scans every booking ever made.
   @@index([status, quoteDueAt])
   @@index([status, quoteExpiresAt])
+  /// §Phase 17.3's two sweeps: the overall window, and the customer's choice.
+  @@index([status, emergencyWindowEndsAt])
+  @@index([status, offerCollectionClosesAt])
   @@map("booking")
 }
 
@@ -2645,4 +2704,158 @@ model Report {
   @@index([status, createdAt])
   @@index([targetType, targetId])
   @@map("report")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 17.3 — emergency dispatch, offer collection, the contact reveal
+// ---------------------------------------------------------------------------
+
+/// Where one offer ended up. `open` is the only live state; every other one
+/// is an ending, and each ending is a different fact about the provider.
+enum EmergencyOfferState {
+  /// Made, and waiting for the customer.
+  open
+  /// The one the customer chose. At most one per round.
+  selected
+  /// The customer chose somebody else. Released immediately (§1c: "releases
+  /// the unselected providers immediately rather than leaving them on a
+  /// spinner").
+  not_selected
+  /// The customer rejected every offer. The provider joins
+  /// `rejectedProviderIds` and is never asked about this request again.
+  rejected
+  /// The customer did not choose within 5 minutes of the collection window
+  /// closing. Released without exclusion — a silent customer is not a verdict
+  /// on anyone's offer.
+  expired
+  /// The request ended underneath the offer — the overall window ran out, the
+  /// customer cancelled, or the provider's tier fell below the bar.
+  lapsed
+  /// Selected, and the customer marked "provider has not arrived" (Round 15).
+  /// §1f's no-show count reads this state.
+  no_show
+  /// Selected, and the provider cancelled afterwards (§1h's replacement).
+  cancelled
+
+  @@map("emergency_offer_state")
+}
+
+/// One provider's answer to one emergency broadcast (§Phase 17.3, Round 15).
+///
+/// "`emergency_offered` now means *offers are collected and awaiting the
+/// customer*, not *one provider has claimed this*." So offers **coexist**: up
+/// to three per round, side by side, and the customer picks. Nothing here is
+/// a race between providers — the only atomic claim is the one offer the
+/// customer selects.
+///
+/// Invariant 8: never deleted. A rejected or expired offer is conduct
+/// evidence (§1f reads `no_show`, and on-time rate reads `etaMinutes` on the
+/// selected one), so every row outlives the round it was made in.
+model EmergencyOffer {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  /// The provider's own published emergency listing in the request's category
+  /// — what the booking is re-pointed to if this offer is selected, so every
+  /// downstream step (the payment step's bank details, the provider's own
+  /// bookings list) reads the provider who is actually coming.
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  /// What they charge to attend, integer laari (invariant 7). Becomes
+  /// `agreedAmount` with `amountKind: callout_fee` on selection.
+  calloutFeeLaari Int @map("callout_fee_laari")
+
+  /// Round 22: the provider's own arrival estimate, supplied in the same call
+  /// as the fee. **Self-declared and unverified** — rendered as the
+  /// provider's estimate, never as a platform guarantee — and §1f's on-time
+  /// rate measures the selected offer against it.
+  etaMinutes Int @map("eta_minutes")
+
+  state EmergencyOfferState @default(open)
+
+  /// When the offer left `open`, whichever way it went.
+  closedAt DateTime? @map("closed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The customer's side-by-side view, oldest first.
+  @@index([bookingId, state, createdAt])
+  /// §1f's conduct window over one provider's offers.
+  @@index([providerProfileId, state, createdAt])
+  // Also: a partial unique index, one `open` offer per (booking, provider),
+  // created by hand in the migration because Prisma cannot express a partial
+  // index. It is what makes a double tap a refusal rather than two bids.
+  @@map("emergency_offer")
+}
+
+/// Every call that returned phone numbers through
+/// `POST /v1/bookings/:id/reveal-contact` — §1c's seventh condition, "every
+/// reveal is logged — bookingId, requesting user, timestamp — and surfaces in
+/// Phase 22's moderation signals".
+///
+/// **IDs only, never the numbers.** The log exists so a pattern is visible
+/// (a customer who reveals on every emergency booking); storing what was
+/// revealed would put a phone number in a second table for no reader.
+///
+/// The first row with `actorRole: customer` **is** the reveal. §1c: "the
+/// customer initiates … there is no provider-initiated reveal", and "both
+/// parties see each other's number" — so a provider's call is logged here too,
+/// and is answered only once a customer row exists.
+model ContactRevealEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  userId    String           @map("user_id") @db.Uuid
+  actorRole BookingActorRole @map("actor_role")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([bookingId, createdAt])
+  @@index([userId, createdAt])
+  @@map("contact_reveal_event")
+}
+
+/// §Phase 10b's incident kill switches — the **runtime check** half, which
+/// §Phase 17.3 builds (§0.0 item 20). 10b builds the admin surface that flips
+/// one; until it does, a row is set directly and the check reads it.
+///
+/// "These are incident controls, not a general feature-flag framework — no
+/// admin-defined flags in v1", so the key is a closed enum and a new switch is
+/// a migration. Only the one this slice checks is here; §Phase 10b adds the
+/// rest.
+enum KillSwitchKey {
+  /// §1c: "the reveal is killable at runtime via the Phase 10b kill switch,
+  /// without a deploy."
+  emergency_contact_reveal
+
+  @@map("kill_switch_key")
+}
+
+/// One switch. **No row means not engaged** — a switch nobody has touched is
+/// off, and the feature it guards runs.
+model KillSwitch {
+  id  String        @id @default(uuid()) @db.Uuid
+  key KillSwitchKey @unique
+
+  /// True while the incident control is on and the feature is **off**.
+  engaged Boolean @default(false)
+
+  /// Who last flipped it, and when. §Phase 10b audit-logs the flip; these
+  /// stamps are what the banner reads.
+  changedByAdminId String?   @map("changed_by_admin_id") @db.Uuid
+  changedAt        DateTime? @map("changed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("kill_switch")
 }

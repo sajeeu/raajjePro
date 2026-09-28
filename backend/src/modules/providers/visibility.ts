@@ -100,6 +100,15 @@ export interface VisibleProviderFilters {
    * rule.
    */
   acceptingNewCustomers?: boolean;
+  /**
+   * 🔧 §Phase 17.3. Narrows the rule to a candidate set the caller already
+   * found by something this helper cannot see — the emergency broadcast finds
+   * providers by *listing* (capable category, `isEmergency`, an island match)
+   * and then asks this helper which of them §1a still makes visible. Added so
+   * suspension stays an input to one helper rather than a second copy of the
+   * filter inside the dispatcher. An empty array matches nobody.
+   */
+  ids?: string[];
 }
 
 export interface VisibleProviderPage {
@@ -212,7 +221,14 @@ function candidateWhere(
     ...(filters.acceptingNewCustomers === undefined
       ? {}
       : { acceptingNewCustomers: filters.acceptingNewCustomers }),
-    ...(after === null ? {} : { id: { gt: after.id } }),
+    ...(after === null && filters.ids === undefined
+      ? {}
+      : {
+          id: {
+            ...(after === null ? {} : { gt: after.id }),
+            ...(filters.ids === undefined ? {} : { in: filters.ids }),
+          },
+        }),
   };
 }
 

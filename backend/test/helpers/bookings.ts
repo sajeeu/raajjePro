@@ -6,7 +6,7 @@ import type { PrismaClient } from '../../src/generated/prisma/client.js';
 import type { BookingDto } from '../../src/modules/bookings/types.js';
 import { freshIp } from './app.js';
 import { addRule, ownSlots, providerWithSlotListing } from './availability.js';
-import { categoryByName, completeDraft, publish } from './listings.js';
+import { categoryByName, completeDraft, patchDraft, publish } from './listings.js';
 import { registerUser, type RegisteredUser } from './users.js';
 
 interface Envelope<T> {
@@ -285,4 +285,120 @@ export async function acceptedBooking(app: FastifyInstance) {
 
 export function errorCode(res: { body: string }): string {
   return (JSON.parse(res.body) as { error?: { code?: string } }).error?.code ?? '';
+}
+
+// ---------------------------------------------------------------------------
+// §Phase 17.3 — emergency fixtures
+// ---------------------------------------------------------------------------
+
+/**
+ * An island nobody else in this run is likely to be using.
+ *
+ * The suite shares one database and never truncates, and a broadcast reaches
+ * **every** eligible provider on the job's island — so a fixed island would
+ * see every emergency listing any earlier run ever made there, and the
+ * broadcast-set assertions would be measuring history rather than the rule.
+ * A random pick from the 192 keeps each test's recipients its own.
+ */
+export async function randomIsland(prisma: PrismaClient) {
+  const count = await prisma.island.count({ where: { isActive: true } });
+  const [island] = await prisma.island.findMany({
+    where: { isActive: true },
+    orderBy: { id: 'asc' },
+    skip: Math.floor(Math.random() * count),
+    take: 1,
+  });
+  if (island === undefined) throw new Error('no islands seeded');
+  return island;
+}
+
+/**
+ * A published emergency listing in `categoryName`, serving `island`, from a
+ * provider at `tier`.
+ *
+ * The tier is stamped directly — there is no verification queue yet (§Phase
+ * 10a part 2 is deferred, ledger P10-DEFER) — and `isEmergency` is then set
+ * **through the real route**, so the listing half of §1c's composed rule is
+ * the product's own check and not the fixture's say-so. A tier below the
+ * category's bar is set *after* the flag, which is exactly the demoted-provider
+ * state the offer path must refuse.
+ */
+export async function emergencyProvider(
+  app: FastifyInstance,
+  options: {
+    categoryName: string;
+    island: { atollAbbr: string; name: string };
+    tier?: 'none' | 'bronze' | 'silver' | 'gold';
+  },
+): Promise<{ provider: RegisteredUser; listingId: string; providerProfileId: string }> {
+  const prisma: PrismaClient = app.deps.prisma;
+  const provider = await registerUser(app, { role: 'provider' });
+  const profile = await prisma.providerProfile.findUniqueOrThrow({
+    where: { userId: provider.userId },
+    select: { id: true },
+  });
+  await prisma.providerProfile.update({
+    where: { id: profile.id },
+    data: { verificationTier: 'gold', verificationStatus: 'verified' },
+  });
+  const draft = await completeDraft(app, provider.headers, {
+    categoryName: options.categoryName,
+    islandNames: [[options.island.atollAbbr, options.island.name]],
+  });
+  const published = await publish(app, provider.headers, draft.id);
+  if (published.statusCode !== 200) {
+    throw new Error(`publish: ${String(published.statusCode)} ${published.body}`);
+  }
+  const flagged = await patchDraft(app, provider.headers, draft.id, { isEmergency: true });
+  if (flagged.statusCode !== 200) {
+    throw new Error(`isEmergency: ${String(flagged.statusCode)} ${flagged.body}`);
+  }
+  if (options.tier !== undefined && options.tier !== 'gold') {
+    await prisma.providerProfile.update({
+      where: { id: profile.id },
+      data: { verificationTier: options.tier },
+    });
+  }
+  return { provider, listingId: draft.id, providerProfileId: profile.id };
+}
+
+/** Raises an emergency and unwraps it, throwing on anything but 201. */
+export async function raiseEmergency(
+  app: FastifyInstance,
+  customer: RegisteredUser,
+  listingId: string,
+  islandId: string,
+  extra: Record<string, unknown> = {},
+): Promise<BookingDto> {
+  const res = await createBooking(app, customer, listingId, {
+    emergency: true,
+    jobNotes: 'Pipe burst under the kitchen sink — water is spreading fast',
+    islandId,
+    addressDetail: 'Fehivina, 2nd floor',
+    ...extra,
+  });
+  if (res.statusCode !== 201) {
+    throw new Error(`raiseEmergency: ${String(res.statusCode)} ${res.body}`);
+  }
+  return res.json<Envelope<BookingDto>>().data;
+}
+
+/** A provider's offer: `PATCH /v1/bookings/:id/emergency-accept`. */
+export function offerOn(
+  app: FastifyInstance,
+  provider: RegisteredUser,
+  bookingId: string,
+  calloutFeeLaari = 35_000,
+  etaMinutes = 30,
+) {
+  return act(app, provider, bookingId, 'emergency-accept', { calloutFeeLaari, etaMinutes });
+}
+
+export async function revealContact(app: FastifyInstance, user: RegisteredUser, bookingId: string) {
+  return app.inject({
+    method: 'POST',
+    url: `/v1/bookings/${bookingId}/reveal-contact`,
+    headers: user.headers,
+    remoteAddress: freshIp(),
+  });
 }

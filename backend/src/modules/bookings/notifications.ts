@@ -70,7 +70,32 @@ export type BookingNotification =
   /** §1h: an amendment was proposed. To the counterparty. */
   | 'amendment_proposed'
   /** §1h: the counterparty answered it. To the proposer. */
-  | 'amendment_answered';
+  | 'amendment_answered'
+  // -- §Phase 17.3. The broadcast itself is not here: it goes through §Phase
+  // 3c's dispatcher as `emergency_dispatch`, the kind that phase built for it.
+  /** The customer chose this provider's offer. To that provider. */
+  | 'emergency_offer_selected'
+  /** §1c: "releases the unselected providers immediately". To each of them. */
+  | 'emergency_offer_not_selected'
+  /** Reject-all: "told the customer went elsewhere, without a reason". To each provider. */
+  | 'emergency_offer_rejected'
+  /** The customer's five minutes ran out. To each provider who offered. */
+  | 'emergency_offer_expired'
+  /** The overall window closed with no match. To the customer — "No one accepted in time". */
+  | 'emergency_window_expired'
+  /** The same close, to each provider whose open offer lapsed with it. */
+  | 'emergency_request_closed'
+  /** The customer marked "provider has not arrived". To that provider. */
+  | 'emergency_provider_released'
+  /** §1h: the chosen provider cancelled and the request went out again. To the customer. */
+  | 'emergency_redispatched'
+  /** §Phase 17 item 21's auto-cancel. **To both parties.** */
+  | 'cancelled_verification_revoked'
+  /**
+   * §1c's fifth reveal condition: "the counterparty is notified at the
+   * moment of reveal, in-app and by push". To the provider.
+   */
+  | 'contact_revealed';
 
 export interface BookingNotificationEvent {
   event: BookingNotification;

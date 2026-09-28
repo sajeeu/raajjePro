@@ -57,3 +57,55 @@ export function minutesFrom(at: Date, minutes: number): Date {
 export function daysBefore(at: Date, days: number): Date {
   return new Date(at.getTime() - days * 24 * 60 * 60_000);
 }
+
+// -- §Phase 17.3's flat emergency numbers --------------------------------------
+//
+// The same rule as the constants above: these are stated **flat, for every
+// emergency category**, and no `Category` column holds them. The per-category
+// emergency numbers — the 30-minute answer window, the tier bar, the arrival
+// presets — are read from the row and appear nowhere in this file.
+
+/**
+ * §1c, Round 15: "the first acceptance opens a **90-second collection
+ * window** during which every other eligible provider may also accept".
+ */
+export const OFFER_COLLECTION_SECONDS = 90;
+
+/**
+ * §1c: "the customer is shown **up to three offers** side by side".
+ */
+export const MAX_OFFERS_PER_ROUND = 3;
+
+/**
+ * §1c: "**Customer silence** → the offer expires after **5 minutes**,
+ * releases the provider, and re-broadcasts", and §Phase 17 item 4 measures it
+ * from the window closing: "a collection window whose customer has not
+ * responded 5 minutes after it closes".
+ */
+export const OFFER_CHOICE_MINUTES = 5;
+
+/**
+ * §1c: "RaajjePro charges the **customer** MVR 200 (20000 laari) per emergency
+ * dispatch." Integer laari (invariant 7).
+ */
+export const EMERGENCY_DISPATCH_FEE_LAARI = 20_000;
+
+/**
+ * §1c: "**Rate limit:** 3 emergency requests per customer per 24 hours, 10
+ * per 7 days." Counted over *requests*: "rejections do not consume the
+ * customer's rate limit. The limit applies to requests, not to offers within
+ * one."
+ */
+export const EMERGENCY_REQUESTS_PER_DAY = 3;
+export const EMERGENCY_REQUESTS_PER_WEEK = 10;
+
+/**
+ * §1c's sixth reveal condition: "The reveal **expires 24 hours after the
+ * booking reaches a terminal state**, after which the endpoint returns nothing
+ * for that booking."
+ */
+export const CONTACT_REVEAL_AFTER_TERMINAL_HOURS = 24;
+
+export function secondsFrom(at: Date, seconds: number): Date {
+  return new Date(at.getTime() + seconds * 1000);
+}

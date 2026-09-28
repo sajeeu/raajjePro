@@ -102,19 +102,19 @@ describe('Phase 17.1 — the status machine, at its edges', () => {
     }
   });
 
-  it('has no edge into the status the remaining slice owns', () => {
-    // The vocabulary is complete; the edges are not, and that is the slice
-    // boundary rather than an omission.
-    //
-    // 🔧 **Two of the three came in with §Phase 17.2.** This test named three
-    // statuses while `awaiting_quote` and `quote_offered` were still nobody's;
-    // the quote path reaches both now, and asserting otherwise would be
-    // asserting that 17.2 was not built. `emergency_offered` is §Phase 17.3's
-    // and is the one the boundary still holds for.
+  it('reaches every status in the vocabulary, now that every slice that owns one is built', () => {
+    // 🔧 This asserted a slice boundary: `emergency_offered` unreachable while
+    // §Phase 17.3 was unbuilt, after §Phase 17.2 had already opened the two
+    // quote statuses. 17.3 adds the emergency edges, so the boundary is gone
+    // and what is worth asserting is that `emergency_offered` is reached by
+    // the emergency path and by nothing else.
     const reachable = new Set(EDGES.map((e) => e.to));
     expect(reachable.has('awaiting_quote')).toBe(true);
     expect(reachable.has('quote_offered')).toBe(true);
-    expect(reachable.has('emergency_offered')).toBe(false);
+    expect(reachable.has('emergency_offered')).toBe(true);
+    expect(EDGES.filter((e) => e.to === 'emergency_offered').map((e) => e.transition)).toEqual([
+      'emergency-offer',
+    ]);
   });
 
   it('reports a state problem before an actor problem', () => {

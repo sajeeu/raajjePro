@@ -10,6 +10,8 @@ import type {
 import type { ReservationService } from '../availability/reservations.js';
 import type { NotificationDispatcher } from '../push/dispatcher.js';
 import type { ProviderProfileService } from '../providers/service.js';
+import { assertNoOutstandingDispatchFee } from './dispatch-fee.js';
+import { isPreSelectionEmergency, type EmergencyService } from './emergency.js';
 import { islandDisplayName, toBookingDto } from './mapper.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
 import { deriveQuotedAmount, deriveSlotAmount, durationMinutes } from './pricing.js';
@@ -153,6 +155,7 @@ export class BookingService {
   private readonly notifier: BookingNotifier;
   private readonly dispatcher: NotificationDispatcher | undefined;
   private readonly onConfirmed: ((providerProfileId: string) => Promise<unknown>) | undefined;
+  private readonly emergency: EmergencyService;
   private readonly log: ServiceLogger;
 
   constructor(deps: {
@@ -170,6 +173,12 @@ export class BookingService {
      * and is invoked from `enterConfirmed` rather than from an endpoint.
      */
     onConfirmed?: (providerProfileId: string) => Promise<unknown>;
+    /**
+     * 🔧 §Phase 17.3. The detail read attaches its `emergency` block, and an
+     * emergency provider's cancellation re-broadcasts through it (§1h). The
+     * dependency runs one way: `EmergencyService` knows nothing of this class.
+     */
+    emergency: EmergencyService;
     log: ServiceLogger;
   }) {
     this.prisma = deps.prisma;
@@ -180,6 +189,7 @@ export class BookingService {
     this.notifier = deps.notifier;
     this.dispatcher = deps.dispatcher;
     this.onConfirmed = deps.onConfirmed;
+    this.emergency = deps.emergency;
     this.log = deps.log;
   }
 
@@ -243,11 +253,17 @@ export class BookingService {
       ? await this.providers.paymentDetailsForBooking(booking.providerProfileId)
       : undefined;
 
-    return toBookingDto(booking, this.clock(), {
+    const dto = toBookingDto(booking, this.clock(), {
       statusHistory,
       ...(paymentDetails === undefined ? {} : { paymentDetails }),
       includeReplacement: this.offersReplacement(booking, caller.role),
     });
+    // §Phase 17.3: the offers, the clocks, the fee and the reveal state. The
+    // customer's emergency screen polls this one read for all of it.
+    if (booking.bookingMode === 'emergency') {
+      dto.emergency = await this.emergency.detailsFor(booking, caller.role);
+    }
+    return dto;
   }
 
   // =========================================================================
@@ -1066,6 +1082,16 @@ export class BookingService {
   async cancel(userId: string, bookingId: string, reason?: string): Promise<BookingDto> {
     const now = this.clock();
     const { booking, caller } = await this.authorize(userId, bookingId);
+
+    // 🔧 §Phase 17.3, §1h: "Emergency bookings re-broadcast … excluding the
+    // cancelling provider. No new dispatch fee is incurred." The chosen
+    // provider walking away sends the request out again rather than closing
+    // it — an emergency must never dead-end.
+    if (booking.bookingMode === 'emergency' && caller.role === 'provider') {
+      await this.emergency.providerCancelled(booking, userId);
+      return this.reread(booking.id);
+    }
+
     const transition = caller.role === 'provider' ? 'provider-cancel' : 'cancel';
     assertTransition(transition, booking.status, caller.role);
 
@@ -1718,7 +1744,12 @@ export class BookingService {
     const role: CallerRole | null =
       booking.customerId === userId
         ? 'customer'
-        : booking.providerProfile.user.id === userId
+        : // 🔧 §Phase 17.3: an emergency still being broadcast has **no
+          // provider side** — its provider columns only name the listing it
+          // was raised from, and are re-pointed when the customer chooses. The
+          // origin provider reaches it through the inbox like everyone else,
+          // and cannot decline or cancel a request nobody gave them.
+          booking.providerProfile.user.id === userId && !isPreSelectionEmergency(booking)
           ? 'provider'
           : null;
     if (role === null) throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');
@@ -1752,6 +1783,11 @@ export class BookingService {
    * layered on a `request` listing) — is still refused by name.
    */
   private async bookableListing(listingId: string, userId: string, expect: 'slot' | 'request') {
+    // 🔧 §Phase 17.3, §1c: "An unsettled fee blocks **all** new bookings, not
+    // only emergency ones." Every creation path passes through here, which is
+    // why the check is here and not on each path.
+    await assertNoOutstandingDispatchFee(this.prisma, userId);
+
     const listing = await this.prisma.listing.findFirst({
       where: { id: listingId, status: 'published', visibility: 'active', deletedAt: null },
       select: {

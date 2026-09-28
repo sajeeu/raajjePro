@@ -1,3 +1,4 @@
+import type { EmergencyService } from '../modules/bookings/emergency.js';
 import type { BookingService } from '../modules/bookings/service.js';
 import type { JobDefinition, JobLogger } from './runner.js';
 
@@ -151,6 +152,70 @@ export function bookingQuoteApprovalTimeoutJob(
         log.info(
           { job: BOOKING_QUOTE_APPROVAL_TIMEOUT_JOB_NAME, expired },
           'quotes expired and their holds released',
+        );
+      }
+    },
+  };
+}
+
+export const EMERGENCY_WINDOW_TIMEOUT_JOB_NAME = 'emergency-window-timeout';
+export const EMERGENCY_OFFER_CHOICE_TIMEOUT_JOB_NAME = 'emergency-offer-choice-timeout';
+
+/**
+ * §Phase 17.3's two sweeps tick every **30 seconds**, not five minutes, and
+ * the reason is the size of the windows: the customer's choice is five
+ * minutes long and the whole request thirty, so a five-minute tick could
+ * double the first and leave a customer looking at "No one accepted in time"
+ * a sixth late. Both scans are one index range over a stored deadline, so the
+ * tighter cadence costs nothing when there is nothing due.
+ */
+const EVERY_THIRTY_SECONDS = 30_000;
+
+/**
+ * §Phase 17 item 4: a `requested` emergency older than its category's
+ * `emergencyAcceptWindowMinutes` → auto-decline and notify — 30 for Plumbing,
+ * Electrical, AC Repair **and Moving** (Round 22), read from the category and
+ * stamped on the booking at creation, never a literal here.
+ */
+export function emergencyWindowTimeoutJob(
+  emergency: EmergencyService,
+  log: JobLogger,
+): JobDefinition {
+  return {
+    name: EMERGENCY_WINDOW_TIMEOUT_JOB_NAME,
+    everyMs: EVERY_THIRTY_SECONDS,
+    async run(now) {
+      const { declined } = await emergency.runWindowTimeouts(now);
+      if (declined > 0) {
+        log.info(
+          { job: EMERGENCY_WINDOW_TIMEOUT_JOB_NAME, declined },
+          'emergency requests expired',
+        );
+      }
+    },
+  };
+}
+
+/**
+ * §Phase 17 item 4: "a collection window whose customer has not responded 5
+ * minutes after it closes → release all offers, return to `requested`,
+ * re-broadcast." Its own job, for the reason the quote sweeps are separate —
+ * one releases providers and pages everyone again, the other closes the
+ * request, and neither should wait on the other's failure.
+ */
+export function emergencyOfferChoiceTimeoutJob(
+  emergency: EmergencyService,
+  log: JobLogger,
+): JobDefinition {
+  return {
+    name: EMERGENCY_OFFER_CHOICE_TIMEOUT_JOB_NAME,
+    everyMs: EVERY_THIRTY_SECONDS,
+    async run(now) {
+      const { expired } = await emergency.runOfferChoiceTimeouts(now);
+      if (expired > 0) {
+        log.info(
+          { job: EMERGENCY_OFFER_CHOICE_TIMEOUT_JOB_NAME, expired },
+          'unanswered emergency offers released and re-broadcast',
         );
       }
     },

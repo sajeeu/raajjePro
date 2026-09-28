@@ -438,8 +438,10 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.1 — Done when', () => {
       });
 
       expect(res.statusCode).toBe(404);
-      // §Phase 17.3 builds `reveal-contact`, the single exception. It is not
-      // this slice's and is deliberately absent too.
+      // 🔧 §Phase 17.3 built `reveal-contact`, the single exception — and a
+      // slot booking is exactly what its first condition refuses. It answers
+      // now, with a refusal and no number; it asserted a 404 while the route
+      // was still unbuilt.
       const reveal = await app.inject({
         method: 'POST',
         url: `/v1/bookings/${booking.id}/reveal-contact`,
@@ -447,7 +449,11 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.1 — Done when', () => {
         remoteAddress: freshIp(),
         payload: {},
       });
-      expect(reveal.statusCode).toBe(404);
+      expect(reveal.statusCode).toBe(422);
+      expect(reveal.json<{ error: { code: string } }>().error.code).toBe(
+        'CONTACT_REVEAL_EMERGENCY_ONLY',
+      );
+      expect(reveal.body).not.toMatch(/\+960/);
     });
   });
 });
