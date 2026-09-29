@@ -106,8 +106,8 @@ export function createOwedDispatchFee(db: Db, customerId: string) {
 /** One fee as the customer's `Dispatch Fee.dc.html` renders it. */
 export interface DispatchFeeDto {
   id: string;
-  /** The emergency it was incurred on — "For dispatching Ibrahim Rasheed to your Emergency plumbing call-out". */
-  bookingId: string | null;
+  /** The emergency request it was incurred on — "For dispatching … to your Emergency plumbing call-out". */
+  requestId: string | null;
   amountLaari: number;
   referenceCode: string;
   /**
@@ -121,7 +121,9 @@ export interface DispatchFeeDto {
   createdAt: string;
 }
 
-export function dispatchFeeState(row: PaymentSubmission): DispatchFeeDto['state'] {
+export function dispatchFeeState(
+  row: Pick<PaymentSubmission, 'status' | 'submittedAt'>,
+): DispatchFeeDto['state'] {
   if (row.status === 'confirmed') return 'confirmed';
   if (row.status === 'rejected') return 'rejected';
   return row.submittedAt === null ? 'owed' : 'submitted';
@@ -157,7 +159,7 @@ export class DispatchFeeService {
     return {
       fees: rows.map((row) => ({
         id: row.id,
-        bookingId: row.dispatchFeeFor?.id ?? null,
+        requestId: row.dispatchFeeFor?.id ?? null,
         amountLaari: row.amountLaari,
         referenceCode: row.referenceCode,
         state: dispatchFeeState(row),

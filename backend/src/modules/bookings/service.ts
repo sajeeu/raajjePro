@@ -11,7 +11,7 @@ import type { ReservationService } from '../availability/reservations.js';
 import type { NotificationDispatcher } from '../push/dispatcher.js';
 import type { ProviderProfileService } from '../providers/service.js';
 import { assertNoOutstandingDispatchFee } from './dispatch-fee.js';
-import { isPreSelectionEmergency, type EmergencyService } from './emergency.js';
+import type { EmergencyService } from './emergency.js';
 import { islandDisplayName, toBookingDto } from './mapper.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
 import { deriveQuotedAmount, deriveSlotAmount, durationMinutes } from './pricing.js';
@@ -1084,11 +1084,12 @@ export class BookingService {
     const { booking, caller } = await this.authorize(userId, bookingId);
 
     // 🔧 §Phase 17.3, §1h: "Emergency bookings re-broadcast … excluding the
-    // cancelling provider. No new dispatch fee is incurred." The chosen
-    // provider walking away sends the request out again rather than closing
-    // it — an emergency must never dead-end.
+    // cancelling provider. No new dispatch fee is incurred." The booking still
+    // takes this slice's own `provider-cancel` edge — the row §1f counts — and
+    // in the same transaction its emergency request goes out again, so the
+    // customer is never left with nothing.
     if (booking.bookingMode === 'emergency' && caller.role === 'provider') {
-      await this.emergency.providerCancelled(booking, userId);
+      await this.emergency.providerCancelled(booking, userId, reason);
       return this.reread(booking.id);
     }
 
@@ -1744,12 +1745,7 @@ export class BookingService {
     const role: CallerRole | null =
       booking.customerId === userId
         ? 'customer'
-        : // 🔧 §Phase 17.3: an emergency still being broadcast has **no
-          // provider side** — its provider columns only name the listing it
-          // was raised from, and are re-pointed when the customer chooses. The
-          // origin provider reaches it through the inbox like everyone else,
-          // and cannot decline or cancel a request nobody gave them.
-          booking.providerProfile.user.id === userId && !isPreSelectionEmergency(booking)
+        : booking.providerProfile.user.id === userId
           ? 'provider'
           : null;
     if (role === null) throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');

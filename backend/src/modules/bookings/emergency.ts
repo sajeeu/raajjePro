@@ -12,23 +12,24 @@ import {
   createOwedDispatchFee,
   dispatchFeeState,
 } from './dispatch-fee.js';
-import { islandDisplayName, toBookingDto } from './mapper.js';
+import { islandDisplayName } from './mapper.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
 import { generateBookingReference } from './reference.js';
 import type { BookingRepository, BookingRow, Db } from './repository.js';
 import { assertTransition } from './transitions.js';
 import type {
-  BookingDto,
   EmergencyBroadcastDto,
   EmergencyDetailsDto,
+  EmergencyDispatchFeeDto,
   EmergencyOfferDto,
   EmergencyPhase,
+  EmergencyRequestDto,
 } from './types.js';
 import {
   daysBefore,
   EMERGENCY_REQUESTS_PER_DAY,
   EMERGENCY_REQUESTS_PER_WEEK,
-  MAX_OFFERS_PER_ROUND,
+  MAX_OFFERS_SHOWN,
   minutesFrom,
   OFFER_CHOICE_MINUTES,
   OFFER_COLLECTION_SECONDS,
@@ -40,10 +41,11 @@ export interface EmergencyLogger {
   warn(obj: Record<string, unknown>, msg: string): void;
 }
 
-/** `Emergency Flow.dc.html`'s form: what's wrong, and where. No slot, no window. */
+/** `Emergency Flow.dc.html`'s form: which trade, what's wrong, and where. No slot, no window, no listing. */
 export interface CreateEmergencyInput {
-  jobNotes: string;
+  categoryId: string;
   islandId: string;
+  jobNotes: string;
   addressDetail?: string | undefined;
 }
 
@@ -61,8 +63,12 @@ interface Recipient {
   listingId: string;
 }
 
-/** The statuses at which an emergency has no provider yet — it is still a broadcast. */
-const PRE_SELECTION: readonly BookingStatus[] = ['requested', 'emergency_offered'];
+/** Statuses at which the request is still a broadcast. */
+const OPEN = ['requested', 'emergency_offered'] as const;
+
+function isOpen(status: string): boolean {
+  return (OPEN as readonly string[]).includes(status);
+}
 
 /** The statuses at which a chosen emergency provider owes a visit that has not happened. */
 const IN_FLIGHT: readonly BookingStatus[] = [
@@ -74,12 +80,22 @@ const IN_FLIGHT: readonly BookingStatus[] = [
   'disputed',
 ];
 
-export function isPreSelectionEmergency(booking: {
-  bookingMode: string;
-  status: BookingStatus;
-}): boolean {
-  return booking.bookingMode === 'emergency' && PRE_SELECTION.includes(booking.status);
-}
+const REQUEST_INCLUDE = {
+  category: {
+    select: {
+      id: true,
+      name: true,
+      emergencyCapable: true,
+      emergencyMinimumTier: true,
+      emergencyAcceptWindowMinutes: true,
+      emergencyEtaPresetsMinutes: true,
+    },
+  },
+  customer: { select: { id: true, fullName: true } },
+  island: { select: { id: true, name: true, atollAbbr: true, nameAmbiguous: true } },
+} as const satisfies Prisma.EmergencyRequestInclude;
+
+type RequestRow = Prisma.EmergencyRequestGetPayload<{ include: typeof REQUEST_INCLUDE }>;
 
 /**
  * §Phase 17.3 — emergency dispatch and offer collection.
@@ -89,24 +105,31 @@ export function isPreSelectionEmergency(booking: {
  * §1c, Round 15: "**Acceptances no longer race** — they create offers that
  * coexist, and the customer chooses." A request **broadcasts** to every
  * eligible provider at once; the first answer opens a **90-second collection
- * window**; at its close the customer sees **up to three offers** side by
- * side and has **five minutes** to pick one or reject them all; picking one
- * incurs the **MVR 200 dispatch fee** and the job proceeds without waiting
- * for it; the whole request lives inside the category's
- * `emergencyAcceptWindowMinutes`, which no rejection or expiry resets.
+ * window** "during which every other eligible provider may also accept"; at
+ * its close the customer is shown **up to three offers** side by side and has
+ * **five minutes** to pick one or reject them all; picking one incurs the
+ * **MVR 200 dispatch fee** and the job proceeds without waiting for it; the
+ * whole request lives inside the category's `emergencyAcceptWindowMinutes`,
+ * which no rejection or expiry resets.
  *
- * ## Who the booking belongs to before anyone is chosen
+ * ## A request, then a booking
  *
- * `Booking.listingId` and `providerProfileId` are NOT NULL, and an emergency
- * is raised from a listing (§Phase 17 item 2). Until a customer selects an
- * offer those columns name the listing the request came from — and **nothing
- * more**: `BookingService.authorize` gives that provider no side of the
- * booking, their bookings list does not show it, and they reach it through
- * the emergency inbox like every other eligible provider. Selection
- * re-points both columns to the chosen provider and their own emergency
- * listing, so every step after it — the payment step's bank details, the
- * provider's own list, completion — reads the provider who is actually
- * coming, through code §Phase 17.1 wrote and this slice did not touch.
+ * 🔧 **Owner's decision, 2026-09-28.** An emergency is raised by **category
+ * and island** (`POST /v1/emergency-requests`), never against a listing:
+ * Round 23 moved the entry to Home and Explore and deleted the card marker
+ * because "dispatch never targets a provider", and §1c computes the broadcast
+ * from "all providers whose listing is emergency-capable in that category, who
+ * serve that island". §Phase 17 item 2's listing-scoped emergency clause is
+ * pre-Round-23 residue.
+ *
+ * So the pre-selection half of §1c's machine (`requested`,
+ * `emergency_offered`) lives on the `EmergencyRequest`, and a `Booking` is
+ * created — at `accepted`, against the chosen provider's own emergency
+ * listing — when the customer selects an offer. `Booking.listingId` and
+ * `providerProfileId` stay NOT NULL and nothing in §Phase 17.1 or 17.2
+ * changes. When the chosen provider does not arrive or cancels, that booking
+ * closes on **their** record and the request goes out again; the next
+ * selection is a new booking under the same request and the same fee.
  *
  * ## Where the phone-number rule stands
  *
@@ -150,74 +173,42 @@ export class EmergencyService {
   // =========================================================================
 
   /**
-   * `POST /v1/listings/:id/bookings` with `emergency: true` — §Phase 17 item
-   * 2: "emergency captures no timing constraint but **validates category
-   * eligibility, provider verification, and the customer's emergency rate
-   * limit**."
+   * `POST /v1/emergency-requests` — the ASAP request, by category and island.
    *
    * Refused, in order: an unsettled dispatch fee (it blocks every new
-   * booking, §1c); a listing that is not public; the caller's own listing; the
-   * composed rule — a category that is not emergency-capable, or a provider
-   * below that category's `emergencyMinimumTier` (never a hardcoded tier); a
-   * listing whose provider has not opted in; and last, the rate limit, so a
-   * customer is never told they are over a limit for a request that could not
-   * have been made anyway.
+   * booking, §1c); a category that is not emergency-capable, or capable but
+   * with no bar or window configured (refused rather than defaulted — a
+   * default would be a hardcoded tier or a hardcoded 30); an unknown island;
+   * and last the rate limit, so a customer is never told they are over a
+   * limit for a request that could not have been made anyway.
+   *
+   * Provider verification is checked where a provider acts — the offer (the
+   * owner's reading of Done-when clause 3, 2026-09-28) — because a request
+   * names no provider.
    */
-  async create(
-    userId: string,
-    listingId: string,
-    input: CreateEmergencyInput,
-  ): Promise<BookingDto> {
+  async create(userId: string, input: CreateEmergencyInput): Promise<EmergencyRequestDto> {
     const now = this.clock();
     await assertNoOutstandingDispatchFee(this.prisma, userId);
 
-    const listing = await this.prisma.listing.findFirst({
-      where: { id: listingId, status: 'published', visibility: 'active', deletedAt: null },
+    const category = await this.prisma.category.findFirst({
+      where: { id: input.categoryId, isActive: true },
       select: {
-        id: true,
-        providerProfileId: true,
-        isEmergency: true,
-        category: {
-          select: {
-            name: true,
-            emergencyCapable: true,
-            emergencyMinimumTier: true,
-            emergencyAcceptWindowMinutes: true,
-          },
-        },
-        providerProfile: { select: { userId: true, suspendedAt: true, verificationTier: true } },
+        name: true,
+        emergencyCapable: true,
+        emergencyMinimumTier: true,
+        emergencyAcceptWindowMinutes: true,
       },
     });
-    if (listing?.category == null || listing.providerProfile.suspendedAt !== null) {
-      throw new NotFoundError('No such service', 'LISTING_NOT_FOUND');
-    }
-    if (listing.providerProfile.userId === userId) {
-      throw new BusinessRuleError('CANNOT_BOOK_OWN_LISTING', 'You cannot book your own service');
-    }
-
-    // §1c, Round 17: "a booking dispatches to it only when both still hold
-    // **at booking time**" — so the rule is re-run here, against today's tier,
-    // not trusted from the listing's flag.
-    const verdict = emergencyEligibility({
-      category: listing.category,
-      providerTier: listing.providerProfile.verificationTier,
-    });
-    if (!verdict.eligible) {
-      throw new BusinessRuleError(verdict.code, verdict.message);
-    }
-    if (!listing.isEmergency) {
-      throw new BusinessRuleError(
-        'EMERGENCY_NOT_OFFERED',
-        'This service does not take emergency requests — send a normal request instead',
-      );
-    }
-    const windowMinutes = listing.category.emergencyAcceptWindowMinutes;
-    if (windowMinutes === null) {
-      // A capable category with no window is a misconfigured row. Refusing is
-      // the safe direction; a default would be a hardcoded 30 by another name.
+    if (category === null) throw new NotFoundError('No such category', 'CATEGORY_NOT_FOUND');
+    const windowMinutes = category.emergencyAcceptWindowMinutes;
+    if (
+      !category.emergencyCapable ||
+      category.emergencyMinimumTier === null ||
+      windowMinutes === null
+    ) {
       throw new BusinessRuleError(
         'EMERGENCY_CATEGORY_NOT_CAPABLE',
-        `${listing.category.name} does not offer emergency callouts`,
+        `${category.name} does not offer emergency callouts — send a normal request instead`,
       );
     }
 
@@ -229,57 +220,37 @@ export class EmergencyService {
 
     await this.assertWithinRateLimit(userId, now);
 
-    const created = await this.prisma.$transaction(async (tx) => {
-      const booking = await this.insertWithReference(tx, {
-        listingId: listing.id,
+    const created = await this.prisma.emergencyRequest.create({
+      data: {
         customerId: userId,
-        providerProfileId: listing.providerProfileId,
-        bookingMode: 'emergency',
-        status: 'requested',
-        // §1c: "No calendar reservation — an emergency is understood as an
-        // interruption to the published calendar, not a block on it."
-        timeSlotId: null,
-        reservationId: null,
-        scheduledFor: null,
-        jobNotes: input.jobNotes,
+        categoryId: input.categoryId,
         islandId: island.id,
+        jobNotes: input.jobNotes,
         addressDetail: input.addressDetail ?? null,
+        status: 'requested',
         // Stored, never recomputed: the customer is already watching it.
-        emergencyWindowEndsAt: minutesFrom(now, windowMinutes),
+        windowEndsAt: minutesFrom(now, windowMinutes),
         createdAt: now,
-      });
-      await this.repo.recordStatusEvent(
-        {
-          bookingId: booking.id,
-          fromStatus: null,
-          toStatus: 'requested',
-          actorRole: 'customer',
-          actorUserId: userId,
-          transition: 'create-emergency',
-          at: now,
-        },
-        tx,
-      );
-      return booking;
+      },
+      include: REQUEST_INCLUDE,
     });
 
-    const row = await this.mustFind(created.id);
-    await this.broadcast(row);
-    return this.dtoFor(row, 'customer');
+    const recipients = await this.broadcast(created);
+    return this.requestDto(created, now, recipients);
   }
 
   /**
    * §1c: "Rate limit: 3 emergency requests per customer per 24 hours, 10 per 7
    * days." Counted over **requests** — a re-broadcast, a rejection or an
-   * expiry happens inside one request and creates no new booking, so none of
-   * them can consume it.
+   * expiry happens inside one request and creates no new one, so none of them
+   * can consume it ("Rejections do not consume the customer's rate limit").
    *
    * The refusal carries what `Emergency Flow.dc.html`'s limit screen prints:
    * "3 of 3 used", "7 of 10 used", and when the next request is possible.
    */
   private async assertWithinRateLimit(customerId: string, now: Date): Promise<void> {
-    const recent = await this.prisma.booking.findMany({
-      where: { customerId, bookingMode: 'emergency', createdAt: { gt: daysBefore(now, 7) } },
+    const recent = await this.prisma.emergencyRequest.findMany({
+      where: { customerId, createdAt: { gt: daysBefore(now, 7) } },
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -289,8 +260,8 @@ export class EmergencyService {
     const overWeek = recent.length >= EMERGENCY_REQUESTS_PER_WEEK;
     if (!overDay && !overWeek) return;
 
-    // The next request is possible when the oldest request that is holding
-    // each limit ages out — whichever of the two binding limits frees last.
+    // The next request is possible when the oldest request holding each
+    // binding limit ages out — whichever of the two frees last.
     const dayFree = overDay ? inDay[inDay.length - EMERGENCY_REQUESTS_PER_DAY] : undefined;
     const weekFree = overWeek ? recent[recent.length - EMERGENCY_REQUESTS_PER_WEEK] : undefined;
     const candidates = [
@@ -316,39 +287,44 @@ export class EmergencyService {
    * "emergency-capable category, island match, `verificationTier` meeting the
    * category's `emergencyMinimumTier` … `acceptingNewCustomers` on."
    *
-   * Two halves, and each is somebody else's rule reused rather than restated:
+   * Two halves, each somebody else's rule reused rather than restated:
    *  - **by listing** — a published, active, undeleted listing in this
    *    category with `isEmergency` set and a live service area on the job's
-   *    island. That is the listing half of §1c's composed rule, and the
-   *    per-listing areas are what discovery matches on (§Phase 8);
-   *  - **by provider** — `findVisibleProviders`, §1a's one shared helper, with
-   *    the category's own tier as the minimum. Suspension is an input to that
+   *    island; the listing half of §1c's composed rule, and the per-listing
+   *    areas are what discovery matches on (§Phase 8);
+   *  - **by provider** — `findVisibleProviders`, §1a's one shared helper,
+   *    with the category's tier as the minimum. Suspension is an input to that
    *    helper, so a suspended provider drops out here without a second copy of
    *    the filter.
    *
-   * Excluded: everyone in `rejectedProviderIds`, and the customer themselves
-   * where they also happen to be a provider.
+   * Excluded: `rejectedProviderIds`, every provider who passed on this request,
+   * and the customer themselves where they are also a provider.
    */
-  private async recipients(booking: BookingRow, onlyProviderId?: string): Promise<Recipient[]> {
-    const category = booking.listing.category;
-    const minimum = category?.emergencyMinimumTier ?? null;
-    if (category === null || !category.emergencyCapable || minimum === null) return [];
-    if (booking.islandId === null) return [];
+  private async recipients(request: RequestRow, onlyProviderId?: string): Promise<Recipient[]> {
+    const { category } = request;
+    const minimum = category.emergencyMinimumTier;
+    if (!category.emergencyCapable || minimum === null) return [];
+
+    const passed = await this.prisma.emergencyPass.findMany({
+      where: { requestId: request.id },
+      select: { providerProfileId: true },
+    });
+    const excluded = [...request.rejectedProviderIds, ...passed.map((p) => p.providerProfileId)];
 
     const listings = await this.prisma.listing.findMany({
       where: {
-        categoryId: booking.listing.categoryId,
+        categoryId: category.id,
         isEmergency: true,
         status: 'published',
         visibility: 'active',
         deletedAt: null,
-        serviceAreas: { some: { islandId: booking.islandId, removedAt: null } },
+        serviceAreas: { some: { islandId: request.islandId, removedAt: null } },
         providerProfileId:
           onlyProviderId === undefined
-            ? { notIn: booking.rejectedProviderIds }
-            : { equals: onlyProviderId, notIn: booking.rejectedProviderIds },
+            ? { notIn: excluded }
+            : { equals: onlyProviderId, notIn: excluded },
         providerProfile: {
-          userId: { not: booking.customerId },
+          userId: { not: request.customerId },
           verificationTier: { in: tiersAtOrAbove(minimum) },
           acceptingNewCustomers: true,
         },
@@ -384,43 +360,43 @@ export class EmergencyService {
    *
    * Through §Phase 3c's dispatcher with the kind it built for this —
    * `emergency_dispatch`, urgency `emergency` — which sends push and email
-   * together with no ladder, because "an emergency window is 30 minutes, which
-   * leaves no room to wait for a push to go unconfirmed". Every send is a
-   * `PushDispatch` row, which is how "did this provider get the emergency
-   * alert?" is answered in one lookup.
+   * together with no ladder. Every send is a `PushDispatch` row whose
+   * `subjectId` is the request, which is how "did this provider get the
+   * emergency alert?" is answered in one lookup.
    *
-   * After the transaction, never inside it: a notification that did not go out
-   * must never roll back a request that did.
+   * After any transaction, never inside one: a notification that did not go
+   * out must never roll back a request that did.
    */
-  private async broadcast(booking: BookingRow): Promise<number> {
-    const recipients = await this.recipients(booking);
-    if (this.dispatcher === undefined) return recipients.length;
-    for (const r of recipients) {
-      try {
-        await this.dispatcher.dispatch({
-          userId: r.userId,
-          urgency: 'emergency',
-          subjectId: booking.id,
-          context: {
-            kind: 'emergency_dispatch',
-            bookingType: booking.listing.category?.name ?? 'Service',
-            customerFirstName: firstName(booking.customer.fullName),
-            islandName: booking.island === null ? '' : islandDisplayName(booking.island),
-          },
-        });
-      } catch (error) {
-        this.log.warn({ err: error, bookingId: booking.id }, 'emergency broadcast dispatch failed');
+  private async broadcast(request: RequestRow): Promise<number> {
+    const recipients = await this.recipients(request);
+    if (this.dispatcher !== undefined) {
+      for (const r of recipients) {
+        try {
+          await this.dispatcher.dispatch({
+            userId: r.userId,
+            urgency: 'emergency',
+            subjectId: request.id,
+            context: {
+              kind: 'emergency_dispatch',
+              bookingType: request.category.name,
+              customerFirstName: firstName(request.customer.fullName),
+              islandName: islandDisplayName(request.island),
+            },
+          });
+        } catch (error) {
+          this.log.warn({ err: error, requestId: request.id }, 'emergency broadcast failed');
+        }
       }
     }
     this.log.info(
-      { bookingId: booking.id, recipients: recipients.length },
+      { requestId: request.id, recipients: recipients.length },
       'emergency request broadcast',
     );
     return recipients.length;
   }
 
   // =========================================================================
-  // The provider's side — the inbox and the offer
+  // The provider's side — the inbox, the offer and the pass
   // =========================================================================
 
   /**
@@ -428,9 +404,9 @@ export class EmergencyService {
    * provider may answer right now, newest first.
    *
    * Computed from the provider's side rather than stored per recipient: the
-   * eligibility rule is live (§1c: "a provider whose verification is later
-   * revoked stops receiving emergency requests immediately"), so a stored
-   * fan-out list would be a second copy of it that could disagree.
+   * rule is live (§1c: "a provider whose verification is later revoked stops
+   * receiving emergency requests immediately"), and a stored fan-out list
+   * would be a second copy of it that could disagree.
    */
   async inbox(userId: string): Promise<EmergencyBroadcastDto[]> {
     const now = this.clock();
@@ -453,37 +429,34 @@ export class EmergencyService {
         serviceAreas: { where: { removedAt: null }, select: { islandId: true } },
       },
     });
-    const scopes = mine
-      .filter((l) => l.categoryId !== null && l.serviceAreas.length > 0)
-      .map((l) => ({
-        listing: { categoryId: l.categoryId },
-        islandId: { in: l.serviceAreas.map((a) => a.islandId) },
-      }));
+    const scopes = mine.flatMap((l) =>
+      l.categoryId === null || l.serviceAreas.length === 0
+        ? []
+        : [{ categoryId: l.categoryId, islandId: { in: l.serviceAreas.map((a) => a.islandId) } }],
+    );
     if (scopes.length === 0) return [];
 
-    const candidates = await this.prisma.booking.findMany({
+    const candidates = await this.prisma.emergencyRequest.findMany({
       where: {
-        bookingMode: 'emergency',
-        status: { in: [...PRE_SELECTION] },
-        emergencyWindowEndsAt: { gt: now },
+        status: { in: [...OPEN] },
+        windowEndsAt: { gt: now },
         customerId: { not: userId },
         NOT: { rejectedProviderIds: { has: profile.id } },
+        passes: { none: { providerProfileId: profile.id } },
         OR: scopes,
       },
-      select: { id: true },
+      include: REQUEST_INCLUDE,
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
 
     const out: EmergencyBroadcastDto[] = [];
-    for (const { id } of candidates) {
-      const booking = await this.repo.findById(id);
-      if (booking === null) continue;
-      // The full rule, per request — tier, visibility, opt-in — so the inbox
-      // can never show a request the offer endpoint would then refuse.
-      const [me] = await this.recipients(booking, profile.id);
+    for (const request of candidates) {
+      // The whole rule, per request — tier, visibility, opt-in — so the inbox
+      // never shows a request the offer endpoint would then refuse.
+      const [me] = await this.recipients(request, profile.id);
       if (me === undefined) continue;
-      out.push(await this.broadcastDto(booking, profile.id, true, now));
+      out.push(await this.broadcastDto(request, profile.id, true, now));
     }
     return out;
   }
@@ -493,49 +466,52 @@ export class EmergencyService {
    * deep-links to it. Readable by a provider who may answer it now **or** who
    * already did, so the one who was not chosen sees that they were released.
    */
-  async readForProvider(userId: string, bookingId: string): Promise<EmergencyBroadcastDto> {
+  async readForProvider(userId: string, requestId: string): Promise<EmergencyBroadcastDto> {
     const now = this.clock();
-    const { booking, providerProfileId, eligible } = await this.providerView(userId, bookingId);
-    return this.broadcastDto(booking, providerProfileId, eligible, now);
+    const view = await this.providerView(userId, requestId);
+    return this.broadcastDto(view.request, view.providerProfileId, view.recipient !== null, now);
   }
 
   /**
-   * `PATCH /v1/bookings/:id/emergency-accept` — §Phase 17 item 4: the
-   * provider "**creates an `EmergencyOffer`** and supplies `calloutFee` and
-   * `etaMinutes` in the same call. This no longer claims the booking."
+   * `PATCH /v1/emergency-requests/:id/emergency-accept` — §Phase 17 item 4:
+   * the provider "**creates an `EmergencyOffer`** and supplies `calloutFee`
+   * and `etaMinutes` in the same call. This no longer claims the booking."
+   *
+   * ## Every eligible provider may offer
+   *
+   * 🔧 **No admission cap — owner's decision, 2026-09-28.** §1c: the first
+   * acceptance opens a window "during which **every other eligible provider
+   * may also accept** with their own fee. At the end of it the customer is
+   * shown up to three offers." "Up to three" caps what the customer is
+   * *shown*, not who may bid; capping admission would bring back the race
+   * Round 15 removed, with the fastest three winning rather than the nearest
+   * or cheapest. The three are chosen at read time — see `shownOffers`.
    *
    * ## Why two simultaneous offers both land
    *
-   * Every offer is admitted by one conditional increment of
-   * `emergencyOfferCount` — `WHERE status IN (requested, emergency_offered)
-   * AND count < 3 AND window still open`. Postgres takes the row lock on the
+   * The request row is written by a conditional update whose `WHERE` carries
+   * the open statuses and both windows. Postgres takes the row lock on the
    * first writer and re-evaluates the second writer's `WHERE` against the
-   * committed row, so two providers answering in the same instant are
-   * serialised rather than raced: both see room, both are admitted, and the
-   * status moves once, for whichever was first. A fourth is refused by the same
-   * predicate. There is no `ALREADY_CLAIMED` — "atomicity applies only to the
+   * committed row, so two answers in the same instant are serialised rather
+   * than raced: both are admitted, and the status moves once, for whichever
+   * was first. There is no `ALREADY_CLAIMED` — "atomicity applies only to the
    * offer the customer selects".
-   *
-   * 🔧 **A fourth offer is refused rather than hidden** —
-   * `EMERGENCY_OFFERS_FULL`, so that provider is released at once instead of
-   * waiting on a choice they are not part of. Raised with the verification
-   * session on 2026-09-28 (the plan says "at most three" and not which three).
    */
   async offer(
     userId: string,
-    bookingId: string,
+    requestId: string,
     input: EmergencyOfferInput,
   ): Promise<EmergencyBroadcastDto> {
     const now = this.clock();
-    const { booking, providerProfileId, recipient, tierBlock } = await this.providerView(
+    const { request, providerProfileId, recipient, tierBlock } = await this.providerView(
       userId,
-      bookingId,
+      requestId,
     );
 
-    // The composed rule's tier half gets its own code, because §Phase 17.3's
-    // Done-when names the case: "an emergency on Electrical is refused to a
-    // silver provider and accepted from a gold one, while AC Repair accepts
-    // silver". The bar is the category's, read from the row.
+    // The tier half of the rule gets its own code, because the Done-when
+    // names the case: "an emergency on Electrical is refused to a silver
+    // provider and accepted from a gold one, while AC Repair accepts silver".
+    // The bar is the category's, read from the row.
     if (tierBlock !== null) throw tierBlock;
     if (recipient === null) {
       throw new BusinessRuleError(
@@ -543,38 +519,38 @@ export class EmergencyService {
         'You can no longer answer this request',
       );
     }
-    if (booking.emergencyWindowEndsAt === null || now >= booking.emergencyWindowEndsAt) {
+    if (!isOpen(request.status) || now >= request.windowEndsAt) {
       throw new BusinessRuleError('EMERGENCY_REQUEST_CLOSED', 'This request has closed');
     }
-    if (booking.offerCollectionClosesAt !== null && now >= booking.offerCollectionClosesAt) {
+    if (request.offerCollectionClosesAt !== null && now >= request.offerCollectionClosesAt) {
       throw new BusinessRuleError(
         'EMERGENCY_OFFERS_CLOSED',
         'Offers for this request have closed — the customer is choosing',
       );
     }
-    // A later offer in the same round moves nothing, so only the first is a
-    // transition; anything past selection is simply closed to new offers.
-    if (booking.status !== 'emergency_offered') {
-      assertTransition('emergency-offer', booking.status, 'provider');
-    }
 
     await this.prisma.$transaction(async (tx) => {
-      const { count: admitted } = await tx.booking.updateMany({
+      const { count: admitted } = await tx.emergencyRequest.updateMany({
         where: {
-          id: booking.id,
-          status: { in: [...PRE_SELECTION] },
-          emergencyOfferCount: { lt: MAX_OFFERS_PER_ROUND },
-          emergencyWindowEndsAt: { gt: now },
+          id: request.id,
+          status: { in: [...OPEN] },
+          windowEndsAt: { gt: now },
           OR: [{ offerCollectionClosesAt: null }, { offerCollectionClosesAt: { gt: now } }],
         },
-        data: { emergencyOfferCount: { increment: 1 } },
+        // A write, so that the row lock is what orders two simultaneous offers.
+        data: { updatedAt: now },
       });
-      if (admitted !== 1) throw await this.whyNotAdmitted(tx, booking.id, now);
+      if (admitted !== 1) {
+        throw new BusinessRuleError(
+          'EMERGENCY_OFFERS_CLOSED',
+          'Offers for this request have closed — the customer is choosing',
+        );
+      }
 
       try {
         await tx.emergencyOffer.create({
           data: {
-            bookingId: booking.id,
+            requestId: request.id,
             providerProfileId,
             listingId: recipient.listingId,
             calloutFeeLaari: input.calloutFeeLaari,
@@ -585,7 +561,6 @@ export class EmergencyService {
         });
       } catch (error) {
         // The partial unique index — one open offer per provider per request.
-        // The throw rolls back the increment above with it.
         if (isUniqueViolation(error)) {
           throw new ConflictError(
             'EMERGENCY_OFFER_ALREADY_MADE',
@@ -596,66 +571,102 @@ export class EmergencyService {
       }
 
       // The first offer of a round opens the collection window. A later one
-      // updates nothing here — which is how "both produce offers" and "the
+      // matches nothing here — which is how "both produce offers" and "the
       // status moved once" are both true.
-      const { count: opened } = await tx.booking.updateMany({
-        where: { id: booking.id, status: 'requested' },
+      await tx.emergencyRequest.updateMany({
+        where: { id: request.id, status: 'requested' },
         data: {
           status: 'emergency_offered',
           offerCollectionClosesAt: secondsFrom(now, OFFER_COLLECTION_SECONDS),
         },
       });
-      if (opened === 1) {
-        await this.event(
-          tx,
-          booking.id,
-          'requested',
-          'emergency_offered',
-          'emergency-offer',
-          'provider',
-          userId,
-          now,
-        );
-      }
     });
 
-    return this.readForProvider(userId, bookingId);
+    return this.readForProvider(userId, requestId);
+  }
+
+  /**
+   * `PATCH /v1/emergency-requests/:id/pass` — `Provider Emergency`'s "Decline
+   * this request".
+   *
+   * 🔧 **Recorded, and not counted — owner's decision, 2026-09-28.** It takes
+   * the request off this provider's list and out of any re-broadcast of it,
+   * and tells nobody. §1f's acceptance rate does not read it: that rule was
+   * written for bookings a provider was targeted with, and a broadcast reaches
+   * everyone eligible whether they wanted it or not.
+   */
+  async pass(userId: string, requestId: string): Promise<EmergencyBroadcastDto> {
+    const { providerProfileId, recipient } = await this.providerView(userId, requestId);
+    if (recipient === null) {
+      throw new BusinessRuleError('EMERGENCY_NOT_ELIGIBLE', 'This request is not on your list');
+    }
+    await this.prisma.emergencyPass.upsert({
+      where: { requestId_providerProfileId: { requestId, providerProfileId } },
+      create: { requestId, providerProfileId, createdAt: this.clock() },
+      update: {},
+    });
+    return this.readForProvider(userId, requestId);
   }
 
   // =========================================================================
-  // The customer's side — choosing
+  // The customer's side — reading, choosing, cancelling
   // =========================================================================
 
+  /** `GET /v1/emergency-requests/:id` — the customer's live view. */
+  async readForCustomer(userId: string, requestId: string): Promise<EmergencyRequestDto> {
+    const request = await this.customerRequest(userId, requestId);
+    const recipients = isOpen(request.status) ? (await this.recipients(request)).length : 0;
+    return this.requestDto(request, this.clock(), recipients);
+  }
+
+  /** `GET /v1/users/me/emergency-requests` — the customer's own, newest first. */
+  async listForCustomer(userId: string): Promise<EmergencyRequestDto[]> {
+    const now = this.clock();
+    const rows = await this.prisma.emergencyRequest.findMany({
+      where: { customerId: userId },
+      include: REQUEST_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    const out: EmergencyRequestDto[] = [];
+    for (const row of rows) out.push(await this.requestDto(row, now, 0));
+    return out;
+  }
+
   /**
-   * `PATCH /v1/bookings/:id/emergency-offer-response` — §Phase 17 item 4.
+   * `PATCH /v1/emergency-requests/:id/emergency-offer-response` — §Phase 17
+   * item 4.
    *
-   * **Select** sets `agreedAmount` from the offer's callout fee with
-   * `amountKind: callout_fee`, moves through `accepted` to
-   * `awaiting_payment`, releases every other offer immediately, and incurs
-   * the dispatch fee — recorded as owed and never blocking dispatch. All of
-   * that is one transaction: the offer claim, the release, the fee, the
-   * re-pointing of the booking and both status events land together or none
-   * of them does.
+   * **Select** — one of the offers the customer was shown — creates the
+   * booking at `accepted` against the chosen provider's listing, with the
+   * offer's callout fee as `agreedAmount` (`amountKind: callout_fee`), moves it
+   * on to `awaiting_payment`, releases every other offer immediately, and
+   * incurs the dispatch fee, recorded as owed and never blocking dispatch.
+   * All of that is **one transaction**.
    *
-   * **Reject all** returns the booking to `requested`, adds **every** provider
-   * who offered to `rejectedProviderIds`, and re-broadcasts. The overall window
-   * is not reset.
+   * **Reject all** returns the request to `requested`, adds **every** provider
+   * who offered to `rejectedProviderIds`, and re-broadcasts. The overall
+   * window is not reset.
    *
-   * Refused before the collection window closes — "at the end of it the
-   * customer is shown up to three offers" — and after the five minutes to
+   * Refused before the collection window closes ("at the end of it the
+   * customer is shown up to three offers") and after the five minutes to
    * choose, which the sweep is about to act on.
    */
   async respond(
     userId: string,
-    bookingId: string,
+    requestId: string,
     response: EmergencyOfferResponse,
-  ): Promise<BookingDto> {
+  ): Promise<EmergencyRequestDto> {
     const now = this.clock();
-    const booking = await this.customerBooking(userId, bookingId);
-    const transition = 'offerId' in response ? 'select-offer' : 'reject-all-offers';
-    assertTransition(transition, booking.status, 'customer');
-
-    const closes = booking.offerCollectionClosesAt;
+    const request = await this.customerRequest(userId, requestId);
+    if (request.status !== 'emergency_offered') {
+      throw new BusinessRuleError(
+        'EMERGENCY_NO_OFFERS_TO_ANSWER',
+        'There are no offers on this request to answer',
+        { status: request.status },
+      );
+    }
+    const closes = request.offerCollectionClosesAt;
     if (closes !== null && now < closes) {
       throw new BusinessRuleError(
         'EMERGENCY_OFFERS_STILL_COLLECTING',
@@ -669,30 +680,29 @@ export class EmergencyService {
         'These offers have expired — your request is being sent out again',
       );
     }
-    if (booking.emergencyWindowEndsAt !== null && now >= booking.emergencyWindowEndsAt) {
+    if (now >= request.windowEndsAt) {
       throw new BusinessRuleError('EMERGENCY_REQUEST_CLOSED', 'This request has closed');
     }
 
-    if ('offerId' in response) return this.select(booking, userId, response.offerId, now);
-    return this.rejectAll(booking, userId, now);
+    if ('offerId' in response) return this.select(request, userId, response.offerId, now);
+    return this.rejectAll(request, now);
   }
 
   private async select(
-    booking: BookingRow,
+    request: RequestRow,
     userId: string,
     offerId: string,
     now: Date,
-  ): Promise<BookingDto> {
-    const offer = await this.prisma.emergencyOffer.findFirst({
-      where: { id: offerId, bookingId: booking.id, state: 'open' },
-    });
-    if (offer === null) {
+  ): Promise<EmergencyRequestDto> {
+    const shown = await this.shownOffers(request.id);
+    const offer = shown.find((o) => o.id === offerId);
+    if (offer === undefined) {
       throw new NotFoundError('That offer is no longer available', 'EMERGENCY_OFFER_NOT_FOUND');
     }
-    // §1c: "a booking dispatches to it only when both still hold at booking
-    // time". A provider demoted, suspended or opted out in the minutes since
-    // they offered is not dispatched.
-    const [still] = await this.recipients(booking, offer.providerProfileId);
+    // §1c, Round 17: "a booking dispatches to it only when both still hold at
+    // booking time". A provider demoted, suspended or opted out in the minutes
+    // since they offered is not dispatched.
+    const [still] = await this.recipients(request, offer.providerProfileId);
     if (still === undefined) {
       throw new BusinessRuleError(
         'EMERGENCY_OFFER_NO_LONGER_AVAILABLE',
@@ -700,58 +710,59 @@ export class EmergencyService {
       );
     }
 
-    const released = await this.prisma.$transaction(async (tx) => {
+    const outcome = await this.prisma.$transaction(async (tx) => {
       // The one atomic claim left in the flow: this offer, once.
       const { count } = await tx.emergencyOffer.updateMany({
         where: { id: offer.id, state: 'open' },
         data: { state: 'selected', closedAt: now },
       });
-      if (count !== 1) throw staleBooking();
+      if (count !== 1) throw stale();
 
       const others = await tx.emergencyOffer.findMany({
-        where: { bookingId: booking.id, state: 'open' },
+        where: { requestId: request.id, state: 'open' },
         select: { providerProfile: { select: { userId: true } } },
       });
       await tx.emergencyOffer.updateMany({
-        where: { bookingId: booking.id, state: 'open' },
+        where: { requestId: request.id, state: 'open' },
         data: { state: 'not_selected', closedAt: now },
       });
 
       // One emergency, one fee — a re-dispatch after a no-show finds this set.
       const feeId =
-        booking.dispatchFeeSubmissionId ?? (await createOwedDispatchFee(tx, booking.customerId)).id;
+        request.dispatchFeeSubmissionId ?? (await createOwedDispatchFee(tx, request.customerId)).id;
 
-      const moved = await this.repo.transition(
-        booking.id,
-        'emergency_offered',
-        {
-          status: 'accepted',
-          listingId: offer.listingId,
-          providerProfileId: offer.providerProfileId,
-          agreedAmountLaari: offer.calloutFeeLaari,
-          amountKind: 'callout_fee',
-          amountSetAt: now,
-          // §1c: "`scheduledFor` is set to the acceptance timestamp, so the
-          // 7-day completion timeout fires normally."
-          scheduledFor: now,
-          offerCollectionClosesAt: null,
-          emergencyOfferCount: 0,
-          dispatchFeeSubmissionId: feeId,
-        },
-        tx,
-      );
-      if (!moved) throw staleBooking();
-      await this.event(
-        tx,
-        booking.id,
-        'emergency_offered',
-        'accepted',
-        'select-offer',
-        'customer',
-        userId,
-        now,
-      );
+      const { count: matched } = await tx.emergencyRequest.updateMany({
+        where: { id: request.id, status: 'emergency_offered' },
+        data: { status: 'matched', offerCollectionClosesAt: null, dispatchFeeSubmissionId: feeId },
+      });
+      if (matched !== 1) throw stale();
 
+      const booking = await this.insertWithReference(tx, {
+        listingId: offer.listingId,
+        customerId: request.customerId,
+        providerProfileId: offer.providerProfileId,
+        bookingMode: 'emergency',
+        status: 'accepted',
+        agreedAmountLaari: offer.calloutFeeLaari,
+        amountKind: 'callout_fee',
+        amountSetAt: now,
+        // §1c: "`scheduledFor` is set to the acceptance timestamp, so the
+        // 7-day completion timeout fires normally."
+        scheduledFor: now,
+        jobNotes: request.jobNotes,
+        islandId: request.islandId,
+        addressDetail: request.addressDetail,
+        emergencyRequestId: request.id,
+        createdAt: now,
+      });
+      await tx.emergencyOffer.update({ where: { id: offer.id }, data: { bookingId: booking.id } });
+
+      // `select-offer` is the booking's creation edge (`from: []`), recorded as
+      // the first status event exactly as `create` is for a slot booking.
+      await this.event(tx, booking.id, null, 'accepted', 'select-offer', 'customer', userId, now);
+
+      // §1c step 3: no booking reaches `awaiting_payment` without an amount.
+      // It has one, in the same transaction.
       assertTransition('amount-set', 'accepted', 'customer');
       const paid = await this.repo.transition(
         booking.id,
@@ -759,7 +770,7 @@ export class EmergencyService {
         { status: 'awaiting_payment' },
         tx,
       );
-      if (!paid) throw staleBooking();
+      if (!paid) throw stale();
       await this.event(
         tx,
         booking.id,
@@ -771,64 +782,78 @@ export class EmergencyService {
         now,
       );
 
-      return others.map((o) => o.providerProfile.userId);
+      return { bookingId: booking.id, released: others.map((o) => o.providerProfile.userId) };
     });
 
     const chosen = await this.prisma.providerProfile.findUniqueOrThrow({
       where: { id: offer.providerProfileId },
       select: { userId: true },
     });
-    await this.notify('emergency_offer_selected', booking.id, chosen.userId);
-    for (const u of released) await this.notify('emergency_offer_not_selected', booking.id, u);
+    await this.notify('emergency_offer_selected', outcome.bookingId, chosen.userId);
+    for (const u of outcome.released) {
+      await this.notify('emergency_offer_not_selected', request.id, u);
+    }
 
-    return this.dtoFor(await this.mustFind(booking.id), 'customer');
+    return this.readForCustomer(userId, request.id);
   }
 
-  private async rejectAll(booking: BookingRow, userId: string, now: Date): Promise<BookingDto> {
+  private async rejectAll(request: RequestRow, now: Date): Promise<EmergencyRequestDto> {
     const rejected = await this.prisma.$transaction(async (tx) => {
       const open = await tx.emergencyOffer.findMany({
-        where: { bookingId: booking.id, state: 'open' },
+        where: { requestId: request.id, state: 'open' },
         select: { providerProfileId: true, providerProfile: { select: { userId: true } } },
       });
       await tx.emergencyOffer.updateMany({
-        where: { bookingId: booking.id, state: 'open' },
+        where: { requestId: request.id, state: 'open' },
         data: { state: 'rejected', closedAt: now },
       });
-      const moved = await this.repo.transition(
-        booking.id,
-        'emergency_offered',
-        {
+      const { count } = await tx.emergencyRequest.updateMany({
+        where: { id: request.id, status: 'emergency_offered' },
+        data: {
           status: 'requested',
           // "**every** provider who offered is added to `rejectedProviderIds`"
           rejectedProviderIds: {
-            set: unique([...booking.rejectedProviderIds, ...open.map((o) => o.providerProfileId)]),
+            set: unique([...request.rejectedProviderIds, ...open.map((o) => o.providerProfileId)]),
           },
           offerCollectionClosesAt: null,
-          emergencyOfferCount: 0,
-          // `emergencyWindowEndsAt` is deliberately untouched: "Offer
-          // rejections and expiries do not reset this clock."
+          // `windowEndsAt` is deliberately untouched: "Offer rejections and
+          // expiries do not reset this clock."
         },
-        tx,
-      );
-      if (!moved) throw staleBooking();
-      await this.event(
-        tx,
-        booking.id,
-        'emergency_offered',
-        'requested',
-        'reject-all-offers',
-        'customer',
-        userId,
-        now,
-      );
+      });
+      if (count !== 1) throw stale();
       return open.map((o) => o.providerProfile.userId);
     });
 
     // §1c: "The rejected provider is told the customer went elsewhere, without a reason."
-    for (const u of rejected) await this.notify('emergency_offer_rejected', booking.id, u);
-    const row = await this.mustFind(booking.id);
-    await this.broadcast(row);
-    return this.dtoFor(row, 'customer');
+    for (const u of rejected) await this.notify('emergency_offer_rejected', request.id, u);
+    await this.broadcast(await this.mustFindRequest(request.id));
+    return this.readForCustomer(request.customerId, request.id);
+  }
+
+  /**
+   * `PATCH /v1/emergency-requests/:id/cancel` — `Emergency Flow`'s "Cancel
+   * request", before anyone is chosen. "Providers will be told the request is
+   * closed. Nothing has been charged" — true, because the fee is incurred only
+   * by selecting.
+   */
+  async cancel(userId: string, requestId: string): Promise<EmergencyRequestDto> {
+    const now = this.clock();
+    const request = await this.customerRequest(userId, requestId);
+    const released = await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.emergencyRequest.updateMany({
+        where: { id: request.id, status: { in: [...OPEN] } },
+        data: { status: 'cancelled', closedAt: now, offerCollectionClosesAt: null },
+      });
+      if (count !== 1) {
+        throw new BusinessRuleError(
+          'EMERGENCY_REQUEST_CLOSED',
+          'This request has already been answered or closed',
+        );
+      }
+      return this.lapseOpenOffers(tx, request.id, now);
+    });
+    for (const u of released) await this.notify('emergency_request_closed', request.id, u);
+    return this.readForCustomer(userId, requestId);
   }
 
   // =========================================================================
@@ -836,24 +861,27 @@ export class EmergencyService {
   // =========================================================================
 
   /**
-   * `PATCH /v1/bookings/:id/provider-not-arrived` — Round 15: "the customer may
-   * mark 'provider has not arrived' … at any point after the category's accept
+   * `PATCH /v1/bookings/:id/provider-not-arrived` — Round 15: the customer may
+   * mark "provider has not arrived" "at any point after the category's accept
    * window elapses. This releases the provider, records a **no-show** against
    * their conduct record, and **re-broadcasts immediately** excluding them. No
    * admin is involved." And from the fee rule: "a re-dispatch under the
    * no-show rule does **not** incur a second fee."
    *
-   * The no-show is recorded on the provider's own offer — `state: no_show` —
-   * which is where §1f's conduct window reads it, and in the status timeline
-   * as a customer-caused `provider-not-arrived`.
+   * The booking closes — on the no-show provider's own record, as
+   * `provider-not-arrived` caused by the customer — and the offer it came from
+   * becomes `no_show`, which is where §1f reads it. The request goes out again.
    */
-  async markNotArrived(userId: string, bookingId: string): Promise<BookingDto> {
+  async markNotArrived(userId: string, bookingId: string): Promise<EmergencyRequestDto> {
     const now = this.clock();
-    const booking = await this.customerBooking(userId, bookingId);
+    const booking = await this.repo.findById(bookingId);
+    if (booking?.customerId !== userId || booking.emergencyRequestId === null) {
+      throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');
+    }
     assertTransition('provider-not-arrived', booking.status, 'customer');
 
     const window = booking.listing.category?.emergencyAcceptWindowMinutes ?? null;
-    if (booking.amountSetAt === null || window === null) throw staleBooking();
+    if (booking.amountSetAt === null || window === null) throw stale();
     const availableAt = minutesFrom(booking.amountSetAt, window);
     if (now < availableAt) {
       throw new BusinessRuleError(
@@ -863,98 +891,121 @@ export class EmergencyService {
       );
     }
 
-    const released = booking.providerProfile.user.id;
+    const requestId = booking.emergencyRequestId;
     await this.prisma.$transaction(async (tx) => {
+      const moved = await this.repo.transition(
+        booking.id,
+        booking.status,
+        { status: 'cancelled', cancelledAt: now },
+        tx,
+      );
+      if (!moved) throw stale();
+      await this.event(
+        tx,
+        booking.id,
+        booking.status,
+        'cancelled',
+        'provider-not-arrived',
+        'customer',
+        userId,
+        now,
+      );
       await tx.emergencyOffer.updateMany({
-        where: {
-          bookingId: booking.id,
-          providerProfileId: booking.providerProfileId,
-          state: 'selected',
-        },
+        where: { bookingId: booking.id },
         data: { state: 'no_show', closedAt: now },
       });
-      await this.redispatch(tx, booking, 'provider-not-arrived', 'customer', userId, now);
+      await this.reopen(tx, requestId, booking, now);
     });
 
-    await this.notify('emergency_provider_released', booking.id, released);
-    const row = await this.mustFind(booking.id);
-    await this.broadcast(row);
-    return this.dtoFor(row, 'customer');
+    await this.notify('emergency_provider_released', booking.id, booking.providerProfile.user.id);
+    await this.broadcast(await this.mustFindRequest(requestId));
+    return this.readForCustomer(userId, requestId);
   }
 
   /**
    * §1h, for emergency: "**Emergency bookings re-broadcast** through the normal
    * §1c dispatch, excluding the cancelling provider. No new dispatch fee is
    * incurred. The cancelling provider takes the conduct hit." Reached from
-   * `BookingService.cancel` when the provider on an emergency cancels — the
-   * endpoint is §Phase 17.1's, the re-broadcast was always this slice's.
+   * `BookingService.cancel` when the provider on an emergency booking cancels.
+   *
+   * The booking takes §Phase 17.1's own `provider-cancel` edge — `cancelled`,
+   * `cancelledByRole: provider`, the row §1f's cancellation rate counts — and
+   * in the same transaction the request goes out again.
    */
-  async providerCancelled(booking: BookingRow, userId: string): Promise<void> {
+  async providerCancelled(booking: BookingRow, userId: string, reason?: string): Promise<void> {
     const now = this.clock();
-    assertTransition('emergency-provider-cancel', booking.status, 'provider');
+    const requestId = booking.emergencyRequestId;
+    if (requestId === null) throw stale();
+    assertTransition('provider-cancel', booking.status, 'provider');
     await this.prisma.$transaction(async (tx) => {
-      await tx.emergencyOffer.updateMany({
-        where: {
-          bookingId: booking.id,
-          providerProfileId: booking.providerProfileId,
-          state: 'selected',
+      const moved = await this.repo.transition(
+        booking.id,
+        booking.status,
+        {
+          status: 'cancelled',
+          cancelledAt: now,
+          cancelledByRole: 'provider',
+          cancellationReason: reason ?? null,
         },
+        tx,
+      );
+      if (!moved) throw stale();
+      await this.event(
+        tx,
+        booking.id,
+        booking.status,
+        'cancelled',
+        'provider-cancel',
+        'provider',
+        userId,
+        now,
+      );
+      await tx.emergencyOffer.updateMany({
+        where: { bookingId: booking.id },
         data: { state: 'cancelled', closedAt: now },
       });
-      await this.redispatch(tx, booking, 'emergency-provider-cancel', 'provider', userId, now);
+      await this.reopen(tx, requestId, booking, now);
     });
     await this.notify('emergency_redispatched', booking.id, booking.customer.id);
-    await this.broadcast(await this.mustFind(booking.id));
+    await this.broadcast(await this.mustFindRequest(requestId));
   }
 
   /**
-   * Back to `requested`, with the released provider excluded and the agreement
-   * cleared — the next provider gets a fresh one, and §1h's lock applies to it
-   * from its own `accepted`.
+   * The request goes out again after a chosen provider fell through, with that
+   * provider excluded and the fee kept.
    *
-   * 🔧 **A fresh answer window.** The Done-when says an unanswered set of
-   * offers re-broadcasts "without resetting the overall window", and that
-   * stands for the two pre-selection re-broadcasts. After selection the
-   * original window has long run out — a no-show is only reportable once it
-   * has — so re-broadcasting into it would decline the request on arrival and
-   * dead-end exactly the customer §1h says must never be. The category's
-   * window is read again, never a literal.
-   *
-   * The fee (`dispatchFeeSubmissionId`) is kept — one emergency, one fee.
+   * 🔧 **A fresh answer window — agreed with the owner 2026-09-28.** The
+   * Done-when says an unanswered set of offers re-broadcasts "without
+   * resetting the overall window", and that stands for the two pre-selection
+   * re-broadcasts. After selection the original window has long run out — a
+   * no-show is only reportable once it has — so re-broadcasting into it would
+   * decline the request on arrival and dead-end exactly the customer §1h says
+   * must never be. The category's window is read again, never a literal.
    */
-  private async redispatch(
+  private async reopen(
     tx: Prisma.TransactionClient,
+    requestId: string,
     booking: BookingRow,
-    transition: 'provider-not-arrived' | 'emergency-provider-cancel',
-    actor: BookingActorRole,
-    userId: string,
     now: Date,
   ): Promise<void> {
     const window = booking.listing.category?.emergencyAcceptWindowMinutes ?? null;
-    if (window === null) throw staleBooking();
-    const moved = await this.repo.transition(
-      booking.id,
-      booking.status,
-      {
+    if (window === null) throw stale();
+    const request = await tx.emergencyRequest.findUniqueOrThrow({
+      where: { id: requestId },
+      select: { rejectedProviderIds: true },
+    });
+    const { count } = await tx.emergencyRequest.updateMany({
+      where: { id: requestId, status: 'matched' },
+      data: {
         status: 'requested',
         rejectedProviderIds: {
-          set: unique([...booking.rejectedProviderIds, booking.providerProfileId]),
+          set: unique([...request.rejectedProviderIds, booking.providerProfileId]),
         },
-        agreedAmountLaari: null,
-        amountKind: null,
-        amountSetAt: null,
-        scheduledFor: null,
-        paymentClaimedAt: null,
-        paymentAttestedAt: null,
-        completionPromptedAt: null,
         offerCollectionClosesAt: null,
-        emergencyOfferCount: 0,
-        emergencyWindowEndsAt: minutesFrom(now, window),
+        windowEndsAt: minutesFrom(now, window),
       },
-      tx,
-    );
-    if (!moved) throw staleBooking();
-    await this.event(tx, booking.id, booking.status, 'requested', transition, actor, userId, now);
+    });
+    if (count !== 1) throw stale();
   }
 
   // =========================================================================
@@ -966,21 +1017,21 @@ export class EmergencyService {
    * "their in-flight emergency bookings are handled by payment state, not
    * uniformly: at `accepted` or `awaiting_payment` the booking **auto-cancels**
    * with both parties notified; at `payment_claimed`, `confirmed`, or later it
-   * is **routed to the admin queue as a dispute** and left otherwise
-   * untouched. Auto-cancelling a booking the customer has already paid for
-   * off-platform would strand real money with no platform recourse."
+   * is **routed to the admin queue as a dispute** and left otherwise untouched.
+   * Auto-cancelling a booking the customer has already paid for off-platform
+   * would strand real money with no platform recourse."
    *
    * 🔧 **The bar is the booking's category, not a flat `silver`.** Item 21 is
    * Round 9's wording ("drops below `silver`"); Round 15 made the gate
    * per-category, and a gold electrician demoted to silver no longer meets
-   * Electrical's bar while still meeting AC Repair's. Evaluated through
-   * `emergencyEligibility`, the one place the composed rule is written.
+   * Electrical's bar while still meeting AC Repair's (invariant 1c). Evaluated
+   * through `emergencyEligibility`, the one place the composed rule is written.
    *
    * **Who calls it:** whatever changes a tier — §Phase 10a part 2's
    * verification queue, deferred by the owner (ledger **P10-DEFER**). Nothing
-   * in this codebase changes a tier yet, so this is reached from tests alone,
-   * the same position `ListingService.reevaluateEmergencyEligibility` is in
-   * (ledger **P8-3**). Ledger **P17-5** carries the wiring.
+   * in this codebase changes a tier yet, so it is reached from tests alone,
+   * the position `ListingService.reevaluateEmergencyEligibility` is in (ledger
+   * **P8-3**). Ledger **P17-5** carries the wiring.
    */
   async onProviderTierChanged(
     providerProfileId: string,
@@ -1015,7 +1066,7 @@ export class EmergencyService {
           );
           if (!moved) return false;
           await tx.emergencyOffer.updateMany({
-            where: { bookingId: booking.id, providerProfileId, state: 'selected' },
+            where: { bookingId: booking.id },
             data: { state: 'lapsed', closedAt: now },
           });
           await this.event(
@@ -1081,184 +1132,124 @@ export class EmergencyService {
    * offer — and the overall window is not reset.
    *
    * A request whose overall window has also run out is left for the window
-   * sweep, which declines it; re-broadcasting a request that is about to be
-   * declined would page every provider for nothing.
+   * sweep, which declines it; re-broadcasting a request about to be declined
+   * would page every provider for nothing.
    */
   async runOfferChoiceTimeouts(now: Date, limit = 200): Promise<{ expired: number }> {
-    const due = await this.repo.findOfferChoiceTimeouts(
-      minutesFrom(now, -OFFER_CHOICE_MINUTES),
-      limit,
-    );
+    const due = await this.prisma.emergencyRequest.findMany({
+      where: {
+        status: 'emergency_offered',
+        offerCollectionClosesAt: { not: null, lte: minutesFrom(now, -OFFER_CHOICE_MINUTES) },
+        windowEndsAt: { gt: now },
+      },
+      select: { id: true },
+      orderBy: { offerCollectionClosesAt: 'asc' },
+      take: limit,
+    });
     let expired = 0;
     for (const { id } of due) {
-      const booking = await this.repo.findById(id);
-      if (booking?.status !== 'emergency_offered') continue;
-      if (booking.emergencyWindowEndsAt !== null && now >= booking.emergencyWindowEndsAt) continue;
       const released = await this.prisma.$transaction(async (tx) => {
-        const moved = await this.repo.transition(
-          booking.id,
-          'emergency_offered',
-          { status: 'requested', offerCollectionClosesAt: null, emergencyOfferCount: 0 },
-          tx,
-        );
-        if (!moved) return null;
+        const { count } = await tx.emergencyRequest.updateMany({
+          where: { id, status: 'emergency_offered' },
+          data: { status: 'requested', offerCollectionClosesAt: null },
+        });
+        if (count !== 1) return null;
         const open = await tx.emergencyOffer.findMany({
-          where: { bookingId: booking.id, state: 'open' },
+          where: { requestId: id, state: 'open' },
           select: { providerProfile: { select: { userId: true } } },
         });
         await tx.emergencyOffer.updateMany({
-          where: { bookingId: booking.id, state: 'open' },
+          where: { requestId: id, state: 'open' },
           data: { state: 'expired', closedAt: now },
         });
-        await this.event(
-          tx,
-          booking.id,
-          'emergency_offered',
-          'requested',
-          'offer-choice-timeout',
-          'system',
-          null,
-          now,
-        );
         return open.map((o) => o.providerProfile.userId);
       });
       if (released === null) continue;
       expired += 1;
-      for (const u of released) await this.notify('emergency_offer_expired', booking.id, u);
-      await this.broadcast(await this.mustFind(booking.id));
+      for (const u of released) await this.notify('emergency_offer_expired', id, u);
+      await this.broadcast(await this.mustFindRequest(id));
     }
     return { expired };
   }
 
   /**
    * §Phase 17 item 4: "**Scheduled job — request expiry:** a `requested`
-   * emergency booking older than its category's
-   * `emergencyAcceptWindowMinutes` (30 for all four emergency categories —
-   * Round 22) → auto-decline, notify, offer re-broadcast or conversion to a
-   * request-based booking."
+   * emergency booking older than its category's `emergencyAcceptWindowMinutes`
+   * (30 for all four emergency categories — Round 22) → auto-decline, notify,
+   * offer re-broadcast or conversion to a request-based booking."
    *
-   * The deadline is the stored `emergencyWindowEndsAt`, stamped from the
-   * category at creation, so Moving expires at exactly the moment Plumbing
-   * does and neither is a literal. The "re-broadcast or conversion" offer is
-   * the screen's (`Emergency Flow.dc.html`'s "Try again now" and "Turn into a
-   * scheduled request"), and both are ordinary creation calls against the
-   * same listing — nothing is charged, because nothing was selected.
+   * The deadline is the stored `windowEndsAt`, stamped from the category at
+   * creation, so Moving expires at exactly the moment Plumbing does and
+   * neither is a literal. From `emergency_offered` too: "the window governs
+   * the whole request, so a customer who rejects three offers has spent that
+   * time." The "re-broadcast or conversion" offer is the screen's — "Try
+   * again now" and "Turn into a scheduled request" — and both are ordinary
+   * creation calls; nothing is charged, because nothing was selected.
    */
   async runWindowTimeouts(now: Date, limit = 200): Promise<{ declined: number }> {
-    const due = await this.repo.findEmergencyWindowTimeouts(now, limit);
+    const due = await this.prisma.emergencyRequest.findMany({
+      where: { status: { in: [...OPEN] }, windowEndsAt: { lte: now } },
+      select: { id: true, customerId: true },
+      orderBy: { windowEndsAt: 'asc' },
+      take: limit,
+    });
     let declined = 0;
-    for (const { id } of due) {
-      const booking = await this.repo.findById(id);
-      if (booking === null || !isPreSelectionEmergency(booking)) continue;
+    for (const { id, customerId } of due) {
       const released = await this.prisma.$transaction(async (tx) => {
-        const moved = await this.repo.transition(
-          booking.id,
-          booking.status,
-          {
-            status: 'declined',
-            declinedAt: now,
-            offerCollectionClosesAt: null,
-            emergencyOfferCount: 0,
-          },
-          tx,
-        );
-        if (!moved) return null;
-        const open = await tx.emergencyOffer.findMany({
-          where: { bookingId: booking.id, state: 'open' },
-          select: { providerProfile: { select: { userId: true } } },
+        const { count } = await tx.emergencyRequest.updateMany({
+          where: { id, status: { in: [...OPEN] } },
+          data: { status: 'declined', closedAt: now, offerCollectionClosesAt: null },
         });
-        await tx.emergencyOffer.updateMany({
-          where: { bookingId: booking.id, state: 'open' },
-          data: { state: 'lapsed', closedAt: now },
-        });
-        await this.event(
-          tx,
-          booking.id,
-          booking.status,
-          'declined',
-          'emergency-window-timeout',
-          'system',
-          null,
-          now,
-        );
-        return open.map((o) => o.providerProfile.userId);
+        if (count !== 1) return null;
+        return this.lapseOpenOffers(tx, id, now);
       });
       if (released === null) continue;
       declined += 1;
-      await this.notify('emergency_window_expired', booking.id, booking.customer.id);
-      for (const u of released) await this.notify('emergency_request_closed', booking.id, u);
+      await this.notify('emergency_window_expired', id, customerId);
+      for (const u of released) await this.notify('emergency_request_closed', id, u);
     }
     return { declined };
   }
 
   // =========================================================================
-  // Reads
+  // The booking detail's emergency block
   // =========================================================================
 
   /**
    * The `emergency` block of an emergency booking's detail read, for either
-   * party. Called by `BookingService.read`, so the customer's screen polls one
-   * endpoint for everything.
+   * party. Called by `BookingService.read`.
    */
   async detailsFor(
     booking: BookingRow,
     role: 'customer' | 'provider',
   ): Promise<EmergencyDetailsDto> {
     const now = this.clock();
-    const phase = emergencyPhase(booking, now);
-    const offers = await this.prisma.emergencyOffer.findMany({
-      where:
-        phase === 'matched'
-          ? {
-              bookingId: booking.id,
-              state: 'selected',
-              providerProfileId: booking.providerProfileId,
-            }
-          : { bookingId: booking.id, state: 'open' },
-      orderBy: { createdAt: 'asc' },
-      include: {
-        providerProfile: {
-          select: {
-            businessName: true,
-            verificationTier: true,
-            user: { select: { fullName: true } },
-          },
-        },
-      },
+    const request =
+      booking.emergencyRequestId === null
+        ? null
+        : await this.prisma.emergencyRequest.findUnique({
+            where: { id: booking.emergencyRequestId },
+            select: { id: true, dispatchFeeSubmission: true },
+          });
+    const offer = await this.prisma.emergencyOffer.findUnique({
+      where: { bookingId: booking.id },
+      select: { etaMinutes: true },
     });
-
-    // The customer sees the offers once the window closes (§1c), and the
-    // chosen one after. A provider on the booking never sees rival bids.
-    const visible = role === 'customer' && (phase === 'choosing' || phase === 'matched');
-    const fee =
-      role === 'customer' && booking.dispatchFeeSubmissionId !== null
-        ? await this.prisma.paymentSubmission.findUnique({
-            where: { id: booking.dispatchFeeSubmissionId },
-          })
-        : null;
     const window = booking.listing.category?.emergencyAcceptWindowMinutes ?? null;
-    const closes = booking.offerCollectionClosesAt;
+    const reportable =
+      booking.status === 'awaiting_payment' ||
+      booking.status === 'payment_claimed' ||
+      booking.status === 'confirmed';
+    const fee = request?.dispatchFeeSubmission ?? null;
 
     return {
-      phase,
-      windowEndsAt: iso(booking.emergencyWindowEndsAt),
-      collectionClosesAt: iso(closes),
-      choiceEndsAt:
-        closes === null ? null : minutesFrom(closes, OFFER_CHOICE_MINUTES).toISOString(),
-      offersReceived: phase === 'matched' ? 0 : offers.length,
-      offers: visible ? offers.map(toOfferDto) : [],
-      etaPresetsMinutes: booking.listing.category?.emergencyEtaPresetsMinutes ?? [],
-      dispatchFee:
-        fee === null
-          ? null
-          : {
-              submissionId: fee.id,
-              amountLaari: fee.amountLaari,
-              referenceCode: fee.referenceCode,
-              state: dispatchFeeState(fee),
-            },
+      requestId: request?.id ?? null,
+      etaMinutes: offer?.etaMinutes ?? null,
+      // The fee is the customer's to settle; the provider has no business with
+      // RaajjePro's own money.
+      dispatchFee: role === 'customer' && fee !== null ? toFeeDto(fee) : null,
       notArrivedAvailableAt:
-        phase === 'matched' && booking.amountSetAt !== null && window !== null
+        role === 'customer' && reportable && booking.amountSetAt !== null && window !== null
           ? minutesFrom(booking.amountSetAt, window).toISOString()
           : null,
       contactReveal: await contactRevealState(this.prisma, this.killSwitches, booking, now),
@@ -1269,63 +1260,153 @@ export class EmergencyService {
   // Internals
   // =========================================================================
 
-  /** The customer on this emergency, or 404 — a stranger learns nothing. */
-  private async customerBooking(userId: string, bookingId: string): Promise<BookingRow> {
-    const booking = await this.repo.findById(bookingId);
-    if (booking?.customerId !== userId || booking.bookingMode !== 'emergency') {
-      throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');
+  /**
+   * Up to three of this round's open offers, as the customer is shown them.
+   *
+   * 🔧 **The ranking is ours to state — the plan says "up to three" and not
+   * which.** §1c names what the collection window is for: the winner should be
+   * "whoever was **nearest or cheapest**" rather than whoever tapped fastest.
+   * Nearest cannot be computed — the system knows islands and nothing finer,
+   * and every recipient already serves the job's island (owner's decision on
+   * distance, 2026-09-28) — so the order is **callout fee, lowest first**;
+   * then the **provider's own arrival estimate**, soonest first, as the
+   * nearest thing to "nearest" that exists; then the earlier offer, so a tie
+   * is broken by something both parties can see rather than by row order.
+   * An offer outside the three is released as `not_selected` when the
+   * customer chooses, exactly like an unchosen one inside it.
+   */
+  private async shownOffers(requestId: string) {
+    return this.prisma.emergencyOffer.findMany({
+      where: { requestId, state: 'open' },
+      orderBy: [{ calloutFeeLaari: 'asc' }, { etaMinutes: 'asc' }, { createdAt: 'asc' }],
+      take: MAX_OFFERS_SHOWN,
+      include: {
+        providerProfile: {
+          select: {
+            businessName: true,
+            verificationTier: true,
+            user: { select: { fullName: true } },
+          },
+        },
+      },
+    });
+  }
+
+  private async requestDto(
+    request: RequestRow,
+    now: Date,
+    recipients: number,
+  ): Promise<EmergencyRequestDto> {
+    const phase = requestPhase(request, now);
+    const offersReceived =
+      phase === 'collecting' || phase === 'choosing'
+        ? await this.prisma.emergencyOffer.count({
+            where: { requestId: request.id, state: 'open' },
+          })
+        : 0;
+    const shown = phase === 'choosing' ? await this.shownOffers(request.id) : [];
+    const booking =
+      request.status === 'matched'
+        ? await this.prisma.booking.findFirst({
+            where: { emergencyRequestId: request.id },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true },
+          })
+        : null;
+    const fee =
+      request.dispatchFeeSubmissionId === null
+        ? null
+        : await this.prisma.paymentSubmission.findUnique({
+            where: { id: request.dispatchFeeSubmissionId },
+          });
+    const closes = request.offerCollectionClosesAt;
+
+    return {
+      id: request.id,
+      status: request.status,
+      phase,
+      categoryId: request.category.id,
+      categoryName: request.category.name,
+      minimumTier: request.category.emergencyMinimumTier,
+      windowMinutes: request.category.emergencyAcceptWindowMinutes,
+      islandId: request.islandId,
+      islandDisplayName: islandDisplayName(request.island),
+      jobNotes: request.jobNotes,
+      addressDetail: request.addressDetail,
+      windowEndsAt: request.windowEndsAt.toISOString(),
+      collectionClosesAt: iso(closes),
+      choiceEndsAt:
+        closes === null ? null : minutesFrom(closes, OFFER_CHOICE_MINUTES).toISOString(),
+      broadcastCount: recipients,
+      offersReceived,
+      offers: shown.map(toOfferDto),
+      bookingId: booking?.id ?? null,
+      dispatchFee: fee === null ? null : toFeeDto(fee),
+      createdAt: request.createdAt.toISOString(),
+    };
+  }
+
+  /** The customer's own request, or 404 — a stranger learns nothing. */
+  private async customerRequest(userId: string, requestId: string): Promise<RequestRow> {
+    const request = await this.prisma.emergencyRequest.findUnique({
+      where: { id: requestId },
+      include: REQUEST_INCLUDE,
+    });
+    if (request?.customerId !== userId) {
+      throw new NotFoundError('No such request', 'EMERGENCY_REQUEST_NOT_FOUND');
     }
-    return booking;
+    return request;
   }
 
   /**
-   * A provider's standing on one broadcast. Not found unless they could
-   * answer it or already have — the existence of a request they were never
-   * sent is not theirs to learn.
+   * A provider's standing on one broadcast. Not found unless they could answer
+   * it, already have, or have a listing here the tier bar now refuses — the
+   * existence of a request they were never sent is not theirs to learn.
    */
   private async providerView(
     userId: string,
-    bookingId: string,
+    requestId: string,
   ): Promise<{
-    booking: BookingRow;
+    request: RequestRow;
     providerProfileId: string;
     recipient: Recipient | null;
-    eligible: boolean;
     tierBlock: BusinessRuleError | null;
   }> {
     const profile = await this.prisma.providerProfile.findUnique({
       where: { userId },
       select: { id: true, verificationTier: true },
     });
-    const booking = await this.repo.findById(bookingId);
-    if (profile === null || booking?.bookingMode !== 'emergency') {
+    const request = await this.prisma.emergencyRequest.findUnique({
+      where: { id: requestId },
+      include: REQUEST_INCLUDE,
+    });
+    if (profile === null || request === null) {
       throw new NotFoundError('No such request', 'EMERGENCY_REQUEST_NOT_FOUND');
     }
 
-    const [recipient] = await this.recipients(booking, profile.id);
+    const [recipient] = await this.recipients(request, profile.id);
     const offered = await this.prisma.emergencyOffer.findFirst({
-      where: { bookingId: booking.id, providerProfileId: profile.id },
+      where: { requestId: request.id, providerProfileId: profile.id },
       select: { id: true },
     });
 
-    // The tier half of the rule, reported by name: a provider who has an
-    // emergency listing here but whose tier no longer meets this category's
-    // bar is told that, rather than "not found".
+    // The tier half of the rule, by name: a provider with an emergency listing
+    // here whose tier no longer meets this category's bar is told so.
     let tierBlock: BusinessRuleError | null = null;
-    if (recipient === undefined && booking.listing.category !== null && booking.islandId !== null) {
+    if (recipient === undefined) {
       const hasListingHere = await this.prisma.listing.findFirst({
         where: {
           providerProfileId: profile.id,
-          categoryId: booking.listing.categoryId,
+          categoryId: request.categoryId,
           isEmergency: true,
           status: 'published',
           deletedAt: null,
-          serviceAreas: { some: { islandId: booking.islandId, removedAt: null } },
+          serviceAreas: { some: { islandId: request.islandId, removedAt: null } },
         },
         select: { id: true },
       });
       const verdict = emergencyEligibility({
-        category: booking.listing.category,
+        category: request.category,
         providerTier: profile.verificationTier,
       });
       if (hasListingHere !== null && !verdict.eligible) {
@@ -1333,46 +1414,53 @@ export class EmergencyService {
       }
     }
 
-    if (recipient === undefined && offered === null && tierBlock === null) {
+    // A provider who passed still reads it — as passed — rather than being told
+    // a request they were shown does not exist.
+    const passed =
+      recipient === undefined
+        ? await this.prisma.emergencyPass.findUnique({
+            where: {
+              requestId_providerProfileId: { requestId: request.id, providerProfileId: profile.id },
+            },
+            select: { id: true },
+          })
+        : null;
+
+    if (recipient === undefined && offered === null && tierBlock === null && passed === null) {
       throw new NotFoundError('No such request', 'EMERGENCY_REQUEST_NOT_FOUND');
     }
-    return {
-      booking,
-      providerProfileId: profile.id,
-      recipient: recipient ?? null,
-      eligible: recipient !== undefined && isPreSelectionEmergency(booking),
-      tierBlock,
-    };
+    return { request, providerProfileId: profile.id, recipient: recipient ?? null, tierBlock };
   }
 
   private async broadcastDto(
-    booking: BookingRow,
+    request: RequestRow,
     providerProfileId: string,
     eligible: boolean,
     now: Date,
   ): Promise<EmergencyBroadcastDto> {
     const mine = await this.prisma.emergencyOffer.findFirst({
-      where: { bookingId: booking.id, providerProfileId },
+      where: { requestId: request.id, providerProfileId },
       orderBy: { createdAt: 'desc' },
     });
-    const closes = booking.offerCollectionClosesAt;
+    const passed = await this.prisma.emergencyPass.findUnique({
+      where: { requestId_providerProfileId: { requestId: request.id, providerProfileId } },
+      select: { id: true },
+    });
+    const closes = request.offerCollectionClosesAt;
     const open =
-      isPreSelectionEmergency(booking) &&
-      booking.emergencyWindowEndsAt !== null &&
-      now < booking.emergencyWindowEndsAt &&
-      (closes === null || now < closes);
+      isOpen(request.status) && now < request.windowEndsAt && (closes === null || now < closes);
     return {
-      bookingId: booking.id,
-      categoryName: booking.listing.category?.name ?? 'Service',
-      customerFirstName: firstName(booking.customer.fullName),
-      jobNotes: booking.jobNotes,
-      islandDisplayName: booking.island === null ? null : islandDisplayName(booking.island),
-      createdAt: booking.createdAt.toISOString(),
-      windowEndsAt: iso(booking.emergencyWindowEndsAt),
+      requestId: request.id,
+      categoryName: request.category.name,
+      customerFirstName: firstName(request.customer.fullName),
+      jobNotes: request.jobNotes,
+      islandDisplayName: islandDisplayName(request.island),
+      createdAt: request.createdAt.toISOString(),
+      windowEndsAt: request.windowEndsAt.toISOString(),
       collectionClosesAt: iso(closes),
       choiceEndsAt:
         closes === null ? null : minutesFrom(closes, OFFER_CHOICE_MINUTES).toISOString(),
-      etaPresetsMinutes: booking.listing.category?.emergencyEtaPresetsMinutes ?? [],
+      etaPresetsMinutes: request.category.emergencyEtaPresetsMinutes,
       myOffer:
         mine === null
           ? null
@@ -1381,52 +1469,31 @@ export class EmergencyService {
               state: mine.state,
               calloutFeeLaari: mine.calloutFeeLaari,
               etaMinutes: mine.etaMinutes,
+              bookingId: mine.bookingId,
               createdAt: mine.createdAt.toISOString(),
             },
-      canOffer: eligible && open && mine?.state !== 'open',
+      passed: passed !== null,
+      canOffer: eligible && open && passed === null && mine?.state !== 'open',
     };
   }
 
-  /** Which refusal applies when the admission gate matched nothing. */
-  private async whyNotAdmitted(tx: Db, bookingId: string, now: Date): Promise<Error> {
-    const row = await tx.booking.findUnique({
-      where: { id: bookingId },
-      select: {
-        status: true,
-        emergencyOfferCount: true,
-        emergencyWindowEndsAt: true,
-        offerCollectionClosesAt: true,
-      },
+  private async lapseOpenOffers(tx: Db, requestId: string, now: Date): Promise<string[]> {
+    const open = await tx.emergencyOffer.findMany({
+      where: { requestId, state: 'open' },
+      select: { providerProfile: { select: { userId: true } } },
     });
-    if (row === null) return new NotFoundError('No such request', 'EMERGENCY_REQUEST_NOT_FOUND');
-    if (!PRE_SELECTION.includes(row.status)) {
-      return new BusinessRuleError('EMERGENCY_REQUEST_CLOSED', 'This request has closed');
-    }
-    if (row.emergencyWindowEndsAt === null || now >= row.emergencyWindowEndsAt) {
-      return new BusinessRuleError('EMERGENCY_REQUEST_CLOSED', 'This request has closed');
-    }
-    if (row.offerCollectionClosesAt !== null && now >= row.offerCollectionClosesAt) {
-      return new BusinessRuleError(
-        'EMERGENCY_OFFERS_CLOSED',
-        'Offers for this request have closed — the customer is choosing',
-      );
-    }
-    return new BusinessRuleError(
-      'EMERGENCY_OFFERS_FULL',
-      'This request already has three offers — the customer is choosing between them',
-    );
+    await tx.emergencyOffer.updateMany({
+      where: { requestId, state: 'open' },
+      data: { state: 'lapsed', closedAt: now },
+    });
+    return open.map((o) => o.providerProfile.userId);
   }
 
-  private async dtoFor(row: BookingRow, role: 'customer' | 'provider'): Promise<BookingDto> {
-    const dto = toBookingDto(row, this.clock());
-    dto.emergency = await this.detailsFor(row, role);
-    return dto;
-  }
-
-  private async mustFind(id: string): Promise<BookingRow> {
-    const booking = await this.repo.findById(id);
-    if (booking === null) throw new NotFoundError('No such booking', 'BOOKING_NOT_FOUND');
-    return booking;
+  private async mustFindRequest(id: string): Promise<RequestRow> {
+    return this.prisma.emergencyRequest.findUniqueOrThrow({
+      where: { id },
+      include: REQUEST_INCLUDE,
+    });
   }
 
   private async insertWithReference(
@@ -1446,7 +1513,7 @@ export class EmergencyService {
   private async event(
     tx: Db,
     bookingId: string,
-    from: BookingStatus,
+    from: BookingStatus | null,
     to: BookingStatus,
     transition: string,
     actorRole: BookingActorRole,
@@ -1459,31 +1526,40 @@ export class EmergencyService {
     );
   }
 
+  /**
+   * `bookingId` on the seam is the event's subject: before selection that is
+   * the request's id, which is what a push would deep-link to.
+   */
   private async notify(
     event: BookingNotification,
-    bookingId: string,
+    subjectId: string,
     userId: string,
   ): Promise<void> {
     try {
-      await this.notifier.notify({ event, bookingId, userId });
+      await this.notifier.notify({ event, bookingId: subjectId, userId });
     } catch (error) {
-      this.log.warn({ err: error, event, bookingId }, 'booking notification failed');
+      this.log.warn({ err: error, event, subjectId }, 'emergency notification failed');
     }
   }
 }
 
 /** Derived, never stored — the same posture `chat.ts` takes. */
-export function emergencyPhase(
-  booking: Pick<BookingRow, 'status' | 'offerCollectionClosesAt' | 'emergencyOfferCount'>,
+export function requestPhase(
+  request: { status: string; offerCollectionClosesAt: Date | null },
   now: Date,
 ): EmergencyPhase {
-  if (booking.status === 'requested') return 'waiting';
-  if (booking.status === 'emergency_offered') {
-    const closes = booking.offerCollectionClosesAt;
-    return closes !== null && now < closes ? 'collecting' : 'choosing';
+  switch (request.status) {
+    case 'requested':
+      return 'waiting';
+    case 'emergency_offered': {
+      const closes = request.offerCollectionClosesAt;
+      return closes !== null && now < closes ? 'collecting' : 'choosing';
+    }
+    case 'matched':
+      return 'matched';
+    default:
+      return 'closed';
   }
-  if (['declined', 'cancelled'].includes(booking.status)) return 'closed';
-  return 'matched';
 }
 
 function toOfferDto(row: {
@@ -1510,10 +1586,25 @@ function toOfferDto(row: {
   };
 }
 
-function staleBooking(): ConflictError {
+function toFeeDto(fee: {
+  id: string;
+  amountLaari: number;
+  referenceCode: string;
+  status: 'pending' | 'confirmed' | 'rejected';
+  submittedAt: Date | null;
+}): EmergencyDispatchFeeDto {
+  return {
+    submissionId: fee.id,
+    amountLaari: fee.amountLaari,
+    referenceCode: fee.referenceCode,
+    state: dispatchFeeState(fee),
+  };
+}
+
+function stale(): ConflictError {
   return new ConflictError(
     'BOOKING_CHANGED',
-    'This booking changed while you were looking at it — open it again',
+    'This request changed while you were looking at it — open it again',
   );
 }
 

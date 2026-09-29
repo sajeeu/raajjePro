@@ -237,15 +237,15 @@ export interface EmergencyOfferDto {
 }
 
 /**
- * Where an emergency is, from the screen's point of view. Derived from the
- * status and the stored clocks, so the app never works out a phase from
- * timestamps of its own.
+ * Where an emergency request is, from the screen's point of view. Derived from
+ * the request's status and stored clocks, so the app never works out a phase
+ * from timestamps of its own.
  *
  *  - `waiting` — broadcast, nobody has answered yet this round
  *  - `collecting` — the first answer opened the 90-second window
  *  - `choosing` — the window closed; up to three offers, five minutes to pick
- *  - `matched` — an offer was selected; the job is on
- *  - `closed` — the request ended without a match, or the booking is over
+ *  - `matched` — an offer was selected; its booking is live
+ *  - `closed` — the request ended without a match
  */
 export type EmergencyPhase = 'waiting' | 'collecting' | 'choosing' | 'matched' | 'closed';
 
@@ -274,29 +274,63 @@ export interface EmergencyDispatchFeeDto {
   state: 'owed' | 'submitted' | 'confirmed' | 'rejected';
 }
 
-export interface EmergencyDetailsDto {
+/**
+ * One emergency request as its **customer** sees it — `Emergency Flow.dc.html`
+ * from the tap to the match. `GET /v1/emergency-requests/:id`.
+ *
+ * Every clock is the server's: the overall window is the category's
+ * `emergencyAcceptWindowMinutes` (never a literal), and the collection and
+ * choice deadlines are stamped when they begin.
+ */
+export interface EmergencyRequestDto {
+  id: string;
+  status: 'requested' | 'emergency_offered' | 'matched' | 'declined' | 'cancelled';
   phase: EmergencyPhase;
-  /** The overall answer window — the category's `emergencyAcceptWindowMinutes`, never a literal. */
-  windowEndsAt: string | null;
-  /** When the current 90-second collection window closes. */
+  categoryId: string;
+  categoryName: string;
+  /** The category's bar — "Goes to every Gold-verified Plumbing provider". */
+  minimumTier: VerificationTier | null;
+  /** The category's answer window, for the copy that states it. */
+  windowMinutes: number | null;
+  islandId: string;
+  /** §0.0 item 12's convention: `Dh. Meedhoo` or `Kulhudhuffushi`. */
+  islandDisplayName: string;
+  jobNotes: string;
+  addressDetail: string | null;
+  windowEndsAt: string;
   collectionClosesAt: string | null;
-  /** When the customer's five minutes to choose run out. */
   choiceEndsAt: string | null;
-  /** How many answers this round, shown during collection ("2 providers have answered"). */
+  /** How many providers the request reaches right now — "Sent to 4 providers". */
+  broadcastCount: number;
+  /** Every answer this round, shown during collection ("2 providers have answered"). */
   offersReceived: number;
   /**
-   * The offers themselves. **To the customer only**, and only once the
-   * collection window has closed — §1c: "at the end of it the customer is
-   * shown up to three offers". After selection, the selected one alone.
+   * The offers the customer chooses between — **at most three**, and only once
+   * the collection window has closed (§1c). Ranked cheapest first, then the
+   * soonest arrival estimate; see `emergency.ts`'s `shownOffers`.
    */
   offers: EmergencyOfferDto[];
-  /** Round 22's presets for this category, for the provider's accept screen. */
-  etaPresetsMinutes: number[];
-  /** The fee incurred on selection. To the customer only; null until then. */
+  /** The live booking once an offer is selected. */
+  bookingId: string | null;
+  /** The fee, once incurred. */
+  dispatchFee: EmergencyDispatchFeeDto | null;
+  createdAt: string;
+}
+
+/**
+ * The `emergency` block on an emergency **booking's** detail read, for either
+ * party.
+ */
+export interface EmergencyDetailsDto {
+  /** The request this booking was dispatched from. */
+  requestId: string | null;
+  /** The chosen provider's own arrival estimate — "their estimate", never a guarantee. */
+  etaMinutes: number | null;
+  /** To the customer only: the MVR 200 fee and whether it still blocks. */
   dispatchFee: EmergencyDispatchFeeDto | null;
   /**
-   * When "provider has not arrived" becomes available — the category's
-   * answer window after selection (Round 15). Null before selection.
+   * When "provider has not arrived" becomes available — the category's answer
+   * window after selection (Round 15). Null where it cannot be used.
    */
   notArrivedAvailableAt: string | null;
   contactReveal: ContactRevealState;
@@ -309,32 +343,35 @@ export interface EmergencyDetailsDto {
  * §1c step 2's accept prompt: "job details and the customer's name only,
  * **no contact details of any kind**". The exact address is withheld too:
  * the artboard says "Exact address is shared if the customer picks you",
- * and at that point the booking is theirs and the ordinary detail read
- * carries it.
+ * and at that point there is a booking and its ordinary detail read carries it.
  */
 export interface EmergencyBroadcastDto {
-  bookingId: string;
+  requestId: string;
   categoryName: string;
   customerFirstName: string;
   jobNotes: string | null;
   islandDisplayName: string | null;
   createdAt: string;
-  windowEndsAt: string | null;
+  windowEndsAt: string;
   collectionClosesAt: string | null;
   choiceEndsAt: string | null;
   etaPresetsMinutes: number[];
   /**
-   * What happened to this provider's own offer this round, if they made one —
-   * so the unselected are "released immediately rather than left on a
-   * spinner" and the chosen one knows the job is theirs.
+   * What happened to this provider's own offer, if they made one — so the
+   * unselected are "released immediately rather than left on a spinner" and
+   * the chosen one lands on their new booking.
    */
   myOffer: {
     id: string;
     state: EmergencyOfferState;
     calloutFeeLaari: number;
     etaMinutes: number;
+    /** Set once this offer was chosen: the booking the provider now has. */
+    bookingId: string | null;
     createdAt: string;
   } | null;
+  /** This provider passed on it. Recorded, never counted (owner, 2026-09-28). */
+  passed: boolean;
   /** True while this provider may still send an offer. */
   canOffer: boolean;
 }

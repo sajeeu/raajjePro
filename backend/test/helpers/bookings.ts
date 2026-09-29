@@ -3,10 +3,17 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 
 import type { PrismaClient } from '../../src/generated/prisma/client.js';
-import type { BookingDto } from '../../src/modules/bookings/types.js';
+import type { BookingDto, EmergencyRequestDto } from '../../src/modules/bookings/types.js';
 import { freshIp } from './app.js';
 import { addRule, ownSlots, providerWithSlotListing } from './availability.js';
-import { categoryByName, completeDraft, patchDraft, publish } from './listings.js';
+import { ensureIslandsSeeded } from './islands.js';
+import {
+  categoryByName,
+  completeDraft,
+  ensureCategoriesSeeded,
+  patchDraft,
+  publish,
+} from './listings.js';
 import { registerUser, type RegisteredUser } from './users.js';
 
 interface Envelope<T> {
@@ -301,6 +308,8 @@ export function errorCode(res: { body: string }): string {
  * A random pick from the 192 keeps each test's recipients its own.
  */
 export async function randomIsland(prisma: PrismaClient) {
+  await ensureIslandsSeeded(prisma);
+  await ensureCategoriesSeeded(prisma);
   const count = await prisma.island.count({ where: { isActive: true } });
   const [island] = await prisma.island.findMany({
     where: { isActive: true },
@@ -362,36 +371,88 @@ export async function emergencyProvider(
   return { provider, listingId: draft.id, providerProfileId: profile.id };
 }
 
-/** Raises an emergency and unwraps it, throwing on anything but 201. */
+/**
+ * Raises an emergency request — by **category and island**, never against a
+ * listing (owner's decision 2026-09-28) — and unwraps it.
+ */
 export async function raiseEmergency(
   app: FastifyInstance,
   customer: RegisteredUser,
-  listingId: string,
+  categoryId: string,
   islandId: string,
   extra: Record<string, unknown> = {},
-): Promise<BookingDto> {
-  const res = await createBooking(app, customer, listingId, {
-    emergency: true,
-    jobNotes: 'Pipe burst under the kitchen sink — water is spreading fast',
+): Promise<EmergencyRequestDto> {
+  const res = await postEmergency(app, customer, {
+    categoryId,
     islandId,
+    jobNotes: 'Pipe burst under the kitchen sink — water is spreading fast',
     addressDetail: 'Fehivina, 2nd floor',
     ...extra,
   });
   if (res.statusCode !== 201) {
     throw new Error(`raiseEmergency: ${String(res.statusCode)} ${res.body}`);
   }
-  return res.json<Envelope<BookingDto>>().data;
+  return res.json<Envelope<EmergencyRequestDto>>().data;
 }
 
-/** A provider's offer: `PATCH /v1/bookings/:id/emergency-accept`. */
+export function postEmergency(
+  app: FastifyInstance,
+  customer: RegisteredUser,
+  body: Record<string, unknown>,
+) {
+  return app.inject({
+    method: 'POST',
+    url: '/v1/emergency-requests',
+    headers: { 'idempotency-key': randomUUID(), ...customer.headers },
+    remoteAddress: freshIp(),
+    payload: body,
+  });
+}
+
+/** An action on a request: `PATCH /v1/emergency-requests/:id/<action>`. */
+export function actOnRequest(
+  app: FastifyInstance,
+  user: RegisteredUser,
+  requestId: string,
+  action: string,
+  payload?: Record<string, unknown>,
+) {
+  return app.inject({
+    method: 'PATCH',
+    url: `/v1/emergency-requests/${requestId}/${action}`,
+    headers: { 'idempotency-key': randomUUID(), ...user.headers },
+    remoteAddress: freshIp(),
+    ...(payload === undefined ? {} : { payload }),
+  });
+}
+
+/** A provider's offer: `PATCH /v1/emergency-requests/:id/emergency-accept`. */
 export function offerOn(
   app: FastifyInstance,
   provider: RegisteredUser,
-  bookingId: string,
+  requestId: string,
   calloutFeeLaari = 35_000,
   etaMinutes = 30,
 ) {
-  return act(app, provider, bookingId, 'emergency-accept', { calloutFeeLaari, etaMinutes });
+  return actOnRequest(app, provider, requestId, 'emergency-accept', {
+    calloutFeeLaari,
+    etaMinutes,
+  });
+}
+
+export async function readRequest(
+  app: FastifyInstance,
+  customer: RegisteredUser,
+  requestId: string,
+): Promise<EmergencyRequestDto> {
+  const res = await app.inject({
+    method: 'GET',
+    url: `/v1/emergency-requests/${requestId}`,
+    headers: customer.headers,
+    remoteAddress: freshIp(),
+  });
+  if (res.statusCode !== 200) throw new Error(`readRequest: ${String(res.statusCode)} ${res.body}`);
+  return res.json<Envelope<EmergencyRequestDto>>().data;
 }
 
 export async function revealContact(app: FastifyInstance, user: RegisteredUser, bookingId: string) {

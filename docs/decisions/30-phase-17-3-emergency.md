@@ -1,167 +1,171 @@
 # Phase 17.3 — Emergency dispatch, offer collection & the reveal endpoint
 
-Built 2026-09-28 against `01_Development_Plan_v5.md` revision 5.35: §Phase 17's
-**17.3 — Done when** (seventeen clauses), §1c's emergency rules and the contact
-exception, and §1h's provider replacement.
+Built 2026-09-28/29 against `01_Development_Plan_v5.md` revision 5.35: §Phase
+17's **17.3 — Done when** (seventeen clauses), §1c's emergency rules and the
+contact exception, and §1h's provider replacement.
 
-This file records what the plan left open, the one conflict already settled
-before the build began, and four questions raised with the verification session
-where the artboards and the plan disagree.
+This file records what the plan left open, the one conflict settled before the
+build began, and four questions the owner decided mid-build. Two of the four
+went against the build's first recommendation, and the backend was reshaped to
+follow them.
 
 ---
 
 ## 1. The conflict settled before the build
 
 **The contact reveal unlocks at `accepted` or later, not at `payment_claimed`.**
-§0.3 says emergency bookings "no longer unlock contact at accepted — they
-unlock at payment_claimed". §Phase 17 item 19, §1c and root `CLAUDE.md`
-invariant 1c all say "at `accepted` or later". §0.0's precedence rule settles
-it: §0.3 is the historical record, and where it conflicts with a later section
-the later section wins. The owner confirmed this in the brief, and Done-when
-clause 1 already assumes it. No plan edit is needed.
+§0.3 says the opposite. §Phase 17 item 19, §1c and root `CLAUDE.md` invariant 1c
+say "at `accepted` or later". §0.0's precedence rule settles it: §0.3 is the
+historical record, and where it conflicts with a later section, the later
+section wins. No plan edit is needed.
 
-In the code, "accepted or later" means two things together: the booking was
-accepted (`amountSetAt` is stamped at `accepted`), and it is not back at a
-pre-acceptance status. The second half matters because a re-dispatch after a
-no-show returns the booking to `requested` and clears `amountSetAt`, so the
-next provider starts with no reveal.
+## 2. An emergency is a request first, and a booking only once someone is chosen
 
-## 2. The shape of the machine
+🔧 **Owner's decision, 2026-09-28 (question 1 below).** An emergency is raised
+by **category and island** — `POST /v1/emergency-requests` — and never against
+a listing.
 
-An emergency starts at **`requested`**, unlike 17.2's request path, which starts
-at `awaiting_quote`. §1c says request mode inserts its states "before the
-diagram" but emergency inserts `emergency_offered` "between `requested` and
-`awaiting_payment`". The two paths diverge at creation, and the plan gives one
-sentence to each. The verification session flagged this so the 17.2 shape would
-not be copied.
+- Round 23 put the emergency entry on Home and Explore and deleted the card
+  marker because "dispatch never targets a provider".
+- §1c computes the broadcast from "all providers whose listing is
+  emergency-capable in that category, who serve that island".
+- §Phase 17 item 2's listing-scoped emergency clause is pre-Round-23 residue.
+  It has the same shape as the two other stale sentences this phase has already
+  found: the flat 24-hour quote window, and the reveal at `payment_claimed`.
 
-| Edge | From → to | Actor |
+`Booking.listingId` and `providerProfileId` are NOT NULL, and a request names no
+provider. So the **pre-selection half of §1c's machine lives on a new
+`EmergencyRequest`**, which uses the same state names:
+
+| `EmergencyRequest.status` | §1c's name for it | Moved by |
 |---|---|---|
-| `create-emergency` | — → `requested` | customer |
-| `emergency-offer` | `requested` → `emergency_offered` | provider (first offer of a round only) |
-| `select-offer`, then `amount-set` | `emergency_offered` → `accepted` → `awaiting_payment` | customer |
-| `reject-all-offers` | `emergency_offered` → `requested` | customer |
-| `offer-choice-timeout` | `emergency_offered` → `requested` | system |
-| `emergency-window-timeout` | `requested` / `emergency_offered` → `declined` | system |
-| `provider-not-arrived` | `awaiting_payment` / `payment_claimed` / `confirmed` → `requested` | customer |
-| `emergency-provider-cancel` | `accepted` … `confirmed` → `requested` | provider |
-| `verification-revoked` | `accepted` / `awaiting_payment` → `cancelled` | system |
+| `requested` | `requested` | creation; reject-all; the customer's silence; a re-dispatch |
+| `emergency_offered` | `emergency_offered` | the round's first offer |
+| `matched` | — | the customer selecting an offer |
+| `declined` | the auto-decline | the answer window running out |
+| `cancelled` | — | the customer withdrawing it before choosing |
 
-Selection writes **two** events, `accepted` and then `awaiting_payment`, as every
-other mode does. `accepted` is where §1h's terms lock and where both the chat
-and the reveal open, so the timeline has to show that moment.
+The **booking is created at `accepted`** by the selection, against the chosen
+provider's own emergency listing (`select-offer`, a creation edge). It moves on
+to `awaiting_payment` in the same transaction, as every other mode does.
+Nothing in §Phase 17.1 or 17.2 changed shape.
 
-## 3. Who owns an emergency before anyone is chosen
+The owner weighed making the two columns nullable and rejected it. They are
+denormalised precisely so the accept prompt needs no join, and every
+provider-side query reads them.
 
-`Booking.listingId` and `providerProfileId` are NOT NULL. §Phase 17 item 2
-creates an emergency through `POST /v1/listings/:id/bookings`, which means from a
-listing. Until selection, those columns name the **origin listing** and
-nothing more:
+**When the chosen provider falls through, their booking closes and the request
+goes out again.**
 
-- `BookingService.authorize` gives the origin provider **no side** of the
-  booking. They cannot decline it, cancel it or read it as theirs.
-- Their `role=provider` bookings list excludes it.
-- They reach it through the emergency inbox on the same footing as every other
-  eligible provider.
+- A no-show closes the booking as `cancelled` via `provider-not-arrived`, and
+  its offer is marked `no_show`.
+- A provider cancelling closes it through §Phase 17.1's own `provider-cancel`
+  edge, with `cancelledByRole: provider` — the row §1f's cancellation rate
+  counts.
+- In both cases the request reopens with that provider excluded.
+- The next selection is a **new** booking under the same request and the same
+  fee. Each booking has exactly one provider for its whole life, so the one who
+  did not come keeps their own record of it.
 
-At selection, both columns are **re-pointed** to the chosen provider and that
-provider's own emergency listing, which `EmergencyOffer.listingId` records.
-Everything downstream — the payment step's bank details, the provider's own
-list, completion and the 7-day jobs — then reads the provider who is actually
-coming, through 17.1 code this slice did not change.
+**`emergency_offered` is reached by no booking edge.** It stays in
+`BookingStatus` (the API is additive-only), and `test/bookings-pricing.test.ts`
+asserts that no booking edge reaches it.
 
-The alternative was to make both columns nullable until selection. That would
-have put a null check on every 17.1 and 17.2 path, so it was rejected.
+## 3. How offers coexist without racing
 
-## 4. How offers coexist without racing
+🔧 **Every eligible provider may offer — owner's decision (question 4).** §1c:
+the first acceptance opens a window "during which **every other eligible
+provider may also accept**… At the end of it the customer is shown up to three
+offers." "Up to three" caps what is *shown*, not who may bid. Capping admission
+would reintroduce the race Round 15 removed, where the fastest three win rather
+than the nearest or cheapest.
 
-Each offer is admitted by **one conditional increment** of
-`Booking.emergencyOfferCount`, with this `WHERE`:
+**Admission.** Each offer takes the request row through a conditional update
+whose `WHERE` carries the open statuses and both windows. Postgres locks the
+row for the first writer and re-evaluates the second writer's `WHERE` against
+the committed row. So two simultaneous offers are serialised: both are
+admitted, and the status moves once. No raw SQL and no explicit lock are
+needed.
 
-- status is `requested` or `emergency_offered`,
-- the count is below 3,
-- the overall window is still open,
-- the collection window is unset or still open.
+**One bid per provider.** A partial unique index allows one `open` offer per
+provider per request. It is hand-written in the migration, because Prisma
+cannot express a partial index, and it is partial because a provider released
+by the customer's silence may answer the re-broadcast.
 
-Postgres locks the row for the first writer, then re-evaluates the second
-writer's `WHERE` against the committed row. So two simultaneous offers are
-serialised, not raced: both are admitted, the status moves once, and a fourth
-offer is refused by the same predicate. This needs no row lock and no raw SQL.
+**Which three the customer sees — our ranking, because the plan names none:**
 
-A **partial unique index** — one `open` offer per provider per request —
-stops a double tap producing two bids. It is hand-written in the migration
-because Prisma cannot express it. It has to be partial: a provider released by
-the customer's silence is not excluded, and may answer the next broadcast.
+1. **Callout fee, lowest first.**
+2. **The provider's own arrival estimate, soonest first** — the nearest thing to
+   "nearest" that exists.
+3. **The earlier offer**, so a tie is broken by something both sides can see.
 
-The one atomic claim left in the flow is on the offer the customer **selects**
-(`open → selected`, conditional). The claim, the release of the other offers,
-the dispatch fee, the re-pointing and both status events are one transaction.
-The test forces a failure after the claim and asserts the spy was reached — the
-17.2 pattern — then checks that no fee, no claim and no status change survived.
+The paragraph that sets the window says what it is for: the winner should be
+"whoever was nearest or cheapest". Nearest cannot be computed (question 3), so
+the estimate stands in for it. An offer outside the three cannot be selected,
+and is released as `not_selected` when the customer chooses, like any other
+unchosen offer.
 
-## 5. The clocks
+**The one atomic claim** is on the offer the customer selects. Everything
+selection does is one transaction: the claim, the release of every other offer,
+the dispatch fee, the request moving to `matched`, the booking row and both
+status events. The test forces a failure after the claim, asserts the spy was
+reached (the 17.2 pattern), and then checks that no booking, no fee and no
+claim survived.
+
+## 4. The clocks
 
 | Clock | Source | Stored as |
 |---|---|---|
-| Overall answer window | `Category.emergencyAcceptWindowMinutes` (30 for all four, Round 22) | `emergencyWindowEndsAt`, stamped at creation |
+| Overall answer window | `Category.emergencyAcceptWindowMinutes` (30 for all four, Round 22) | `EmergencyRequest.windowEndsAt`, stamped at creation |
 | Collection window | §1c flat: 90 seconds | `offerCollectionClosesAt`, set by a round's first offer |
-| Customer's choice | §1c flat: 5 minutes after the collection closes | derived from `offerCollectionClosesAt` |
-| "Provider has not arrived" | the category's answer window, measured from selection (`amountSetAt`) | derived |
-| Reveal expiry | §1c flat: 24 hours after the terminal state | derived from the terminal stamp |
+| Customer's choice | §1c flat: 5 minutes after collection closes | derived |
+| "Provider has not arrived" | the category's window, from the booking's `amountSetAt` | derived |
+| Reveal expiry | §1c flat: 24 hours after the terminal state | derived |
 
-The per-category number is never a literal. Clause 17's test changes the
-seeded window and watches the deadline move with it. The flat numbers live in
-`windows.ts`, each beside the sentence of §1c that sets it.
+- The per-category number is never a literal. Clause 17's test changes the
+  seeded window and watches the next request's deadline move with it.
+- The flat numbers live in `windows.ts`, each beside its §1c sentence.
+- Both sweeps tick every **30 seconds**, because a five-minute tick could
+  double the customer's five-minute choice.
 
-Both sweeps tick every **30 seconds**, not the five minutes the 17.1 jobs use.
-A five-minute tick could double the customer's five-minute choice window.
+🔧 **A re-dispatch after selection opens a fresh answer window — agreed with
+the owner.** The Done-when's "without resetting the overall window" holds for
+the two re-broadcasts **before** selection: reject-all and the customer's
+silence. After selection the original window has long run out — a no-show is
+only reportable once it has — so re-broadcasting into it would decline the
+request on arrival.
 
-🔧 **A re-dispatch after selection opens a fresh answer window.** The Done-when
-says an unanswered set of offers re-broadcasts "without resetting the overall
-window", and that holds for the two re-broadcasts **before** selection (reject-all
-and the customer's silence). After selection, the original window has long run
-out — a no-show can only be reported once it has — so re-broadcasting into it
-would decline the request on arrival. That would dead-end exactly the customer
-§1h says must never be dead-ended. The window is read from the category again
-and is never a literal. This was raised with the verification session.
-
-## 6. The dispatch fee
+## 5. The dispatch fee
 
 The fee is a `PaymentSubmission` with `purpose: emergency_dispatch_fee` and
-amount 20000 laari. It is created **owed** (`submittedAt` null) inside the
-selection transaction. The customer settles it through §Phase 8a's own proof
-upload and submit, reached from `/v1/users/me/dispatch-fees/…`. Those routes
-first check that the row really is a dispatch fee, so they cannot become a
-second door onto a subscription payment.
+amount 20000 laari, **linked to the request**. It is created owed
+(`submittedAt` null) inside the selection transaction.
 
-**Unsettled** means owed with no proof submitted. The check sits in
-`BookingService.bookableListing` and in emergency creation, so it covers every
-creation path. Submitting proof lifts it with the row still `pending`, and no
-admin is involved.
+- **One emergency, one fee.** A re-dispatch finds it already set and creates
+  nothing.
+- **Settling it.** The customer uses §Phase 8a's own proof upload and submit,
+  reached from `/v1/users/me/dispatch-fees/…`. Those routes first check that
+  the row really is a dispatch fee, so they cannot become a second door onto a
+  subscription payment.
+- **The block.** *Unsettled* means owed with no proof submitted. It is checked
+  in `BookingService.bookableListing` (slot and request) and in emergency
+  creation. Submitting proof lifts it while the row is still `pending`, and no
+  admin is involved.
+- 🔧 **An admin rejecting the proof does not re-impose the block.** The plan
+  calls a fabricated receipt "a moderation matter", and never says a rejection
+  blocks again.
 
-🔧 **An admin rejecting the proof afterwards does not re-impose the block.**
-The plan says the admin "acts on anything false" and calls a fabricated receipt
-"a moderation matter". It does not say a rejection blocks again, and the block
-exists to avoid making the customer wait on the admin queue.
+Open, and recorded rather than decided:
 
-**One emergency, one fee.** A no-show re-dispatch and a provider-cancel
-re-dispatch both find `dispatchFeeSubmissionId` already set and create nothing.
+- A booking auto-cancelled by the revocation cascade keeps its fee owed. §1c
+  covers no-shows and says nothing about a platform-side cancellation.
+- §Phase 10a part 2's admin confirm path resolves the payer to a provider and
+  would refuse a customer. That is ledger **P17-6**.
 
-Open, and not decided here: a booking **auto-cancelled by the revocation
-cascade** keeps its fee owed. §1c makes the fee non-refundable on a no-show, but
-says nothing about a platform-side cancellation. The fee stays owed, and that
-choice is in the queries sent to the verification session.
-
-**§Phase 10a part 2's admin confirm does not handle this purpose.**
-`SubscriptionService.confirmSubmission` resolves the payer to a provider profile
-and would refuse a customer. That admin path is deferred with the rest of the
-panel (ledger **P10-DEFER**), and ledger **P17-6** records what it must add.
-
-## 7. The reveal
+## 6. The reveal
 
 `contact-reveal.ts` is the only code in the system that reads `phoneE164` on
-behalf of another user. It checks each condition with its own error code, so a
-test can see each one refuse for the right reason:
+behalf of another user. Each condition has its own refusal:
 
 | Condition | Refusal |
 |---|---|
@@ -174,107 +178,99 @@ test can see each one refuse for the right reason:
 | 6 24 hours after terminal | `CONTACT_REVEAL_EXPIRED` |
 | 7 logged | a `ContactRevealEvent` row, IDs only |
 
-Conditions 3 and 4 have to be read together. The customer's call **is** the
-reveal. The provider's call is how the provider sees the customer's number
-afterwards: it is refused while no customer reveal exists, because that would be
-provider-initiated, and answered once one does. Both calls return both numbers.
+**Condition 2 in this model.** An emergency booking begins at `accepted`, so a
+broadcast has no booking to reveal on at all: the endpoint answers 404 to a
+request id. The guard is still enforced, and the test proves it by forcing a
+booking back to `requested`.
 
-**The kill switch is a `KillSwitch` row keyed by a closed enum**, because
-§Phase 10b calls these "incident controls, not a general feature-flag
-framework". No row means not engaged. Only the one switch this slice checks is
-defined; §Phase 10b adds the rest and the admin screen. A check against a flag
-with no admin surface is the intended state (§0.0 item 20).
+**Conditions 3 and 4 are read together.** The customer's call *is* the reveal.
+A provider's call before that is provider-initiated and is refused. After it,
+the provider's call is how they see the customer's number, and both calls
+return both numbers.
 
-## 8. The revocation cascade
+**The kill switch** is a `KillSwitch` row keyed by a closed enum. §Phase 10b
+says these are "incident controls, not a general feature-flag framework". A
+missing row means the switch is not engaged. §Phase 10b adds the admin surface
+and the other switches.
 
-§Phase 17 item 21 says "drops below `silver`". That is Round 9's wording, and
-Round 15 made the emergency gate per-category. The cascade therefore evaluates
-each in-flight emergency against **its own category's**
-`emergencyMinimumTier`, through `emergencyEligibility`, the one place the
-composed rule is written. The effect: a gold electrician demoted to silver loses
-Electrical work and keeps AC Repair work.
+## 7. The revocation cascade
+
+§Phase 17 item 21 says "below `silver`". That is Round 9's wording. The cascade
+instead evaluates each in-flight emergency against **its own category's**
+`emergencyMinimumTier`, through `emergencyEligibility`, as invariant 1c
+requires. The owner agreed.
 
 - At `accepted` or `awaiting_payment`, the booking auto-cancels and both parties
   are notified.
 - Later than that, a system-filed Report (`provider_verification_revoked`, a new
-  enum value) routes it to admin, the booking is left untouched, and at most one
-  Report is filed per booking.
+  enum value) is raised and nothing else moves. At most one is filed per
+  booking.
 
-Nothing in the codebase changes a tier yet, because that is §Phase 10a part 2's
-verification queue. So `onProviderTierChanged` is reached only from tests, the
-same position as `ListingService.reevaluateEmergencyEligibility` (ledger P8-3).
-Ledger **P17-5** records the wiring.
+Nothing changes a tier yet, so this is reached from tests alone. Ledger
+**P17-5** records the missing trigger; its twin is P8-3.
 
-## 9. The broadcast
+## 8. The broadcast, and the pass
 
-The rule is: an emergency-capable category, a published and active emergency
-listing with a live service area on the job's island, the category's tier,
-`acceptingNewCustomers`, not suspended, not excluded, and not the customer.
+**The broadcast rule**, computed in two halves:
 
-It is computed in two halves:
+- **By listing.** Only a listing query can see the island and the `isEmergency`
+  flag.
+- **By provider.** The candidates then go through `findVisibleProviders`, with
+  the category's tier as the minimum. That helper gained one additive filter,
+  `ids`, so suspension stays an input to the single shared helper (§1a).
 
-- **By listing.** Only a query over listings can see the island and the
-  `isEmergency` flag.
-- **By provider.** The candidates go through `findVisibleProviders`, with the
-  category's tier as the minimum. That helper gained one additive filter, `ids`,
-  so suspension stays an input to the single shared helper (§1a) instead of a
-  second copy inside the dispatcher.
+Pages go out through §Phase 3c's `emergency_dispatch` kind at `emergency`
+urgency, with the request's id as `subjectId`. Clause 5's test reads those rows
+back.
 
-The broadcast goes out through §Phase 3c's `emergency_dispatch` kind at
-`emergency` urgency, which sends push and email together. Every send is a
-`PushDispatch` row, and the clause 5 test reads those rows back.
+🔧 **A pass is recorded and not counted — owner's decision (question 2).**
+`PATCH /v1/emergency-requests/:id/pass` writes an `EmergencyPass`.
 
-## 10. Questions raised with the verification session
+- It takes the request off that provider's list and out of any re-broadcast of
+  it, and tells nobody.
+- §1f's acceptance rate does not read it. That rule was written for bookings a
+  provider was targeted with, and a broadcast reaches everyone eligible whether
+  they wanted it or not.
+- The record keeps a signal for tuning eligibility later.
 
-Each question has a recommended option and was sent on 2026-09-28. The build
-follows the recommendation. Every one can be reversed without touching the
-machine.
+## 9. The owner's four decisions, 2026-09-28
 
-1. **Emergency Flow picks a category, not a listing.** The plan creates
-   emergencies from a listing, and clause 3's "by an unverified provider" only
-   makes sense with a listing. *Built:* the listing-scoped endpoint only. The
-   screen opens with the listing's category fixed. Round 23's Home/Explore entry
-   arrives with §Phase 16 and needs its own plan line.
-2. **Provider Emergency's "Decline this request"** says a pass "is counted in
-   your acceptance rate". The plan has no broadcast decline, and §1f does not
-   say whether a pass counts. *Built:* no server-side decline. The pass hides the
-   request on the device, and the acceptance-rate sentence goes in a correction
-   prompt.
-3. **Offer cards show "1.2 km"**, and §1c lists distance too, but the system
-   knows islands and has no coordinates. *Built:* distance is omitted, and the
-   card shows the island.
-4. **"At most three."** A fourth offer is refused (`EMERGENCY_OFFERS_FULL`) so
-   that provider is released at once, and the window still closes at 90 seconds.
+| # | Question | Decision |
+|---|---|---|
+| 1 | Create by listing or by category? | **By category and island**, as a request; the booking is created at selection (§2). *Overturned the build's first recommendation.* |
+| 2 | Provider "Decline this request"? | **Record the pass, exclude it from acceptance rate** (§8). The artboard's acceptance-rate sentence gets a correction prompt. |
+| 3 | "1.2 km" distance? | **Island-relative only.** No coordinates exist anywhere in the schema. Correction prompt. |
+| 4 | "At most three" offers? | **Admit every offer, show three**, ranked (§3). *Overturned the build's first recommendation.* |
 
-Also decided without asking:
+Also confirmed: the per-category tier bar in the cascade; the fresh window on a
+post-selection re-dispatch; and a null rating until §Phase 11.
 
-- **Rating is null until §Phase 11.** A number there would be invented.
-- **Emergency jobs need both the description and the island.** The island is
-  what the broadcast matches on, and the description is all a provider has to
-  price a callout from.
-- **The emergency accept is not in the offline queue** (§0.0 item 14). Offline,
-  the control is replaced by a notice with a live retry.
+## 10. What this slice did not build
 
-## 11. What this slice did not build
-
-- **The Home/Explore emergency entry** — §Phase 16, per question 1.
+- **The Home and Explore entry points.** §Phase 16 and §Phase 15 place the
+  emergency action. The request screen is routable now.
 - **Admin confirmation of a dispatch fee** — §Phase 10a part 2 (P17-6).
 - **The kill switch's admin surface** — §Phase 10b.
-- **Real delivery of the new notification events** — §Phase 19. The seam fires
-  them, as it does 17.1's (P17-1). `contact_revealed` has no push kind yet.
-- **§1f's conduct numbers.** `EmergencyOffer.state = no_show` and the status
-  events are what §Phase 11 will read. This slice records them and computes
-  nothing.
+- **Real delivery of the new events** — §Phase 19 (P17-1, P17-7).
+- **§1f's numbers.** No-shows, cancellations and passes are recorded here, and
+  §Phase 11 computes the rates from them.
+- **An open request in the account-deletion blocker.** A request with no chosen
+  provider owes nobody a visit and closes itself within its window. It is noted
+  here in case §Phase 3's deletion pipeline should wait for one anyway.
 
-## 12. How to verify it
+## 11. How to verify it
 
 ```
 cd backend && npx vitest run test/phase17-3-done-when.test.ts
 scripts/verify.sh
 ```
 
-`test/phase17-3-done-when.test.ts` has one `describe` per clause, numbered in the
-plan's order. It also checks each reveal condition individually, and runs a
-phone-absence sweep over every endpoint this slice adds, checking both values
-and keys. Each broadcast test uses a random island, so its recipients are its
-own even inside one run.
+`test/phase17-3-done-when.test.ts` has one `describe` per clause, in the plan's
+order. It also covers:
+
+- each reveal condition individually;
+- the pass;
+- a phone-absence sweep over every endpoint this slice adds, checking both
+  values and key names.
+
+Each test uses a random island, so its broadcast recipients are its own.

@@ -38,9 +38,10 @@ import { CONTACT_REVEAL_AFTER_TERMINAL_HOURS } from './windows.js';
  * §0.3 once said emergency contact unlocks at `payment_claimed`; §0.0's
  * precedence rule gives it to §Phase 17 item 19 and §1c, which both say
  * **`accepted` or later**. Read as: the booking was accepted (`amountSetAt`
- * is stamped at `accepted` and cleared by a re-dispatch) and is not back at a
- * pre-acceptance status. A booking cancelled while still a broadcast was
- * never accepted and never reveals.
+ * is stamped at `accepted`) and is not at a pre-acceptance status. An
+ * emergency booking only ever *begins* at `accepted` — the broadcast before it
+ * is an `EmergencyRequest`, not a booking — so a provider who offered and was
+ * not chosen has no booking to reveal on at all.
  *
  * ## Condition 3 and condition 4 together
  *
@@ -73,15 +74,13 @@ export function databaseKillSwitches(prisma: PrismaClient): KillSwitches {
   };
 }
 
-/** Statuses before acceptance. A booking back at one of these after a re-dispatch has no reveal. */
+/** Statuses before acceptance. Defensive for emergency, which begins at `accepted`. */
 const PRE_ACCEPTANCE: readonly BookingStatus[] = [
   'requested',
   'emergency_offered',
   'awaiting_quote',
   'quote_offered',
 ];
-
-const PRE_SELECTION: readonly BookingStatus[] = ['requested', 'emergency_offered'];
 
 /** When the booking reached its terminal state — the stamp for whichever ending it had. */
 function terminalAt(booking: BookingRow): Date | null {
@@ -185,10 +184,7 @@ export class ContactRevealService {
         ? null
         : booking.customerId === userId
           ? ('customer' as const)
-          : booking.providerProfile.user.id === userId &&
-              // An emergency still being broadcast has no provider side yet —
-              // its provider columns only name the listing it came from.
-              !(booking.bookingMode === 'emergency' && PRE_SELECTION.includes(booking.status))
+          : booking.providerProfile.user.id === userId
             ? ('provider' as const)
             : null;
     if (booking === null || role === null) {

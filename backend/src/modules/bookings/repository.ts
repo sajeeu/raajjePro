@@ -142,18 +142,7 @@ export class BookingRepository {
         : // A user with no provider profile has no provider-side bookings, and
           // an impossible filter is the honest way to say so — it returns an
           // empty page rather than everybody's bookings.
-          {
-            providerProfileId: query.providerProfileId ?? '00000000-0000-0000-0000-000000000000',
-            // 🔧 §Phase 17.3. An emergency nobody has been chosen for yet is
-            // not this provider's booking, even though its provider columns
-            // name the listing it was raised from (they are NOT NULL, and are
-            // re-pointed at selection). It reaches every eligible provider
-            // through the emergency inbox instead, on the same footing.
-            NOT: {
-              bookingMode: 'emergency',
-              status: { in: ['requested', 'emergency_offered'] },
-            },
-          };
+          { providerProfileId: query.providerProfileId ?? '00000000-0000-0000-0000-000000000000' };
 
     return db.booking.findMany({
       where: {
@@ -236,43 +225,6 @@ export class BookingRepository {
       where: { status: 'quote_offered', quoteExpiresAt: { not: null, lte: now } },
       select: { id: true },
       orderBy: { quoteExpiresAt: 'asc' },
-      take: limit,
-    });
-  }
-
-  /**
-   * §Phase 17.3: an emergency still unanswered at the category's
-   * `emergencyAcceptWindowMinutes`, stamped at creation as
-   * `emergencyWindowEndsAt`. Both pre-selection statuses — the window
-   * "governs the whole request".
-   */
-  findEmergencyWindowTimeouts(now: Date, limit: number): Promise<{ id: string }[]> {
-    return this.prisma.booking.findMany({
-      where: {
-        bookingMode: 'emergency',
-        status: { in: ['requested', 'emergency_offered'] },
-        emergencyWindowEndsAt: { not: null, lte: now },
-      },
-      select: { id: true },
-      orderBy: { emergencyWindowEndsAt: 'asc' },
-      take: limit,
-    });
-  }
-
-  /**
-   * §Phase 17.3: offers the customer has not chosen between, five minutes
-   * after the collection window closed. The caller passes `closedBefore` as
-   * `now − 5 minutes`.
-   */
-  findOfferChoiceTimeouts(closedBefore: Date, limit: number): Promise<{ id: string }[]> {
-    return this.prisma.booking.findMany({
-      where: {
-        bookingMode: 'emergency',
-        status: 'emergency_offered',
-        offerCollectionClosesAt: { not: null, lte: closedBefore },
-      },
-      select: { id: true },
-      orderBy: { offerCollectionClosesAt: 'asc' },
       take: limit,
     });
   }

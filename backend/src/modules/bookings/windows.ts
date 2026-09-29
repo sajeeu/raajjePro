@@ -73,8 +73,12 @@ export const OFFER_COLLECTION_SECONDS = 90;
 
 /**
  * §1c: "the customer is shown **up to three offers** side by side".
+ *
+ * 🔧 A **display** cap, not an admission cap (owner's decision, 2026-09-28):
+ * "every other eligible provider may also accept", and the customer is shown
+ * the best three. `emergency.ts`'s `shownOffers` states the ranking.
  */
-export const MAX_OFFERS_PER_ROUND = 3;
+export const MAX_OFFERS_SHOWN = 3;
 
 /**
  * §1c: "**Customer silence** → the offer expires after **5 minutes**,

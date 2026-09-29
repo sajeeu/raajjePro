@@ -13,12 +13,14 @@ import {
   completionAnswerBody,
   createBookingBody,
   declineBody,
+  createEmergencyRequestBody,
   declineQuoteBody,
   dispatchFeeParams,
   disputeBody,
   emergencyAcceptBody,
   emergencyOfferResponseBody,
   listBookingsQuery,
+  emergencyRequestParams,
   listingParams,
   offerQuoteBody,
   proposeAmendmentBody,
@@ -101,16 +103,10 @@ export function registerBookingRoutes(app: FastifyInstance): void {
       // One route, two shapes, and the **listing** decides which is valid —
       // the service refuses a mismatch by name (`BOOKING_MODE_NOT_AVAILABLE`).
       // Reading `timeSlotId` here only routes the call; it grants nothing.
-      const userId = userOf(request).id;
       const booking =
         'timeSlotId' in body
-          ? await app.bookings.createSlotBooking(userId, request.params.id, body)
-          : 'emergency' in body
-            ? // §Phase 17.3. The same route and the same guards — email
-              // verified, not frozen, idempotency key — plus the emergency
-              // rate limit, which is a business rule and lives in the service.
-              await app.emergency.create(userId, request.params.id, body)
-            : await app.bookings.createRequestBooking(userId, request.params.id, body);
+          ? await app.bookings.createSlotBooking(userOf(request).id, request.params.id, body)
+          : await app.bookings.createRequestBooking(userOf(request).id, request.params.id, body);
       return reply.code(201).send(ok(booking));
     },
   );
@@ -231,6 +227,44 @@ export function registerBookingRoutes(app: FastifyInstance): void {
   );
 
   // -- §Phase 17.3, emergency dispatch ----------------------------------------
+  //
+  // 🔧 An emergency is a **request**, raised by category and island, until the
+  // customer chooses an offer — owner's decision 2026-09-28, following Round
+  // 23's "dispatch never targets a provider". §Phase 17 item 2's
+  // listing-scoped emergency clause is pre-Round-23 residue; the verbs below
+  // keep the plan's names (`emergency-accept`, `emergency-offer-response`).
+
+  // Who may call: an email-verified, non-frozen customer — the same guards as
+  // every booking creation, for the same reasons (§1c's access table; §Phase
+  // 3's freeze). Idempotency key required: a double tap on a weak connection
+  // must not page every plumber on the island twice or spend two of three
+  // requests a day.
+  r.post(
+    '/v1/emergency-requests',
+    {
+      schema: { body: createEmergencyRequestBody },
+      preValidation: [requireAuth, requireEmailVerified, requireActiveAccount],
+      config: { idempotency: { operation: 'emergency.create' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.code(201).send(ok(await app.emergency.create(userOf(request).id, request.body))),
+  );
+
+  // Who may call: the customer who raised it. Anyone else gets 404.
+  r.get(
+    '/v1/emergency-requests/:id',
+    { schema: { params: emergencyRequestParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.readForCustomer(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the signed-in user, for their own requests.
+  r.get(
+    '/v1/users/me/emergency-requests',
+    { preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.listForCustomer(userOf(request).id))),
+  );
 
   // Who may call: a provider the broadcast reaches — capable category, the
   // category's own tier bar, a live emergency listing on the job's island,
@@ -241,11 +275,11 @@ export function registerBookingRoutes(app: FastifyInstance): void {
   // promise. And **not** in the offline queue (§0.0 item 14) — a replayed offer
   // would commit a provider to numbers worked out somewhere else.
   r.patch(
-    '/v1/bookings/:id/emergency-accept',
+    '/v1/emergency-requests/:id/emergency-accept',
     {
-      schema: { params: bookingParams, body: emergencyAcceptBody },
+      schema: { params: emergencyRequestParams, body: emergencyAcceptBody },
       preValidation: requireAuth,
-      config: { idempotency: { operation: 'booking.emergency-accept' }, ...bookingRate },
+      config: { idempotency: { operation: 'emergency.accept' }, ...bookingRate },
     },
     async (request, reply) =>
       reply.send(
@@ -253,14 +287,24 @@ export function registerBookingRoutes(app: FastifyInstance): void {
       ),
   );
 
-  // Who may call: the customer on this emergency, once the collection window
-  // has closed and inside their five minutes. Selecting incurs the dispatch fee.
+  // Who may call: a provider the broadcast reaches. Recorded, never counted
+  // in the acceptance rate, and nobody is told (owner, 2026-09-28).
   r.patch(
-    '/v1/bookings/:id/emergency-offer-response',
+    '/v1/emergency-requests/:id/pass',
+    { schema: { params: emergencyRequestParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.pass(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the customer, once the collection window has closed and
+  // inside their five minutes. Selecting creates the booking and incurs the
+  // dispatch fee.
+  r.patch(
+    '/v1/emergency-requests/:id/emergency-offer-response',
     {
-      schema: { params: bookingParams, body: emergencyOfferResponseBody },
+      schema: { params: emergencyRequestParams, body: emergencyOfferResponseBody },
       preValidation: requireAuth,
-      config: { idempotency: { operation: 'booking.emergency-offer-response' }, ...bookingRate },
+      config: { idempotency: { operation: 'emergency.offer-response' }, ...bookingRate },
     },
     async (request, reply) =>
       reply.send(
@@ -268,8 +312,17 @@ export function registerBookingRoutes(app: FastifyInstance): void {
       ),
   );
 
-  // Who may call: the customer on this emergency, once the category's answer
-  // window has passed since they chose. No admin in the loop (Round 15).
+  // Who may call: the customer, before anyone is chosen. Nothing is charged.
+  r.patch(
+    '/v1/emergency-requests/:id/cancel',
+    { schema: { params: emergencyRequestParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.emergency.cancel(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the customer on an emergency booking, once the category's
+  // answer window has passed since they chose. No admin in the loop (Round 15).
+  // Answers with the request, which has gone out again.
   r.patch(
     '/v1/bookings/:id/provider-not-arrived',
     { schema: { params: bookingParams }, preValidation: requireAuth, config: bookingRate },
@@ -288,7 +341,7 @@ export function registerBookingRoutes(app: FastifyInstance): void {
   // on it — so a provider who was not chosen can see that they were released.
   r.get(
     '/v1/providers/me/emergency-requests/:id',
-    { schema: { params: bookingParams }, preValidation: requireAuth, config: bookingRate },
+    { schema: { params: emergencyRequestParams }, preValidation: requireAuth, config: bookingRate },
     async (request, reply) =>
       reply.send(ok(await app.emergency.readForProvider(userOf(request).id, request.params.id))),
   );

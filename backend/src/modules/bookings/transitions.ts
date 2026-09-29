@@ -18,7 +18,8 @@ import type { BookingActorRole, BookingStatus } from '../../generated/prisma/enu
  *
  * A slice adds rows to this table; it never adds a second table — §Phase
  * 17.2 added the quote edges below exactly that way, and 🔧 §Phase 17.3 added
- * the emergency edges, the only ones that reach `emergency_offered`.
+ * the emergency edges. **No edge reaches `emergency_offered`**: it is the
+ * emergency *request's* state, not a booking's — see the emergency block.
  */
 export interface Edge {
   /** The machine's own name for this edge. Stored on every status event. */
@@ -159,94 +160,35 @@ export const EDGES: readonly Edge[] = [
     actors: ['system'],
   },
 
-  // -- §Phase 17.3, emergency dispatch ----------------------------------------
+  // -- §Phase 17.3, emergency -------------------------------------------------
   //
-  // §1c: "**Emergency** bookings insert `emergency_offered` between
-  // `requested` and `awaiting_payment`". Unlike the request path, an emergency
-  // really does start at `requested` — it is waiting for *any* eligible
-  // provider to answer, on the category's `emergencyAcceptWindowMinutes`.
-  {
-    transition: 'create-emergency',
-    from: [],
-    to: 'requested',
-    actors: ['customer'],
-  },
-  /**
-   * The first offer of a round. Later offers inside the 90-second window add
-   * `EmergencyOffer` rows and move nothing — "acceptances no longer race", so
-   * there is no second transition for a second provider to lose.
-   */
-  {
-    transition: 'emergency-offer',
-    from: ['requested'],
-    to: 'emergency_offered',
-    actors: ['provider'],
-  },
-  /**
-   * The customer picks one. Written as `accepted` and then `amount-set`, the
-   * two events every other mode writes, because `accepted` is where §1h's
-   * terms lock and where §1c's contact reveal and chat both open.
-   */
+  // 🔧 §1c inserts `emergency_offered` "between `requested` and
+  // `awaiting_payment`", and neither of those two pre-selection states is a
+  // booking's here: an emergency booking cannot exist before a provider is
+  // chosen, because `listingId` and `providerProfileId` are NOT NULL and the
+  // request targets no provider (Round 23; owner's decision 2026-09-28). The
+  // broadcast half lives on `EmergencyRequest` with the same names, and the
+  // booking is **created at `accepted`** by the customer's selection.
+  // `emergency_offered` therefore stays in this enum's vocabulary and no
+  // booking edge reaches it.
   {
     transition: 'select-offer',
-    from: ['emergency_offered'],
+    from: [],
     to: 'accepted',
     actors: ['customer'],
-  },
-  /** §Phase 17 item 4: "Reject-all → back to `requested`, re-broadcast". */
-  {
-    transition: 'reject-all-offers',
-    from: ['emergency_offered'],
-    to: 'requested',
-    actors: ['customer'],
-  },
-  /**
-   * §Phase 17 item 4's offer-expiry job: "a collection window whose customer
-   * has not responded 5 minutes after it closes → release all offers, return
-   * to `requested`, re-broadcast."
-   */
-  {
-    transition: 'offer-choice-timeout',
-    from: ['emergency_offered'],
-    to: 'requested',
-    actors: ['system'],
-  },
-  /**
-   * §Phase 17 item 4's request-expiry job, on the category's
-   * `emergencyAcceptWindowMinutes`. From `emergency_offered` too: "if the
-   * window expires with no accepted offer: the booking auto-declines… the
-   * window governs the whole request, so a customer who rejects three offers
-   * has spent that time." `declined` with a `system` actor, like every other
-   * timeout, so §1f reads it as a timeout and not a refusal.
-   */
-  {
-    transition: 'emergency-window-timeout',
-    from: ['requested', 'emergency_offered'],
-    to: 'declined',
-    actors: ['system'],
   },
   /**
    * Round 15: "the customer may mark 'provider has not arrived' … This
    * releases the provider, records a **no-show** against their conduct
-   * record, and **re-broadcasts immediately** excluding them."
+   * record, and **re-broadcasts immediately** excluding them." The booking
+   * closes on the no-show provider's own record; the request goes out again
+   * and the next selection is a new booking.
    */
   {
     transition: 'provider-not-arrived',
     from: ['awaiting_payment', 'payment_claimed', 'confirmed'],
-    to: 'requested',
+    to: 'cancelled',
     actors: ['customer'],
-  },
-  /**
-   * §1h: "**Emergency bookings re-broadcast** through the normal §1c dispatch,
-   * excluding the cancelling provider. No new dispatch fee is incurred." The
-   * emergency counterpart of `provider-cancel`, which lands on `cancelled` —
-   * an emergency must never dead-end on a provider walking away.
-   */
-  {
-    transition: 'emergency-provider-cancel',
-    from: ['accepted', 'awaiting_payment', 'payment_claimed', 'confirmed'],
-    to: 'requested',
-    actors: ['provider'],
   },
   /**
    * §Phase 17 item 21, the half that cancels: "at `accepted` or
@@ -334,11 +276,7 @@ export const EDGES: readonly Edge[] = [
    */
   {
     transition: 'cancel',
-    // 🔧 `emergency_offered` added by §Phase 17.3 — `Emergency Flow.dc.html`
-    // offers "Cancel request" while offers are still arriving, and says
-    // nothing has been charged, which is true: the fee is incurred only by
-    // selecting one.
-    from: ['requested', 'awaiting_quote', 'emergency_offered', 'accepted', 'awaiting_payment'],
+    from: ['requested', 'awaiting_quote', 'accepted', 'awaiting_payment'],
     to: 'cancelled',
     actors: ['customer'],
   },

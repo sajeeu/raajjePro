@@ -90,39 +90,31 @@ export const createRequestBookingBody = z
  * matches neither is refused with both branches' reasons, naming the missing
  * `timeSlotId` and the missing window.
  */
+export const createBookingBody = z.union([createSlotBookingBody, createRequestBookingBody]);
+
 /**
- * §Phase 17.3 — `Emergency Flow.dc.html`'s form: "What's wrong?" and
- * "Where?". §1c: "Customer submits an ASAP request — no slot, no window —
- * with job details and location."
+ * `POST /v1/emergency-requests` — §Phase 17.3, `Emergency Flow.dc.html`'s
+ * form: "What kind of emergency?", "What's wrong?" and "Where?". §1c:
+ * "Customer submits an ASAP request — no slot, no window — with job details
+ * and location."
  *
- * **Both are required**, unlike the request form's job description, because
- * both are load-bearing here: the island is what the broadcast matches on
- * (by id, never by name — §0.0 item 12), and the description is the whole of
- * what a provider has to price a callout fee from before they answer. The
- * `emergency: true` literal is what routes the body; the listing still has to
- * be one that takes emergency requests, which the service checks.
+ * Raised by **category and island, never against a listing** — Round 23,
+ * "dispatch never targets a provider" (owner's decision 2026-09-28). All three
+ * are required: the category and the island are what the broadcast matches
+ * on (the island by id, never by name — §0.0 item 12), and the description is
+ * the whole of what a provider has to price a callout fee from.
  */
-export const createEmergencyBookingBody = z.object({
-  emergency: z.literal(true),
-  jobNotes: z.string().trim().min(1).max(2000),
+export const createEmergencyRequestBody = z.object({
+  categoryId: uuid,
   islandId: uuid,
+  jobNotes: z.string().trim().min(1).max(2000),
   addressDetail: z.string().trim().max(300).optional(),
 });
 
-/**
- * 🔧 Three shapes as of §Phase 17.3. The emergency shape is tried before the
- * request shape because it is the narrower of the two — it requires the
- * `emergency` literal, which the request shape would otherwise strip and then
- * refuse for having no window.
- */
-export const createBookingBody = z.union([
-  createSlotBookingBody,
-  createEmergencyBookingBody,
-  createRequestBookingBody,
-]);
+export const emergencyRequestParams = z.object({ id: uuid });
 
 /**
- * `PATCH /v1/bookings/:id/emergency-accept` — `Provider Emergency.dc.html`:
+ * `PATCH /v1/emergency-requests/:id/emergency-accept` — `Provider Emergency.dc.html`:
  * "Your callout fee" and "When can you get there?".
  *
  * Both required, in one call (Round 22). `etaMinutes` is whatever the
@@ -141,7 +133,7 @@ export const emergencyAcceptBody = z.object({
 });
 
 /**
- * `PATCH /v1/bookings/:id/emergency-offer-response` — pick one offer, or
+ * `PATCH /v1/emergency-requests/:id/emergency-offer-response` — pick one offer, or
  * reject them all. Exactly one of the two.
  */
 export const emergencyOfferResponseBody = z.union([

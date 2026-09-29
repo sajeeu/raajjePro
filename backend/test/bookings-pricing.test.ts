@@ -102,19 +102,19 @@ describe('Phase 17.1 — the status machine, at its edges', () => {
     }
   });
 
-  it('reaches every status in the vocabulary, now that every slice that owns one is built', () => {
-    // 🔧 This asserted a slice boundary: `emergency_offered` unreachable while
-    // §Phase 17.3 was unbuilt, after §Phase 17.2 had already opened the two
-    // quote statuses. 17.3 adds the emergency edges, so the boundary is gone
-    // and what is worth asserting is that `emergency_offered` is reached by
-    // the emergency path and by nothing else.
+  it('reaches the quote statuses, and leaves emergency_offered to the emergency request', () => {
+    // 🔧 This asserted a slice boundary while §Phase 17.3 was unbuilt. 17.3 is
+    // built, and `emergency_offered` is still unreached by any *booking* edge —
+    // deliberately: an emergency's pre-selection states live on
+    // `EmergencyRequest`, because a booking cannot exist before a provider is
+    // chosen (owner's decision 2026-09-28). The booking begins at `accepted`.
     const reachable = new Set(EDGES.map((e) => e.to));
     expect(reachable.has('awaiting_quote')).toBe(true);
     expect(reachable.has('quote_offered')).toBe(true);
-    expect(reachable.has('emergency_offered')).toBe(true);
-    expect(EDGES.filter((e) => e.to === 'emergency_offered').map((e) => e.transition)).toEqual([
-      'emergency-offer',
-    ]);
+    expect(reachable.has('emergency_offered')).toBe(false);
+    const created = EDGES.find((e) => e.transition === 'select-offer');
+    expect(created?.from).toEqual([]);
+    expect(created?.to).toBe('accepted');
   });
 
   it('reports a state problem before an actor problem', () => {
