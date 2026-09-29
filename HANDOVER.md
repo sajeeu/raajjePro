@@ -14,6 +14,14 @@ VS Code will offer the recommended extensions from `.vscode/extensions.json` —
 
 Then open Claude Code in the workspace. It reads `CLAUDE.md` at the root automatically, which carries every architectural invariant, so it starts with the same constraints it has here. **You do not need to re-explain the project.** `backend/CLAUDE.md` and `frontend/CLAUDE.md` scope themselves to their own trees and load on top of it.
 
+`.claude/settings.json` travels with the clone too, so a new machine does not
+spend its first day approving `npm test`. It holds only what this project
+actually runs — the verify scripts, npm, flutter, docker compose, git, and the
+ordinary read-only shell — and never a credential. Per-machine grants belong in
+`.claude/settings.local.json`, which stays ignored and overrides it locally.
+**If you want pushes to be approved each time, delete the `Bash(git push:*)`
+line**; it is the one rule in there that can do something irreversible.
+
 Then the toolchain. Phase 0 is built, so a checkout needs Node 22, Docker with Compose, and Flutter 3.47 stable on your `PATH` (`export PATH="$HOME/flutter/bin:$PATH"` in your shell rc — the pre-commit hook runs `dart format` and `scripts/verify.sh` runs `flutter analyze`, and both need it).
 
 🔧 **One Android SDK quirk, if the app will not build locally.** `frontend/android/app/build.gradle.kts` pins `compileSdk = 37`, which `flutter_secure_storage` 11 requires. The SDK publishes that platform as **`platforms;android-37.0`** — minor API levels are a 2025 change — but AGP 9.1 looks for a directory named `android-37`. On this machine the two are bridged by copying the installed `android-37.0` directory to `android-37`; the copy says so in its own `source.properties`. **CI needs none of this** — a fresh runner resolves the platform on its own, verified on the Phase 3 merge, which built `app-debug.apk` in 220 seconds. So this is a local-machine fix, not a project dependency:

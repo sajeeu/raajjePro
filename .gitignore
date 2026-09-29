@@ -23,10 +23,15 @@ SUPPORTING-DOCS-STATUS.md
 .claude/*
 # Project configuration must travel with the clone — the whole point of the
 # Claude Code migration is that agents, commands and skills are version-controlled
-# rather than pasted into settings per machine.
+# rather than pasted into settings per machine. `settings.json` joined them on
+# 2026-09-29, when a second development machine made "the same setup" mean a
+# permission baseline too: it holds only what this project runs, and never a
+# credential. Anything machine-specific belongs in settings.local.json, which
+# stays ignored below and still overrides this file locally.
 !.claude/agents/
 !.claude/commands/
 !.claude/skills/
+!.claude/settings.json
 # Local, per-machine state stays ignored
 .claude/settings.local.json
 .claude/worktrees/
