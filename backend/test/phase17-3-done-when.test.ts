@@ -462,6 +462,36 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.3 — Done when', () => {
       await bookSlot(app, customer, slot.listingId, slot.slotId);
     });
 
+    it('leaves a confirmed fee alone — waiving it would erase money received', async () => {
+      const { customer, origin, request, booking } = await matched('Electrical');
+      const feeId = booking.emergency?.dispatchFee?.submissionId ?? '';
+      await submitFeeProof(customer, feeId);
+      // Set directly rather than through `confirmSubmission`, which refuses a
+      // dispatch fee outright — `providerOfPayerOr422` throws
+      // PAYER_IS_NOT_A_PROVIDER for a customer payer, so no admin can confirm
+      // one today (ledger P17-6). The guard this pins is what protects the
+      // money once they can: `dispatchFeeState` reads `waivedAt` before
+      // `status`, so a waiver landing on a confirmed row would render a
+      // payment RaajjePro actually received as "nothing to pay".
+      await app.deps.prisma.paymentSubmission.update({
+        where: { id: feeId },
+        data: { status: 'confirmed' },
+      });
+
+      await app.deps.prisma.providerProfile.update({
+        where: { id: origin.providerProfileId },
+        data: { verificationTier: 'silver' },
+      });
+      await app.emergency.onProviderTierChanged(origin.providerProfileId);
+
+      const fee = await app.deps.prisma.paymentSubmission.findUniqueOrThrow({
+        where: { id: feeId },
+      });
+      expect(fee.waivedAt).toBeNull();
+      expect(fee.waivedReason).toBeNull();
+      expect((await readRequest(app, customer, request.id)).dispatchFee?.state).toBe('confirmed');
+    });
+
     it('does not waive the fee on a no-show — the customer still gets their job', async () => {
       const { customer, booking } = await matched();
       const window = (await category('Plumbing')).windowMinutes;
