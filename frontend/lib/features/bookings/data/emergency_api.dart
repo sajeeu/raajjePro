@@ -153,6 +153,18 @@ class EmergencyApi {
     );
   }
 
+  /// A rejected proof leaves the fee unsettled (§0.0 item 24). This issues a
+  /// fresh owed fee with a new reference; the hold stays until its proof is
+  /// submitted.
+  Future<DispatchFee> retryFee(String feeId) async => DispatchFee.fromJson(
+    await _api.post(
+      '/v1/users/me/dispatch-fees/$feeId/retry',
+      headers: {
+        'idempotency-key': _queue.newIdempotencyKey('dispatch-fee.retry'),
+      },
+    ),
+  );
+
   Future<EmergencyRequest> _respond(
     String requestId,
     Map<String, dynamic> body,

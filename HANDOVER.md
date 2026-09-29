@@ -993,7 +993,19 @@ other offer, the MVR 200 fee, the booking and both status events.
 
 **The fee blocks every new booking until proof is submitted**, not until an
 admin looks. It is §Phase 8a's upload and submit, reached through
-`/v1/users/me/dispatch-fees`.
+`/v1/users/me/dispatch-fees`. 🔧 Two follow-ups from §0.0 item 24 (owner,
+2026-09-29): **a rejected proof re-blocks**, with `POST
+/v1/users/me/dispatch-fees/:id/retry` issuing a fresh reference as the way
+out, and **a booking the revocation cascade cancels waives its fee**
+(`PaymentSubmission.waivedAt`, migration `20260929120000_dispatch_fee_waiver`).
+The no-show path still re-broadcasts under the fee already owed.
+
+🔧 **The shared `_test` database had `emergency_offer` truncated once.**
+Migration `20260929090000_phase_17_3_emergency_requests` refuses to run over
+existing offer rows, and the suite had left some from the first 17.3 shape. It
+was cleared with `migrate resolve --rolled-back`, `TRUNCATE emergency_offer`
+and a redeploy. Only test rows were lost. A fresh volume never meets this; an
+older `_test` database will, and the same three steps apply.
 
 **`reveal-contact` holds each of its seven conditions with its own code**, and
 checks a `KillSwitch` row first. A provider can read the numbers only after the

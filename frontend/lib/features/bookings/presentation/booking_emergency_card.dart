@@ -89,12 +89,17 @@ class _BookingEmergencyCardState extends ConsumerState<BookingEmergencyCard> {
           ],
           if (widget.viewerIsCustomer &&
               fee != null &&
-              fee.state == DispatchFeeState.owed) ...[
+              fee.state.holdsBookings) ...[
             const SizedBox(height: AppSpacing.sm2),
             Text(
-              'The ${mvr(fee.amountLaari)} dispatch fee to RaajjePro is owed. '
-              'New bookings are on hold until you submit proof of the '
-              'transfer — this job isn’t affected.',
+              fee.state == DispatchFeeState.rejected
+                  ? 'An admin couldn’t match your transfer for the '
+                        '${mvr(fee.amountLaari)} dispatch fee, so new bookings '
+                        'are on hold again until you submit a new one — this '
+                        'job isn’t affected.'
+                  : 'The ${mvr(fee.amountLaari)} dispatch fee to RaajjePro is '
+                        'owed. New bookings are on hold until you submit proof '
+                        'of the transfer — this job isn’t affected.',
               style: type.secondary.copyWith(color: colors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.sm),

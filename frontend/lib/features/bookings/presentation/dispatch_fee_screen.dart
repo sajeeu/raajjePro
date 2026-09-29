@@ -48,6 +48,13 @@ class DispatchFeeArgs {
 /// §1c: "The block lifts the moment the customer submits proof of transfer,
 /// not when an admin confirms it." The screen says exactly that, and after
 /// submitting shows the admin check as "Pending — doesn't hold you up".
+///
+/// ## A rejection brings the hold back
+///
+/// §0.0 item 24: a rejected proof means the fee is still unsettled, so new
+/// bookings are held again. The way out is a fresh transfer with a new
+/// reference — the screen then shows that fee. A fee the platform waived
+/// (its booking was cancelled by the verification cascade) holds nothing.
 class DispatchFeeScreen extends ConsumerStatefulWidget {
   const DispatchFeeScreen({required this.args, super.key});
 
@@ -63,7 +70,11 @@ class _DispatchFeeScreenState extends ConsumerState<DispatchFeeScreen> {
   PickedImage? _proof;
   bool _submitting = false;
   bool _submitted = false;
+  bool _retrying = false;
   String? _error;
+
+  /// The fresh fee a retry issued, which replaces the rejected one on screen.
+  String? _retriedFeeId;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +112,7 @@ class _DispatchFeeScreenState extends ConsumerState<DispatchFeeScreen> {
   Widget _body(BuildContext context, DispatchFees all) {
     final colors = context.colors;
     final type = context.type;
-    final id = widget.args.feeId;
+    final id = _retriedFeeId ?? widget.args.feeId;
     final fee = id == null
         ? all.outstanding
         : all.fees.where((f) => f.id == id).firstOrNull;
@@ -121,6 +132,9 @@ class _DispatchFeeScreenState extends ConsumerState<DispatchFeeScreen> {
 
     final settled = _submitted || fee.state != DispatchFeeState.owed;
     final bank = all.bankTransfer;
+    if (!_submitted && fee.state == DispatchFeeState.rejected) {
+      return _rejected(context, fee);
+    }
     return ListView(
       padding: AppSpacing.screenInsets,
       children: fadeUpAll([
@@ -153,16 +167,20 @@ class _DispatchFeeScreenState extends ConsumerState<DispatchFeeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('New bookings are unblocked', style: type.cardTitle),
+                Text(
+                  fee.state == DispatchFeeState.waived
+                      ? 'Waived — nothing to pay'
+                      : 'New bookings are unblocked',
+                  style: type.cardTitle,
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   fee.state == DispatchFeeState.confirmed
                       ? 'An admin has confirmed the transfer against your '
                             'reference.'
-                      : fee.state == DispatchFeeState.rejected
-                      ? 'An admin couldn’t match the transfer: '
-                            '${fee.rejectionReason ?? 'no reason given'}. '
-                            'They’ll contact you here.'
+                      : fee.state == DispatchFeeState.waived
+                      ? 'RaajjePro cancelled the booking this fee was for, so '
+                            'you don’t owe it. Nothing holds your bookings.'
                       : 'That happened the moment you submitted — you’re not '
                             'waiting on anyone. An admin will confirm the '
                             'transfer against your reference later. Admin '
@@ -250,6 +268,87 @@ class _DispatchFeeScreenState extends ConsumerState<DispatchFeeScreen> {
         const SizedBox(height: AppSpacing.n28),
       ]),
     );
+  }
+
+  /// §0.0 item 24's rejected state: the hold is back, and a fresh transfer is
+  /// the way out.
+  Widget _rejected(BuildContext context, DispatchFee fee) {
+    final colors = context.colors;
+    final type = context.type;
+    return ListView(
+      padding: AppSpacing.screenInsets,
+      children: fadeUpAll([
+        const SizedBox(height: AppSpacing.md),
+        NoticeBanner(
+          icon: Icons.pause_circle_outline_rounded,
+          message:
+              'New bookings are on hold again. An admin couldn’t match your '
+              'transfer for the ${mvr(fee.amountLaari)} dispatch fee, so it '
+              'is still unsettled. Your existing bookings run as agreed.',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (_error != null) ...[
+          NoticeBanner(message: _error ?? ''),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Why it wasn’t matched', style: type.cardTitle),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                fee.rejectionReason ?? 'No reason was given.',
+                style: type.secondary.copyWith(color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppButton.primary(
+          label: 'Start a new transfer',
+          expand: true,
+          loading: _retrying,
+          onPressed: _retrying ? null : () => _retry(fee),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'You’ll get a new reference. Submitting proof of that transfer lifts '
+          'the hold again.',
+          style: type.caption.copyWith(color: colors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.n28),
+      ]),
+    );
+  }
+
+  Future<void> _retry(DispatchFee fee) async {
+    setState(() {
+      _retrying = true;
+      _error = null;
+    });
+    try {
+      final fresh = await ref.read(emergencyApiProvider).retryFee(fee.id);
+      AppHaptics.commit();
+      setState(() {
+        _retriedFeeId = fresh.id;
+        _proof = null;
+      });
+      ref.invalidate(dispatchFeesProvider);
+    } on ApiNetworkException {
+      setState(
+        () => _error =
+            'No connection — nothing changed. Try again when you’re back '
+            'online.',
+      );
+    } on ApiException catch (e) {
+      setState(() => _error = e.message.isEmpty ? genericErrorCopy : e.message);
+    } on Object {
+      setState(() => _error = genericErrorCopy);
+    } finally {
+      if (mounted) setState(() => _retrying = false);
+    }
   }
 
   Future<void> _attach() async {

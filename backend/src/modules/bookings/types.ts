@@ -271,7 +271,8 @@ export interface EmergencyDispatchFeeDto {
   submissionId: string;
   amountLaari: number;
   referenceCode: string;
-  state: 'owed' | 'submitted' | 'confirmed' | 'rejected';
+  /** `owed` and `rejected` block new bookings; `waived` never does (§0.0 item 24). */
+  state: 'owed' | 'submitted' | 'confirmed' | 'rejected' | 'waived';
 }
 
 /**

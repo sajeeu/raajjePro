@@ -1701,6 +1701,14 @@ model PaymentSubmission {
   /// Null on every subscription payment.
   dispatchFeeFor EmergencyRequest?
 
+  /// 🔧 §0.0 item 24 (owner, 2026-09-29): "a booking the platform itself
+  /// cancels waives the fee". Stamped by the verification revocation cascade
+  /// when it auto-cancels the emergency booking this fee was incurred on. A
+  /// waived fee never blocks, and nothing is deleted — the row keeps its
+  /// amount, its reference and why it was waived. Dispatch fees only.
+  waivedAt     DateTime? @map("waived_at") @db.Timestamptz(6)
+  waivedReason String?   @map("waived_reason") @db.VarChar(80)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -2859,7 +2867,9 @@ enum EmergencyRequestStatus {
   matched
   /// The answer window closed with no match (§1c: "auto-declines").
   declined
-  /// The customer withdrew it before choosing.
+  /// The customer withdrew it before choosing — or the verification
+  /// revocation cascade cancelled its booking, which closes the request with
+  /// the fee waived (§0.0 item 24).
   cancelled
 
   @@map("emergency_request_status")

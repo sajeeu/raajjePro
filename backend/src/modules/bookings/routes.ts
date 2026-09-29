@@ -382,6 +382,21 @@ export function registerBookingRoutes(app: FastifyInstance): void {
     async (request, reply) => reply.send(ok(await app.dispatchFees.listOwn(userOf(request).id))),
   );
 
+  // Who may call: the customer whose current fee was rejected. §0.0 item 24:
+  // a rejection re-blocks, and this is the way out — a fresh transfer against
+  // a fresh reference. Idempotency key required: a double tap must not issue
+  // two references for one fee.
+  r.post(
+    '/v1/users/me/dispatch-fees/:id/retry',
+    {
+      schema: { params: dispatchFeeParams },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'dispatch-fee.retry' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply.code(201).send(ok(await app.dispatchFees.retry(userOf(request).id, request.params.id))),
+  );
+
   // Who may call: the customer who owes it. Step 1 of §Phase 8a's upload.
   // Not `requireActiveAccount`: a customer mid-deletion may still settle a
   // debt, and refusing would leave it owed forever.

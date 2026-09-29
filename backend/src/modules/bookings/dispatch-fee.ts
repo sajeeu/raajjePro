@@ -31,36 +31,40 @@ import { EMERGENCY_DISPATCH_FEE_LAARI } from './windows.js';
  *
  * §1c: "An unsettled fee blocks **all** new bookings, not only emergency
  * ones", and "**the block lifts the moment the customer submits proof of
- * transfer, not when an admin confirms it**." So *unsettled* means one thing
- * here — an owed row with no proof submitted — and nothing about the admin's
- * later decision re-enters the rule.
+ * transfer, not when an admin confirms it**."
  *
- * 🔧 **An admin rejecting a submitted proof does not re-impose the block.**
- * The plan says the admin "verifies afterwards and acts on anything false"
- * and calls a fabricated receipt "a moderation matter (§Phase 22), not a
- * reason to make everyone wait". It does not say a rejection blocks again,
- * and inventing that would make the block turn on the admin queue after all.
- * Recorded in `docs/decisions/30-phase-17-3-emergency.md`.
+ * 🔧 **Unsettled, as decided by the owner on 2026-09-29 (§0.0 item 24):** the
+ * request's *current* fee is either owed with no proof submitted, **or
+ * rejected** — "a rejected proof means the fee is still unsettled, so the
+ * block returns. Without this, one invalid submission is a permanent bypass."
+ * A proof that is submitted and still awaiting the admin does **not** block;
+ * that is the half of §1c that stands. A **waived** fee never blocks (the
+ * platform cancelled the booking itself — see `EmergencyService`'s revocation
+ * cascade).
+ *
+ * "Current" is `EmergencyRequest.dispatchFeeSubmissionId`: after a rejection
+ * the customer starts a fresh transfer with a new reference ([retry]), which
+ * replaces the pointer, and the rejected row stays behind as history without
+ * blocking anyone.
  */
 
-/** The prisma predicate for "owed and not yet evidenced". One place, three readers. */
-function outstandingWhere(customerId: string) {
-  return {
-    payerId: customerId,
-    purpose: 'emergency_dispatch_fee' as const,
-    status: 'pending' as const,
-    submittedAt: null,
-  };
-}
+/** "Still owed": nothing submitted, or submitted and rejected. Never a waived row. */
+const UNSETTLED = {
+  purpose: 'emergency_dispatch_fee' as const,
+  waivedAt: null,
+  OR: [{ status: 'pending' as const, submittedAt: null }, { status: 'rejected' as const }],
+};
 
 export async function findOutstandingDispatchFee(
   db: Db,
   customerId: string,
 ): Promise<PaymentSubmission | null> {
-  return db.paymentSubmission.findFirst({
-    where: outstandingWhere(customerId),
+  const request = await db.emergencyRequest.findFirst({
+    where: { customerId, dispatchFeeSubmission: { is: UNSETTLED } },
     orderBy: { createdAt: 'asc' },
+    select: { dispatchFeeSubmission: true },
   });
+  return request?.dispatchFeeSubmission ?? null;
 }
 
 export class DispatchFeeOutstandingError extends BusinessRuleError {
@@ -111,10 +115,10 @@ export interface DispatchFeeDto {
   amountLaari: number;
   referenceCode: string;
   /**
-   * `owed` until proof is submitted, which is the only state that blocks.
-   * The admin's later decision is reported as-is and does not block.
+   * `owed` until proof is submitted. `owed` and `rejected` block new
+   * bookings (§0.0 item 24); `submitted` and `waived` do not.
    */
-  state: 'owed' | 'submitted' | 'confirmed' | 'rejected';
+  state: 'owed' | 'submitted' | 'confirmed' | 'rejected' | 'waived';
   submittedAt: string | null;
   rejectionReason: string | null;
   proofUploaded: boolean;
@@ -122,8 +126,9 @@ export interface DispatchFeeDto {
 }
 
 export function dispatchFeeState(
-  row: Pick<PaymentSubmission, 'status' | 'submittedAt'>,
+  row: Pick<PaymentSubmission, 'status' | 'submittedAt' | 'waivedAt'>,
 ): DispatchFeeDto['state'] {
+  if (row.waivedAt !== null) return 'waived';
   if (row.status === 'confirmed') return 'confirmed';
   if (row.status === 'rejected') return 'rejected';
   return row.submittedAt === null ? 'owed' : 'submitted';
@@ -171,6 +176,59 @@ export class DispatchFeeService {
       // RaajjePro's own account, never a provider's — the artboard says so in
       // as many words ("The platform's own account — never a provider's").
       bankTransfer: this.deps.bankDetails,
+    };
+  }
+
+  /**
+   * Who may call: the customer whose **rejected** fee this is.
+   *
+   * §0.0 item 24 makes a rejection re-block, so there has to be a way out of
+   * it: a fresh transfer against a fresh reference — the same move §1b step 5
+   * gives a provider ("resubmit immediately — no cooldown"), which there too
+   * creates a new intent rather than reopening the rejected one. The new row
+   * becomes the request's current fee; the rejected one stays as history.
+   * The amount is §1c's flat MVR 200, not re-derived from anything.
+   */
+  async retry(userId: string, feeId: string): Promise<DispatchFeeDto> {
+    const request = await this.deps.prisma.emergencyRequest.findFirst({
+      where: { customerId: userId, dispatchFeeSubmissionId: feeId },
+      include: { dispatchFeeSubmission: true },
+    });
+    const fee = request?.dispatchFeeSubmission ?? null;
+    if (request === null || fee === null) {
+      throw new NotFoundError('No such dispatch fee', 'DISPATCH_FEE_NOT_FOUND');
+    }
+    if (fee.status !== 'rejected' || fee.waivedAt !== null) {
+      throw new BusinessRuleError(
+        'DISPATCH_FEE_NOT_REJECTED',
+        'Only a rejected transfer can be started again',
+        { state: dispatchFeeState(fee) },
+      );
+    }
+    const fresh = await this.deps.prisma.$transaction(async (tx) => {
+      const created = await createOwedDispatchFee(tx, userId);
+      const { count } = await tx.emergencyRequest.updateMany({
+        where: { id: request.id, dispatchFeeSubmissionId: fee.id },
+        data: { dispatchFeeSubmissionId: created.id },
+      });
+      if (count !== 1) {
+        throw new BusinessRuleError(
+          'DISPATCH_FEE_NOT_REJECTED',
+          'This fee has already been started again',
+        );
+      }
+      return created;
+    });
+    return {
+      id: fresh.id,
+      requestId: request.id,
+      amountLaari: fresh.amountLaari,
+      referenceCode: fresh.referenceCode,
+      state: dispatchFeeState(fresh),
+      submittedAt: null,
+      rejectionReason: null,
+      proofUploaded: false,
+      createdAt: fresh.createdAt.toISOString(),
     };
   }
 

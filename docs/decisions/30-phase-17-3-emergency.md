@@ -147,18 +147,30 @@ amount 20000 laari, **linked to the request**. It is created owed
   reached from `/v1/users/me/dispatch-fees/…`. Those routes first check that
   the row really is a dispatch fee, so they cannot become a second door onto a
   subscription payment.
-- **The block.** *Unsettled* means owed with no proof submitted. It is checked
-  in `BookingService.bookableListing` (slot and request) and in emergency
+- **The block.** *Unsettled* means owed with no proof submitted, **or
+  rejected**, and never waived. It is checked in
+  `BookingService.bookableListing` (slot and request) and in emergency
   creation. Submitting proof lifts it while the row is still `pending`, and no
   admin is involved.
-- 🔧 **An admin rejecting the proof does not re-impose the block.** The plan
-  calls a fabricated receipt "a moderation matter", and never says a rejection
-  blocks again.
+- 🔧 **A rejected proof re-blocks** (owner, 2026-09-29, §0.0 item 24). The
+  fee is still unsettled, and without this one invalid submission is a
+  permanent bypass. As first built, a rejection did not re-block; that was
+  reversed before 17.4. The way out is `POST
+  /v1/users/me/dispatch-fees/:id/retry`: it issues a fresh owed fee with a new
+  reference and repoints the request at it, and the hold stays until that
+  proof is submitted. Only the request's current, rejected, unwaived fee can
+  be retried (`DISPATCH_FEE_NOT_REJECTED` otherwise).
+- 🔧 **A booking the platform cancels waives its fee** (§0.0 item 24). When
+  the revocation cascade auto-cancels an `accepted` or `awaiting_payment`
+  emergency booking, it stamps `waivedAt` / `waivedReason =
+  provider_verification_revoked` on the fee in the same transaction and closes
+  the request `cancelled`. Nothing is deleted: the row keeps its amount and
+  reference. A waived fee never blocks and reads `waived`. As first built, the
+  fee stayed owed. **The no-show path is unchanged**: re-broadcast under the
+  fee already owed, because the customer still gets their job.
 
 Open, and recorded rather than decided:
 
-- A booking auto-cancelled by the revocation cascade keeps its fee owed. §1c
-  covers no-shows and says nothing about a platform-side cancellation.
 - §Phase 10a part 2's admin confirm path resolves the payer to a provider and
   would refuse a customer. That is ledger **P17-6**.
 

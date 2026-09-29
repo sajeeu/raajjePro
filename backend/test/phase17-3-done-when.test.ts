@@ -196,6 +196,34 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.3 — Done when', () => {
     return actOnRequest(app, customer, requestId, 'emergency-offer-response', body);
   }
 
+  /** §Phase 8a's three steps against a customer's dispatch fee: target, PUT, submit. */
+  async function submitFeeProof(customer: RegisteredUser, feeId: string): Promise<void> {
+    const target = await app.inject({
+      method: 'POST',
+      url: `/v1/users/me/dispatch-fees/${feeId}/proof`,
+      headers: { ...customer.headers, 'idempotency-key': randomUUID() },
+      remoteAddress: freshIp(),
+      payload: { contentType: 'image/jpeg' },
+    });
+    const upload =
+      target.json<Envelope<{ upload: { url: string; headers: Record<string, string> } }>>().data
+        .upload;
+    await app.inject({
+      method: 'PUT',
+      url: uploadPathOf(upload.url),
+      headers: upload.headers,
+      remoteAddress: freshIp(),
+      payload: jpeg(),
+    });
+    const submitted = await app.inject({
+      method: 'POST',
+      url: `/v1/users/me/dispatch-fees/${feeId}/submit`,
+      headers: { ...customer.headers, 'idempotency-key': randomUUID() },
+      remoteAddress: freshIp(),
+    });
+    if (submitted.statusCode !== 200) throw new Error(`submit: ${submitted.body}`);
+  }
+
   /** A request with one offer, taken past the collection window and selected — the job is on. */
   async function matched(categoryName = 'Plumbing') {
     const s = await scene(categoryName);
@@ -406,6 +434,43 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.3 — Done when', () => {
       expect(after.statusHistory?.at(-1)?.transition).toBe('verification-revoked');
       const told = notifier.for(booking.id, 'cancelled_verification_revoked').map((e) => e.userId);
       expect(told.sort()).toEqual([customer.userId, origin.provider.userId].sort());
+    });
+
+    it('waives the dispatch fee on the booking it cancels — §0.0 item 24', async () => {
+      const { customer, origin, request, booking } = await matched('Electrical');
+      const feeId = booking.emergency?.dispatchFee?.submissionId ?? '';
+      // Owed, so the customer is blocked before the cascade runs.
+      const slot = await bookableListing(app);
+      expect(
+        errorCode(await createBooking(app, customer, slot.listingId, { timeSlotId: slot.slotId })),
+      ).toBe('DISPATCH_FEE_OUTSTANDING');
+
+      await app.deps.prisma.providerProfile.update({
+        where: { id: origin.providerProfileId },
+        data: { verificationTier: 'silver' },
+      });
+      await app.emergency.onProviderTierChanged(origin.providerProfileId);
+
+      const fee = await app.deps.prisma.paymentSubmission.findUniqueOrThrow({
+        where: { id: feeId },
+      });
+      expect(fee.waivedAt).not.toBeNull();
+      expect(fee.waivedReason).toBe('provider_verification_revoked');
+      // Nothing deleted: the amount and reference stay on the row.
+      expect(fee.amountLaari).toBe(20_000);
+      expect((await readRequest(app, customer, request.id)).dispatchFee?.state).toBe('waived');
+      await bookSlot(app, customer, slot.listingId, slot.slotId);
+    });
+
+    it('does not waive the fee on a no-show — the customer still gets their job', async () => {
+      const { customer, booking } = await matched();
+      const window = (await category('Plumbing')).windowMinutes;
+      clock.advance(minutes(window));
+      await act(app, customer, booking.id, 'provider-not-arrived');
+      const fee = await app.deps.prisma.paymentSubmission.findUniqueOrThrow({
+        where: { id: booking.emergency?.dispatchFee?.submissionId ?? '' },
+      });
+      expect(fee.waivedAt).toBeNull();
     });
 
     it('leaves a payment_claimed one untouched and files it for admin, once', async () => {
@@ -995,6 +1060,61 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.3 — Done when', () => {
       expect(row.status).toBe('pending');
       expect(row.reviewedByAdminId).toBeNull();
       await bookSlot(app, customer, slot.listingId, slot.slotId);
+    });
+
+    it('re-blocks when the proof is rejected, and a fresh transfer is the way out — §0.0 item 24', async () => {
+      const { customer, booking } = await matched();
+      const feeId = booking.emergency?.dispatchFee?.submissionId ?? '';
+      await submitFeeProof(customer, feeId);
+      const slot = await bookableListing(app);
+      // Submitted and pending: not blocked — the half of §1c that stands.
+      const pendingBooking = await bookSlot(app, customer, slot.listingId, slot.slotId);
+      await actOk(app, customer, pendingBooking.id, 'cancel');
+
+      // The rejection path itself — §Phase 8a's, which §Phase 10a part 2's
+      // panel will call (P17-6). No panel yet, so it is called directly.
+      const admin = await app.adminAuth.createAdmin(
+        `admin-${randomUUID()}@example.test`,
+        'correct horse battery staple',
+        {},
+      );
+      await app.subscriptions.rejectSubmission(feeId, admin.id, 'Reference does not match');
+
+      const second = await bookableListing(app);
+      expect(
+        errorCode(
+          await createBooking(app, customer, second.listingId, { timeSlotId: second.slotId }),
+        ),
+      ).toBe('DISPATCH_FEE_OUTSTANDING');
+
+      // A fresh transfer: new reference, current fee, and still blocked until submitted.
+      const retried = await app.inject({
+        method: 'POST',
+        url: `/v1/users/me/dispatch-fees/${feeId}/retry`,
+        headers: { ...customer.headers, 'idempotency-key': randomUUID() },
+        remoteAddress: freshIp(),
+      });
+      expect(retried.statusCode).toBe(201);
+      const fresh =
+        retried.json<Envelope<{ id: string; referenceCode: string; state: string }>>().data;
+      expect(fresh.id).not.toBe(feeId);
+      expect(fresh.state).toBe('owed');
+      expect(
+        errorCode(
+          await createBooking(app, customer, second.listingId, { timeSlotId: second.slotId }),
+        ),
+      ).toBe('DISPATCH_FEE_OUTSTANDING');
+      await submitFeeProof(customer, fresh.id);
+      await bookSlot(app, customer, second.listingId, second.slotId);
+
+      // Only a rejected fee can be started again.
+      const again = await app.inject({
+        method: 'POST',
+        url: `/v1/users/me/dispatch-fees/${fresh.id}/retry`,
+        headers: { ...customer.headers, 'idempotency-key': randomUUID() },
+        remoteAddress: freshIp(),
+      });
+      expect(errorCode(again)).toBe('DISPATCH_FEE_NOT_REJECTED');
     });
 
     it('charges nothing for a request nobody answered', async () => {

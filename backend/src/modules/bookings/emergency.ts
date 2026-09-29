@@ -1069,6 +1069,33 @@ export class EmergencyService {
             where: { bookingId: booking.id },
             data: { state: 'lapsed', closedAt: now },
           });
+          // 🔧 §0.0 item 24 (owner, 2026-09-29): "a booking the platform
+          // itself cancels waives the fee". The customer chose an offer in
+          // good faith and RaajjePro removed the provider — nothing happens,
+          // so nothing is owed. Only an unsettled fee is waived: one an admin
+          // has already confirmed is money received, and returning it is a
+          // manual matter outside this system. The request closes with the
+          // booking; it is not re-broadcast (§Phase 17 item 21 auto-cancels).
+          if (booking.emergencyRequestId !== null) {
+            const request = await tx.emergencyRequest.findUniqueOrThrow({
+              where: { id: booking.emergencyRequestId },
+              select: { dispatchFeeSubmissionId: true },
+            });
+            if (request.dispatchFeeSubmissionId !== null) {
+              await tx.paymentSubmission.updateMany({
+                where: {
+                  id: request.dispatchFeeSubmissionId,
+                  status: { not: 'confirmed' },
+                  waivedAt: null,
+                },
+                data: { waivedAt: now, waivedReason: 'provider_verification_revoked' },
+              });
+            }
+            await tx.emergencyRequest.updateMany({
+              where: { id: booking.emergencyRequestId, status: 'matched' },
+              data: { status: 'cancelled', closedAt: now },
+            });
+          }
           await this.event(
             tx,
             booking.id,
@@ -1592,6 +1619,7 @@ function toFeeDto(fee: {
   referenceCode: string;
   status: 'pending' | 'confirmed' | 'rejected';
   submittedAt: Date | null;
+  waivedAt: Date | null;
 }): EmergencyDispatchFeeDto {
   return {
     submissionId: fee.id,

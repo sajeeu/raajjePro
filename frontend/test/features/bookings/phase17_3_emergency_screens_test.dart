@@ -697,6 +697,86 @@ void main() {
       expect(find.text('New bookings are unblocked'), findsOneWidget);
       expect(find.textContaining('doesn’t hold you up'), findsOneWidget);
     });
+
+    Map<String, dynamic> feeJson(String id, String state, String reference) => {
+      'id': id,
+      'requestId': 'req-1',
+      'amountLaari': 20000,
+      'referenceCode': reference,
+      'state': state,
+      'submittedAt': null,
+      'rejectionReason': state == 'rejected'
+          ? 'Reference does not match'
+          : null,
+      'proofUploaded': false,
+      'createdAt': '2026-09-15T03:02:00.000Z',
+    };
+    const bank = {
+      'bankName': 'Bank of Maldives',
+      'accountName': 'RaajjePro Pvt Ltd',
+      'accountNumber': '7701200000415',
+    };
+
+    testWidgets('a rejected proof brings the hold back, and a new transfer '
+        'gets a new reference — §0.0 item 24', (tester) async {
+      var current = feeJson('fee-1', 'rejected', 'RP-4471-EMGX');
+      var retries = 0;
+      h.api.on(
+        'GET',
+        '/v1/users/me/dispatch-fees',
+        (_) => {
+          'fees': [current],
+          'bankTransfer': bank,
+        },
+      );
+      h.api.on('POST', '/v1/users/me/dispatch-fees/fee-1/retry', (_) {
+        retries++;
+        current = feeJson('fee-2', 'owed', 'RP-9902-EMGY');
+        return current;
+      });
+
+      await pumpScreen(
+        tester,
+        const DispatchFeeScreen(args: DispatchFeeArgs(feeId: 'fee-1')),
+        overrides: h.overrides(),
+      );
+      expect(
+        find.textContaining('New bookings are on hold again'),
+        findsOneWidget,
+      );
+      expect(find.text('Reference does not match'), findsOneWidget);
+      expect(find.text('New bookings are unblocked'), findsNothing);
+
+      await scrollTo(tester, find.text('Start a new transfer'));
+      await tester.tap(find.text('Start a new transfer'));
+      await settle(tester);
+
+      expect(retries, 1);
+      await scrollTo(tester, find.text('RP-9902-EMGY'));
+      expect(find.text('RP-9902-EMGY'), findsOneWidget);
+      expect(find.text('RP-4471-EMGX'), findsNothing);
+      await scrollTo(tester, find.text('Submit proof — lifts the hold now'));
+      expect(find.text('Submit proof — lifts the hold now'), findsOneWidget);
+    });
+
+    testWidgets('a waived fee asks for nothing', (tester) async {
+      h.api.on(
+        'GET',
+        '/v1/users/me/dispatch-fees',
+        (_) => {
+          'fees': [feeJson('fee-1', 'waived', 'RP-4471-EMGX')],
+          'bankTransfer': bank,
+        },
+      );
+      await pumpScreen(
+        tester,
+        const DispatchFeeScreen(args: DispatchFeeArgs(feeId: 'fee-1')),
+        overrides: h.overrides(),
+      );
+      expect(find.text('Waived — nothing to pay'), findsOneWidget);
+      expect(find.text('Add your transfer receipt'), findsNothing);
+      expect(find.textContaining('New bookings are on hold'), findsNothing);
+    });
   });
 
   group('Booking detail — the emergency block', () {

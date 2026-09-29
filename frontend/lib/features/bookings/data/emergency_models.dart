@@ -154,20 +154,28 @@ class EmergencyDispatchFee {
   final DispatchFeeState state;
 }
 
-/// §1c: `owed` is the only state that blocks new bookings, and it lifts on
-/// proof submission — never on the admin's later decision.
+/// §1c: the hold lifts on proof submission, never on the admin's later
+/// decision. §0.0 item 24: a **rejected** proof leaves the fee unsettled, so
+/// the hold is back; a **waived** fee — the platform cancelled the booking —
+/// never holds anything.
 enum DispatchFeeState {
   owed,
   submitted,
   confirmed,
-  rejected;
+  rejected,
+  waived;
 
   static DispatchFeeState parse(String? wire) => switch (wire) {
     'submitted' => submitted,
     'confirmed' => confirmed,
     'rejected' => rejected,
+    'waived' => waived,
     _ => owed,
   };
+
+  /// Whether a fee in this state holds new bookings — the server decides,
+  /// and this mirrors it for the copy.
+  bool get holdsBookings => this == owed || this == rejected;
 }
 
 /// One emergency request as its customer sees it — `Emergency Flow` from the
@@ -499,10 +507,11 @@ class DispatchFees {
   final List<DispatchFee> fees;
   final PlatformBankAccount? bankTransfer;
 
-  /// The fee that is holding new bookings, if any — the oldest owed one.
+  /// The fee that is holding new bookings, if any — owed, or rejected
+  /// (§0.0 item 24).
   DispatchFee? get outstanding {
     for (final fee in fees.reversed) {
-      if (fee.state == DispatchFeeState.owed) return fee;
+      if (fee.state.holdsBookings) return fee;
     }
     return null;
   }
