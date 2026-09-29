@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:raajjepro/features/bookings/data/emergency_models.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// §1c's status machine, as the app reads it.
@@ -376,6 +377,7 @@ class Booking {
     required this.statusHistory,
     required this.paymentDetails,
     required this.replacement,
+    this.emergency,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) => Booking(
@@ -444,6 +446,9 @@ class Booking {
         : ReplacementPrefill.fromJson(
             json['replacement'] as Map<String, dynamic>,
           ),
+    emergency: json['emergency'] is Map<String, dynamic>
+        ? EmergencyDetails.fromJson(json['emergency'] as Map<String, dynamic>)
+        : null,
   );
 
   final String id;
@@ -498,6 +503,10 @@ class Booking {
   final List<BookingStatusEvent> statusHistory;
   final BookingPaymentDetails? paymentDetails;
   final ReplacementPrefill? replacement;
+
+  /// §Phase 17.3. Present on the detail read of an emergency booking only:
+  /// the fee, the reveal's state and when "provider has not arrived" opens.
+  final EmergencyDetails? emergency;
 
   /// The number a screen shows, and the label beside it. Before the provider
   /// has accepted there is no agreed amount — what exists is what the listing

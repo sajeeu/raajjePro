@@ -274,3 +274,44 @@ order. It also covers:
   values and key names.
 
 Each test uses a random island, so its broadcast recipients are its own.
+
+## 12. The Flutter screens
+
+Four screens and one card:
+
+- `EmergencyRequestScreen` (`Emergency Flow`)
+- `ProviderEmergencyScreen` (`Provider Emergency`)
+- `RevealContactScreen` (`Reveal Contact`)
+- `DispatchFeeScreen` (`Dispatch Fee`)
+- `BookingEmergencyCard`, on Booking Detail
+
+The artboard audit, and what each finding became, is
+`docs/design/sessions/round-61-emergency-corrections.md`.
+
+- **The trade's bar and window are rendered, never derived.** Both are read off
+  the category on the form. Every countdown counts to a deadline the server
+  gave; the screen never decides a window has closed, it re-reads.
+- **The emergency accept is never queued** (§0.0 item 14). Offline, the send is
+  replaced by a notice with a live retry, and the test asserts exactly one
+  attempt with nothing parked.
+- **No arrival preset is preselected**, and the offer cannot be sent without an
+  estimate (Round 22).
+- **Offers render in the server's order**, with the provider's own estimate
+  labelled as theirs. There is no distance, and ratings read "No ratings yet".
+- **A pass says it does not count against the provider.** The artboard's
+  acceptance-rate sentence is not reproduced.
+- **The reveal never calls a number "verified".** It says an admin confirmed it
+  at verification and that it isn't checked live, and only at Bronze or above.
+  There is no dialler yet, so the number is selectable and copyable.
+- **The MVR 200 disclosure before sending is the one number the app states
+  itself.** The server returns the fee only once it has been incurred, and the
+  disclosure has to come before that.
+
+**Where the entry points live.** The emergency action belongs on Home and
+Explore (Round 23), which are §Phases 16 and 15. The screen is routable at
+`AppRoutes.emergency`, and the provider view at `AppRoutes.providerEmergency`
+for the push deep link. Those phases place the entry points.
+
+**Not wired yet.** The slot and request creation screens show the server's
+`DISPATCH_FEE_OUTSTANDING` sentence, but carry no "settle it" link; the
+emergency form does.

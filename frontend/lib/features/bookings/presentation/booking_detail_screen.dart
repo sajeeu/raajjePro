@@ -9,6 +9,7 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/features/bookings/controller/bookings_controller.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
+import 'package:raajjepro/features/bookings/presentation/booking_emergency_card.dart';
 import 'package:raajjepro/features/bookings/presentation/payment_step_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/propose_amendment_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/propose_quote_screen.dart';
@@ -197,6 +198,13 @@ class _DetailBody extends ConsumerWidget {
             actionLabel: 'Pick a new time',
             onAction: () => Navigator.of(context).pop(),
           ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        // §Phase 17.3: the dispatch fee, "provider has not arrived", and the one
+        // contact exception — each only where the server says it applies.
+        if (booking.emergency != null) ...[
+          BookingEmergencyCard(booking: booking, viewerIsCustomer: isCustomer),
           const SizedBox(height: AppSpacing.md),
         ],
 

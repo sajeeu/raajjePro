@@ -71,4 +71,16 @@ abstract final class AppRoutes {
   /// upgrade prompt rather than a generic error — a prompt whose only action
   /// went nowhere would be the generic error with better wording.
   static const providerBilling = '/provider/billing';
+
+  /// 🔧 **§Phase 17.3's emergency request.** Here rather than only on the
+  /// screen because §Phase 16's Home and §Phase 15's Explore are what place
+  /// the entry to it (Round 23: "a distinct emergency action sits on Home and
+  /// Explore") and neither may import the bookings feature.
+  static const emergency = '/emergency';
+
+  /// A provider's view of one emergency broadcast — where the push deep-links.
+  static const providerEmergency = '/provider/emergency';
+
+  /// §1c's dispatch fee, settled by the customer.
+  static const dispatchFee = '/dispatch-fee';
 }
