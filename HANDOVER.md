@@ -51,6 +51,17 @@ docker compose up -d                          # Postgres 18 + pg_cron + WAL arch
 scripts/verify.sh                             # all of it; takes about three minutes
 ```
 
+🔧 **That sequence was measured, not assumed.** On 2026-09-29 it was run start
+to finish against a fresh `git clone` and a brand-new Docker volume: the
+`raajjepro_test` database really is created by `infra/postgres/initdb/` on a
+virgin volume, `npm run db:migrate` really does complete unattended, and
+`scripts/verify.sh` came back green — 823 backend tests included — on a clone
+that had existed for four minutes. Nothing outside the repository was needed:
+`cp .env.example .env` is the whole of the configuration, because every
+transport (`EMAIL_TRANSPORT`, `PUSH_TRANSPORT`, `MEDIA_STORAGE`) defaults to
+`file` and the billing block is commented out. **There is no secret to carry
+to a new machine.**
+
 🔧 **If `backend lint` ever exhausts Node's heap again, read this before
 raising the heap.** It happened once, on 2026-09-15, the day §Phase 9a's six
 models landed. It looked like an environment problem and was not one: it was a
@@ -98,6 +109,63 @@ python3 -m http.server 5173 --directory frontend/build/web
 in; it was deleted, and should be deleted again if anyone re-runs it.
 
 `README.md` has the day-to-day commands and the four conventions every line of code follows.
+
+### The second machine: Windows + WSL2
+
+Everything above is written for Linux and applies unchanged **inside** the
+WSL2 distro. The Windows side runs no part of this project except Docker
+Desktop and the editor's window.
+
+**None of this subsection has been exercised by the repository's own
+verification** — the run described above was on Linux. Treat it as the order to
+work in, and expect step 5 to be the one that bites.
+
+1. **Clone inside the distro, never under `/mnt/c`.** `~/raajjePro`, not
+   `/mnt/c/Users/…`. A checkout on the Windows filesystem crosses the 9p
+   translation layer on every file operation: `npm ci` and `flutter pub get`
+   go from seconds to minutes, file watching misses changes, and the
+   executable bit on `scripts/*.sh` does not survive. This one decision
+   decides whether WSL2 is pleasant or unusable.
+
+2. **Docker Desktop, WSL2 backend.** Settings → Resources → WSL Integration →
+   enable the distro. `docker compose` then works from inside it, and the
+   container's 5435 answers on `localhost:5435` from both sides.
+
+3. **Node 22 inside the distro** — `.nvmrc` pins it, and nvm is the least
+   painful route. Never a Windows Node: `npm` would write Windows paths into
+   `node_modules/.bin` and every script would break.
+
+4. **Flutter: the Linux SDK, inside the distro.** That is what `flutter
+   analyze`, `flutter test` and `flutter build web` need, which is everything
+   `scripts/verify.sh` runs. `export PATH="$HOME/flutter/bin:$PATH"` in
+   `~/.bashrc`, exactly as on the Linux machine.
+
+5. **The Android emulator does not belong on this machine.** WSL2 gives it no
+   usable nested virtualisation by default, and driving a Windows-side emulator
+   from a Linux `flutter run` means bridging `adb` over TCP. The Linux PC stays
+   active and already has `raajjepro_a11y` working, so **device passes stay
+   there** — see "Do not judge motion on the emulator". This machine does code,
+   `scripts/verify.sh`, and the :5173 browser preview, which covers layout and
+   copy but not session or token behaviour.
+
+6. **Ports reach Windows on their own.** WSL2 forwards `localhost`, so the API
+   on 3000 and the preview on 5173 open in a Windows browser with no extra
+   step. 5173 is still the only origin the backend's CORS allows.
+
+7. **Line endings are handled — keep them handled.** `.gitattributes` pins the
+   tree to LF, added for exactly this machine. Do not point a Windows `git` at
+   the checkout inside the distro; use the distro's git from the distro's
+   shell. A CRLF that gets in turns every shell script into
+   `\r: command not found`.
+
+8. **VS Code: install the WSL extension on Windows**, then run `code .` from
+   inside the distro. Claude Code and the Dart/Flutter extensions must be
+   installed **in the WSL context** — VS Code asks — or they inspect a Windows
+   filesystem that has none of the toolchain.
+
+9. **An SSH key for GitHub, inside the distro.** The clone URL is `git@…`, so
+   this blocks first. `ssh -T git@github.com` should greet you by name before
+   you try anything else.
 
 ## Write in the editor, verify in the terminal
 
@@ -198,6 +266,37 @@ mid-build. Confirm it before acting: run the individual checks rather than the
 whole gate, and read the whole output rather than the tail. Attributing a
 failure to the other session on a glance at the last six lines is how a
 typecheck error of mine reached CI.
+
+### Two machines
+
+Two PCs is a different problem from two sessions, and confusing them is the
+mistake to avoid: **none of the shared-index rules above apply across
+machines.** Separate clones have separate indexes and separate stashes, so
+`git add .` is merely untidy there rather than dangerous. What replaces those
+rules is shorter and stricter.
+
+**`git fetch` before every push.** The other machine moves `main` while this
+one is not looking. The failure is not a merge conflict you will notice — it is
+a rejected push at the end of an hour's work.
+
+**Pull before editing a shared document, not after.**
+`01_Development_Plan_v5.md`, `HANDOVER.md` and `docs/deferred-verification.md`
+are written from both machines and collide most readily, because both machines
+append to the same lists. `git pull --ff-only origin main` first, and one file
+per write.
+
+**The `_test` database is per machine now, and that is a gain.** Contamination
+between test files in one run is still possible; contamination between machines
+is not. A failure one machine sees and the other does not is now a real
+difference between two trees rather than a shared fixture that drifted.
+
+**Both machines may run the 16:30 backstop.** `scripts/eod-push.sh` fetches
+first and fast-forwards, and stops without committing if the branch has truly
+diverged. Before 2026-09-29 it did neither, and the shape of that failure is
+why it was worth fixing: measured with two clones and a day each, the loser of
+the race committed locally, failed to push, and then failed identically every
+day after — silently, because it runs on a schedule and its output goes to a
+log nobody opens.
 
 ### Why `locked-rules.py` exists
 
@@ -1094,6 +1193,11 @@ Two things it depends on, worth checking on a new machine:
 - **cron has no ssh-agent.** If your GitHub key has a passphrase the push will fail silently into the log. Test with
   `env -i HOME=$HOME PATH=/usr/bin:/bin ssh -o BatchMode=yes -T git@github.com` — it should greet you by name.
 - **The machine has to be awake at 16:30.** A laptop asleep at that minute simply misses it; there is no catch-up.
+- **On WSL2 cron is not running by default,** and neither is the distro when no
+  window is open. Start it (`sudo service cron start`, or enable systemd in
+  `/etc/wsl.conf`) and keep a shell open, or — more reliable on a machine that
+  gets shut down — schedule it from Windows Task Scheduler as
+  `wsl.exe -d <distro> -e bash -lc '~/raajjePro/scripts/eod-push.sh'`.
 
 Read `.eod-push.log` if a day looks missing. It is gitignored.
 

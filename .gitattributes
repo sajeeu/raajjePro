@@ -1,0 +1,28 @@
+# Line endings.
+#
+# The second development machine runs WSL2, where one checkout can be reached
+# by both the Linux git inside the distro and the Windows git outside it. A
+# Windows git with core.autocrlf=true rewrites files to CRLF on checkout, and
+# bash then fails on every shell script in the repository with the error
+# `\r: command not found` — scripts/verify.sh, scripts/eod-push.sh and each
+# husky hook. Normalising here fixes it for every machine regardless of what
+# that machine's core.autocrlf happens to be set to.
+#
+# Adding this cost nothing: on 2026-09-29 no tracked file had CRLF in the
+# index, so there is no renormalisation diff hiding behind it.
+* text=auto eol=lf
+
+# Binary, and never to be touched by any of the above.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.jar   binary
+*.keystore binary

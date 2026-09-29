@@ -43,7 +43,48 @@ case "$REMOTE" in
   *) echo; echo "STOPPED — origin is $REMOTE, which is not raajjePro."; exit 1 ;;
 esac
 
-# 3. Nothing to do is a normal outcome, not an error.
+# 3. The remote may have moved. A second machine runs this same backstop, and
+#    without this step the loser of the race commits locally, fails to push,
+#    and then fails again every day after — `git push` is rejected, `set -e`
+#    ends the script, and nothing says so out loud because it happens at 16:30
+#    on a schedule. Measured on 2026-09-29: two clones, one day each, and the
+#    second machine's work sat committed-but-unpushed indefinitely.
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+git fetch -q origin "$BRANCH" 2>/dev/null || true
+if git rev-parse --verify -q "origin/$BRANCH" >/dev/null; then
+  BEHIND="$(git rev-list --count "HEAD..origin/$BRANCH")"
+  AHEAD="$(git rev-list --count "origin/$BRANCH..HEAD")"
+  if (( BEHIND > 0 )); then
+    echo
+    echo "origin/$BRANCH has $BEHIND commit(s) this machine does not have."
+    if (( AHEAD > 0 )); then
+      cat <<MSG
+
+STOPPED — the branch has diverged ($AHEAD local, $BEHIND remote). Nothing
+committed, nothing pushed. Integrate by hand, which is a decision this script
+should not make for you:
+    git pull --rebase origin $BRANCH
+then run this again.
+MSG
+      exit 1
+    fi
+    if (( DRY )); then
+      echo "Dry run — would fast-forward to origin/$BRANCH first."
+    elif git merge --ff-only -q "origin/$BRANCH"; then
+      echo "Fast-forwarded to $(git rev-parse --short HEAD)."
+    else
+      cat <<MSG
+
+STOPPED — cannot fast-forward onto origin/$BRANCH, usually because a local
+edit touches a file the incoming commits change. Nothing committed, nothing
+pushed. Resolve it by hand and run this again.
+MSG
+      exit 1
+    fi
+  fi
+fi
+
+# 4. Nothing to do is a normal outcome, not an error.
 if [[ -z "$(git status --porcelain)" ]]; then
   echo
   echo "Working tree clean."
@@ -61,7 +102,7 @@ if [[ -z "$(git status --porcelain)" ]]; then
   exit 0
 fi
 
-# 4. Show what is about to go in.
+# 5. Show what is about to go in.
 echo
 git status --short
 echo
