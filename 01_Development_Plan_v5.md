@@ -10,7 +10,7 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
 
 ## 0. Read this first
 
-### 0.0 Revision 5.36 — read this before §0.1–0.3
+### 0.0 Revision 5.37 — read this before §0.1–0.3
 
 🔧 **Rounds 8 and 9 (2026-08-05) changed decisions that §0.1–0.3 below still describe in their original form.** Those sections are kept as a historical record of how v5 arrived where it did; **where they conflict with anything below, the later section wins.** Four changes are load-bearing enough to state up front:
 
@@ -64,6 +64,14 @@ Folds in all decisions resolved across thirteen rounds of review, 2026-08-03 to 
   🔧 **A broadcast pass is recorded and does not touch the acceptance rate.** §1f is `accepted ÷ (accepted + declined)`, explicit responses only — written for bookings a provider was *targeted* with. A broadcast reaches everyone eligible whether they wanted it or not, so a provider mid-job who passes must not watch a public reliability number fall for work nobody offered them directly. The pass is stored (it removes the request from their inbox and from re-broadcasts, and leaves a signal for tuning eligibility later); nothing reads it for conduct.
 
   🔧 **There is no admission cap on offers.** §1c says every other eligible provider *may also accept* and the customer is shown **up to three** — a display cap, not an admission cap. Refusing a fourth offer would reinstate the race Round 15 removed, where the fastest three win rather than the nearest or cheapest. Offers outside the shown three are released as *not selected*.
+
+24. 🔧 **Three answers the MVR 200 dispatch fee needed — owner's decisions, 2026-09-29.** §Phase 17.3 built the fee and surfaced three cases §1c never covers. All three are recorded here because the code cannot show which way they were decided, only which way it behaves.
+
+  **A booking the platform itself cancels waives the fee.** When a revocation cascade auto-cancels an `accepted` emergency booking, the customer has already incurred MVR 200 for a job that will not happen, through a decision they had no part in. §1c's "no second fee" covers a *provider's* no-show, where the customer still gets their job; this is different, and charging for it is not defensible. The no-show path is unchanged: re-broadcast under the fee already owed.
+
+  **A rejected proof re-blocks.** §1c is explicit that an unsettled fee blocks new bookings and that **the block lifts on submission, not on admin confirmation** — that stands, and it exists so a provider settling in good faith is not stranded overnight. But a *rejected* proof means the fee is still unsettled, so the block returns. Without this, one invalid submission is a permanent bypass: submit anything, get unblocked, ignore the outcome.
+
+  **An open `EmergencyRequest` does not block account deletion.** It owes nobody a visit and self-closes inside its own 30-minute window, so it cannot outlive the deletion queue. A `Booking` created from one is a booking and blocks anonymisation exactly as §1d requires.
 
 11. **Uploaded payment receipts are analysed and the result shown to the reviewing admin — Round 29** (Phase 10a part 2). Every `PaymentSubmission` proof image is checked against what the submission claims — reference code, amount, date, destination account — and the findings render beside the image in the admin queue. 🔧 **It is advisory and never a verdict.** It never uses the word "verified", never auto-confirms, and never gates the confirm button: the admin confirming *is* the verification. Where a bank-statement CSV row also matches, **the CSV outranks the receipt** — the statement is the bank's record, the receipt is the provider's claim. **Admin-only:** the provider sees none of this, so nothing at submission time can read as pre-approval (§1b's "nothing activates on submission" is unchanged).
 10. **The callback guarantee is per-category, not universal — Round 28** (§1h, Phase 4, Phase 17.4). It is offered **only on Plumbing, Electrical, AC Repair, Appliance Repair, Pest Control and Home Repairs** — read from a seeded `callbackEligible` flag, never hardcoded. The promise is *a free return visit if the same problem comes back*, which only means anything where something was fixed or treated and can un-fix. A fishing trip, a wedding shoot, a house move and a haircut either happened or did not; offering to redo them free is a promise with no referent. On an ineligible category the opt-in does not render at all — not disabled, absent — and no badge appears on any card. Statements below that the guarantee is simply "opt-in per listing" are pre-Round-28: it is opt-in per listing **within an eligible category**.
