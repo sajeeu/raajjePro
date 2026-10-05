@@ -13,7 +13,7 @@ dependencies:
   http: ^1.6.0
   flutter_secure_storage: ^11.0.0
   device_info_plus: ^13.2.0
-  share_plus: ^13.3.0
+  share_plus: ^13.3.1
   # Pinned to the version share_plus already pulls in transitively
   # (pubspec.lock) — promoted to direct because DownloadController now calls
   # getTemporaryDirectory() itself rather than Directory.systemTemp, which on
