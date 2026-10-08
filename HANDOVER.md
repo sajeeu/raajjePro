@@ -126,29 +126,69 @@ Desktop and the editor's window.
 
 **None of this subsection has been exercised by the repository's own
 verification** — the run described above was on Linux. Treat it as the order to
-work in, and expect step 5 to be the one that bites.
+work in, and expect step 7 to be the one that bites.
 
-1. **Clone inside the distro, never under `/mnt/c`.** `~/raajjePro`, not
+**Copy commands from this file, never from a printed PDF.** The PDF wraps long
+lines mid-token — the clone in step 2 and the bootstrap sequence in step 6 both
+come out broken — and a pasted fragment fails in ways that look like an
+environment problem.
+
+1. **Make Ubuntu the default distro, straight after installing WSL.** From
+   PowerShell: `wsl --set-default Ubuntu`. Docker Desktop installs its own
+   `docker-desktop` distro, and that can become the default; VS Code then
+   connects to it and finds none of the toolchain.
+
+2. **Clone inside the distro, never under `/mnt/c`.** `~/raajjePro`, not
    `/mnt/c/Users/…`. A checkout on the Windows filesystem crosses the 9p
    translation layer on every file operation: `npm ci` and `flutter pub get`
    go from seconds to minutes, file watching misses changes, and the
    executable bit on `scripts/*.sh` does not survive. This one decision
    decides whether WSL2 is pleasant or unusable.
 
-2. **Docker Desktop, WSL2 backend.** Settings → Resources → WSL Integration →
-   enable the distro. `docker compose` then works from inside it, and the
-   container's 5435 answers on `localhost:5435` from both sides.
+3. **Docker Desktop, WSL2 backend.** Settings → Resources → WSL Integration →
+   enable the distro. Then, inside the distro, `sudo usermod -aG docker $USER`,
+   and from PowerShell `wsl --shutdown` so the group takes effect. Skip either
+   and `docker` fails with permission denied on the socket. After that,
+   `docker compose` works from inside the distro, and the container's 5435
+   answers on `localhost:5435` from both sides.
 
-3. **Node 22 inside the distro** — `.nvmrc` pins it, and nvm is the least
+4. **Node 22 inside the distro** — `.nvmrc` pins it, and nvm is the least
    painful route. Never a Windows Node: `npm` would write Windows paths into
    `node_modules/.bin` and every script would break.
 
-4. **Flutter: the Linux SDK, inside the distro.** That is what `flutter
+5. **Flutter: the Linux SDK, inside the distro.** That is what `flutter
    analyze`, `flutter test` and `flutter build web` need, which is everything
-   `scripts/verify.sh` runs. `export PATH="$HOME/flutter/bin:$PATH"` in
-   `~/.bashrc`, exactly as on the Linux machine.
+   `scripts/verify.sh` runs. `export PATH="$HOME/flutter/bin:$PATH"`, exactly
+   as on the Linux machine.
 
-5. **The Android emulator does not belong on this machine.** WSL2 gives it no
+   **Put the nvm lines and the Flutter `PATH` line in `~/.profile` as well as
+   `~/.bashrc`.** Non-interactive and scheduled runs (`bash -lc`) never reach
+   the interactive part of `.bashrc`, so without this the commit hooks fall
+   back to the Windows Node on `PATH` and fail:
+
+   ```bash
+   export NVM_DIR="$HOME/.nvm"
+   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+   export PATH="$HOME/flutter/bin:$PATH"
+   ```
+
+   **Both machines must be on the same Flutter revision, not just the same
+   tag.** `flutter --version` prints the revision; match it. The `pubspec.lock`
+   pins for `meta` and `vector_math` follow the SDK revision, so a mismatch
+   rewrites the lockfile on `flutter pub get` and the two machines fight over
+   it.
+
+6. **Bootstrap with the sequence under "Set up".** It must create
+   `backend/.env` — `cp .env.example .env` inside `backend/` — before anything
+   in `backend/` runs.
+
+   ⚠️ **Never `export DATABASE_URL` in the shell that runs
+   `scripts/verify.sh`.** The test setup takes the original URL from `.env` to
+   find the database pg_cron writes to, and the job-runner test fails if that
+   has been overridden. The inline `DATABASE_URL=… npm run db:deploy` in the
+   sequence is fine — it lasts one command.
+
+7. **The Android emulator does not belong on this machine.** WSL2 gives it no
    usable nested virtualisation by default, and driving a Windows-side emulator
    from a Linux `flutter run` means bridging `adb` over TCP. The Linux PC stays
    active and already has `raajjepro_a11y` working, so **device passes stay
@@ -156,24 +196,41 @@ work in, and expect step 5 to be the one that bites.
    `scripts/verify.sh`, and the :5173 browser preview, which covers layout and
    copy but not session or token behaviour.
 
-6. **Ports reach Windows on their own.** WSL2 forwards `localhost`, so the API
+8. **Ports reach Windows on their own.** WSL2 forwards `localhost`, so the API
    on 3000 and the preview on 5173 open in a Windows browser with no extra
    step. 5173 is still the only origin the backend's CORS allows.
 
-7. **Line endings are handled — keep them handled.** `.gitattributes` pins the
+9. **Line endings are handled — keep them handled.** `.gitattributes` pins the
    tree to LF, added for exactly this machine. Do not point a Windows `git` at
    the checkout inside the distro; use the distro's git from the distro's
    shell. A CRLF that gets in turns every shell script into
    `\r: command not found`.
 
-8. **VS Code: install the WSL extension on Windows**, then run `code .` from
-   inside the distro. Claude Code and the Dart/Flutter extensions must be
-   installed **in the WSL context** — VS Code asks — or they inspect a Windows
-   filesystem that has none of the toolchain.
+10. **VS Code: install the WSL extension on Windows**, then open the checkout
+    through **"WSL: Connect to WSL using Distro..."** and choose Ubuntu. Not
+    `code .` — if Cursor is installed it can claim that command. Claude Code
+    and the Dart/Flutter extensions must be installed **in the WSL context** —
+    VS Code asks — or they inspect a Windows filesystem that has none of the
+    toolchain.
 
-9. **An SSH key for GitHub, inside the distro.** The clone URL is `git@…`, so
-   this blocks first. `ssh -T git@github.com` should greet you by name before
-   you try anything else.
+11. **An SSH key for GitHub, inside the distro.** The clone URL is `git@…`, so
+    this blocks first. `ssh -T git@github.com` should greet you by name before
+    you try anything else. Before the first commit, set your identity:
+    `git config --global user.name "…"` and
+    `git config --global user.email "…"`.
+
+12. **The 16:30 backstop runs from Windows Task Scheduler** (see "End of day"
+    for why not cron). The action is exactly this — no quotes, absolute path:
+
+    ```
+    wsl.exe -d Ubuntu -e bash -lc /home/<user>/raajjePro/scripts/eod-push.sh
+    ```
+
+    Single quotes around the path break under Task Scheduler and the task exits
+    with code 127. In the task's **Conditions** tab, untick "Start the task
+    only if the computer is on AC power" and "Stop if the computer switches to
+    battery power". In **Settings**, tick "Run task as soon as possible after a
+    scheduled start is missed".
 
 ## Write in the editor, verify in the terminal
 
@@ -1204,8 +1261,8 @@ Two things it depends on, worth checking on a new machine:
 - **On WSL2 cron is not running by default,** and neither is the distro when no
   window is open. Start it (`sudo service cron start`, or enable systemd in
   `/etc/wsl.conf`) and keep a shell open, or — more reliable on a machine that
-  gets shut down — schedule it from Windows Task Scheduler as
-  `wsl.exe -d <distro> -e bash -lc '~/raajjePro/scripts/eod-push.sh'`.
+  gets shut down — schedule it from Windows Task Scheduler, exactly as step 12
+  of "The second machine: Windows + WSL2" gives it.
 
 Read `.eod-push.log` if a day looks missing. It is gitignored.
 
