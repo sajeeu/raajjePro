@@ -217,18 +217,36 @@ class _ProposeQuoteScreenState extends ConsumerState<ProposeQuoteScreen> {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        AppTextField(
-          label: 'Your price',
-          controller: _price,
-          hint: '0',
-          keyboardType: TextInputType.number,
-          prefix: const Text('MVR'),
-          errorText: _priceError,
-          helper:
-              'The whole job, in rufiyaa. ${booking.customer.name} accepts '
-              'this exact number — once they do, it is the agreed price and '
-              'changing it needs an amendment they accept.',
-        ),
+        if (booking.isCallback)
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${mvr(0)} · free return visit', style: type.bodyStrong),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'This is a callback on a job you did for '
+                  '${booking.customer.name} — the same problem came back. '
+                  'There’s no price to set and no payment step; you only '
+                  'propose when you’ll come back.',
+                  style: type.caption.copyWith(color: colors.textSecondary),
+                ),
+              ],
+            ),
+          )
+        else
+          AppTextField(
+            label: 'Your price',
+            controller: _price,
+            hint: '0',
+            keyboardType: TextInputType.number,
+            prefix: const Text('MVR'),
+            errorText: _priceError,
+            helper:
+                'The whole job, in rufiyaa. ${booking.customer.name} accepts '
+                'this exact number — once they do, it is the agreed price and '
+                'changing it needs an amendment they accept.',
+          ),
         const SizedBox(height: AppSpacing.md),
 
         AppTextField(
@@ -238,7 +256,10 @@ class _ProposeQuoteScreenState extends ConsumerState<ProposeQuoteScreen> {
           maxLines: 3,
           maxLength: 2000,
           requirement: FieldRequirement.optional,
-          helper: 'What the price covers. This becomes the agreed scope.',
+          helper: booking.isCallback
+              ? 'What you’ll do on the return visit. This becomes the agreed '
+                    'scope.'
+              : 'What the price covers. This becomes the agreed scope.',
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -271,7 +292,7 @@ class _ProposeQuoteScreenState extends ConsumerState<ProposeQuoteScreen> {
         const SizedBox(height: AppSpacing.lg),
 
         AppButton.primary(
-          label: _ctaLabel(revising),
+          label: _ctaLabel(revising, callback: booking.isCallback),
           expand: true,
           loading: action.isWorking,
           onPressed: when == null || action.isWorking
@@ -283,7 +304,8 @@ class _ProposeQuoteScreenState extends ConsumerState<ProposeQuoteScreen> {
     );
   }
 
-  String _ctaLabel(bool revising) {
+  String _ctaLabel(bool revising, {required bool callback}) {
+    if (callback) return revising ? 'Send a new time' : 'Propose this time';
     final laari = _parsePrice();
     final verb = revising ? 'Send revised quote' : 'Send quote';
     if (laari == null || _when == null) return verb;
@@ -357,7 +379,9 @@ class _ProposeQuoteScreenState extends ConsumerState<ProposeQuoteScreen> {
     Booking booking,
   ) async {
     final when = _when;
-    final laari = _parsePrice();
+    // §1h: a callback is "at zero cost" — the server refuses any other
+    // number (`CALLBACK_IS_FREE`), so the screen never asks for one.
+    final laari = booking.isCallback ? 0 : _parsePrice();
     if (when == null) return;
     if (laari == null) {
       // Inline, under the field — never a toast (frontend/CLAUDE.md).

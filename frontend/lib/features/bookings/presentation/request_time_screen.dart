@@ -180,7 +180,7 @@ class _RequestTimeScreenState extends ConsumerState<RequestTimeScreen> {
                   const SizedBox(height: AppSpacing.md),
                 ],
 
-                _WhenCard(
+                WhenSuitsCard(
                   chip: _chip,
                   controller: _windowText,
                   onChip: (chip) {
@@ -338,18 +338,25 @@ class _RequestTimeScreenState extends ConsumerState<RequestTimeScreen> {
 }
 
 /// "When suits you?" — the chips, then the free-text line under them.
-class _WhenCard extends StatelessWidget {
-  const _WhenCard({
+///
+/// 🔧 Public since §Phase 17.4: "Change the time" on a request and the
+/// callback claim ask the same question the same way, and §1c's chips have
+/// one home ([WindowChip]).
+class WhenSuitsCard extends StatelessWidget {
+  const WhenSuitsCard({
     required this.chip,
     required this.controller,
     required this.onChip,
     required this.providerName,
+    this.title = 'When suits you?',
+    super.key,
   });
 
   final WindowChip? chip;
   final TextEditingController controller;
   final ValueChanged<WindowChip> onChip;
   final String? providerName;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +368,7 @@ class _WhenCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('When suits you?', style: type.bodyStrong),
+          Text(title, style: type.bodyStrong),
           const SizedBox(height: AppSpacing.sm2),
           Wrap(
             spacing: AppSpacing.sm,

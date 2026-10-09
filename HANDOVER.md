@@ -1216,19 +1216,29 @@ mode *now* and carries the address, notes, standing instructions and first
 preferred window forward. The ICS comes back inside the envelope, from
 `accepted` to `confirmed`, in UTC, with `SEQUENCE` counting time amendments.
 
-**Five pieces have no artboard and wait for a design decision:** the
-reschedule entry, the callback claim, the calendar control, Book Again's entry
-on a completed booking, and Saved Preferences' time-window editor (decision 31
-§6). Their backend is built and tested. New ledger rows **P17-9**
+**The five undrawn pieces are built** against the proposals the owner
+approved on 2026-10-09 (decision 31 §6): "Change the time" on Booking Detail
+(slot picker or window chips; moved at once before accept, filed as a time
+amendment after), the callback card and claim form (no tick/shield/lock,
+nothing shared with Raise Dispute, absent where it does not apply, MVR 0 with
+no payment step on the return visit — Quote Received and Propose a Quote now
+branch for it), "Add to calendar" in the agreement card (ICS to the share
+sheet), "Book again" on a completed booking (opens Book Again, never Pick a
+Time), and Saved Preferences' time-window sheet (Monday-first toggles, no
+presets, a preview that mirrors the server's label). The day toggle and
+dropdown moved to `lib/shared/inputs/`. New ledger rows **P17-9**
 (notifications), **P17-10** (a real calendar app) and **P17-11** (conduct);
 **P6-2** is annotated — Saved preferences now reaches its real screen.
+
+🔧 **A recurring series' paused banner names the provider only when all three
+misses were theirs** — `could_not_ask` split into `provider_unavailable` and
+`customer_blocked`, and the series read carries `pauseCause` (decision 31 §2).
 
 🔧 **Flagged, not changed:** a Cleaning, Beauty or Fitness listing switched to
 `request` mode cannot take a request (no quote window), so Book Again would
 route into that refusal. 17.2's behaviour; decision 31 §7.
 
-**Next**: the design proposals for 17.4's five undrawn pieces, then
-`/phase-11`. `/phase-10a` part 2 (the admin panel) is still paused by the
+**Next**: `/phase-11`. `/phase-10a` part 2 (the admin panel) is still paused by the
 owner.
 
 | | |

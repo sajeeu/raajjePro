@@ -4,10 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
+import 'package:raajjepro/core/feedback/app_haptics.dart';
+import 'package:raajjepro/core/format/maldives_time.dart';
 import 'package:raajjepro/core/format/money.dart';
 import 'package:raajjepro/core/theme/app_theme.dart';
+import 'package:raajjepro/features/availability/presentation/slot_picker_screen.dart';
 import 'package:raajjepro/features/bookings/controller/bookings_controller.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
+import 'package:raajjepro/features/bookings/presentation/book_again_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_emergency_card.dart';
 import 'package:raajjepro/features/bookings/presentation/payment_step_screen.dart';
@@ -216,8 +220,27 @@ class _DetailBody extends ConsumerWidget {
               : 'Customer on this booking',
         ),
         const SizedBox(height: AppSpacing.md),
-        AgreementCard(booking: booking),
+        AgreementCard(
+          booking: booking,
+          footer:
+              _calendarExportable(booking.status) &&
+                  booking.scheduledFor != null
+              ? _CalendarButton(bookingId: booking.id)
+              : null,
+        ),
         const SizedBox(height: AppSpacing.md),
+
+        // §1h's callback guarantee, on the customer's completed job. Absent —
+        // not disabled — wherever it does not apply: an ineligible category,
+        // a listing that did not opt in, or a window that has closed.
+        if (isCustomer &&
+            booking.status == BookingStatus.completed &&
+            booking.callback.guaranteed &&
+            (booking.callback.canClaim ||
+                booking.callback.claimBookingId != null)) ...[
+          _CallbackCard(booking: booking, providerName: other.name),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         if (booking.finalAmountLaari != null) ...[
           AppCard(
@@ -329,6 +352,22 @@ class _DetailBody extends ConsumerWidget {
           ),
         );
       }
+      // §Phase 17.4. Book Again opens its own screen — `Book Again.dc.html`,
+      // which routes by the listing's mode now and says when that changed —
+      // never Pick a Time directly.
+      if (booking.status == BookingStatus.completed) {
+        actions.insert(
+          0,
+          AppButton.primary(
+            label: 'Book again',
+            expand: true,
+            onPressed: () => Navigator.of(context).pushNamed(
+              BookAgainScreen.routeName,
+              arguments: {'bookingId': booking.id},
+            ),
+          ),
+        );
+      }
       if (booking.status == BookingStatus.requested ||
           // §Phase 17.2: `Request a Time`'s own "Cancel this request".
           booking.status == BookingStatus.awaitingQuote ||
@@ -389,6 +428,22 @@ class _DetailBody extends ConsumerWidget {
       }
     }
 
+    // §Phase 17.4's "Change the time" (decision 31 §6). Shown only where the
+    // endpoint has a picker to feed: the customer's unanswered slot booking
+    // or request (moved at once), and either party's agreed slot booking
+    // (filed as a time amendment). An agreed request's time change is what
+    // "Propose a change" already does, so it is not offered twice.
+    final changeTime = _changeTimeKind(booking, isCustomer: isCustomer);
+    if (changeTime != null) {
+      actions.add(
+        AppButton.text(
+          label: 'Change the time',
+          expand: true,
+          onPressed: () => _changeTime(context, ref, booking, changeTime),
+        ),
+      );
+    }
+
     // §1h: either party may propose, while there is an agreement to amend.
     if (_amendable(booking.status) && booking.openAmendment == null) {
       actions.insert(
@@ -423,11 +478,177 @@ class _DetailBody extends ConsumerWidget {
     ];
   }
 
+  /// The server's `COMMITTED_STATUSES`: from `accepted`, when §1h locks the
+  /// time, through `confirmed`.
+  static bool _calendarExportable(BookingStatus status) => _amendable(status);
+
+  static _ChangeTime? _changeTimeKind(
+    Booking booking, {
+    required bool isCustomer,
+  }) {
+    if (booking.bookingMode == BookingKind.emergency) return null;
+    final slot = booking.bookingMode == BookingKind.slot;
+    if (isCustomer && slot && booking.status == BookingStatus.requested) {
+      return _ChangeTime.slot;
+    }
+    if (isCustomer && !slot && booking.status == BookingStatus.awaitingQuote) {
+      return _ChangeTime.window;
+    }
+    if (slot && _amendable(booking.status) && booking.openAmendment == null) {
+      return _ChangeTime.slot;
+    }
+    return null;
+  }
+
+  static Future<void> _changeTime(
+    BuildContext context,
+    WidgetRef ref,
+    Booking booking,
+    _ChangeTime kind,
+  ) async {
+    final navigator = Navigator.of(context);
+    if (kind == _ChangeTime.window) {
+      await navigator.pushNamed(
+        RescheduleWindowScreen.routeName,
+        arguments: {'bookingId': booking.id},
+      );
+      return;
+    }
+    // `Object?`, as Book Slot pushes it: a named route is built untyped, and
+    // a typed push would fail its cast before the picker ever opened.
+    final picked = await navigator.pushNamed<Object?>(
+      SlotPickerScreen.routeName,
+      arguments: {
+        'listingId': booking.listingId,
+        'serviceName': ?booking.listingName,
+      },
+    );
+    if (picked is! PickedSlot) return;
+    final done = await ref
+        .read(bookingActionsProvider(booking.id).notifier)
+        .reschedule(timeSlotId: picked.slotId);
+    if (done) {
+      AppHaptics.commit();
+    } else {
+      AppHaptics.refused();
+    }
+  }
+
   static bool _amendable(BookingStatus status) =>
       status == BookingStatus.accepted ||
       status == BookingStatus.awaitingPayment ||
       status == BookingStatus.paymentClaimed ||
       status == BookingStatus.confirmed;
+}
+
+/// Which picker "Change the time" opens.
+enum _ChangeTime { slot, window }
+
+/// "Add to calendar" — the server's ICS entry, handed to the share sheet.
+class _CalendarButton extends ConsumerWidget {
+  const _CalendarButton({required this.bookingId});
+
+  final String bookingId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(calendarExportProvider(bookingId));
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppButton.secondary(
+          label: 'Add to calendar',
+          expand: true,
+          loading: state.isWorking,
+          onPressed: state.isWorking
+              ? null
+              : () => ref
+                    .read(calendarExportProvider(bookingId).notifier)
+                    .export(),
+        ),
+        if (state.message != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            state.message ?? '',
+            style: context.type.caption.copyWith(color: colors.errorText),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// §1h's callback guarantee on a completed job — RaajjePro's promise, not
+/// the provider's (§1i). Deliberately plain: a "come back" arrow, never a
+/// tick, shield or lock, and nothing that says "verified". The claim is an
+/// offer being taken up, so the button is an ordinary secondary one and the
+/// card shares nothing with "Report a problem".
+class _CallbackCard extends StatelessWidget {
+  const _CallbackCard({required this.booking, required this.providerName});
+
+  final Booking booking;
+  final String providerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final type = context.type;
+    final callback = booking.callback;
+    final until = callback.claimableUntil;
+    final claimed = callback.claimBookingId;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.replay_rounded,
+                size: AppSizes.iconLg,
+                color: colors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text('Callback guarantee', style: type.bodyStrong),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            claimed != null
+                ? 'You asked $providerName to come back. The return visit is '
+                      'its own booking, at MVR 0.'
+                : until == null
+                ? 'Free return visit if the same problem comes back.'
+                : 'Free return visit if the same problem comes back — until '
+                      '${maldivesDayLabel(until, DateTime.now())}.',
+            style: type.secondary.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.sm2),
+          if (claimed != null)
+            AppButton.secondary(
+              label: 'Open the return visit',
+              expand: true,
+              onPressed: () => Navigator.of(context).pushNamed(
+                BookingDetailScreen.routeName,
+                arguments: {'bookingId': claimed},
+              ),
+            )
+          else
+            AppButton.secondary(
+              label: 'The same problem is back',
+              expand: true,
+              onPressed: () => Navigator.of(context).pushNamed(
+                CallbackClaimScreen.routeName,
+                arguments: {'bookingId': booking.id},
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// §1h's amendment, and the decision where the viewer is the one who has to

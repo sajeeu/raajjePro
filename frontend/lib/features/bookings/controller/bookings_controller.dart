@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:raajjepro/core/api/api_client.dart';
+import 'package:raajjepro/core/files/share_file.dart';
 import 'package:raajjepro/features/bookings/data/booking_api.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
 import 'package:raajjepro/features/bookings/data/repeat_models.dart';
 import 'package:raajjepro/shared/shared.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// The Bookings tab's filter pills (`My Bookings.dc.html`).
 ///
@@ -288,6 +292,23 @@ class BookingActionsController extends Notifier<BookingActionState> {
         ref.read(bookingApiProvider).withdrawAmendment(bookingId, amendmentId),
   );
 
+  /// §Phase 17.4's "Change the time". The server decides whether this moves
+  /// the booking now or files a time amendment (§1h), from its status.
+  Future<bool> reschedule({
+    String? timeSlotId,
+    String? preferredWindowChip,
+    String? preferredWindowText,
+  }) => _run(
+    () => ref
+        .read(bookingApiProvider)
+        .reschedule(
+          bookingId,
+          timeSlotId: timeSlotId,
+          preferredWindowChip: preferredWindowChip,
+          preferredWindowText: preferredWindowText,
+        ),
+  );
+
   void clearMessage() => state = const BookingActionState();
 
   Future<bool> _run(Future<Object?> Function() action) async {
@@ -333,3 +354,64 @@ String _messageFor(Object error) => switch (error) {
   ApiException(:final message) when message.isNotEmpty => message,
   _ => genericErrorCopy,
 };
+
+/// "Add to calendar" — fetches the server's ICS entry, writes it to the app's
+/// own temp directory and hands it to the share sheet, which is where the
+/// phone's calendar picks it up. Kept apart from [BookingActionsController]
+/// because it changes nothing on the booking and must not disable the rest.
+class CalendarExportController extends Notifier<BookingActionState> {
+  CalendarExportController(this.bookingId);
+
+  final String bookingId;
+
+  @override
+  BookingActionState build() => const BookingActionState();
+
+  Future<void> export() async {
+    if (state.isWorking) return;
+    state = const BookingActionState(phase: BookingActionPhase.working);
+    try {
+      final entry = await ref.read(bookingApiProvider).calendar(bookingId);
+      final dir = await ref.read(tempDirProvider)();
+      final file = File(
+        '${dir.path}${Platform.pathSeparator}${_safeName(entry.filename)}',
+      );
+      await file.writeAsString(entry.ics);
+      await ref.read(shareDocumentProvider)(
+        XFile(file.path, mimeType: entry.contentType),
+        'Add to calendar',
+      );
+      state = const BookingActionState();
+    } on ApiException catch (error) {
+      state = BookingActionState(
+        phase: BookingActionPhase.failed,
+        message: _messageFor(error),
+      );
+    } on ApiNetworkException catch (error) {
+      state = BookingActionState(
+        phase: BookingActionPhase.failed,
+        message: _messageFor(error),
+      );
+    } on Object {
+      // A FileSystemException or a share-channel failure: nothing on the
+      // booking changed, and the button must leave its loading state.
+      state = const BookingActionState(
+        phase: BookingActionPhase.failed,
+        message: 'The calendar entry couldn’t be saved right now. Try again.',
+      );
+    }
+  }
+
+  /// The server names the file; it is still kept to one path segment.
+  static String _safeName(String name) {
+    final cleaned = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '-');
+    return cleaned.endsWith('.ics') ? cleaned : '$cleaned.ics';
+  }
+}
+
+final calendarExportProvider =
+    NotifierProvider.family<
+      CalendarExportController,
+      BookingActionState,
+      String
+    >(CalendarExportController.new);

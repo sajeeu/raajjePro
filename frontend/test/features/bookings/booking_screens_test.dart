@@ -190,6 +190,12 @@ void main() {
 
         final text = await allTextScrolled(tester);
         expect(text, contains('Change proposed — your decision'));
+        // Back up to the card: a long page leaves it outside the lazy list.
+        await tester.scrollUntilVisible(
+          find.text('Accept'),
+          -200,
+          scrollable: find.byType(Scrollable).first,
+        );
         expect(find.text('Accept'), findsOneWidget);
         expect(find.text('Reject'), findsOneWidget);
         // The live terms have not moved — that is the whole of "neither party

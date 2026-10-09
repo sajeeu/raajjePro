@@ -297,6 +297,58 @@ class BookingApi {
   Future<BookAgain> bookAgain(String bookingId) async =>
       BookAgain.fromJson(await _api.get('$_bookings/$bookingId/book-again'));
 
+  /// `PATCH /v1/bookings/:id/reschedule` — "Change the time".
+  ///
+  /// Before the provider answers it moves the booking at once: a slot booking
+  /// to [timeSlotId], a request to a new window. From `accepted` on, the same
+  /// call files a time amendment the other party must accept (§1h) — the
+  /// server decides which from the booking's status. Not queued: a picked
+  /// slot may be gone by the time a reconnect replays it.
+  Future<Booking> reschedule(
+    String bookingId, {
+    String? timeSlotId,
+    String? preferredWindowChip,
+    String? preferredWindowText,
+  }) async => Booking.fromJson(
+    await _api.patch(
+      '$_bookings/$bookingId/reschedule',
+      body: {
+        'timeSlotId': ?timeSlotId,
+        'preferredWindowChip': ?preferredWindowChip,
+        'preferredWindowText': ?_blankToNull(preferredWindowText),
+      },
+      headers: {
+        'idempotency-key': _queue.newIdempotencyKey('booking.reschedule'),
+      },
+    ),
+  );
+
+  /// `POST /v1/bookings/:id/callback` — §1h's claim. Returns the **new**
+  /// return-visit booking, linked to [bookingId] and at zero cost. Not
+  /// queued: it is a creation the provider sees.
+  Future<Booking> claimCallback(
+    String bookingId, {
+    required String whatCameBack,
+    String? preferredWindowChip,
+    String? preferredWindowText,
+  }) async => Booking.fromJson(
+    await _api.post(
+      '$_bookings/$bookingId/callback',
+      body: {
+        'jobNotes': whatCameBack.trim(),
+        'preferredWindowChip': ?preferredWindowChip,
+        'preferredWindowText': ?_blankToNull(preferredWindowText),
+      },
+      headers: {
+        'idempotency-key': _queue.newIdempotencyKey('booking.callback'),
+      },
+    ),
+  );
+
+  /// `GET /v1/bookings/:id/calendar` — the ICS text inside the envelope.
+  Future<CalendarExport> calendar(String bookingId) async =>
+      CalendarExport.fromJson(await _api.get('$_bookings/$bookingId/calendar'));
+
   /// "Same time next week?" — starts a weekly series from a booking the
   /// customer has had, and asks for next week at once. Not queued: the ask
   /// is a booking request the provider sees, and a replay a day later would

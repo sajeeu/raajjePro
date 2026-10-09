@@ -31,6 +31,32 @@ class AmountBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final type = context.type;
+    // §Phase 17.4: a return visit is MVR 0 from the moment it is claimed,
+    // not "No price yet" — there is no price coming, and no payment step.
+    if (booking.isCallback) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AmountKind.callback.label,
+            style: type.caption.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            mvr(0),
+            style: (compact ? type.bodyStrong : type.price).copyWith(
+              color: colors.ink,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Nothing to pay, and no payment step — the provider only proposes '
+            'a time to come back.',
+            style: type.caption.copyWith(color: colors.textSecondary),
+          ),
+        ],
+      );
+    }
     final amount = booking.displayAmountLaari;
     final kind = booking.amountKind;
 
@@ -207,9 +233,13 @@ class BookingTimeline extends StatelessWidget {
 /// §1h's locked agreement, drawn as what it is: the terms, and the note
 /// saying when they stopped being changeable unilaterally.
 class AgreementCard extends StatelessWidget {
-  const AgreementCard({required this.booking, super.key});
+  const AgreementCard({required this.booking, super.key, this.footer});
 
   final Booking booking;
+
+  /// 🔧 §Phase 17.4: Booking Detail puts "Add to calendar" here — the entry
+  /// is the agreed time, so it sits with the agreement (decision 31 §6).
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +291,10 @@ class AgreementCard extends StatelessWidget {
                       'provider accepts.',
             style: type.caption.copyWith(color: colors.textSecondary),
           ),
+          if (footer != null) ...[
+            const SizedBox(height: AppSpacing.sm2),
+            footer ?? const SizedBox.shrink(),
+          ],
         ],
       ),
     );

@@ -118,7 +118,7 @@ class _RuleEditorSheetState extends State<_RuleEditorSheet> {
             children: [
               for (var day = 1; day <= 7; day++) ...[
                 Expanded(
-                  child: _DayToggle(
+                  child: WeekdayToggle(
                     label: _dayInitials[day - 1],
                     day: day,
                     selected: _weekdays.contains(day),
@@ -138,7 +138,7 @@ class _RuleEditorSheetState extends State<_RuleEditorSheet> {
           Row(
             children: [
               Expanded(
-                child: _Dropdown<String>(
+                child: AppDropdown<String>(
                   label: 'From',
                   value: _from,
                   items: {for (final h in _hourOptions) h: h},
@@ -147,7 +147,7 @@ class _RuleEditorSheetState extends State<_RuleEditorSheet> {
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: _Dropdown<String>(
+                child: AppDropdown<String>(
                   label: 'To',
                   value: _to,
                   items: {for (final h in _hourOptions) h: h},
@@ -157,7 +157,7 @@ class _RuleEditorSheetState extends State<_RuleEditorSheet> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          _Dropdown<int>(
+          AppDropdown<int>(
             label: 'Each visit',
             value: _visitOptions.contains(_visit)
                 ? _visit
@@ -202,109 +202,6 @@ class _RuleEditorSheetState extends State<_RuleEditorSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _DayToggle extends StatelessWidget {
-  const _DayToggle({
-    required this.label,
-    required this.day,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final int day;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Pressable(
-      // The initial alone is ambiguous out loud — two Ts and two Ss.
-      semanticLabel: weekdayRangeLabel([day]),
-      toggled: selected,
-      onTap: onTap,
-      focusRadius: AppRadius.input,
-      builder: (context, state) => Container(
-        height: AppSizes.compactButtonHeight,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? colors.primary : colors.surface,
-          border: Border.all(
-            color: selected ? colors.primary : colors.border,
-            width: selected ? AppSizes.selectedStroke : AppSizes.inputStroke,
-          ),
-          borderRadius: BorderRadius.circular(AppRadius.input),
-        ),
-        child: Text(
-          label,
-          style: context.type.bodyStrong.copyWith(
-            color: selected ? colors.onPrimary : colors.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Dropdown<T> extends StatelessWidget {
-  const _Dropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  final String label;
-  final T value;
-  final Map<T, String> items;
-  final void Function(T value) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: context.type.caption),
-        const SizedBox(height: AppSpacing.xs),
-        Container(
-          height: AppSizes.inputHeight,
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            border: Border.all(
-              color: colors.border,
-              width: AppSizes.inputStroke,
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.input),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isExpanded: true,
-              style: context.type.body.copyWith(color: colors.ink),
-              onChanged: (next) {
-                if (next == null) return;
-                AppHaptics.selection();
-                onChanged(next);
-              },
-              items: [
-                for (final entry in items.entries)
-                  DropdownMenuItem<T>(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

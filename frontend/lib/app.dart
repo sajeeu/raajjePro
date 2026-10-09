@@ -223,6 +223,16 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),
+        RescheduleWindowScreen.routeName: (context) => RescheduleWindowScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        CallbackClaimScreen.routeName: (context) => CallbackClaimScreen(
+          args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
         CancelBookingScreen.routeName: (context) => CancelBookingScreen(
           args: BookingActionArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,

@@ -184,18 +184,98 @@ error), `Saved Preferences` (populated, empty, loading, error, add/edit sheet),
 and Booking Detail's "Make this recurring". Profile's row now reaches the real
 screen. Book Slot and Request a Time accept a prefill.
 
-**Not built, because no artboard draws them** (CLAUDE.md: propose, then build on
-approval):
+**Proposed, then approved by the owner on 2026-10-09 and built.** No artboard
+draws these five pieces, so CLAUDE.md's propose-then-build applied. The owner
+approved the proposals below as drawn, with two amendments to the time-window
+editor and four binding rules for the callback claim.
 
-1. Reschedule — the entry on Booking Detail and the picker hand-off.
-2. The callback claim — the badge on a guaranteed booking and the claim form.
-3. Calendar export — the "Add to calendar" control and the save/share step.
-4. Book Again's entry on a completed booking's detail view.
-5. Saved Preferences' "add a time window" editor — the artboard's Add appends a
-   sample and draws no editor. Saved windows render and can be removed.
+```
+1 Reschedule (Booking Detail)       2 Callback claim (completed, guaranteed)
+┌──────────────────────────────┐    ┌──────────────────────────────┐
+│ …actions                     │    │ ◇ Callback guarantee          │
+│ [ Change the time ]  text btn│    │ Free return visit if the same │
+│  before accept → slot picker │    │ problem comes back — until    │
+│  / window chips, sent at once│    │ Tue 13 Oct.                   │
+│  after accept → same picker, │    │ [ The same problem is back ]  │
+│  sent as a proposal to accept│    └──────────────────────────────┘
+└──────────────────────────────┘     → form: "What came back?" + window
+                                       chips → [Ask Ibrahim to come back]
 
-The backend for all five is built and tested. Until the screens exist, Book
-Again is reachable from no Flutter surface; that is the gap the proposals close.
+3 Calendar (accepted → confirmed)   4 Book Again (completed booking)
+  In the agreement card:              Footer primary: [ Book again ]
+  [ Add to calendar ] → .ics file     (above "Report a problem")
+  via the phone's share sheet
+
+5 Time-window editor (bottom sheet)
+┌──────────────────────────────┐
+│ Add a time window            │
+│ Mo Tu We Th Fr Sa Su  toggles│
+│ From [09:00 ▾]  To [12:00 ▾] │
+│ Preview: Weekdays · 9:00–12:00│
+│ [ Save window ]              │
+└──────────────────────────────┘
+```
+
+**The owner's amendments to piece 5.** The Weekdays/Weekend preset chips are
+dropped: the plan defines neither set's membership, and the Maldivian working
+week is not what those words mean elsewhere. The day toggles run Monday first,
+matching the API's ISO 1–7 (Round 58). The output keeps Saved Preferences' fixed
+form, `Weekdays · 9:00–12:00` / `Saturday · 14:00–18:00`.
+
+**The owner's binding rules for piece 2:**
+
+- **No visual treatment shared with a provider warranty (§1i).** No tick,
+  shield or lock, and no "verified", near either one. A provider's own warranty
+  is never called "guaranteed".
+- **It must not resemble Raise Dispute.** A claim takes up an offer. Only a
+  claim the provider declines or ignores becomes a report, and the server
+  files that report (`callback_declined`).
+- **An ineligible category, or a listing that did not opt in, renders nothing:**
+  absent, not disabled.
+- **The linked booking shows MVR 0, and no payment step appears.**
+
+Piece 4 opens `Book Again.dc.html`'s screen, which is already built with all
+five states including the mode-change notice. It never jumps straight to Pick
+a Time.
+
+### How the build reads them
+
+- **Reschedule is shown where the endpoint has a picker to feed.** That means
+  a slot booking at `requested` for the customer (the picker, moved at once),
+  a request at `awaiting_quote` for the customer (the window chips, moved at
+  once), and a slot booking from `accepted` to `confirmed` for either party
+  (the picker, filed as a time amendment). 🔧 **A request booking after
+  `accepted` gets no "Change the time".** The endpoint wants a concrete
+  `scheduledFor` there, the chips cannot produce one, and the existing
+  "Propose a change" already proposes exactly that time amendment. Two buttons
+  doing one thing would leave the reader guessing which one to press.
+  Emergency bookings never offer it (`EMERGENCY_CANNOT_BE_RESCHEDULED`).
+- **The callback card is the customer's, on a completed booking whose
+  `callback.guaranteed` is true.** It shows the claim while `canClaim` holds,
+  and a link to the return visit once one is claimed. After the window it
+  shows nothing, so a stale offer is never drawn. The icon is a plain "come
+  back" arrow standing in for the sketch's ◇, never a tick, shield or lock.
+  The claim button is secondary and blue, never the destructive red, and the
+  claim screen is a form for booking a visit, not a report.
+- **The return visit names its price.** The agreement card reads
+  `MVR 0 · Callback — free return visit` from the server's `amountKind`. The
+  `no-payment-due` edge means the booking never sits at `awaiting_payment`, so
+  no payment button is ever drawn for it.
+- **Calendar** sits in the agreement card for `accepted`, `awaiting_payment`,
+  `payment_claimed` and `confirmed` (the server's `COMMITTED_STATUSES`). The
+  ICS is written to the app's temp directory and handed to the share sheet
+  through `core/files/share_file.dart`. `share_plus` was already a dependency,
+  so the lockfile did not move.
+- **The preview is a mirror of the server's label.** `timeWindowLabel` lives
+  in `saved-preferences/types.ts`. The sheet previews with a Dart copy pinned
+  by the same cases, and once saved the chip prints the server's own string.
+  🔧 Two things to know. The server still calls Sunday–Thursday "Weekdays",
+  and toggling exactly those days yields that word. It also orders a list of
+  days Sunday first ("Sun, Tue"). The editor's Monday-first order is input
+  order only. Changing either is a server change, and this build makes none.
+- **The day toggle and the dropdown moved to `lib/shared/inputs/`** from the
+  availability rule editor, on their second consumer (`lib/README.md`). The
+  availability editor imports them and renders no differently.
 
 ## 7. Flagged, not changed
 

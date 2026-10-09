@@ -234,3 +234,23 @@ class RecurringSeries {
   final RecurringPauseCause pauseCause;
   final List<RecurringOccurrence> occurrences;
 }
+
+/// `GET /v1/bookings/:id/calendar` — one ICS entry, built by the server.
+@immutable
+class CalendarExport {
+  const CalendarExport({
+    required this.filename,
+    required this.contentType,
+    required this.ics,
+  });
+
+  factory CalendarExport.fromJson(Map<String, dynamic> json) => CalendarExport(
+    filename: json['filename'] as String? ?? 'raajjepro-booking.ics',
+    contentType: json['contentType'] as String? ?? 'text/calendar',
+    ics: json['ics'] as String? ?? '',
+  );
+
+  final String filename;
+  final String contentType;
+  final String ics;
+}

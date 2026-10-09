@@ -56,6 +56,56 @@ class SavedTimeWindow {
   final String label;
 }
 
+/// The label a window will be saved under — **a mirror** of the server's
+/// `timeWindowLabel` (`backend/src/modules/saved-preferences/types.ts`), used
+/// only for the editor's preview. Once saved, the chip prints the server's own
+/// string, so this can never be the label of record. Pinned by the same cases
+/// as the server's tests; change both or neither.
+///
+/// [weekdays] are ISO (1 = Monday … 7 = Sunday); [start] and [end] `HH:MM`.
+String previewTimeWindowLabel(List<int> weekdays, String start, String end) =>
+    '${_weekdaysLabel(weekdays)} · ${_shortClock(start)}–${_shortClock(end)}';
+
+/// The server's sets: the Maldivian working week is Sunday to Thursday.
+const _maldivesWeekdays = {7, 1, 2, 3, 4};
+const _maldivesWeekend = {5, 6};
+
+/// The server lists days Sunday first.
+const _displayOrder = [7, 1, 2, 3, 4, 5, 6];
+const _long = [
+  '',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+const _short = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+String _weekdaysLabel(List<int> weekdays) {
+  final days = weekdays.toSet();
+  if (days.length == 7) return 'Every day';
+  if (days.length == _maldivesWeekdays.length &&
+      days.containsAll(_maldivesWeekdays)) {
+    return 'Weekdays';
+  }
+  if (days.length == _maldivesWeekend.length &&
+      days.containsAll(_maldivesWeekend)) {
+    return 'Weekend';
+  }
+  final ordered = _displayOrder.where(days.contains).toList();
+  if (ordered.length == 1) return _long[ordered.first];
+  return ordered.map((d) => _short[d]).join(', ');
+}
+
+/// `9:00` rather than `09:00`, as the server prints it.
+String _shortClock(String hhmm) {
+  final parts = hhmm.split(':');
+  return '${int.parse(parts[0])}:${parts[1]}';
+}
+
 @immutable
 class SavedPreferences {
   const SavedPreferences({
@@ -121,6 +171,19 @@ class SavedPreferencesApi {
   );
 
   Future<void> removeAddress(String id) => _api.delete('$_base/addresses/$id');
+
+  /// [weekdays] are ISO, 1 = Monday … 7 = Sunday; times are `HH:MM`,
+  /// Maldives wall clock. The server renders the label.
+  Future<SavedTimeWindow> addTimeWindow({
+    required List<int> weekdays,
+    required String startTime,
+    required String endTime,
+  }) async => SavedTimeWindow.fromJson(
+    await _api.post(
+      '$_base/time-windows',
+      body: {'weekdays': weekdays, 'startTime': startTime, 'endTime': endTime},
+    ),
+  );
 
   Future<void> removeTimeWindow(String id) =>
       _api.delete('$_base/time-windows/$id');

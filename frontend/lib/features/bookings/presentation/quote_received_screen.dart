@@ -156,8 +156,10 @@ class _QuoteReceivedScreenState extends ConsumerState<QuoteReceivedScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               _Row(
-                label: 'Quoted price',
-                value: mvr(booking.quotedAmountLaari ?? 0),
+                label: booking.isCallback ? 'Price' : 'Quoted price',
+                value: booking.isCallback
+                    ? '${mvr(0)} · free return visit'
+                    : mvr(booking.quotedAmountLaari ?? 0),
                 strong: true,
               ),
               if ((booking.quoteNote ?? '').isNotEmpty) ...[
@@ -199,8 +201,11 @@ class _QuoteReceivedScreenState extends ConsumerState<QuoteReceivedScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'You pay ${booking.provider.name} directly by bank transfer. '
-                'RaajjePro never handles the money.',
+                booking.isCallback
+                    ? 'There’s nothing to pay — this is a free return visit, '
+                          'so no payment step follows.'
+                    : 'You pay ${booking.provider.name} directly by bank '
+                          'transfer. RaajjePro never handles the money.',
                 style: type.caption.copyWith(color: colors.textSecondary),
               ),
             ],
@@ -209,7 +214,11 @@ class _QuoteReceivedScreenState extends ConsumerState<QuoteReceivedScreen> {
         const SizedBox(height: AppSpacing.lg),
 
         AppButton.primary(
-          label: expired ? 'This quote expired' : 'Accept quote',
+          label: expired
+              ? 'This quote expired'
+              : booking.isCallback
+              ? 'Accept this time'
+              : 'Accept quote',
           expand: true,
           loading: action.isWorking,
           onPressed: expired || action.isWorking
@@ -258,6 +267,12 @@ class _QuoteReceivedScreenState extends ConsumerState<QuoteReceivedScreen> {
     final done = await controller.approveQuote();
     if (!mounted || !done) return;
     AppHaptics.commit();
+    // §Phase 17.4: a return visit goes from `accepted` straight to
+    // `confirmed` (`no-payment-due`), so there is no payment step to open.
+    if (booking.isCallback) {
+      Navigator.of(context).pop();
+      return;
+    }
     // Straight on to the payment step: §1c has a request booking pass through
     // `awaiting_payment` the instant the amount is set, and the customer's
     // next real action is the transfer.

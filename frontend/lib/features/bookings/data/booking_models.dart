@@ -529,6 +529,11 @@ class Booking {
   /// On a callback booking: the completed job whose guarantee it honours.
   final String? callbackForBookingId;
 
+  /// §1h's return visit — "at zero cost", from the moment it is claimed. It
+  /// is quoted at MVR 0 and never passes through a payment step (the server's
+  /// `no-payment-due` edge), so no screen may ask anyone to pay for it.
+  bool get isCallback => callbackForBookingId != null;
+
   /// The weekly series this booking is one week of, where it is.
   final String? recurringSeriesId;
 

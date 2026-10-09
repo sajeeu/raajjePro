@@ -24,12 +24,12 @@ import 'package:raajjepro/shared/shared.dart';
 /// and Save waits for one. The plan wins over the artboard here, and the
 /// difference is recorded in the decision record.
 ///
-/// ## Adding a time window is not built yet
+/// ## The time-window editor is the owner-approved proposal
 ///
-/// The artboard's "Add" on that section appends a sample — there is no drawn
-/// editor for choosing days and hours — and CLAUDE.md requires a proposal and
-/// approval before an undrawn piece is built. Saved windows render and can be
-/// removed; the editor follows once its design is agreed.
+/// The artboard's "Add" on that section appended a sample and drew no editor.
+/// The sheet here is decision 31 §6's proposal as the owner amended it: day
+/// toggles alone, Monday first (ISO 1–7, Round 58), with no Weekdays/Weekend
+/// presets, a From/To pair, and a preview in the server's label form.
 class SavedPreferencesScreen extends ConsumerWidget {
   const SavedPreferencesScreen({super.key});
 
@@ -131,11 +131,16 @@ class _Populated extends ConsumerWidget {
           _AddressCard(address: address),
         ],
         const SizedBox(height: AppSpacing.xl),
-        const _SectionHeading(title: 'Preferred time windows'),
+        _SectionHeading(
+          title: 'Preferred time windows',
+          actionLabel: 'Add',
+          onAction: () => showTimeWindowSheet(context),
+        ),
         const SizedBox(height: AppSpacing.sm),
         if (prefs.timeWindows.isEmpty)
           Text(
-            'No time windows saved yet.',
+            'No time windows saved yet — add the days and hours that usually '
+            'suit you.',
             style: type.secondary.copyWith(color: colors.textSecondary),
           )
         else
@@ -640,6 +645,168 @@ class _AddressSheetState extends ConsumerState<_AddressSheet> {
         setState(
           () => _error =
               'No connection — nothing was saved. Your details are still here.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+}
+
+/// Half-hour steps from 06:00 to 22:00 — the same menu as the availability
+/// rule editor. The server accepts any valid `HH:MM`; this is the menu, not
+/// the rule.
+final List<String> _hourOptions = [
+  for (var m = 6 * 60; m <= 22 * 60; m += 30)
+    '${(m ~/ 60).toString().padLeft(2, '0')}:'
+        '${(m % 60).toString().padLeft(2, '0')}',
+];
+
+/// Monday first — ISO 1–7, the order the API speaks (Round 58).
+const List<String> _dayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+/// Decision 31 §6, piece 5: "Add a time window".
+Future<void> showTimeWindowSheet(BuildContext context) =>
+    showAppBottomSheet<void>(
+      context: context,
+      barrierLabel: 'Close time window sheet',
+      builder: (_) => const _TimeWindowSheet(),
+    );
+
+class _TimeWindowSheet extends ConsumerStatefulWidget {
+  const _TimeWindowSheet();
+
+  @override
+  ConsumerState<_TimeWindowSheet> createState() => _TimeWindowSheetState();
+}
+
+class _TimeWindowSheetState extends ConsumerState<_TimeWindowSheet> {
+  // No day is preselected: a window is the customer's, not a default.
+  final Set<int> _days = {};
+  String _from = '09:00';
+  String _to = '12:00';
+  bool _saving = false;
+  String? _error;
+
+  /// Explains a disabled Save. The server checks both again (invariant 4).
+  String? get _problem {
+    if (_days.isEmpty) return 'Choose at least one day.';
+    if (_to.compareTo(_from) <= 0) {
+      return 'The window has to end after it starts.';
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final type = context.type;
+    final problem = _problem;
+    final sorted = _days.toList()..sort();
+
+    return AppBottomSheet(
+      title: 'Add a time window',
+      onClose: () => Navigator.of(context).maybePop(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_error != null) ...[
+            NoticeBanner(message: _error ?? ''),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          Text('Days', style: type.caption),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              for (var day = 1; day <= 7; day++) ...[
+                Expanded(
+                  child: WeekdayToggle(
+                    label: _dayInitials[day - 1],
+                    day: day,
+                    selected: _days.contains(day),
+                    onTap: () {
+                      AppHaptics.selection();
+                      setState(() {
+                        if (!_days.remove(day)) _days.add(day);
+                      });
+                    },
+                  ),
+                ),
+                if (day < 7) const SizedBox(width: AppSpacing.xs),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: AppDropdown<String>(
+                  label: 'From',
+                  value: _from,
+                  items: {for (final h in _hourOptions) h: h},
+                  onChanged: (value) => setState(() => _from = value),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppDropdown<String>(
+                  label: 'To',
+                  value: _to,
+                  items: {for (final h in _hourOptions) h: h},
+                  onChanged: (value) => setState(() => _to = value),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            problem ?? 'Saves as ${previewTimeWindowLabel(sorted, _from, _to)}',
+            style: type.secondary.copyWith(
+              color: problem == null ? colors.ink : colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton.primary(
+            label: 'Save window',
+            expand: true,
+            loading: _saving,
+            onPressed: problem != null || _saving ? null : () => _save(sorted),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton.text(
+            label: 'Cancel',
+            expand: true,
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _save(List<int> weekdays) async {
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final saved = await ref
+          .read(savedPreferencesApiProvider)
+          .addTimeWindow(weekdays: weekdays, startTime: _from, endTime: _to);
+      ref.invalidate(savedPreferencesProvider);
+      AppHaptics.commit();
+      if (!mounted) return;
+      await Navigator.of(context).maybePop();
+      messenger.showSnackBar(SnackBar(content: Text('Saved ${saved.label}')));
+    } on ApiException catch (e) {
+      AppHaptics.refused();
+      if (mounted) setState(() => _error = e.message);
+    } on ApiNetworkException {
+      if (mounted) {
+        setState(
+          () => _error =
+              'No connection — nothing was saved. Your choice is still here.',
         );
       }
     } finally {

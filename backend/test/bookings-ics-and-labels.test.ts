@@ -56,6 +56,8 @@ describe('saved time-window labels', () => {
     expect(weekdaysLabel([1, 3, 5])).toBe('Mon, Wed, Fri');
     expect(weekdaysLabel([6])).toBe('Saturday');
     expect(weekdaysLabel([1, 2, 3, 4, 5, 6, 7])).toBe('Every day');
+    // Sunday first in a list — mirrored by the app's preview (previewTimeWindowLabel).
+    expect(weekdaysLabel([2, 7])).toBe('Sun, Tue');
   });
 
   it('prints the artboard’s form', () => {

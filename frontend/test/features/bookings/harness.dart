@@ -101,6 +101,9 @@ Map<String, dynamic> bookingJson({
   Map<String, dynamic>? replacement,
   String customerId = 'customer-1',
   String providerUserId = 'provider-user-1',
+  String? completedAt,
+  Map<String, dynamic>? callback,
+  String? callbackForBookingId,
 }) => {
   'id': id,
   'reference': 'RP-7K4M2QXB',
@@ -134,7 +137,7 @@ Map<String, dynamic> bookingJson({
   'paymentClaimedAt': paymentClaimedAt,
   'paymentClaimWithdrawnAt': paymentClaimWithdrawnAt,
   'paymentAttestedAt': null,
-  'completedAt': null,
+  'completedAt': completedAt,
   'completedVia': null,
   'completionPromptedAt': completionPromptedAt,
   'cancelledAt': cancelledByRole == null ? null : '2026-09-14T06:00:00.000Z',
@@ -147,6 +150,8 @@ Map<String, dynamic> bookingJson({
   'statusHistory': statusHistory,
   'paymentDetails': paymentDetails,
   'replacement': replacement,
+  'callback': ?callback,
+  'callbackForBookingId': callbackForBookingId,
 };
 
 Map<String, dynamic> amendmentJson({
