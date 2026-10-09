@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createPrismaClient } from '../src/db/client.js';
 import type { PrismaClient } from '../src/generated/prisma/client.js';
 import { databaseUrl } from './helpers/app.js';
+import { freshPhone } from './helpers/users.js';
 
 describe.skipIf(databaseUrl === undefined)('phase 3 schema', () => {
   let prisma: PrismaClient;
@@ -26,7 +27,7 @@ describe.skipIf(databaseUrl === undefined)('phase 3 schema', () => {
 
   it('email is unique at the database; phone is not (uniqueness begins at Bronze, §0.0 item 8a)', async () => {
     const email = `u-${randomUUID()}@example.test`;
-    const phone = `+960${String(Math.floor(Math.random() * 9_000_000) + 1_000_000)}`;
+    const phone = `+960${freshPhone()}`;
     await prisma.user.create({ data: user(email, phone) });
     await expect(prisma.user.create({ data: user(email, null) })).rejects.toThrow();
     await expect(

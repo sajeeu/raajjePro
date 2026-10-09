@@ -27,8 +27,20 @@ export function freshEmail(): string {
   return `user-${randomUUID()}@example.test`;
 }
 
+// A per-process prefix plus a sequence, not a draw from a 9-million space.
+// The old generator collided against a database that accumulates users
+// across runs, failing as PHONE_IN_USE once a colliding account reached
+// Bronze (§Phase 3, Round 15 — uniqueness begins at Bronze).
+const phoneRun = String(Math.floor(Math.random() * 90_000) + 10_000);
+let phoneSeq = 0;
+
+/**
+ * Twelve digits: inside §Phase 3's 6–15, and inside E.164's 15 with `+960`
+ * or `+44`, the dial codes tests pair it with.
+ */
 export function freshPhone(): string {
-  return String(Math.floor(Math.random() * 9_000_000) + 1_000_000);
+  phoneSeq += 1;
+  return `${phoneRun}${String(phoneSeq).padStart(7, '0')}`;
 }
 
 /** Inserts a user straight into the database — for tests of everything downstream of registration. */
