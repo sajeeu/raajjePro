@@ -44,6 +44,9 @@ class RequestTimeArgs {
     this.serviceName,
     this.providerName,
     this.categoryId,
+    this.jobNotes,
+    this.addressDetail,
+    this.islandId,
   });
 
   factory RequestTimeArgs.fromRouteArguments(Object? arguments) {
@@ -55,8 +58,17 @@ class RequestTimeArgs {
       serviceName: map['serviceName'] as String?,
       providerName: map['providerName'] as String?,
       categoryId: map['categoryId'] as String?,
+      jobNotes: map['jobNotes'] as String?,
+      addressDetail: map['addressDetail'] as String?,
+      islandId: map['islandId'] as String?,
     );
   }
+
+  /// 🔧 §Phase 17.4. What Book Again carries forward (§1h) — the form opens
+  /// with it filled in and every field still editable.
+  final String? jobNotes;
+  final String? addressDetail;
+  final String? islandId;
 
   final String listingId;
   final String? serviceName;
@@ -113,6 +125,8 @@ class _RequestTimeScreenState extends ConsumerState<RequestTimeScreen> {
     super.initState();
     // The CTA enables on the window alone, so both inputs have to re-render it.
     _windowText.addListener(_onTyped);
+    _notes.text = widget.args.jobNotes ?? '';
+    _address.text = widget.args.addressDetail ?? '';
   }
 
   @override
@@ -295,6 +309,7 @@ class _RequestTimeScreenState extends ConsumerState<RequestTimeScreen> {
             preferredWindowText: _windowText.text,
             occasion: _occasion,
             jobNotes: _notes.text,
+            islandId: widget.args.islandId,
             addressDetail: _address.text,
           );
       ref.invalidate(bookingsListProvider);

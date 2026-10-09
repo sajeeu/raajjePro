@@ -15,6 +15,7 @@ import 'package:raajjepro/features/bookings/presentation/propose_amendment_scree
 import 'package:raajjepro/features/bookings/presentation/propose_quote_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/provider_receipt_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/quote_received_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/recurring_booking_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/widgets/booking_pieces.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -306,6 +307,25 @@ class _DetailBody extends ConsumerWidget {
             label: 'Review what you sent',
             expand: true,
             onPressed: () => push(PaymentStepScreen.routeName),
+          ),
+        );
+      }
+      // §Phase 17.4, `Booking Detail.dc.html`'s "Make this recurring". Slot
+      // bookings only (§1c: "predictable duration is what makes 'same time
+      // next week' meaningful"), once the provider has confirmed one — the
+      // offer screen itself leads with a completed booking, so both states
+      // carry it. A week that is already part of a series opens the series.
+      if (booking.bookingMode == BookingKind.slot &&
+          (booking.status == BookingStatus.confirmed ||
+              booking.status == BookingStatus.completed)) {
+        actions.add(
+          AppButton.text(
+            label: 'Make this recurring',
+            expand: true,
+            onPressed: () => Navigator.of(context).pushNamed(
+              RecurringBookingScreen.routeName,
+              arguments: {'bookingId': booking.id},
+            ),
           ),
         );
       }

@@ -737,7 +737,16 @@ export class EmergencyService {
       });
       if (matched !== 1) throw stale();
 
+      // 🔧 §Phase 17.4: §1h's callback guarantee, kept as the listing offered
+      // it when the customer chose this provider. Plumbing, Electrical and AC
+      // Repair are callback-eligible (Round 28); Moving is not, and §Phase 8
+      // already refuses the opt-in there.
+      const guarantee = await tx.listing.findUnique({
+        where: { id: offer.listingId },
+        select: { callbackGuaranteeOffered: true },
+      });
       const booking = await this.insertWithReference(tx, {
+        callbackGuaranteed: guarantee?.callbackGuaranteeOffered ?? false,
         listingId: offer.listingId,
         customerId: request.customerId,
         providerProfileId: offer.providerProfileId,

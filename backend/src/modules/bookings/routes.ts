@@ -9,7 +9,9 @@ import {
   amendmentParams,
   bookingParams,
   cancelBody,
+  claimCallbackBody,
   completeBody,
+  createRecurringSeriesBody,
   completionAnswerBody,
   createBookingBody,
   declineBody,
@@ -20,6 +22,10 @@ import {
   emergencyAcceptBody,
   emergencyOfferResponseBody,
   listBookingsQuery,
+  listRecurringSeriesQuery,
+  recurringSeriesParams,
+  rescheduleBody,
+  skipOccurrenceBody,
   emergencyRequestParams,
   listingParams,
   offerQuoteBody,
@@ -643,5 +649,151 @@ export function registerBookingRoutes(app: FastifyInstance): void {
         ),
       );
     },
+  );
+
+  // -- §Phase 17.4 ------------------------------------------------------------
+  //
+  // None of these responses carries a phone number: every booking shape is
+  // `BookingDto`, the series and Book Again shapes have no slot for one, and
+  // the calendar entry is built from the same projection.
+  // `test/phase17-4-done-when.test.ts` re-checks all of them.
+
+  // Who may call: the customer before the provider has answered (a direct
+  // move); either party from `accepted` on (a time amendment the other side
+  // must accept, §1h). Idempotency, because the pre-accept move takes a slot.
+  r.patch(
+    '/v1/bookings/:id/reschedule',
+    {
+      schema: { params: bookingParams, body: rescheduleBody },
+      preValidation: requireAuth,
+      config: { idempotency: { operation: 'booking.reschedule' }, ...bookingRate },
+    },
+    async (request, reply) => {
+      const body = request.body;
+      return reply.send(
+        ok(
+          await app.bookings.reschedule(userOf(request).id, request.params.id, {
+            timeSlotId: body.timeSlotId,
+            scheduledFor: body.scheduledFor === undefined ? undefined : new Date(body.scheduledFor),
+            preferredWindowChip: body.preferredWindowChip,
+            preferredWindowText: body.preferredWindowText,
+            reason: body.reason,
+          }),
+        ),
+      );
+    },
+  );
+
+  // Who may call: the customer of a completed booking. A read — the booking
+  // itself is then made through the ordinary creation route.
+  r.get(
+    '/v1/bookings/:id/book-again',
+    { schema: { params: bookingParams }, preValidation: requireAuth },
+    async (request, reply) =>
+      reply.send(ok(await app.bookings.bookAgain(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the customer of a completed, guaranteed booking, inside its
+  // 7-day window. A creation POST like booking itself: email-verified,
+  // not frozen, idempotent.
+  r.post(
+    '/v1/bookings/:id/callback',
+    {
+      schema: { params: bookingParams, body: claimCallbackBody },
+      preValidation: [requireAuth, requireEmailVerified, requireActiveAccount],
+      config: { idempotency: { operation: 'booking.callback' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply
+        .code(201)
+        .send(
+          ok(await app.bookings.claimCallback(userOf(request).id, request.params.id, request.body)),
+        ),
+  );
+
+  // Who may call: either party, once the time is agreed.
+  r.get(
+    '/v1/bookings/:id/calendar',
+    { schema: { params: bookingParams }, preValidation: requireAuth },
+    async (request, reply) =>
+      reply.send(ok(await app.bookings.calendarExport(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the customer of a confirmed or completed slot booking. It
+  // makes the first week's booking, so it carries creation's guards.
+  r.post(
+    '/v1/recurring-series',
+    {
+      schema: { body: createRecurringSeriesBody },
+      preValidation: [requireAuth, requireEmailVerified, requireActiveAccount],
+      config: { idempotency: { operation: 'recurring.create' }, ...bookingRate },
+    },
+    async (request, reply) =>
+      reply
+        .code(201)
+        .send(ok(await app.recurringSeries.create(userOf(request).id, request.body.bookingId))),
+  );
+
+  // Who may call: the signed-in user, for their own series on either side.
+  r.get(
+    '/v1/users/me/recurring-series',
+    { schema: { querystring: listRecurringSeriesQuery }, preValidation: requireAuth },
+    async (request, reply) => {
+      const { series, nextCursor } = await app.recurringSeries.list(userOf(request).id, {
+        role: request.query.role,
+        limit: request.query.limit,
+        cursor: request.query.cursor ?? null,
+      });
+      return reply.send(ok(series, { nextCursor }));
+    },
+  );
+
+  // Who may call: either party to the series. Anyone else gets 404.
+  r.get(
+    '/v1/recurring-series/:id',
+    { schema: { params: recurringSeriesParams }, preValidation: requireAuth },
+    async (request, reply) =>
+      reply.send(ok(await app.recurringSeries.read(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the series' customer.
+  r.patch(
+    '/v1/recurring-series/:id/skip',
+    {
+      schema: { params: recurringSeriesParams, body: skipOccurrenceBody },
+      preValidation: requireAuth,
+      config: bookingRate,
+    },
+    async (request, reply) =>
+      reply.send(
+        ok(
+          await app.recurringSeries.skip(
+            userOf(request).id,
+            request.params.id,
+            new Date(request.body.occursAt),
+          ),
+        ),
+      ),
+  );
+
+  // Who may call: the series' customer.
+  r.patch(
+    '/v1/recurring-series/:id/end',
+    { schema: { params: recurringSeriesParams }, preValidation: requireAuth, config: bookingRate },
+    async (request, reply) =>
+      reply.send(ok(await app.recurringSeries.end(userOf(request).id, request.params.id))),
+  );
+
+  // Who may call: the series' customer. It asks for the next week, so it
+  // carries creation's guards.
+  r.patch(
+    '/v1/recurring-series/:id/resume',
+    {
+      schema: { params: recurringSeriesParams },
+      preValidation: [requireAuth, requireEmailVerified, requireActiveAccount],
+      config: bookingRate,
+    },
+    async (request, reply) =>
+      reply.send(ok(await app.recurringSeries.resume(userOf(request).id, request.params.id))),
   );
 }

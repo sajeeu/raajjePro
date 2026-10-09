@@ -7,12 +7,17 @@ import type {
   DisputeOutcome,
   ReportReason,
 } from '../../generated/prisma/enums.js';
-import type { ReservationService } from '../availability/reservations.js';
+import {
+  SlotNoLongerAvailableError,
+  type ReservationService,
+} from '../availability/reservations.js';
 import type { NotificationDispatcher } from '../push/dispatcher.js';
 import type { ProviderProfileService } from '../providers/service.js';
+import type { SavedPreferencesService } from '../saved-preferences/service.js';
 import { assertNoOutstandingDispatchFee } from './dispatch-fee.js';
 import type { EmergencyService } from './emergency.js';
-import { islandDisplayName, toBookingDto } from './mapper.js';
+import { buildIcs } from './ics.js';
+import { callbackClaimableUntil, islandDisplayName, toBookingDto } from './mapper.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
 import { deriveQuotedAmount, deriveSlotAmount, durationMinutes } from './pricing.js';
 import {
@@ -32,7 +37,7 @@ import {
   isTerminal,
   TERMINAL_STATUSES,
 } from './transitions.js';
-import type { BookingDto } from './types.js';
+import type { BookAgainDto, BookingDto } from './types.js';
 import {
   ACCEPT_WINDOW_MINUTES,
   COMPLETION_GRACE_DAYS,
@@ -99,6 +104,48 @@ export interface ProposeAmendmentInput {
   scheduledFor?: Date;
   scopeNote?: string;
   reason?: string;
+  /**
+   * 🔧 §Phase 17.4. Set only by `reschedule`, never by the amendment route:
+   * the published slot a new time was picked from, so accepting it lands the
+   * booking back on a slot.
+   */
+  timeSlotId?: string;
+}
+
+/**
+ * §Phase 17 item 16: "another open slot (slot-based) or a new proposed time
+ * (request-based)". Which fields apply depends on the booking's mode and on
+ * whether the provider has answered yet — see `reschedule`.
+ */
+export interface RescheduleInput {
+  timeSlotId?: string | undefined;
+  scheduledFor?: Date | undefined;
+  preferredWindowChip?: WindowChip | undefined;
+  preferredWindowText?: string | undefined;
+  reason?: string | undefined;
+}
+
+/** §1h's callback claim — what came back, and when suits the customer. */
+export interface ClaimCallbackInput {
+  jobNotes: string;
+  preferredWindowChip?: WindowChip | undefined;
+  preferredWindowText?: string | undefined;
+}
+
+/** The calendar file, inside the standard envelope like every response. */
+export interface CalendarExportDto {
+  filename: string;
+  contentType: 'text/calendar';
+  ics: string;
+}
+
+/**
+ * What lets `RecurringSeriesService` create a week's booking inside the same
+ * transaction that records the week, so a booking can never exist without its
+ * occurrence row or the other way round.
+ */
+export interface SlotBookingOptions {
+  inTransaction?: (tx: Db, bookingId: string) => Promise<void>;
 }
 
 export interface ListBookingsQuery {
@@ -156,6 +203,7 @@ export class BookingService {
   private readonly dispatcher: NotificationDispatcher | undefined;
   private readonly onConfirmed: ((providerProfileId: string) => Promise<unknown>) | undefined;
   private readonly emergency: EmergencyService;
+  private readonly savedPreferences: SavedPreferencesService;
   private readonly log: ServiceLogger;
 
   constructor(deps: {
@@ -179,6 +227,8 @@ export class BookingService {
      * dependency runs one way: `EmergencyService` knows nothing of this class.
      */
     emergency: EmergencyService;
+    /** 🔧 §Phase 17.4: what Book Again carries forward (§1h). A read, one way. */
+    savedPreferences: SavedPreferencesService;
     log: ServiceLogger;
   }) {
     this.prisma = deps.prisma;
@@ -190,6 +240,7 @@ export class BookingService {
     this.dispatcher = deps.dispatcher;
     this.onConfirmed = deps.onConfirmed;
     this.emergency = deps.emergency;
+    this.savedPreferences = deps.savedPreferences;
     this.log = deps.log;
   }
 
@@ -296,6 +347,7 @@ export class BookingService {
     userId: string,
     listingId: string,
     input: CreateSlotBookingInput,
+    options: SlotBookingOptions = {},
   ): Promise<BookingDto> {
     const now = this.clock();
     const listing = await this.bookableListing(listingId, userId, 'slot');
@@ -336,6 +388,8 @@ export class BookingService {
         jobNotes: input.jobNotes ?? null,
         islandId: input.islandId ?? null,
         addressDetail: input.addressDetail ?? null,
+        // 🔧 §Phase 17.4: the promise the customer booked under, kept.
+        callbackGuaranteed: listing.callbackGuaranteeOffered,
         createdAt: now,
       });
 
@@ -351,6 +405,7 @@ export class BookingService {
         },
         tx,
       );
+      await options.inTransaction?.(tx, booking.id);
       return booking;
     });
 
@@ -436,6 +491,7 @@ export class BookingService {
         jobNotes: input.jobNotes ?? null,
         islandId: input.islandId ?? null,
         addressDetail: input.addressDetail ?? null,
+        callbackGuaranteed: listing.callbackGuaranteeOffered,
         createdAt: now,
       });
 
@@ -567,6 +623,7 @@ export class BookingService {
       if (!moved) throw staleBooking();
       await this.releaseHold(tx, booking, 'declined', now);
       await this.event(tx, booking, 'declined', 'decline', 'provider', userId, now);
+      await this.fileCallbackDeclined(tx, booking, now);
     });
 
     await this.notify('declined', booking.id, booking.customer.id);
@@ -627,6 +684,19 @@ export class BookingService {
 
     const transition = booking.status === 'quote_offered' ? 'revise-quote' : 'offer-quote';
     assertTransition(transition, booking.status, 'provider');
+
+    // 🔧 §Phase 17.4. A callback is "at zero cost" (§1h): the provider names
+    // the return time and nothing else. Every other quote names a price.
+    if (booking.callbackForBookingId !== null) {
+      if (input.amountLaari !== 0) {
+        throw new BusinessRuleError(
+          'CALLBACK_IS_FREE',
+          'A callback is a free return visit — propose a time at no charge',
+        );
+      }
+    } else if (input.amountLaari < 1) {
+      throw new BusinessRuleError('QUOTE_AMOUNT_REQUIRED', 'Propose a price for this job');
+    }
 
     const category = booking.listing.category;
     if (category === null) throw new QuoteWindowsMissingError();
@@ -739,7 +809,11 @@ export class BookingService {
       );
     }
 
-    const amount = deriveQuotedAmount(booking.quotedAmountLaari ?? 0);
+    // 🔧 §Phase 17.4: a callback's amount is zero and says so by kind.
+    const isCallback = booking.callbackForBookingId !== null;
+    const amount = isCallback
+      ? { amountLaari: 0, amountKind: 'callback' as const }
+      : deriveQuotedAmount(booking.quotedAmountLaari ?? 0);
     const reservationId = booking.reservationId;
 
     await this.prisma.$transaction(async (tx) => {
@@ -766,6 +840,29 @@ export class BookingService {
       if (!moved) throw staleBooking();
       await this.event(tx, booking, 'accepted', 'approve-quote', 'customer', userId, now);
 
+      if (isCallback) {
+        // Nothing is owed, so nobody is asked to attest to a transfer that
+        // cannot happen (owner's decision, 2026-10-09).
+        assertTransition('no-payment-due', 'accepted', 'system');
+        const free = await this.repo.transition(
+          booking.id,
+          'accepted',
+          { status: 'confirmed' },
+          tx,
+        );
+        if (!free) throw staleBooking();
+        await this.event(
+          tx,
+          { ...booking, status: 'accepted' },
+          'confirmed',
+          'no-payment-due',
+          'system',
+          null,
+          now,
+        );
+        return;
+      }
+
       assertTransition('amount-set', 'accepted', 'customer');
       const paid = await this.repo.transition(
         booking.id,
@@ -785,6 +882,9 @@ export class BookingService {
       );
     });
 
+    // §Phase 17 item 20: the hook fires on the transition into `confirmed`,
+    // whichever door reached it — and a callback reaches it here.
+    if (isCallback) await this.enterConfirmed(booking.id, booking.providerProfileId);
     await this.notify('quote_approved', booking.id, booking.providerProfile.user.id);
     return this.reread(booking.id);
   }
@@ -1111,6 +1211,7 @@ export class BookingService {
       if (!moved) throw staleBooking();
       await this.releaseHold(tx, booking, 'cancelled', now);
       await this.event(tx, booking, 'cancelled', transition, caller.role, userId, now);
+      if (caller.role === 'provider') await this.fileCallbackDeclined(tx, booking, now);
     });
 
     await this.notify(
@@ -1191,6 +1292,7 @@ export class BookingService {
         proposedAmountLaari: input.amountLaari ?? null,
         proposedScheduledFor: input.scheduledFor ?? null,
         proposedScopeNote: input.scopeNote ?? null,
+        proposedTimeSlotId: input.timeSlotId ?? null,
         reason: input.reason ?? null,
         createdAt: now,
       },
@@ -1269,7 +1371,25 @@ export class BookingService {
 
       if (amendment.proposedScheduledFor !== null) {
         data.scheduledFor = amendment.proposedScheduledFor;
-        if (booking.reservationId !== null) {
+        if (booking.reservationId !== null && amendment.proposedTimeSlotId !== null) {
+          // 🔧 §Phase 17.4's reschedule after `accepted`: the new time was
+          // picked from the provider's own published grid, so the booking
+          // lands back on a slot. Re-claimed now, not when proposed — a slot
+          // somebody took in the meantime refuses here as
+          // `SLOT_NO_LONGER_AVAILABLE` and the old hold stays where it was.
+          const minutes = this.slotDuration(booking);
+          await this.reservations.reschedule(
+            tx,
+            booking.reservationId,
+            {
+              startsAt: amendment.proposedScheduledFor,
+              endsAt: new Date(amendment.proposedScheduledFor.getTime() + minutes * 60_000),
+              slotId: amendment.proposedTimeSlotId,
+            },
+            now,
+          );
+          data.timeSlotId = amendment.proposedTimeSlotId;
+        } else if (booking.reservationId !== null) {
           const minutes = this.slotDuration(booking);
           await this.reservations.reschedule(
             tx,
@@ -1519,6 +1639,9 @@ export class BookingService {
         // assuming otherwise is how a provider's calendar stays blocked.
         await this.releaseHold(tx, booking, 'declined', now);
         await this.event(tx, booking, 'declined', 'quote-request-timeout', 'system', null, now);
+        // A callback left unanswered is a callback declined — silence is the
+        // provider's answer too.
+        await this.fileCallbackDeclined(tx, booking, now);
         return true;
       });
       if (done) {
@@ -1697,6 +1820,387 @@ export class BookingService {
   }
 
   // =========================================================================
+  // §Phase 17.4 — reschedule, Book Again, the callback, calendar export
+  // =========================================================================
+
+  /**
+   * `PATCH /v1/bookings/:id/reschedule` — §Phase 17 item 16: "another open
+   * slot (slot-based) or a new proposed time (request-based); frees the old
+   * reservation atomically."
+   *
+   * ## Two shapes, split at `accepted` (owner's decision, 2026-10-09)
+   *
+   * **Before the provider has answered** nothing is agreed, so nothing in
+   * §1h is locked. The customer moves the booking directly: a slot booking
+   * to another open slot of the same listing, a request to a new preferred
+   * window. The status does not change, the provider's clock restarts from
+   * the move, and they are told.
+   *
+   * **From `accepted` on**, §1h: "Neither party can alter them unilaterally.
+   * Any change requires an explicit in-app amendment the other party
+   * accepts." So the same endpoint files a **time amendment** — on a slot
+   * booking it carries the picked slot, so acceptance lands the booking back
+   * on the provider's published grid. Either party may propose one, as with
+   * any amendment, and §1f's adherence count sees it like any other.
+   *
+   * ## Atomically
+   *
+   * The pre-accept slot move is one transaction: §Phase 9a's
+   * `reservations.reschedule` releases the old hold and claims the new slot,
+   * and the booking row moves with them. A new slot somebody else took first
+   * refuses as `SLOT_NO_LONGER_AVAILABLE` and the booking keeps the time it
+   * had — the provider is never free at both times or held at both.
+   */
+  async reschedule(userId: string, bookingId: string, input: RescheduleInput): Promise<BookingDto> {
+    const now = this.clock();
+    const { booking, caller } = await this.authorize(userId, bookingId);
+
+    if (booking.bookingMode === 'emergency') {
+      throw new BusinessRuleError(
+        'EMERGENCY_CANNOT_BE_RESCHEDULED',
+        'An emergency is attended as soon as possible — there is no booked time to move',
+      );
+    }
+
+    if (AMENDABLE_STATUSES.includes(booking.status)) {
+      const reason = input.reason === undefined ? {} : { reason: input.reason };
+      if (booking.bookingMode === 'slot') {
+        if (input.timeSlotId === undefined) throw rescheduleNeeds('slot');
+        const slot = await this.openSlotFor(booking, input.timeSlotId, now);
+        return this.proposeAmendment(userId, bookingId, {
+          scheduledFor: slot.startsAt,
+          timeSlotId: slot.id,
+          ...reason,
+        });
+      }
+      if (input.scheduledFor === undefined) throw rescheduleNeeds('time');
+      return this.proposeAmendment(userId, bookingId, {
+        scheduledFor: input.scheduledFor,
+        ...reason,
+      });
+    }
+
+    assertTransition('reschedule', booking.status, caller.role);
+
+    if (booking.status === 'requested') {
+      if (input.timeSlotId === undefined) throw rescheduleNeeds('slot');
+      const slot = await this.openSlotFor(booking, input.timeSlotId, now);
+      const reservationId = booking.reservationId;
+      if (reservationId === null) {
+        // Unreachable: a slot booking is created with its hold.
+        throw new ConflictError('RESERVATION_NOT_FOUND', 'This booking holds no time to move');
+      }
+      // The price follows the slot's own length, exactly as at creation
+      // (Round 17: derived, never sent by the client).
+      const amount = deriveSlotAmount(booking.listing, durationMinutes(slot.startsAt, slot.endsAt));
+
+      await this.prisma.$transaction(async (tx) => {
+        await this.reservations.reschedule(
+          tx,
+          reservationId,
+          { startsAt: slot.startsAt, endsAt: slot.endsAt, slotId: slot.id },
+          now,
+        );
+        const moved = await this.repo.transition(
+          booking.id,
+          'requested',
+          {
+            timeSlotId: slot.id,
+            scheduledFor: slot.startsAt,
+            quotedAmountLaari: amount.amountLaari,
+            rescheduledAt: now,
+          },
+          tx,
+        );
+        if (!moved) throw staleBooking();
+        await this.event(tx, booking, 'requested', 'reschedule', 'customer', userId, now);
+      });
+    } else {
+      // `awaiting_quote`: nothing is held yet, so there is nothing to free —
+      // the request simply says a different "when", and the provider's
+      // quote clock restarts on the category's own value (invariant 13).
+      if (input.preferredWindowChip === undefined && input.preferredWindowText === undefined) {
+        throw rescheduleNeeds('window');
+      }
+      const category = booking.listing.category;
+      if (category === null) throw new QuoteWindowsMissingError();
+      const windows = readQuoteWindows(category);
+      const window = this.resolvePreferredWindow(input, now);
+
+      await this.prisma.$transaction(async (tx) => {
+        const moved = await this.repo.transition(
+          booking.id,
+          'awaiting_quote',
+          {
+            preferredWindowText: window.text,
+            preferredWindowFrom: window.from,
+            preferredWindowTo: window.to,
+            quoteDueAt: minutesFrom(now, windows.expiryMinutes),
+            rescheduledAt: now,
+          },
+          tx,
+        );
+        if (!moved) throw staleBooking();
+        await this.event(tx, booking, 'awaiting_quote', 'reschedule', 'customer', userId, now);
+      });
+    }
+
+    await this.notify('rescheduled', booking.id, booking.providerProfile.user.id);
+    return this.reread(booking.id);
+  }
+
+  /**
+   * `GET /v1/bookings/:id/book-again` — §Phase 17 frontend item 13 and
+   * `Book Again.dc.html`.
+   *
+   * "Pre-fills a new booking request against the same provider and listing,
+   * **routed by that listing's current `bookingMode`**." The booking itself
+   * is then made through the ordinary creation route, so every rule of
+   * creation — visibility, the paused toggle, the dispatch-fee block — still
+   * applies. This read decides nothing; it only gathers what §1h says is
+   * carried forward.
+   */
+  async bookAgain(userId: string, bookingId: string): Promise<BookAgainDto> {
+    const { booking } = await this.authorize(userId, bookingId, 'customer');
+    if (booking.status !== 'completed') {
+      throw new BusinessRuleError(
+        'BOOK_AGAIN_NOT_AVAILABLE',
+        'Book again is offered once a job is complete',
+        { status: booking.status },
+      );
+    }
+
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: booking.listingId },
+      select: {
+        status: true,
+        visibility: true,
+        deletedAt: true,
+        bookingMode: true,
+        pricingModel: true,
+        priceLaari: true,
+        providerProfile: { select: { suspendedAt: true } },
+      },
+    });
+    // The artboard's "This service is no longer offered" — the same three
+    // tests `bookableListing` applies, read rather than thrown.
+    const available =
+      listing !== null &&
+      listing.status === 'published' &&
+      listing.visibility === 'active' &&
+      listing.deletedAt === null &&
+      listing.providerProfile.suspendedAt === null;
+    const prefs = await this.savedPreferences.forBooking(userId);
+
+    return {
+      fromBookingId: booking.id,
+      listingId: booking.listingId,
+      listingName: booking.listing.name,
+      categoryName: booking.listing.category?.name ?? null,
+      providerName: booking.providerProfile.businessName ?? booking.providerProfile.user.fullName,
+      providerVerificationTier: booking.providerProfile.verificationTier,
+      available,
+      bookingMode: available ? listing.bookingMode : null,
+      // "Since your last booking, Mariyam switched from open slots to
+      // requests." An emergency job was never a slot or a request, so
+      // repeating it as the listing's ordinary mode is not a switch.
+      modeChanged:
+        available &&
+        booking.bookingMode !== 'emergency' &&
+        listing.bookingMode !== booking.bookingMode,
+      pricingModel: available ? listing.pricingModel : null,
+      priceLaari: available ? listing.priceLaari : null,
+      lastDoneAt: booking.completedAt === null ? null : booking.completedAt.toISOString(),
+      jobNotes: booking.jobNotes,
+      islandId: booking.islandId,
+      islandDisplayName: booking.island === null ? null : islandDisplayName(booking.island),
+      addressDetail: booking.addressDetail,
+      occasion: booking.occasion,
+      standingInstructions: prefs.standingInstructions,
+      preferredWindowLabel: prefs.preferredWindowLabel,
+    };
+  }
+
+  /**
+   * `POST /v1/bookings/:id/callback` — §1h's callback guarantee.
+   *
+   * "A provider commits to return free within 7 days if the same issue
+   * recurs … A callback is a **new booking linked to the original**, at zero
+   * cost, so it flows through the normal machinery and appears in both
+   * parties' history."
+   *
+   * The new booking is a request (owner's decision, 2026-10-09): the provider
+   * proposes a return time priced at zero, the customer approves it, and it
+   * goes straight to `confirmed` because nothing is owed. It runs on the
+   * category's own quote clocks, like any request.
+   *
+   * It does **not** pass `bookableListing`: the guarantee was made on the job
+   * that was done, and a provider who has since hidden the listing or paused
+   * new customers still owes it. A suspended provider is the one exception —
+   * the platform routes nothing to them.
+   */
+  async claimCallback(
+    userId: string,
+    bookingId: string,
+    input: ClaimCallbackInput,
+  ): Promise<BookingDto> {
+    const now = this.clock();
+    const { booking: original } = await this.authorize(userId, bookingId, 'customer');
+
+    if (!original.callbackGuaranteed) {
+      throw new BusinessRuleError(
+        'CALLBACK_NOT_OFFERED',
+        'This job was not booked with a callback guarantee',
+      );
+    }
+    const until = callbackClaimableUntil(original);
+    if (original.status !== 'completed' || until === null) {
+      throw new BusinessRuleError(
+        'CALLBACK_NOT_YET_AVAILABLE',
+        'A callback can be claimed once the job is complete',
+        { status: original.status },
+      );
+    }
+    if (now >= until) {
+      throw new BusinessRuleError(
+        'CALLBACK_WINDOW_CLOSED',
+        'The 7-day callback window has closed — Book Again to ask for a new visit',
+        { closedAt: until.toISOString() },
+      );
+    }
+    if (original.callbackClaim !== null) throw callbackAlreadyClaimed(original.callbackClaim.id);
+    if (original.providerProfile.suspendedAt !== null) {
+      throw new BusinessRuleError(
+        'CALLBACK_PROVIDER_UNAVAILABLE',
+        'This provider cannot take bookings right now — report the problem instead',
+      );
+    }
+    // §1c: an unsettled dispatch fee blocks **all** new bookings, and a
+    // callback is a new booking.
+    await assertNoOutstandingDispatchFee(this.prisma, userId);
+
+    const category = original.listing.category;
+    if (category === null) throw new QuoteWindowsMissingError();
+    const windows = readQuoteWindows(category);
+    const window = this.resolvePreferredWindow(input, now);
+
+    let created;
+    try {
+      created = await this.prisma.$transaction(async (tx) => {
+        const booking = await this.createWithReference(tx, {
+          listingId: original.listingId,
+          customerId: userId,
+          providerProfileId: original.providerProfileId,
+          bookingMode: 'request',
+          status: 'awaiting_quote',
+          preferredWindowText: window.text,
+          preferredWindowFrom: window.from,
+          preferredWindowTo: window.to,
+          quoteDueAt: minutesFrom(now, windows.expiryMinutes),
+          jobNotes: input.jobNotes,
+          islandId: original.islandId,
+          addressDetail: original.addressDetail,
+          // The chain stops at one return visit.
+          callbackGuaranteed: false,
+          callbackForBookingId: original.id,
+          createdAt: now,
+        });
+        await this.repo.recordStatusEvent(
+          {
+            bookingId: booking.id,
+            fromStatus: null,
+            toStatus: 'awaiting_quote',
+            actorRole: 'customer',
+            actorUserId: userId,
+            transition: 'create-callback',
+            at: now,
+          },
+          tx,
+        );
+        return booking;
+      });
+    } catch (error) {
+      // Two taps racing: the unique link lets one through.
+      if (isUniqueViolation(error, 'callback')) throw callbackAlreadyClaimed(null);
+      throw error;
+    }
+
+    const row = await this.mustFind(created.id);
+    await this.sendAcceptPrompt(row);
+    await this.notify('callback_claimed', row.id, row.providerProfile.user.id);
+    return toBookingDto(row, now);
+  }
+
+  /**
+   * `GET /v1/bookings/:id/calendar` — §Phase 17 frontend item 14, "an ICS
+   * download … on a confirmed booking".
+   *
+   * Available from `accepted` through `confirmed` — §1h locks the time at
+   * `accepted`, so from then on the entry names a time both parties agreed.
+   * Before that there is no agreed time to export, and after a terminal state
+   * there is nothing left to attend.
+   *
+   * Either party. The entry carries the service, the counterparty's display
+   * name, the place and the reference — and **no phone number** (§1c).
+   */
+  async calendarExport(userId: string, bookingId: string): Promise<CalendarExportDto> {
+    const now = this.clock();
+    const { booking, caller } = await this.authorize(userId, bookingId);
+    if (!COMMITTED_STATUSES.includes(booking.status) || booking.scheduledFor === null) {
+      throw new BusinessRuleError(
+        'CALENDAR_EXPORT_NOT_AVAILABLE',
+        'A booking can be added to a calendar once its time is agreed',
+        { status: booking.status },
+      );
+    }
+
+    // The held range where there is one — that is the time actually blocked
+    // on the provider's calendar. An emergency holds nothing (§1c) and gets
+    // the same two hours a request's hold is given.
+    const reservation =
+      booking.reservationId === null
+        ? null
+        : await this.prisma.reservation.findUnique({
+            where: { id: booking.reservationId },
+            select: { startsAt: true, endsAt: true },
+          });
+    const startsAt = booking.scheduledFor;
+    const endsAt =
+      reservation !== null
+        ? reservation.endsAt
+        : booking.timeSlot !== null
+          ? booking.timeSlot.endsAt
+          : minutesFrom(startsAt, REQUEST_HOLD_MINUTES);
+
+    const counterparty =
+      caller.role === 'customer'
+        ? (booking.providerProfile.businessName ?? booking.providerProfile.user.fullName)
+        : booking.customer.fullName;
+    const place = [
+      booking.addressDetail,
+      booking.island === null ? null : islandDisplayName(booking.island),
+    ].filter((part): part is string => part !== null && part !== '');
+
+    const ics = buildIcs({
+      uid: `booking-${booking.id}@raajjepro`,
+      // Each accepted change of time is a new revision of the same event, so
+      // a re-download replaces the entry rather than adding a second one.
+      sequence: booking.amendments.filter(
+        (a) => a.status === 'accepted' && a.proposedScheduledFor !== null,
+      ).length,
+      stampedAt: now,
+      startsAt,
+      endsAt,
+      summary: `${booking.listing.name ?? 'RaajjePro booking'} — ${counterparty}`,
+      description:
+        `RaajjePro booking ${booking.reference}. ` +
+        'Arrangements and any change to the agreed time go through the booking chat in the app.',
+      location: place.length === 0 ? null : place.join(', '),
+    });
+    return { filename: `raajjepro-${booking.reference}.ics`, contentType: 'text/calendar', ics };
+  }
+
+  // =========================================================================
   // The two seams earlier phases built against
   // =========================================================================
 
@@ -1793,6 +2297,7 @@ export class BookingService {
         pricingModel: true,
         priceLaari: true,
         categoryId: true,
+        callbackGuaranteeOffered: true,
         // §Phase 17.2 reads four of these: both quote clocks (invariant 13),
         // Round 14's lead time and Round 25's occasion presets. None of them
         // is ever a literal in this module.
@@ -2068,6 +2573,49 @@ export class BookingService {
     );
   }
 
+  /**
+   * A slot a booking can move to: on the **same listing**, still open, and
+   * still in the future. The claim inside the transaction is the last word;
+   * this is what lets the common refusals name themselves first.
+   */
+  private async openSlotFor(booking: BookingRow, slotId: string, now: Date) {
+    const slot = await this.prisma.timeSlot.findUnique({
+      where: { id: slotId },
+      select: { id: true, listingId: true, startsAt: true, endsAt: true, status: true },
+    });
+    if (slot?.listingId !== booking.listingId) {
+      throw new NotFoundError('That time is no longer available', 'SLOT_NOT_FOUND');
+    }
+    if (slot.id === booking.timeSlotId) {
+      throw new BusinessRuleError('RESCHEDULE_SAME_TIME', 'That is the time already booked');
+    }
+    if (slot.status !== 'open' || slot.startsAt <= now) throw new SlotNoLongerAvailableError();
+    return slot;
+  }
+
+  /**
+   * §1h: "Declining an honoured callback claim routes to the Phase 22 dispute
+   * queue and counts against conduct." Filed by the system — the customer
+   * claimed, the provider said no or said nothing — so the reporter is null,
+   * as §Phase 17.1's day-7 escalation's is. A no-op on any other booking.
+   */
+  private async fileCallbackDeclined(tx: Db, booking: BookingRow, now: Date): Promise<void> {
+    if (booking.callbackForBookingId === null) return;
+    await this.repo.createReport(
+      {
+        reporterId: null,
+        targetType: 'booking',
+        targetId: booking.id,
+        bookingId: booking.id,
+        reason: 'callback_declined',
+        note: null,
+        status: 'open',
+        createdAt: now,
+      },
+      tx,
+    );
+  }
+
   private slotDuration(booking: BookingRow): number {
     if (booking.timeSlot !== null) {
       return durationMinutes(booking.timeSlot.startsAt, booking.timeSlot.endsAt);
@@ -2149,6 +2697,26 @@ const AMENDABLE_STATUSES: BookingStatus[] = [
   'payment_claimed',
   'confirmed',
 ];
+
+function rescheduleNeeds(what: 'slot' | 'time' | 'window'): BusinessRuleError {
+  return new BusinessRuleError(
+    'RESCHEDULE_NEEDS_A_TIME',
+    what === 'slot'
+      ? 'Pick another open time'
+      : what === 'time'
+        ? 'Propose the new time'
+        : 'Say when suits you instead',
+    { needs: what },
+  );
+}
+
+function callbackAlreadyClaimed(bookingId: string | null): ConflictError {
+  return new ConflictError(
+    'CALLBACK_ALREADY_CLAIMED',
+    'A callback has already been claimed for this job',
+    bookingId === null ? undefined : { bookingId },
+  );
+}
 
 /** The two-devices case, and the stale screen. Same truth, same answer. */
 function staleBooking(): ConflictError {

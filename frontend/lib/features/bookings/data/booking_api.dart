@@ -4,6 +4,7 @@ import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/offline/offline_queue.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
+import 'package:raajjepro/features/bookings/data/repeat_models.dart';
 
 /// Which side of a booking the caller is asking as. The server treats this as
 /// the scope, not a hint — there is no shape of the request that reaches
@@ -287,6 +288,55 @@ class BookingApi {
   ) async => Booking.fromJson(
     await _api.delete('$_bookings/$bookingId/amendments/$amendmentId'),
   );
+
+  // -- §Phase 17.4 -----------------------------------------------------------
+
+  /// `Book Again.dc.html`'s prefill — routed by the listing's mode **now**.
+  /// A read; the booking itself is made by [createSlotBooking] or
+  /// [createRequestBooking], so every rule of creation still applies.
+  Future<BookAgain> bookAgain(String bookingId) async =>
+      BookAgain.fromJson(await _api.get('$_bookings/$bookingId/book-again'));
+
+  /// "Same time next week?" — starts a weekly series from a booking the
+  /// customer has had, and asks for next week at once. Not queued: the ask
+  /// is a booking request the provider sees, and a replay a day later would
+  /// ask for a time that may be gone.
+  Future<RecurringSeries> createSeries(String bookingId) async =>
+      RecurringSeries.fromJson(
+        await _api.post(
+          '/v1/recurring-series',
+          body: {'bookingId': bookingId},
+          headers: {
+            'idempotency-key': _queue.newIdempotencyKey('recurring.create'),
+          },
+        ),
+      );
+
+  Future<RecurringSeries> readSeries(String seriesId) async =>
+      RecurringSeries.fromJson(
+        await _api.get('/v1/recurring-series/$seriesId'),
+      );
+
+  Future<RecurringSeries> skipWeek(String seriesId, DateTime occursAt) async =>
+      RecurringSeries.fromJson(
+        await _api.patch(
+          '/v1/recurring-series/$seriesId/skip',
+          body: {'occursAt': occursAt.toUtc().toIso8601String()},
+        ),
+      );
+
+  Future<RecurringSeries> endSeries(String seriesId) async =>
+      RecurringSeries.fromJson(
+        await _api.patch('/v1/recurring-series/$seriesId/end', body: const {}),
+      );
+
+  Future<RecurringSeries> resumeSeries(String seriesId) async =>
+      RecurringSeries.fromJson(
+        await _api.patch(
+          '/v1/recurring-series/$seriesId/resume',
+          body: const {},
+        ),
+      );
 
   Future<Booking> _patch(
     String bookingId,

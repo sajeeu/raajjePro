@@ -95,10 +95,33 @@ export type BookingNotification =
    * §1c's fifth reveal condition: "the counterparty is notified at the
    * moment of reveal, in-app and by push". To the provider.
    */
-  | 'contact_revealed';
+  | 'contact_revealed'
+  // -- §Phase 17.4 -----------------------------------------------------------
+  /** §Phase 17 item 16: the customer moved an unanswered booking. To the provider. */
+  | 'rescheduled'
+  /** §1h: a callback was claimed against a completed job. To the provider. */
+  | 'callback_claimed'
+  /**
+   * §1c: "that week is skipped, **both parties are notified explicitly**
+   * ('this week was not confirmed; your series continues next week')". To
+   * both. 🔧 The subject id is the **series**, as an emergency's is its
+   * request — a week with no open slot has no booking to name.
+   */
+  | 'recurring_week_missed'
+  /** The customer freed a week. To the provider. Subject: the series. */
+  | 'recurring_week_skipped'
+  /** §1c: three misses "pause the series and notify the customer to reconfirm". Subject: the series. */
+  | 'recurring_series_paused'
+  /** The customer ended the series; unanswered weeks are withdrawn. To the provider. Subject: the series. */
+  | 'recurring_series_ended';
 
 export interface BookingNotificationEvent {
   event: BookingNotification;
+  /**
+   * The subject: a booking id for booking events, the emergency request's id
+   * for §Phase 17.3's pre-selection events, and the recurring series' id for
+   * §Phase 17.4's series events. The event name says which.
+   */
   bookingId: string;
   /** Who should be told. One call per recipient — "both parties" is two events. */
   userId: string;

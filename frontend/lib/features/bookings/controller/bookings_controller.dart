@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:raajjepro/core/api/api_client.dart';
 import 'package:raajjepro/features/bookings/data/booking_api.dart';
 import 'package:raajjepro/features/bookings/data/booking_models.dart';
+import 'package:raajjepro/features/bookings/data/repeat_models.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 /// The Bookings tab's filter pills (`My Bookings.dc.html`).
@@ -136,6 +137,19 @@ final bookingDetailProvider = FutureProvider.autoDispose
 /// item 12). Every other action either sent or failed, and saying "pending"
 /// about a payment claim the provider has not received would be a false
 /// promise about money.
+/// §Phase 17.4. Book Again's prefill for one completed booking.
+final bookAgainProvider = FutureProvider.autoDispose.family<BookAgain, String>(
+  (ref, bookingId) => ref.watch(bookingApiProvider).bookAgain(bookingId),
+  retry: _noRetry,
+);
+
+/// §Phase 17.4. One weekly series.
+final recurringSeriesProvider = FutureProvider.autoDispose
+    .family<RecurringSeries, String>(
+      (ref, seriesId) => ref.watch(bookingApiProvider).readSeries(seriesId),
+      retry: _noRetry,
+    );
+
 enum BookingActionPhase { idle, working, queued, failed }
 
 class BookingActionState {

@@ -15,6 +15,7 @@ import 'package:raajjepro/features/my_services/presentation/my_services_screen.d
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
 import '../../core/auth/auth_controller_test.dart' show tokensJson, userJson;
@@ -170,18 +171,10 @@ void main() {
       expect(find.text('1. Scope'), findsOneWidget);
     });
 
-    testWidgets('the three unbuilt rows each name the phase that owes them', (
+    testWidgets('the two unbuilt rows each name the phase that owes them', (
       tester,
     ) async {
-      const owed = {
-        'Saved': 'Phase 14',
-        // 🔧 Was Phase 7 until 2026-09-10. Phase 7 seeded `Island` and
-        // built the picker but does not own this screen — §1h's "carried
-        // forward by Book Again" puts it in 17.4
-        // (`docs/decisions/19-phase-7-service-areas.md`, decision 1).
-        'Saved preferences': 'Phase 17.4',
-        'Help & support': 'Phase 19b',
-      };
+      const owed = {'Saved': 'Phase 14', 'Help & support': 'Phase 19b'};
       await bootToProfile(tester);
       for (final entry in owed.entries) {
         await tester.ensureVisible(find.text(entry.key));
@@ -196,6 +189,28 @@ void main() {
         await settle(tester);
         expect(find.byType(ProfileScreen), findsOneWidget);
       }
+    });
+
+    // 🔧 Phase 17.4 built it. Until 2026-10-09 this row was asserted to reach
+    // an `UnbuiltScreen` owed by Phase 17.4 (ledger P6-2); it now reaches
+    // the screen itself.
+    testWidgets('Saved preferences reaches the real screen', (tester) async {
+      api.on(
+        'GET',
+        '/v1/users/me/saved-preferences',
+        (_) => {
+          'addresses': <Object>[],
+          'timeWindows': <Object>[],
+          'standingInstructions': null,
+        },
+      );
+      await bootToProfile(tester);
+      await tester.ensureVisible(find.text('Saved preferences'));
+      await tester.tap(find.text('Saved preferences'));
+      await settle(tester);
+      expect(find.byType(SavedPreferencesScreen), findsOneWidget);
+      expect(find.byType(UnbuiltScreen), findsNothing);
+      expect(find.text('Nothing saved yet'), findsOneWidget);
     });
   });
 

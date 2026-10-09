@@ -109,6 +109,10 @@ enum AmountKind {
   dailyTotal,
   quoted,
   calloutFee,
+
+  /// §Phase 17.4. §1h's callback — "at zero cost" — labelled for why it is
+  /// nothing, never as a quoted price of MVR 0.
+  callback,
   unknown;
 
   static AmountKind parse(String? wire) => switch (wire) {
@@ -117,6 +121,7 @@ enum AmountKind {
     'daily_total' => dailyTotal,
     'quoted' => quoted,
     'callout_fee' => calloutFee,
+    'callback' => callback,
     _ => unknown,
   };
 
@@ -126,6 +131,7 @@ enum AmountKind {
     dailyTotal => 'Agreed total',
     quoted => 'Quoted price',
     calloutFee => 'Callout fee',
+    callback => 'Callback — free return visit',
     unknown => 'Agreed amount',
   };
 
@@ -378,6 +384,9 @@ class Booking {
     required this.paymentDetails,
     required this.replacement,
     this.emergency,
+    this.callback = BookingCallback.none,
+    this.callbackForBookingId,
+    this.recurringSeriesId,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) => Booking(
@@ -449,6 +458,11 @@ class Booking {
     emergency: json['emergency'] is Map<String, dynamic>
         ? EmergencyDetails.fromJson(json['emergency'] as Map<String, dynamic>)
         : null,
+    callback: json['callback'] is Map<String, dynamic>
+        ? BookingCallback.fromJson(json['callback'] as Map<String, dynamic>)
+        : BookingCallback.none,
+    callbackForBookingId: json['callbackForBookingId'] as String?,
+    recurringSeriesId: json['recurringSeriesId'] as String?,
   );
 
   final String id;
@@ -508,6 +522,16 @@ class Booking {
   /// the fee, the reveal's state and when "provider has not arrived" opens.
   final EmergencyDetails? emergency;
 
+  /// §Phase 17.4. §1h's callback guarantee as it applies to this booking —
+  /// derived by the server from its snapshot and the clock.
+  final BookingCallback callback;
+
+  /// On a callback booking: the completed job whose guarantee it honours.
+  final String? callbackForBookingId;
+
+  /// The weekly series this booking is one week of, where it is.
+  final String? recurringSeriesId;
+
   /// The number a screen shows, and the label beside it. Before the provider
   /// has accepted there is no agreed amount — what exists is what the listing
   /// would come to, and it is labelled as such rather than as agreed.
@@ -547,4 +571,38 @@ class Booking {
     final left = deadline.difference(now);
     return left.isNegative ? Duration.zero : left;
   }
+}
+
+/// §1h's callback guarantee on one booking. The server decides every field;
+/// the app shows the badge and offers the claim only where `canClaim` says so.
+@immutable
+class BookingCallback {
+  const BookingCallback({
+    required this.guaranteed,
+    required this.claimableUntil,
+    required this.claimBookingId,
+    required this.canClaim,
+  });
+
+  factory BookingCallback.fromJson(Map<String, dynamic> json) =>
+      BookingCallback(
+        guaranteed: json['guaranteed'] as bool? ?? false,
+        claimableUntil: DateTime.tryParse(
+          json['claimableUntil'] as String? ?? '',
+        )?.toLocal(),
+        claimBookingId: json['claimBookingId'] as String?,
+        canClaim: json['canClaim'] as bool? ?? false,
+      );
+
+  static const none = BookingCallback(
+    guaranteed: false,
+    claimableUntil: null,
+    claimBookingId: null,
+    canClaim: false,
+  );
+
+  final bool guaranteed;
+  final DateTime? claimableUntil;
+  final String? claimBookingId;
+  final bool canClaim;
 }

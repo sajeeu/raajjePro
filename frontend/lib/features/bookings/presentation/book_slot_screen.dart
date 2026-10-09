@@ -16,7 +16,13 @@ import 'package:raajjepro/shared/shared.dart';
 
 /// What [BookSlotScreen] is pushed with.
 class BookSlotArgs {
-  const BookSlotArgs({required this.listingId, this.serviceName});
+  const BookSlotArgs({
+    required this.listingId,
+    this.serviceName,
+    this.jobNotes,
+    this.addressDetail,
+    this.islandId,
+  });
 
   factory BookSlotArgs.fromRouteArguments(Object? arguments) {
     final map = arguments is Map<String, dynamic>
@@ -25,11 +31,20 @@ class BookSlotArgs {
     return BookSlotArgs(
       listingId: map['listingId'] as String? ?? '',
       serviceName: map['serviceName'] as String?,
+      jobNotes: map['jobNotes'] as String?,
+      addressDetail: map['addressDetail'] as String?,
+      islandId: map['islandId'] as String?,
     );
   }
 
   final String listingId;
   final String? serviceName;
+
+  /// 🔧 §Phase 17.4. What Book Again carries forward (§1h) — the form opens
+  /// with it filled in and every field still editable.
+  final String? jobNotes;
+  final String? addressDetail;
+  final String? islandId;
 }
 
 /// **Booking a published time** — the second half of `Pick a Time.dc.html`,
@@ -70,6 +85,13 @@ class _BookSlotScreenState extends ConsumerState<BookSlotScreen> {
   PickedSlot? _slot;
   bool _sending = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _notes.text = widget.args.jobNotes ?? '';
+    _address.text = widget.args.addressDetail ?? '';
+  }
 
   @override
   void dispose() {
@@ -248,6 +270,7 @@ class _BookSlotScreenState extends ConsumerState<BookSlotScreen> {
             listingId: widget.args.listingId,
             timeSlotId: slot.slotId,
             jobNotes: _notes.text,
+            islandId: widget.args.islandId,
             addressDetail: _address.text,
           );
       ref.invalidate(bookingsListProvider);

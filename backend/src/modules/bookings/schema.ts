@@ -160,7 +160,13 @@ export const dispatchFeeParams = z.object({ id: uuid });
  */
 export const offerQuoteBody = z.object({
   scheduledFor: z.iso.datetime(),
-  amountLaari: laari.min(1),
+  /**
+   * 🔧 Widened from `min(1)` in §Phase 17.4 — a callback is quoted at zero
+   * (§1h, "at zero cost"). The service still refuses zero on every other
+   * booking (`QUOTE_AMOUNT_REQUIRED`) and anything but zero on a callback
+   * (`CALLBACK_IS_FREE`), so no client sees a rule loosen.
+   */
+  amountLaari: laari,
   note: z.string().trim().max(2000).optional(),
 });
 
@@ -251,6 +257,48 @@ export const listBookingsQuery = z.object({
     .union([z.enum(BOOKING_STATUSES), z.array(z.enum(BOOKING_STATUSES))])
     .optional()
     .transform((v) => (v === undefined ? undefined : Array.isArray(v) ? v : [v])),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().max(200).optional(),
+});
+
+// ---------------------------------------------------------------------------
+// §Phase 17.4
+// ---------------------------------------------------------------------------
+
+/**
+ * `PATCH /v1/bookings/:id/reschedule`. Which field applies depends on the
+ * booking — a slot booking moves to `timeSlotId`, a request before its quote
+ * to a new window, a request after `accepted` to `scheduledFor` — and the
+ * service says which one was missing.
+ */
+export const rescheduleBody = z.object({
+  timeSlotId: uuid.optional(),
+  scheduledFor: z.iso.datetime().optional(),
+  preferredWindowChip: z.enum(WINDOW_CHIPS).optional(),
+  preferredWindowText: z.string().trim().min(1).max(300).optional(),
+  reason: z.string().trim().max(500).optional(),
+});
+
+/** `POST /v1/bookings/:id/callback` — what came back, and when suits. */
+export const claimCallbackBody = z
+  .object({
+    jobNotes: z.string().trim().min(1).max(2000),
+    preferredWindowChip: z.enum(WINDOW_CHIPS).optional(),
+    preferredWindowText: z.string().trim().min(1).max(300).optional(),
+  })
+  .refine(
+    (body) => body.preferredWindowChip !== undefined || body.preferredWindowText !== undefined,
+    { error: 'Say when suits you — pick a window or describe one', path: ['preferredWindowChip'] },
+  );
+
+export const recurringSeriesParams = z.object({ id: uuid });
+
+export const createRecurringSeriesBody = z.object({ bookingId: uuid });
+
+export const skipOccurrenceBody = z.object({ occursAt: z.iso.datetime() });
+
+export const listRecurringSeriesQuery = z.object({
+  role: z.enum(['customer', 'provider']).default('customer'),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   cursor: z.string().max(200).optional(),
 });

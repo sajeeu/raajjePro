@@ -40,6 +40,13 @@ import { BookingService } from './modules/bookings/service.js';
 import { ContactRevealService, databaseKillSwitches } from './modules/bookings/contact-reveal.js';
 import { DispatchFeeService } from './modules/bookings/dispatch-fee.js';
 import { EmergencyService } from './modules/bookings/emergency.js';
+import { RecurringSeriesService } from './modules/bookings/recurring.js';
+import { registerSavedPreferencesRoutes } from './modules/saved-preferences/routes.js';
+import {
+  registerSavedPreferencesAnonymisation,
+  savedPreferencesExportContributor,
+  SavedPreferencesService,
+} from './modules/saved-preferences/service.js';
 import { loggingBookingNotifier, type BookingNotifier } from './modules/bookings/notifications.js';
 import { bookingDeletionBlocker, bookingSubscriptionSource } from './modules/bookings/seams.js';
 import { registerListingRoutes } from './modules/listings/routes.js';
@@ -90,6 +97,7 @@ import {
   bookingQuoteApprovalTimeoutJob,
   bookingQuoteRequestTimeoutJob,
   emergencyOfferChoiceTimeoutJob,
+  recurringSeriesJob,
   emergencyWindowTimeoutJob,
 } from './jobs/booking-lifecycle.js';
 import {
@@ -187,6 +195,8 @@ declare module 'fastify' {
     subscriptions: SubscriptionService;
     bookings: BookingService;
     emergency: EmergencyService;
+    recurringSeries: RecurringSeriesService;
+    savedPreferences: SavedPreferencesService;
     contactReveal: ContactRevealService;
     dispatchFees: DispatchFeeService;
     media: MediaService;
@@ -317,6 +327,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     new LocationService({ prisma: deps.prisma, providers, clock: deps.clock }),
   );
   exportContributors.register(serviceAreaExportContributor(deps.prisma));
+  // Phase 17.4. A saved address is the user's own data and leaves with it.
+  exportContributors.register(savedPreferencesExportContributor(deps.prisma));
 
   // Phase 8. `MediaService` is the one upload path every module uses; the
   // storage behind it is a transport, defaulting to the local directory
@@ -490,6 +502,11 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     }),
   );
 
+  // Phase 17.4. §1h's saved preferences, read by Book Again — one way: this
+  // module knows nothing of bookings.
+  const savedPreferences = new SavedPreferencesService({ prisma: deps.prisma, clock: deps.clock });
+  app.decorate('savedPreferences', savedPreferences);
+
   const bookings = new BookingService({
     prisma: deps.prisma,
     clock: deps.clock,
@@ -499,10 +516,22 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     notifier: bookingNotifier,
     dispatcher: notifications,
     emergency,
+    savedPreferences,
     onConfirmed: (providerProfileId) => subscriptions.onBookingConfirmed(providerProfileId),
     log: app.log,
   });
   app.decorate('bookings', bookings);
+  // Phase 17.4. §1c's weekly series makes each week's booking through
+  // `BookingService` — the dependency runs one way, as `EmergencyService`'s does.
+  const recurringSeries = new RecurringSeriesService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    repo: bookingRepo,
+    bookings,
+    notifier: bookingNotifier,
+    log: app.log,
+  });
+  app.decorate('recurringSeries', recurringSeries);
 
   const anonymisation = new AnonymisationHooks();
   // A deleted account must stop receiving pushes. Revoking inside the
@@ -517,6 +546,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // Phase 5. The bank details and the self-written bio go with the account;
   // the verification decision and the billing price stay (see the hook).
   registerProviderAnonymisation(anonymisation);
+  // Phase 17.4. Saved addresses and standing instructions are personal data.
+  registerSavedPreferencesAnonymisation(anonymisation);
   app.decorate('anonymisation', anonymisation);
   const anonymiser = new AccountAnonymiser({
     prisma: deps.prisma,
@@ -580,6 +611,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // five minutes to choose between offers.
   jobs.register(emergencyWindowTimeoutJob(emergency, app.log));
   jobs.register(emergencyOfferChoiceTimeoutJob(emergency, app.log));
+  // Phase 17.4: the weekly series — record each week's outcome, then ask.
+  jobs.register(recurringSeriesJob(recurringSeries, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -603,6 +636,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerListingRoutes(app);
   registerAvailabilityRoutes(app);
   registerBookingRoutes(app);
+  registerSavedPreferencesRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);
   // The two routes the LOCAL media transport needs — this process playing the

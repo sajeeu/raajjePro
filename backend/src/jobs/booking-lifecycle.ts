@@ -1,4 +1,5 @@
 import type { EmergencyService } from '../modules/bookings/emergency.js';
+import type { RecurringSeriesService } from '../modules/bookings/recurring.js';
 import type { BookingService } from '../modules/bookings/service.js';
 import type { JobDefinition, JobLogger } from './runner.js';
 
@@ -217,6 +218,31 @@ export function emergencyOfferChoiceTimeoutJob(
           { job: EMERGENCY_OFFER_CHOICE_TIMEOUT_JOB_NAME, expired },
           'unanswered emergency offers released and re-broadcast',
         );
+      }
+    },
+  };
+}
+
+export const RECURRING_SERIES_JOB_NAME = 'recurring-series';
+
+/**
+ * §Phase 17.4. One tick records how every unanswered week turned out, then
+ * sends every weekly ask that has come due — in that order, so a third miss
+ * pauses a series before its next ask could go out (§1c).
+ *
+ * Every five minutes, like the accept window it follows: a week resolves when
+ * its booking leaves `requested`, and the customer's "this week was not
+ * confirmed" should arrive close behind the 24-hour auto-decline that caused
+ * it.
+ */
+export function recurringSeriesJob(series: RecurringSeriesService, log: JobLogger): JobDefinition {
+  return {
+    name: RECURRING_SERIES_JOB_NAME,
+    everyMs: EVERY_FIVE_MINUTES,
+    async run(now) {
+      const { resolved, asked } = await series.runSweep(now);
+      if (resolved > 0 || asked > 0) {
+        log.info({ job: RECURRING_SERIES_JOB_NAME, resolved, asked }, 'recurring series swept');
       }
     },
   };

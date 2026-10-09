@@ -113,3 +113,29 @@ export const CONTACT_REVEAL_AFTER_TERMINAL_HOURS = 24;
 export function secondsFrom(at: Date, seconds: number): Date {
   return new Date(at.getTime() + seconds * 1000);
 }
+
+// -- §Phase 17.4 -----------------------------------------------------------------
+//
+// Flat for every category, like the rest of this file. The per-category
+// callback rule is **eligibility** (`Category.callbackEligible`, Round 28),
+// never the length of the window.
+
+/**
+ * §1h: "A provider commits to **return free within 7 days** if the same issue
+ * recurs." Measured from `completedAt` — the job has to have been done before
+ * it can come back.
+ */
+export const CALLBACK_WINDOW_DAYS = 7;
+
+/** §1c: "A `RecurringSeries` links a customer, provider, and listing to a **weekly** cadence." */
+export const RECURRING_CADENCE_DAYS = 7;
+
+/**
+ * §1c: "**Three consecutive missed occurrences** pause the series and notify
+ * the customer to reconfirm."
+ */
+export const RECURRING_PAUSE_AFTER_MISSES = 3;
+
+export function daysFrom(at: Date, days: number): Date {
+  return new Date(at.getTime() + days * 24 * 60 * 60_000);
+}

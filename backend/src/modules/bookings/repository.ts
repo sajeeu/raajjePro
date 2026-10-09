@@ -79,6 +79,11 @@ const BOOKING_FIELDS = {
       select: { id: true, name: true, atollAbbr: true, nameAmbiguous: true },
     },
     amendments: { orderBy: { createdAt: 'desc' } },
+    /// 🔧 §Phase 17.4. The callback booking claimed against this one, if any
+    /// — what the detail read needs to say "claimed" rather than offer the
+    /// claim again — and the series a weekly booking belongs to.
+    callbackClaim: { select: { id: true } },
+    recurringOccurrence: { select: { seriesId: true } },
   },
 } as const satisfies { include: Prisma.BookingInclude };
 
@@ -173,7 +178,16 @@ export class BookingRepository {
     return this.prisma.booking.findMany({
       where: {
         status: 'requested',
-        createdAt: { lte: before },
+        /**
+         * 🔧 §Phase 17.4: a booking the customer moved before the provider
+         * answered runs its 24 hours from the move — the provider is being
+         * asked about a different time. One that was never moved runs from
+         * creation, as it always did.
+         */
+        OR: [
+          { rescheduledAt: null, createdAt: { lte: before } },
+          { rescheduledAt: { lte: before } },
+        ],
         /**
          * 🔧 **`slot` alone as of §Phase 17.2** — this read `['slot',
          * 'request']` while no request booking could exist to be found.

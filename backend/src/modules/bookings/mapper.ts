@@ -2,8 +2,10 @@ import type { BookingAmendment, BookingStatusEvent } from '../../generated/prism
 import type { PaymentDetailsDto as ProviderPaymentDetailsDto } from '../providers/types.js';
 import { bookingChatState } from './chat.js';
 import type { BookingRow } from './repository.js';
+import { CALLBACK_WINDOW_DAYS, daysFrom } from './windows.js';
 import type {
   BookingAmendmentDto,
+  BookingCallbackDto,
   BookingDto,
   BookingStatusEventDto,
   PaymentDetailsDto,
@@ -90,6 +92,35 @@ export function toReplacementPrefillDto(row: BookingRow): ReplacementPrefillDto 
   };
 }
 
+/**
+ * §1h's callback, derived from the snapshot and the clock — the same reading
+ * `BookingService.claimCallback` enforces, so the button and the endpoint
+ * cannot disagree.
+ */
+export function toCallbackDto(row: BookingRow, now: Date): BookingCallbackDto {
+  const claimableUntil = callbackClaimableUntil(row);
+  const claimBookingId = row.callbackClaim?.id ?? null;
+  return {
+    guaranteed: row.callbackGuaranteed,
+    claimableUntil: iso(claimableUntil),
+    claimBookingId,
+    canClaim:
+      claimableUntil !== null &&
+      row.status === 'completed' &&
+      now < claimableUntil &&
+      claimBookingId === null,
+  };
+}
+
+/** Seven days after completion, on a guaranteed booking; null otherwise. */
+export function callbackClaimableUntil(row: {
+  callbackGuaranteed: boolean;
+  completedAt: Date | null;
+}): Date | null {
+  if (!row.callbackGuaranteed || row.completedAt === null) return null;
+  return daysFrom(row.completedAt, CALLBACK_WINDOW_DAYS);
+}
+
 export interface BookingDtoExtras {
   statusHistory?: BookingStatusEvent[];
   paymentDetails?: ProviderPaymentDetailsDto;
@@ -169,6 +200,11 @@ export function toBookingDto(
     disputeOutcome: row.disputeOutcome,
 
     createdAt: row.createdAt.toISOString(),
+
+    rescheduledAt: iso(row.rescheduledAt),
+    callback: toCallbackDto(row, now),
+    callbackForBookingId: row.callbackForBookingId,
+    recurringSeriesId: row.recurringOccurrence?.seriesId ?? null,
 
     amendments: row.amendments.map(toAmendmentDto),
   };

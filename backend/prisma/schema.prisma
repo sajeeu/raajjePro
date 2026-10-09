@@ -322,6 +322,11 @@ model User {
   emergencyRequests EmergencyRequest[] @relation("EmergencyRequestCustomer")
   /// §Phase 22's minimal insert. Null reporter = the system filed it.
   reportsFiled      Report[]           @relation("ReportReporter")
+  /// §Phase 17.4.
+  recurringSeries   RecurringSeries[]  @relation("RecurringSeriesCustomer")
+  savedAddresses    SavedAddress[]
+  savedTimeWindows  SavedTimeWindow[]
+  savedPreferences  SavedPreferences?
 
   @@index([phoneE164])
   @@index([status, deletionDeadlineAt])
@@ -512,6 +517,8 @@ model ProviderProfile {
   bookings               Booking[]
   emergencyOffers        EmergencyOffer[]
   emergencyPasses        EmergencyPass[]
+  /// §Phase 17.4.
+  recurringSeries        RecurringSeries[]
 
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
@@ -975,6 +982,9 @@ model Island {
   /// §Phase 17.1. Where the job is — **by id, never by name** (§0.0 item 12).
   bookings            Booking[]
   emergencyRequests   EmergencyRequest[]
+  /// §Phase 17.4. Saved addresses and recurring series, both by id.
+  savedAddresses      SavedAddress[]
+  recurringSeries     RecurringSeries[]
 
   /// The natural key, so two rows cannot claim the same island of the same atoll.
   @@unique([atollAbbr, name])
@@ -1285,11 +1295,13 @@ model Listing {
   reservations           Reservation[]
   slotState              ListingSlotState?
 
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   /// §Phase 17.1. §1b's protected-listing rule reads these by status and
   /// `scheduledFor`; nothing counts them for display.
-  bookings  Booking[]
+  bookings        Booking[]
+  /// §Phase 17.4.
+  recurringSeries RecurringSeries[]
 
   /// §1a's derived visibility resolves through this composite: the
   /// published-listing count is `(providerProfileId, status, visibility,
@@ -2180,6 +2192,11 @@ enum AmountKind {
   quoted
   /// §Phase 17.3.
   callout_fee
+  /// 🔧 §Phase 17.4. §1h's callback guarantee: "a new booking linked to the
+  /// original, **at zero cost**". Its own value rather than a `quoted` zero,
+  /// because the label a customer reads beside the number has to say why it
+  /// is nothing — "Callback — free return visit", never "Quoted price: MVR 0".
+  callback
 
   @@map("amount_kind")
 }
@@ -2282,6 +2299,11 @@ enum ReportReason {
   /// with an emergency booking already paid. System-filed, never chosen by a
   /// person — so it is not among the four a dispute may be raised under.
   provider_verification_revoked
+  /// 🔧 §Phase 17.4, §1h: "Declining an honoured callback claim routes to the
+  /// Phase 22 dispute queue and counts against conduct." System-filed when a
+  /// provider declines, lets lapse, or cancels a callback booking — never
+  /// chosen by a person, so it is not among the four a dispute may cite.
+  callback_declined
   // message
   contact_solicitation
   spam
@@ -2513,6 +2535,35 @@ model Booking {
   /// The offer this booking was created from.
   emergencyOffer EmergencyOffer?
 
+  // -- §Phase 17.4 -----------------------------------------------------------
+
+  /// When the customer last moved this booking before the provider answered
+  /// (§Phase 17 item 16). The accept clock runs from here when it is set:
+  /// the provider is being asked about a different time, so the 24 hours
+  /// they had for the old one is not the window they have for the new one.
+  /// `createdAt` is left alone — it is when the booking was made, and
+  /// rewriting it would be a lie the timeline could not explain.
+  rescheduledAt DateTime? @map("rescheduled_at") @db.Timestamptz(6)
+
+  /// §1h's callback guarantee, **snapshotted at creation** from the listing's
+  /// `callbackGuaranteeOffered` (which §Phase 8 already refuses on a category
+  /// whose `callbackEligible` is false — Round 28). Copied rather than read
+  /// later so a provider switching the opt-in off after the job cannot take
+  /// back the promise the customer booked under.
+  callbackGuaranteed Boolean @default(false) @map("callback_guaranteed")
+
+  /// Set on a callback booking: the completed booking whose guarantee it
+  /// honours. **Unique** — one claim per original job; a callback booking is
+  /// itself never guaranteed, so the chain stops at one return visit.
+  callbackForBookingId String?  @unique @map("callback_for_booking_id") @db.Uuid
+  callbackFor          Booking? @relation("CallbackClaim", fields: [callbackForBookingId], references: [id])
+  callbackClaim        Booking? @relation("CallbackClaim")
+
+  /// The weekly ask this booking answers, where it is one.
+  recurringOccurrence RecurringOccurrence?
+  /// Series started from this booking ("Same time next week?").
+  seriesStarted       RecurringSeries[]    @relation("RecurringSeriesOrigin")
+
   statusHistory BookingStatusEvent[]
   amendments    BookingAmendment[]
   reports       Report[]
@@ -2625,6 +2676,14 @@ model BookingAmendment {
   proposedAmountLaari  Int?      @map("proposed_amount_laari")
   proposedScheduledFor DateTime? @map("proposed_scheduled_for") @db.Timestamptz(6)
   proposedScopeNote    String?   @map("proposed_scope_note") @db.VarChar(2000)
+  /// 🔧 §Phase 17.4's reschedule after `accepted`: the published slot the new
+  /// time was picked from, so accepting the amendment puts the booking back
+  /// on a slot rather than on a bare window. **Deliberately not a foreign
+  /// key** — a future unreserved `TimeSlot` is the one row §0.0 item 18 lets
+  /// regeneration remove, and a pending proposal must not stop that. Nothing
+  /// is held while the proposal waits: accepting re-claims the slot, and a
+  /// slot somebody took in the meantime fails as `SLOT_NO_LONGER_AVAILABLE`.
+  proposedTimeSlotId   String?   @map("proposed_time_slot_id") @db.Uuid
 
   /// Why, in the proposer's words. Shown to the counterparty deciding.
   reason String? @db.VarChar(500)
@@ -2974,4 +3033,211 @@ model EmergencyPass {
 
   @@unique([requestId, providerProfileId])
   @@map("emergency_pass")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 17.4 — recurring series and saved preferences
+// ---------------------------------------------------------------------------
+
+/// §1c "Recurring bookings". `paused` is the three-misses state ("pause the
+/// series and notify the customer to reconfirm"); `ended` is the customer
+/// stopping it ("cancelling the series stops future occurrences").
+enum RecurringSeriesStatus {
+  active
+  paused
+  ended
+
+  @@map("recurring_series_status")
+}
+
+/// Where one week of a series ended up.
+enum RecurringOccurrenceState {
+  /// The weekly ask went out; the booking is waiting on the provider.
+  asked
+  /// The provider accepted that week. What happens to the booking afterwards
+  /// is the booking's own business.
+  accepted
+  /// The provider did not confirm that week — `missReason` says how. §1c:
+  /// "that week is skipped … and the series continues".
+  missed
+  /// The customer freed that week. Neutral: neither a miss nor a confirmation.
+  skipped
+  /// The series ended while that week's ask was still unanswered.
+  withdrawn
+
+  @@map("recurring_occurrence_state")
+}
+
+/// Why a week was not confirmed. All four count toward the three-in-a-row
+/// pause (owner's decision, 2026-10-09: "the provider didn't confirm this
+/// week" is the same fact to the customer however it happened).
+enum RecurringMissReason {
+  /// The provider said no.
+  declined
+  /// §1c's own case: the occurrence "auto-declines at the 24-hour timeout".
+  timed_out
+  /// The provider had no open slot at that time, so there was nothing to ask.
+  no_open_slot
+  /// The ask could not be made at all — the listing is no longer bookable,
+  /// the provider paused new customers, or the customer is blocked by an
+  /// unsettled dispatch fee.
+  could_not_ask
+
+  @@map("recurring_miss_reason")
+}
+
+/// §1c: "A `RecurringSeries` links a customer, provider, and listing to a
+/// weekly cadence." **Slot-based listings only.** "Each occurrence still
+/// requires individual provider accept — recurrence is a convenience, not a
+/// standing pre-authorization", so this row holds no reservation and no
+/// agreement: every week is an ordinary slot booking created by the job.
+model RecurringSeries {
+  id String @id @default(uuid()) @db.Uuid
+
+  customerId String @map("customer_id") @db.Uuid
+  customer   User   @relation("RecurringSeriesCustomer", fields: [customerId], references: [id])
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  /// The booking "Same time next week?" was tapped on.
+  originBookingId String  @map("origin_booking_id") @db.Uuid
+  originBooking   Booking @relation("RecurringSeriesOrigin", fields: [originBookingId], references: [id])
+
+  status RecurringSeriesStatus @default(active)
+
+  /// The start of the next week this series will ask for. Advances by exactly
+  /// seven days — the Maldives keeps no daylight saving, so a week is always
+  /// 168 hours and "Tuesdays 14:00" never drifts.
+  nextOccurrenceAt DateTime  @map("next_occurrence_at") @db.Timestamptz(6)
+  /// When that week's ask goes out: one week ahead of it, which is what
+  /// `Recurring Booking.dc.html` tells the customer ("The ask goes out on
+  /// Tue 8 Sep" for Tue 15 Sep). Null while paused or ended.
+  nextAskAt        DateTime? @map("next_ask_at") @db.Timestamptz(6)
+
+  /// Misses since the last accepted week. Three pauses the series (§1c). A
+  /// week the customer skipped neither adds to it nor resets it.
+  consecutiveMisses Int @default(0) @map("consecutive_misses")
+
+  /// "Same address, same notes — nothing to re-enter." Copied from the origin
+  /// booking, and what every week's booking is created with.
+  jobNotes      String? @map("job_notes") @db.VarChar(2000)
+  islandId      String? @map("island_id") @db.Uuid
+  island        Island? @relation(fields: [islandId], references: [id])
+  addressDetail String? @map("address_detail") @db.VarChar(300)
+
+  pausedAt DateTime? @map("paused_at") @db.Timestamptz(6)
+  endedAt  DateTime? @map("ended_at") @db.Timestamptz(6)
+
+  occurrences RecurringOccurrence[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// The ask sweep: active series whose next ask is due.
+  @@index([status, nextAskAt])
+  @@index([customerId, createdAt])
+  @@index([providerProfileId, createdAt])
+  @@map("recurring_series")
+}
+
+/// One week of a series. Written when the week is asked for — or earlier,
+/// when the customer skips a week that has not been asked yet — and never
+/// deleted (invariant 8).
+model RecurringOccurrence {
+  id String @id @default(uuid()) @db.Uuid
+
+  seriesId String          @map("series_id") @db.Uuid
+  series   RecurringSeries @relation(fields: [seriesId], references: [id])
+
+  occursAt DateTime @map("occurs_at") @db.Timestamptz(6)
+
+  /// The week's booking. Null where none could be made (`no_open_slot`,
+  /// `could_not_ask`) or where the customer skipped before the ask.
+  bookingId String?  @unique @map("booking_id") @db.Uuid
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  state      RecurringOccurrenceState
+  missReason RecurringMissReason?     @map("miss_reason")
+
+  /// When `state` last moved. The reconcile sweep reads `asked` rows.
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  /// One row per week per series — what makes the ask idempotent, and what
+  /// lets a skip written ahead of time be found when that week comes round.
+  @@unique([seriesId, occursAt])
+  @@index([state])
+  @@map("recurring_occurrence")
+}
+
+/// §1h: "**Saved addresses** with labels … reused across bookings."
+/// `Saved Preferences.dc.html`. An island **by id**, never by name (§0.0
+/// item 12); the line underneath is the customer's own free text.
+model SavedAddress {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  label       String @db.VarChar(40)
+  islandId    String @map("island_id") @db.Uuid
+  island      Island @relation(fields: [islandId], references: [id])
+  addressLine String @map("address_line") @db.VarChar(300)
+
+  /// Soft delete (invariant 8). A removed address is gone from every read.
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId, deletedAt, createdAt])
+  @@map("saved_address")
+}
+
+/// §1h: "**preferred time windows**". A set of weekdays and a range of the
+/// Maldives day — "Weekdays · 9:00–12:00". The label is rendered by the
+/// server from these, so "Weekdays" means Sunday to Thursday everywhere.
+model SavedTimeWindow {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  /// ISO weekdays, 1 = Monday … 7 = Sunday, sorted and distinct.
+  weekdays    Int[]
+  /// Minutes after Maldives midnight. `endMinute` > `startMinute`.
+  startMinute Int   @map("start_minute")
+  endMinute   Int   @map("end_minute")
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId, deletedAt, createdAt])
+  @@map("saved_time_window")
+}
+
+/// §1h: "**standing service instructions** ('gate code', 'ask for the
+/// manager')". One row per user, created on first write.
+model SavedPreferences {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  /// "Shared with the provider on every booking." Null when never written or
+  /// cleared.
+  standingInstructions String? @map("standing_instructions") @db.VarChar(500)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("saved_preferences")
 }

@@ -193,6 +193,17 @@ export interface BookingDto {
 
   createdAt: string;
 
+  // -- §Phase 17.4 ----------------------------------------------------------
+
+  /** When the customer last moved this booking before the provider answered. */
+  rescheduledAt: string | null;
+  /** §1h's callback guarantee as it applies to this booking. */
+  callback: BookingCallbackDto;
+  /** On a callback booking: the completed booking whose guarantee it honours. */
+  callbackForBookingId: string | null;
+  /** The weekly series this booking is one week of, where it is. */
+  recurringSeriesId: string | null;
+
   /** §1h. Every attempt, accepted or not — newest first. */
   amendments: BookingAmendmentDto[];
   /** Omitted from list responses; present on the detail read. */
@@ -401,4 +412,104 @@ export interface ContactRevealDto {
   revealedAt: string;
   /** 24 hours after the booking went terminal; null while it is still live. */
   expiresAt: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// §Phase 17.4 — callback, Book Again, recurring series
+// ---------------------------------------------------------------------------
+
+/**
+ * §1h: "A provider commits to return free within 7 days if the same issue
+ * recurs." Derived on every read from the booking's snapshot and its
+ * completion, so no stored flag can disagree with the clock.
+ */
+export interface BookingCallbackDto {
+  /** The listing offered the guarantee when this booking was made. The badge. */
+  guaranteed: boolean;
+  /** Seven days after completion; null until completed, or where not guaranteed. */
+  claimableUntil: string | null;
+  /** The callback booking already claimed against this one. */
+  claimBookingId: string | null;
+  /** All of: guaranteed, completed, inside the window, not yet claimed. */
+  canClaim: boolean;
+}
+
+/**
+ * `GET /v1/bookings/:id/book-again` — `Book Again.dc.html`.
+ *
+ * §Phase 17 frontend item 13: "pre-fills a new booking request against the
+ * same provider and listing, **routed by that listing's current
+ * `bookingMode`**". So `bookingMode` here is the listing's mode *now*, and
+ * `modeChanged` is what draws the artboard's "Since your last booking,
+ * Mariyam switched from open slots to requests" note.
+ *
+ * §1h: "Book Again carries the saved preferences forward" — the address from
+ * the job it repeats, and the customer's standing instructions and first
+ * preferred window from Saved Preferences.
+ */
+export interface BookAgainDto {
+  fromBookingId: string;
+  listingId: string;
+  listingName: string | null;
+  categoryName: string | null;
+  providerName: string;
+  /** What `VerificationBadge` renders beside the name. Never a boolean "verified". */
+  providerVerificationTier: VerificationTier;
+  /** False when the listing is no longer bookable — the artboard's "no longer offered" state. */
+  available: boolean;
+  /** The listing's mode now. Null only when `available` is false. */
+  bookingMode: 'slot' | 'request' | null;
+  modeChanged: boolean;
+  /** What the listing advertises now, for the "Service" row. */
+  pricingModel: string | null;
+  priceLaari: number | null;
+  lastDoneAt: string | null;
+  jobNotes: string | null;
+  islandId: string | null;
+  islandDisplayName: string | null;
+  addressDetail: string | null;
+  occasion: string | null;
+  standingInstructions: string | null;
+  /** The customer's first saved window's label — "Tuesday afternoons". */
+  preferredWindowLabel: string | null;
+}
+
+export type RecurringSeriesStatusDto = 'active' | 'paused' | 'ended';
+
+export interface RecurringOccurrenceDto {
+  id: string;
+  occursAt: string;
+  state: 'asked' | 'accepted' | 'missed' | 'skipped' | 'withdrawn';
+  missReason: 'declined' | 'timed_out' | 'no_open_slot' | 'could_not_ask' | null;
+  bookingId: string | null;
+  bookingStatus: BookingStatus | null;
+}
+
+/**
+ * One series — `Recurring Booking.dc.html`'s "Tuesdays · 14:00" screen.
+ *
+ * `nextOccurrenceAt` is the week that has not been asked for yet (the
+ * artboard's "The ask goes out on Tue 8 Sep"); it is skippable ahead of time.
+ */
+export interface RecurringSeriesDto {
+  id: string;
+  status: RecurringSeriesStatusDto;
+  listingId: string;
+  listingName: string | null;
+  customer: BookingPartyDto;
+  provider: BookingPartyDto;
+  /** The origin booking's slot length; null where it no longer sits on a slot. */
+  durationMinutes: number | null;
+  /** What one visit costs at the listing's price now — "MVR 450 a visit". */
+  pricePerVisitLaari: number | null;
+  nextOccurrenceAt: string | null;
+  nextAskAt: string | null;
+  /** True when the next week has already been skipped by the customer. */
+  nextOccurrenceSkipped: boolean;
+  consecutiveMisses: number;
+  pausedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+  /** The most recent weeks, newest last. */
+  occurrences: RecurringOccurrenceDto[];
 }

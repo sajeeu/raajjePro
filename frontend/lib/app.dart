@@ -27,6 +27,7 @@ import 'package:raajjepro/features/billing/presentation/billing_screen.dart';
 import 'package:raajjepro/features/billing/presentation/invoices_screen.dart';
 import 'package:raajjepro/features/billing/presentation/pay_by_bank_transfer_screen.dart';
 import 'package:raajjepro/features/bookings/controller/bookings_controller.dart';
+import 'package:raajjepro/features/bookings/presentation/book_again_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/book_slot_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_action_screens.dart';
 import 'package:raajjepro/features/bookings/presentation/booking_detail_screen.dart';
@@ -40,6 +41,7 @@ import 'package:raajjepro/features/bookings/presentation/provider_accept_screen.
 import 'package:raajjepro/features/bookings/presentation/provider_emergency_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/provider_receipt_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/quote_received_screen.dart';
+import 'package:raajjepro/features/bookings/presentation/recurring_booking_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/request_time_screen.dart';
 import 'package:raajjepro/features/bookings/presentation/reveal_contact_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
@@ -49,6 +51,7 @@ import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.d
 import 'package:raajjepro/features/my_services/presentation/my_services_screen.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
 import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -122,23 +125,10 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         LegalIndexScreen.routeName: (_) => const LegalIndexScreen(),
         AppRoutes.saved: (_) =>
             const UnbuiltScreen(title: 'Saved', owedBy: 'Phase 14'),
-        AppRoutes.savedPreferences: (_) => const UnbuiltScreen(
-          title: 'Saved preferences',
-          // Deferred out of Phase 3's Account settings and past Phase 6:
-          // labelled addresses need `Island`
-          // (`docs/decisions/12-phase-3-identity.md`, decision 2).
-          //
-          // 🔧 **Phase 7 built `Island` and did not take this screen.**
-          // §Phase 7's bullets and Done-when name it nowhere, and no section
-          // of the plan specifies its entity shape or endpoints, so Phase 7
-          // declined to invent them
-          // (`docs/decisions/19-phase-7-service-areas.md`, decision 1).
-          // §1h is what asks for it — saved addresses, preferred windows and
-          // standing instructions "reused across bookings" and "carried
-          // forward by Book Again" — which is Phase 17.4's slice, and before
-          // bookings exist a saved preference has nothing to be used by.
-          owedBy: 'Phase 17.4',
-        ),
+        // Phase 17.4 — §1h's saved preferences, reattributed here by the
+        // owner on 2026-09-10 and built against `Saved Preferences.dc.html`.
+        // Profile's row now reaches the real screen (ledger row P6-2).
+        AppRoutes.savedPreferences: (_) => const SavedPreferencesScreen(),
         AppRoutes.help: (_) =>
             const UnbuiltScreen(title: 'Help & support', owedBy: 'Phase 19b'),
         // Phase 6a. The onboarding flow itself — three steps behind one
@@ -245,6 +235,17 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         ),
         ProposeAmendmentScreen.routeName: (context) => ProposeAmendmentScreen(
           args: BookingActionArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        // §Phase 17.4 — the weekly series and Book Again.
+        RecurringBookingScreen.routeName: (context) => RecurringBookingScreen(
+          args: RecurringBookingArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+        BookAgainScreen.routeName: (context) => BookAgainScreen(
+          args: BookAgainArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),

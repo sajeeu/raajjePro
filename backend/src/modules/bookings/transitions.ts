@@ -17,8 +17,8 @@ import type { BookingActorRole, BookingStatus } from '../../generated/prisma/enu
  * ## What is deliberately absent
  *
  * A slice adds rows to this table; it never adds a second table — §Phase
- * 17.2 added the quote edges below exactly that way, and 🔧 §Phase 17.3 added
- * the emergency edges. **No edge reaches `emergency_offered`**: it is the
+ * 17.2 added the quote edges below exactly that way, 🔧 §Phase 17.3 added
+ * the emergency edges, and §Phase 17.4 added reschedule and the callback. **No edge reaches `emergency_offered`**: it is the
  * emergency *request's* state, not a booking's — see the emergency block.
  */
 export interface Edge {
@@ -200,6 +200,54 @@ export const EDGES: readonly Edge[] = [
     transition: 'verification-revoked',
     from: ['accepted', 'awaiting_payment'],
     to: 'cancelled',
+    actors: ['system'],
+  },
+
+  // -- §Phase 17.4 ----------------------------------------------------------
+  /**
+   * §Phase 17 item 16, **before the provider has answered** (owner's
+   * decision, 2026-10-09). Nothing is agreed yet, so nothing in §1h is
+   * locked: the customer moves a slot booking to another open slot, or a
+   * request to a new preferred window, and the status does not change. From
+   * `accepted` on the same endpoint files a time amendment instead, because
+   * §1h says neither party can move a locked time alone — that path is
+   * §1h's machinery, not an edge.
+   */
+  {
+    transition: 'reschedule',
+    from: ['requested'],
+    to: 'requested',
+    actors: ['customer'],
+  },
+  {
+    transition: 'reschedule',
+    from: ['awaiting_quote'],
+    to: 'awaiting_quote',
+    actors: ['customer'],
+  },
+  /**
+   * §1h: "A callback is a **new booking linked to the original**, at zero
+   * cost, so it flows through the normal machinery." It is a request — the
+   * provider proposes a return time, priced at zero — so it is created where
+   * every request is: `awaiting_quote`.
+   */
+  {
+    transition: 'create-callback',
+    from: [],
+    to: 'awaiting_quote',
+    actors: ['customer'],
+  },
+  /**
+   * The one place a booking skips the payment steps (owner's decision,
+   * 2026-10-09). A callback's agreed amount is zero, and walking it through
+   * "I've Paid" and "Payment Received" for MVR 0 would ask two people to
+   * attest to a transfer that cannot happen. `system`, because nobody chose
+   * it: the amount did.
+   */
+  {
+    transition: 'no-payment-due',
+    from: ['accepted'],
+    to: 'confirmed',
     actors: ['system'],
   },
 
