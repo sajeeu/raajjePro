@@ -6,11 +6,16 @@ import {
   SlotNoLongerAvailableError,
   TimeNoLongerAvailableError,
 } from '../availability/reservations.js';
+import { DispatchFeeOutstandingError } from './dispatch-fee.js';
 import type { BookingNotification, BookingNotifier } from './notifications.js';
 import { deriveSlotAmount, durationMinutes } from './pricing.js';
 import type { BookingRepository } from './repository.js';
 import type { BookingService, ServiceLogger } from './service.js';
-import type { RecurringOccurrenceDto, RecurringSeriesDto } from './types.js';
+import type {
+  RecurringOccurrenceDto,
+  RecurringPauseCauseDto,
+  RecurringSeriesDto,
+} from './types.js';
 import { daysFrom, RECURRING_CADENCE_DAYS, RECURRING_PAUSE_AFTER_MISSES } from './windows.js';
 
 const SERIES_INCLUDE = {
@@ -465,10 +470,15 @@ export class RecurringSeriesService {
             error instanceof TimeNoLongerAvailableError
           ) {
             await this.recordMiss(seriesId, null, occursAt, 'no_open_slot', now);
+          } else if (error instanceof DispatchFeeOutstandingError) {
+            // The customer's own unsettled fee (§1c). A miss like any other —
+            // but theirs, and the paused banner must not say otherwise.
+            await this.recordMiss(seriesId, null, occursAt, 'customer_blocked', now);
           } else if (error instanceof AppError) {
-            // The listing is gone or paused, or the customer is blocked —
-            // creation's own refusals, each a reason this week cannot be asked.
-            await this.recordMiss(seriesId, null, occursAt, 'could_not_ask', now);
+            // Creation's other refusals are all the listing's or the
+            // provider's: gone, hidden, suspended, switched mode, or not
+            // taking new customers.
+            await this.recordMiss(seriesId, null, occursAt, 'provider_unavailable', now);
           } else {
             throw error;
           }
@@ -605,8 +615,24 @@ export class RecurringSeriesService {
       pausedAt: series.pausedAt === null ? null : series.pausedAt.toISOString(),
       endedAt: series.endedAt === null ? null : series.endedAt.toISOString(),
       createdAt: series.createdAt.toISOString(),
+      pauseCause: series.status === 'paused' ? await this.pauseCause(series.id) : null,
       occurrences,
     };
+  }
+
+  /**
+   * Whose the misses that paused a series were — read from the last three
+   * missed weeks. A skipped week neither adds to the run nor resets it, and an
+   * accepted one resets it, so the last three misses are exactly the run.
+   */
+  private async pauseCause(seriesId: string): Promise<RecurringPauseCauseDto> {
+    const misses = await this.deps.prisma.recurringOccurrence.findMany({
+      where: { seriesId, state: 'missed' },
+      orderBy: { occursAt: 'desc' },
+      take: RECURRING_PAUSE_AFTER_MISSES,
+      select: { missReason: true },
+    });
+    return pauseCauseOf(misses.map((m) => m.missReason));
   }
 
   private async notify(event: BookingNotification, seriesId: string, userId: string) {
@@ -635,6 +661,32 @@ function outcomeOf(
   if (status === 'cancelled') return cancelledByRole === 'customer' ? 'skipped' : 'declined';
   return 'accepted';
 }
+
+/**
+ * §1c's honest framing and §1f's rule against attributing to a provider what
+ * is not theirs: the paused banner names the provider only when **every**
+ * miss in the run was on their side. All customer-side reads as the
+ * customer's, with what would clear it. Anything else — a mix, or a
+ * pre-split `could_not_ask` that cannot be told apart — names neither party.
+ */
+export function pauseCauseOf(reasons: (RecurringMissReason | null)[]): RecurringPauseCauseDto {
+  if (reasons.length > 0 && reasons.every((r) => r !== null && PROVIDER_SIDE.has(r))) {
+    return 'provider';
+  }
+  if (reasons.length > 0 && reasons.every((r) => r === 'customer_blocked')) return 'customer';
+  return 'mixed';
+}
+
+/**
+ * The misses that are the provider's: a decline, a silent 24 hours, no open
+ * time on their own grid, or a listing they hid or paused.
+ */
+const PROVIDER_SIDE: ReadonlySet<RecurringMissReason> = new Set([
+  'declined',
+  'timed_out',
+  'no_open_slot',
+  'provider_unavailable',
+]);
 
 /**
  * What one visit costs at the listing's price **now** — the provider may have

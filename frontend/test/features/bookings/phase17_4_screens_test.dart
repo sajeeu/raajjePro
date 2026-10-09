@@ -34,6 +34,7 @@ Map<String, dynamic> seriesJson({
   List<Map<String, dynamic>> occurrences = const [],
   String? nextOccurrenceAt = '2026-10-06T09:00:00.000Z',
   String? nextAskAt = '2026-09-29T09:00:00.000Z',
+  String? pauseCause,
 }) => {
   'id': 'series-1',
   'status': status,
@@ -50,6 +51,7 @@ Map<String, dynamic> seriesJson({
   'pausedAt': status == 'paused' ? '2026-09-29T09:00:00.000Z' : null,
   'endedAt': status == 'ended' ? '2026-09-29T09:00:00.000Z' : null,
   'createdAt': '2026-09-15T03:00:00.000Z',
+  'pauseCause': pauseCause,
   'occurrences': occurrences,
 };
 
@@ -276,8 +278,12 @@ void main() {
       h.api.on(
         'GET',
         '/v1/recurring-series/series-1',
-        (_) =>
-            seriesJson(status: 'paused', consecutiveMisses: 3, nextAskAt: null),
+        (_) => seriesJson(
+          status: 'paused',
+          consecutiveMisses: 3,
+          nextAskAt: null,
+          pauseCause: 'provider',
+        ),
       );
       h.api.on(
         'PATCH',
@@ -296,6 +302,11 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('nothing is charged'), findsOneWidget);
+      // All three misses were the provider's, so the banner may say so.
+      expect(
+        find.textContaining('Mariyam didn’t confirm three weeks in a row'),
+        findsOneWidget,
+      );
       // A paused series offers no skip — nothing is being asked.
       expect(find.text('Skip'), findsNothing);
       await tester.tap(find.text('Keep asking weekly'));
@@ -308,6 +319,85 @@ void main() {
         ),
         isTrue,
       );
+    });
+
+    testWidgets(
+      'paused by the customer’s own unsettled fee: names no provider, says '
+      'what lifts it',
+      (tester) async {
+        h.api.on(
+          'GET',
+          '/v1/recurring-series/series-1',
+          (_) => seriesJson(
+            status: 'paused',
+            consecutiveMisses: 3,
+            nextAskAt: null,
+            pauseCause: 'customer',
+            occurrences: [
+              for (final at in [
+                '2026-09-15T09:00:00.000Z',
+                '2026-09-22T09:00:00.000Z',
+                '2026-09-29T09:00:00.000Z',
+              ])
+                weekJson(at, 'missed', missReason: 'customer_blocked'),
+            ],
+          ),
+        );
+        await pumpScreen(
+          tester,
+          const RecurringBookingScreen(
+            args: RecurringBookingArgs(seriesId: 'series-1'),
+          ),
+          overrides: h.overrides(),
+        );
+        expect(
+          find.text('Series paused — three weeks couldn’t be asked'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('didn’t confirm'), findsNothing);
+        // §1c: the hold lifts on proof submission, not on admin confirmation.
+        expect(
+          find.textContaining('Submitting your transfer proof lifts the hold'),
+          findsOneWidget,
+        );
+        // The banner and the rows agree.
+        await scrollTo(
+          tester,
+          find.textContaining('while the dispatch fee was unsettled').first,
+        );
+        expect(
+          find.textContaining('while the dispatch fee was unsettled'),
+          findsNWidgets(3),
+        );
+      },
+    );
+
+    testWidgets('paused by a mix of misses: names neither party', (
+      tester,
+    ) async {
+      h.api.on(
+        'GET',
+        '/v1/recurring-series/series-1',
+        (_) => seriesJson(
+          status: 'paused',
+          consecutiveMisses: 3,
+          nextAskAt: null,
+          pauseCause: 'mixed',
+        ),
+      );
+      await pumpScreen(
+        tester,
+        const RecurringBookingScreen(
+          args: RecurringBookingArgs(seriesId: 'series-1'),
+        ),
+        overrides: h.overrides(),
+      );
+      expect(
+        find.textContaining('Three weeks in a row didn’t go ahead'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Mariyam didn’t confirm'), findsNothing);
+      expect(find.textContaining('dispatch fee'), findsNothing);
     });
 
     testWidgets('ending asks first, and says what it leaves alone', (

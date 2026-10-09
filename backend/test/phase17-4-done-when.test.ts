@@ -9,6 +9,7 @@ import {
   RECURRING_SERIES_JOB_NAME,
 } from '../src/jobs/booking-lifecycle.js';
 import type { ReservationService } from '../src/modules/availability/reservations.js';
+import { createOwedDispatchFee } from '../src/modules/bookings/dispatch-fee.js';
 import type {
   BookingNotificationEvent,
   BookingNotifier,
@@ -142,6 +143,30 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.4 — Done when', () => {
     });
   }
 
+  /**
+   * Leaves the customer owing §1c's MVR 200 dispatch fee, unsettled — linked
+   * to an emergency request, which is where the creation gate looks for it.
+   */
+  async function owesDispatchFee(customerId: string, listingId: string) {
+    const prisma = app.deps.prisma;
+    const fee = await createOwedDispatchFee(prisma, customerId);
+    const listing = await prisma.listing.findUniqueOrThrow({
+      where: { id: listingId },
+      select: { categoryId: true },
+    });
+    const island = await prisma.island.findFirstOrThrow({ select: { id: true } });
+    await prisma.emergencyRequest.create({
+      data: {
+        customerId,
+        categoryId: listing.categoryId ?? '',
+        islandId: island.id,
+        jobNotes: 'Burst pipe',
+        windowEndsAt: clock.clock(),
+        dispatchFeeSubmissionId: fee.id,
+      },
+    });
+  }
+
   async function series(user: RegisteredUser, id: string) {
     return sendOk<RecurringSeriesDto>(user, 'GET', `/v1/recurring-series/${id}`);
   }
@@ -265,6 +290,8 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.4 — Done when', () => {
       expect(now.status).toBe('paused');
       expect(now.consecutiveMisses).toBe(3);
       expect(now.nextAskAt).toBeNull();
+      // All three were the provider's declines, so the banner may name them.
+      expect(now.pauseCause).toBe('provider');
 
       // Paused means no ask goes out, however long it waits.
       const weeksBefore = now.occurrences.length;
@@ -280,6 +307,7 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.4 — Done when', () => {
       );
       expect(resumed.status).toBe('active');
       expect(resumed.consecutiveMisses).toBe(0);
+      expect(resumed.pauseCause).toBeNull();
       expect(resumed.occurrences.at(-1)?.state).toBe('asked');
       expect(new Date(resumed.occurrences.at(-1)?.occursAt ?? '') > clock.clock()).toBe(true);
     });
@@ -302,6 +330,64 @@ describe.skipIf(databaseUrl === undefined)('Phase 17.4 — Done when', () => {
       expect(made.occurrences[0]?.missReason).toBe('no_open_slot');
       expect(made.consecutiveMisses).toBe(1);
       expect((await series(provider, made.id)).status).toBe('active');
+    });
+
+    /** Sweeps at each week's ask time until the series has `weeks` resolved weeks. */
+    async function sweepWeeks(customer: RegisteredUser, id: string, weeks: number) {
+      let now = await series(customer, id);
+      while (now.occurrences.length < weeks && now.nextAskAt !== null) {
+        clock.set(new Date(now.nextAskAt));
+        await sweep();
+        now = await series(customer, id);
+      }
+      return now;
+    }
+
+    it("three weeks the customer's own unsettled fee blocked pause it — attributed to the customer, not the provider", async () => {
+      const { customer, listingId, booking } = await confirmedSlotBooking();
+      // §1c: an unsettled dispatch fee blocks all new bookings — every week's ask with it.
+      await owesDispatchFee(customer.userId, listingId);
+      const made = await sendOk<RecurringSeriesDto>(customer, 'POST', '/v1/recurring-series', {
+        bookingId: booking.id,
+      });
+      expect(made.occurrences[0]?.missReason).toBe('customer_blocked');
+
+      const now = await sweepWeeks(customer, made.id, 3);
+      expect(now.occurrences.map((o) => o.missReason)).toEqual([
+        'customer_blocked',
+        'customer_blocked',
+        'customer_blocked',
+      ]);
+      // The count and the pause are unchanged by the split — only whose they are.
+      expect(now.status).toBe('paused');
+      expect(now.consecutiveMisses).toBe(3);
+      expect(now.pauseCause).toBe('customer');
+    });
+
+    it('a provider who stops taking new customers misses on their side; mixed with the customer’s, it is neither’s', async () => {
+      const { customer, provider, listingId, booking } = await confirmedSlotBooking();
+      await app.deps.prisma.providerProfile.update({
+        where: { userId: provider.userId },
+        data: { acceptingNewCustomers: false },
+      });
+      const made = await sendOk<RecurringSeriesDto>(customer, 'POST', '/v1/recurring-series', {
+        bookingId: booking.id,
+      });
+      expect(made.occurrences[0]?.missReason).toBe('provider_unavailable');
+
+      await app.deps.prisma.providerProfile.update({
+        where: { userId: provider.userId },
+        data: { acceptingNewCustomers: true },
+      });
+      await owesDispatchFee(customer.userId, listingId);
+      const now = await sweepWeeks(customer, made.id, 3);
+      expect(now.occurrences.map((o) => o.missReason)).toEqual([
+        'provider_unavailable',
+        'customer_blocked',
+        'customer_blocked',
+      ]);
+      expect(now.status).toBe('paused');
+      expect(now.pauseCause).toBe('mixed');
     });
 
     it('a week the customer skips is neutral, and frees the slot', async () => {

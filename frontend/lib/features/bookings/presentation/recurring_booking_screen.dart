@@ -439,11 +439,10 @@ class _SeriesViewState extends ConsumerState<_SeriesView> {
         ],
         if (paused) ...[
           _WarningPanel(
-            title: 'Series paused — three weeks weren’t confirmed',
-            body:
-                '$first didn’t confirm three weeks in a row, so the weekly '
-                'ask has stopped going out. Keep asking, or end the series — '
-                'nothing is charged either way.',
+            title: series.pauseCause == RecurringPauseCause.customer
+                ? 'Series paused — three weeks couldn’t be asked'
+                : 'Series paused — three weeks weren’t confirmed',
+            body: _pausedBody(series.pauseCause, first),
             children: [
               Expanded(
                 child: AppButton.primary(
@@ -559,6 +558,27 @@ class _SeriesViewState extends ConsumerState<_SeriesView> {
     );
   }
 
+  /// Names the provider only when all three misses were theirs. A run the
+  /// customer's own unsettled fee blocked says what lifts it — proof of the
+  /// transfer, not admin confirmation (§1c). A mix names neither party.
+  static String _pausedBody(RecurringPauseCause cause, String first) =>
+      switch (cause) {
+        RecurringPauseCause.provider =>
+          '$first didn’t confirm three weeks in a row, so the weekly '
+              'ask has stopped going out. Keep asking, or end the series — '
+              'nothing is charged either way.',
+        RecurringPauseCause.customer =>
+          'New bookings are on hold until the MVR 200 emergency dispatch fee '
+              'is settled, so three weeks couldn’t be asked for and the '
+              'weekly ask has stopped. Submitting your transfer proof lifts '
+              'the hold — then keep asking weekly. Nothing is charged for '
+              'the series either way.',
+        RecurringPauseCause.mixed =>
+          'Three weeks in a row didn’t go ahead, so the weekly ask has '
+              'stopped going out. Each week below says why. Keep asking, or '
+              'end the series — nothing is charged either way.',
+      };
+
   void _confirmEnd() => setState(() => _end = _EndPhase.confirm);
 
   Future<void> _skip(DateTime occursAt) =>
@@ -638,6 +658,11 @@ class _WeekRow {
           sub: switch (o.missReason) {
             'no_open_slot' =>
               '$first had no open time that week; your series continues',
+            'provider_unavailable' =>
+              '$first wasn’t taking bookings that week; your series continues',
+            'customer_blocked' =>
+              'Couldn’t be asked while the dispatch fee was unsettled; your '
+                  'series continues',
             'could_not_ask' =>
               'This week couldn’t be asked for; your series continues',
             _ => 'This week was not confirmed; your series continues next week',

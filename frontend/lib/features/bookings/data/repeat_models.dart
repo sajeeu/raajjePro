@@ -106,6 +106,21 @@ enum RecurringSeriesStatus {
   };
 }
 
+/// Whose the three misses that paused a series were — decided by the server,
+/// so the banner can name the provider only when all three were theirs (§1c's
+/// honest framing, §1f). Anything the app does not recognise names neither.
+enum RecurringPauseCause {
+  provider,
+  customer,
+  mixed;
+
+  static RecurringPauseCause parse(String? wire) => switch (wire) {
+    'provider' => provider,
+    'customer' => customer,
+    _ => mixed,
+  };
+}
+
 enum RecurringOccurrenceState {
   asked,
   accepted,
@@ -176,6 +191,7 @@ class RecurringSeries {
     required this.nextAskAt,
     required this.nextOccurrenceSkipped,
     required this.consecutiveMisses,
+    required this.pauseCause,
     required this.occurrences,
   });
 
@@ -195,6 +211,7 @@ class RecurringSeries {
     nextAskAt: DateTime.tryParse(json['nextAskAt'] as String? ?? '')?.toLocal(),
     nextOccurrenceSkipped: json['nextOccurrenceSkipped'] as bool? ?? false,
     consecutiveMisses: json['consecutiveMisses'] as int? ?? 0,
+    pauseCause: RecurringPauseCause.parse(json['pauseCause'] as String?),
     occurrences: ((json['occurrences'] as List<dynamic>?) ?? const [])
         .whereType<Map<String, dynamic>>()
         .map(RecurringOccurrence.fromJson)
@@ -212,5 +229,8 @@ class RecurringSeries {
   final DateTime? nextAskAt;
   final bool nextOccurrenceSkipped;
   final int consecutiveMisses;
+
+  /// Meaningful only while [status] is paused.
+  final RecurringPauseCause pauseCause;
   final List<RecurringOccurrence> occurrences;
 }

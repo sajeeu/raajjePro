@@ -3068,9 +3068,11 @@ enum RecurringOccurrenceState {
   @@map("recurring_occurrence_state")
 }
 
-/// Why a week was not confirmed. All four count toward the three-in-a-row
-/// pause (owner's decision, 2026-10-09: "the provider didn't confirm this
-/// week" is the same fact to the customer however it happened).
+/// Why a week was not confirmed. Every reason counts toward the three-in-a-row
+/// pause (owner's decision, 2026-10-09) — but they do not all belong to the
+/// same party, and the paused banner names the provider only when all three
+/// misses are theirs (§1c honest framing, §1f). `pauseCause` on the series
+/// read is where that is decided.
 enum RecurringMissReason {
   /// The provider said no.
   declined
@@ -3078,10 +3080,19 @@ enum RecurringMissReason {
   timed_out
   /// The provider had no open slot at that time, so there was nothing to ask.
   no_open_slot
-  /// The ask could not be made at all — the listing is no longer bookable,
-  /// the provider paused new customers, or the customer is blocked by an
-  /// unsettled dispatch fee.
+  /// 🔧 Superseded 2026-10-09 by the two values below, and never written any
+  /// more. It carried a provider-side fact and a customer-side fact under one
+  /// name, which is how the paused banner came to blame the provider for the
+  /// customer's own unsettled fee. Kept readable for rows written before the
+  /// split, which cannot be told apart after the fact — so it is attributed
+  /// to neither party.
   could_not_ask
+  /// The ask could not be made for a reason on the provider's side — the
+  /// listing is no longer bookable, or the provider paused new customers.
+  provider_unavailable
+  /// The ask could not be made because the customer is blocked from booking
+  /// by an unsettled dispatch fee (§1c). Lifts on proof submission.
+  customer_blocked
 
   @@map("recurring_miss_reason")
 }

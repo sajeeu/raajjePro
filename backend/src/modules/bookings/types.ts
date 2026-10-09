@@ -480,7 +480,19 @@ export interface RecurringOccurrenceDto {
   id: string;
   occursAt: string;
   state: 'asked' | 'accepted' | 'missed' | 'skipped' | 'withdrawn';
-  missReason: 'declined' | 'timed_out' | 'no_open_slot' | 'could_not_ask' | null;
+  /**
+   * 🔧 `could_not_ask` is no longer written — it was split into
+   * `provider_unavailable` and `customer_blocked` — but stays in the type for
+   * rows made before the split.
+   */
+  missReason:
+    | 'declined'
+    | 'timed_out'
+    | 'no_open_slot'
+    | 'could_not_ask'
+    | 'provider_unavailable'
+    | 'customer_blocked'
+    | null;
   bookingId: string | null;
   bookingStatus: BookingStatus | null;
 }
@@ -510,6 +522,14 @@ export interface RecurringSeriesDto {
   pausedAt: string | null;
   endedAt: string | null;
   createdAt: string;
+  /**
+   * Whose the three misses that paused the series were; null unless paused.
+   * `provider` only when all three were the provider's — the app names the
+   * provider in the paused banner on that value and no other.
+   */
+  pauseCause: RecurringPauseCauseDto | null;
   /** The most recent weeks, newest last. */
   occurrences: RecurringOccurrenceDto[];
 }
+
+export type RecurringPauseCauseDto = 'provider' | 'customer' | 'mixed';

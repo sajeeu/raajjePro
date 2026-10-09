@@ -81,6 +81,19 @@ neutral: it neither adds to the run nor resets it. An accepted week resets it.
   listing gone or paused, the customer blocked by an unsettled dispatch fee. It
   counts like the other three; the owner's rule is about what the customer
   experiences, and a week that could not even be asked is not confirmed.
+  🔧 **Split the same day (owner, 2026-10-09)** into `provider_unavailable` and
+  `customer_blocked` (`DispatchFeeOutstandingError`). One value carried two
+  unrelated facts, and the paused banner read "Mariyam didn't confirm three
+  weeks in a row" to a customer whose own unpaid MVR 200 had blocked all three
+  — against §1c's honest framing and §1f. The count and the pause are
+  unchanged; only attribution is. The series read gains `pauseCause`
+  (`provider` / `customer` / `mixed`, from the last three misses): the banner
+  names the provider only on `provider` (declined, timed out, no open slot,
+  provider-side), says what lifts the hold on `customer` (proof submission),
+  and names neither party otherwise. `could_not_ask` stays in the enum, is no
+  longer written, and reads as `mixed` — rows written before the split cannot
+  be told apart, so no backfill. 🔧 `no_open_slot` is counted as the
+  provider's: the per-week row already names them for it.
 - **One active or paused series per customer per listing**
   (`RECURRING_SERIES_EXISTS`, carrying the existing id so the app opens it).
 - Offered from `confirmed` **or** `completed` slot bookings: Booking Detail
