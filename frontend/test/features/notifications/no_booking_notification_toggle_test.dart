@@ -61,6 +61,11 @@ void main() {
     final offenders = <String>[];
     for (final entity in Directory('lib').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      // 🔧 Separators normalised — 2026-10-09. `File.path` is `\`-separated on
+      // Windows, so the `/gallery/` test below never matched there and the
+      // gallery screen was reported as an offender on the first native-Windows
+      // run. Compare on one spelling rather than the host's.
+      final path = entity.path.replaceAll(r'\', '/');
       final source = entity.readAsStringSync();
       final hasToggle =
           source.contains('AppToggle') || source.contains('Switch(');
@@ -70,8 +75,8 @@ void main() {
           source.toLowerCase().contains('push');
       // The gallery renders every shared widget with sample data, including
       // AppToggle — it is a component catalogue, not a settings screen.
-      final isGallery = entity.path.contains('/gallery/');
-      if (mentionsNotifications && !isGallery) offenders.add(entity.path);
+      final isGallery = path.contains('/gallery/');
+      if (mentionsNotifications && !isGallery) offenders.add(path);
     }
     expect(
       offenders,

@@ -19,7 +19,11 @@ describe('Phase 7 — the island register', () => {
   const rows = loadIslandRegister();
 
   it('reads the real register, not a five-entry stand-in', () => {
-    expect(registerPath()).toMatch(/docs\/data\/inhabited-islands\.json$/);
+    // 🔧 Separators normalised — 2026-10-09. `registerPath()` is built with
+    // `path.resolve`, which returns `C:\…\docs\data\…` on Windows, so this
+    // pattern matched nothing there. Assert the tail on one spelling rather
+    // than the host's.
+    expect(registerPath().replaceAll('\\', '/')).toMatch(/docs\/data\/inhabited-islands\.json$/);
     expect(rows).toHaveLength(192);
     expect(new Set(rows.map((r) => r.atollAbbr)).size).toBe(20);
   });

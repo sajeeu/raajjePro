@@ -350,7 +350,11 @@ void main() {
       for (final file in Directory(
         'lib',
       ).listSync(recursive: true).whereType<File>()) {
-        final path = file.path;
+        // 🔧 Separators normalised — 2026-10-09. `File.path` is `\`-separated
+        // on Windows, so `exempt` — written with `/` — matched nothing there
+        // and the gallery screen was reported as having no entrance on the
+        // first native-Windows run. Compare on one spelling, not the host's.
+        final path = file.path.replaceAll(r'\', '/');
         if (!path.endsWith('_screen.dart')) continue;
         if (exempt.contains(path)) continue;
 

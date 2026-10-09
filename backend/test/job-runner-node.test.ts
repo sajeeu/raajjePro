@@ -92,6 +92,14 @@ describe.skipIf(databaseUrl === undefined)('JobRunner (Node-side jobs)', () => {
     runner.start();
     await new Promise((r) => setTimeout(r, 120));
     runner.stop();
+    await new Promise((r) => setTimeout(r, 60));
+    // 🔧 The baseline is taken after a settle, not at `stop()` — 2026-10-09.
+    // Reading it on the line after `stop()` raced a callback that was already
+    // queued: the property under test is that no *new* run is scheduled, and
+    // an in-flight one completing is not a leak. Windows' coarser timer
+    // granularity lands inside a 20 ms interval often enough that this failed
+    // on the first native-Windows run and never on Linux. The assertion below
+    // is unchanged in what it proves — nothing fires in a window after stop.
     const after = runs;
     await new Promise((r) => setTimeout(r, 60));
     expect(runs).toBeGreaterThanOrEqual(2);

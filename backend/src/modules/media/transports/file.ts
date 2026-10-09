@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 
 import { signMediaToken } from '../signing.js';
 import type { IssueUploadInput, IssuedUpload, MediaStorage } from '../types.js';
@@ -96,10 +96,19 @@ export class FileMediaStorage implements MediaStorage {
    * with `../` today. It is checked anyway: the day something derives a key
    * from a filename, path traversal out of the media directory is the bug
    * that gets written, and a check costs nothing.
+   *
+   * 🔧 **The separator is `sep`, never a literal `/` — 2026-10-09.** This read
+   * `this.directory + '/'`, which is the separator on Linux and CI and not the
+   * one `resolve` returns on Windows: there the path comes back
+   * `C:\…\.media\listing_cover\<uuid>`, never starts with `…\.media/`, and the
+   * guard judged every server-generated key to have escaped. Every upload threw,
+   * the route answered 500, and 47 of the 48 tests in
+   * `phase17-3-done-when.test.ts` died in setup on the first Windows checkout.
+   * Found by running the suite natively rather than inside WSL.
    */
   private pathFor(objectKey: string): string {
     const path = resolve(this.directory, objectKey);
-    if (path !== this.directory && !path.startsWith(this.directory + '/')) {
+    if (path !== this.directory && !path.startsWith(this.directory + sep)) {
       throw new Error(`object key escapes the media directory: ${objectKey}`);
     }
     return path;
