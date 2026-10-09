@@ -65,6 +65,13 @@ import { createMediaStorage } from './modules/media/transports/file.js';
 import type { MediaStorage } from './modules/media/types.js';
 import { registerProviderAnonymisation } from './modules/providers/anonymise.js';
 import type { ProviderConductSource } from './modules/providers/conduct.js';
+import { registerConductRoutes } from './modules/conduct/routes.js';
+import { ConductService } from './modules/conduct/service.js';
+import { registerReviewAnonymisation } from './modules/reviews/anonymise.js';
+import { registerReviewRoutes } from './modules/reviews/routes.js';
+import { ReviewService } from './modules/reviews/service.js';
+import { ProviderVisibility } from './modules/providers/visibility.js';
+import { conductRecomputeJob } from './jobs/conduct-recompute.js';
 import { registerProviderRoutes } from './modules/providers/routes.js';
 import { ProviderProfileService } from './modules/providers/service.js';
 import type { PublishedListingSource } from './modules/providers/visibility.js';
@@ -162,7 +169,12 @@ export interface AppDeps {
    * billing event fired and that nothing delivered it.
    */
   billingNotifier?: BillingNotifier;
-  /** Phase 11 supplies §1f's computed conduct metrics; until then no rate is computable. */
+  /**
+   * 🔧 **§Phase 11 filled this seam.** The default is now `ConductService`,
+   * reading snapshots recomputed from the booking log, not `noConductRecorded`
+   * (ledger P5-2). A test may still inject `FakeConduct` to put a provider
+   * either side of §1f's ten-booking floor without building ten bookings.
+   */
   providerConduct?: ProviderConductSource;
   /**
    * §Phase 19 owns notification content; until then the default logs that a
@@ -197,6 +209,8 @@ declare module 'fastify' {
     emergency: EmergencyService;
     recurringSeries: RecurringSeriesService;
     savedPreferences: SavedPreferencesService;
+    reviews: ReviewService;
+    conduct: ConductService;
     contactReveal: ContactRevealService;
     dispatchFees: DispatchFeeService;
     media: MediaService;
@@ -284,14 +298,18 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // gate. 🔧 **Phase 8 filled the published-listing seam** — the default is
   // now the real predicate over the `listing` table, not the empty one, so a
   // provider becomes publicly visible the moment they publish (ledger P5-1).
-  // Phase 11's conduct seam is still open: until bookings exist no rate is
-  // computable, which is the honest answer rather than a placeholder.
+  // 🔧 **Phase 11 filled the conduct seam** — `ConductService` reads §1f's
+  // metrics from snapshots the booking log recomputes (ledger P5-2). It is
+  // built here because it needs nothing but the database, and both this
+  // service and the booking repository below depend on it.
+  const conduct = new ConductService({ prisma: deps.prisma, clock: deps.clock, audit });
+  app.decorate('conduct', conduct);
   const providers = new ProviderProfileService({
     prisma: deps.prisma,
     categories,
     audit,
     listings: deps.publishedListings ?? PUBLISHED_LISTINGS,
-    ...(deps.providerConduct === undefined ? {} : { conduct: deps.providerConduct }),
+    conduct: deps.providerConduct ?? conduct,
   });
   app.decorate('providers', providers);
 
@@ -351,7 +369,11 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // pure reads, so they need no rules and no service — which is what keeps the
   // dependency one-way: subscriptions reads bookings, and `BookingService`
   // (constructed below) reads subscriptions for the trial hook.
-  const bookingRepo = new BookingRepository(deps.prisma);
+  // 🔧 §Phase 11: every terminal status event marks the provider's conduct
+  // snapshot stale inside its own transaction (see `ConductService`).
+  const bookingRepo = new BookingRepository(deps.prisma, (db, bookingId, at) =>
+    conduct.markStale(db, bookingId, at),
+  );
 
   const subscriptions = new SubscriptionService({
     prisma: deps.prisma,
@@ -533,6 +555,21 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   });
   app.decorate('recurringSeries', recurringSeries);
 
+  // Phase 11. Reviews of completed bookings, and the per-listing and
+  // per-provider aggregates recomputed in the transaction that changes them.
+  // §1a's gate is constructed over the same published-listing source the
+  // provider service uses, so a provider who is not public has no public
+  // reviews either.
+  app.decorate(
+    'reviews',
+    new ReviewService({
+      prisma: deps.prisma,
+      clock: deps.clock,
+      audit,
+      visibility: new ProviderVisibility(deps.prisma, deps.publishedListings ?? PUBLISHED_LISTINGS),
+    }),
+  );
+
   const anonymisation = new AnonymisationHooks();
   // A deleted account must stop receiving pushes. Revoking inside the
   // anonymisation transaction means a hook failure leaves the user frozen and
@@ -548,6 +585,9 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerProviderAnonymisation(anonymisation);
   // Phase 17.4. Saved addresses and standing instructions are personal data.
   registerSavedPreferencesAnonymisation(anonymisation);
+  // Phase 11. Reviews stay and keep counting; their attribution goes, and the
+  // author id is retained internally (ledger P1).
+  registerReviewAnonymisation(anonymisation);
   app.decorate('anonymisation', anonymisation);
   const anonymiser = new AccountAnonymiser({
     prisma: deps.prisma,
@@ -613,6 +653,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   jobs.register(emergencyOfferChoiceTimeoutJob(emergency, app.log));
   // Phase 17.4: the weekly series — record each week's outcome, then ask.
   jobs.register(recurringSeriesJob(recurringSeries, app.log));
+  // Phase 11: stale conduct snapshots every minute, every snapshot daily.
+  jobs.register(conductRecomputeJob(conduct, app.log));
   app.decorate('jobs', jobs);
 
   app.addHook('onSend', async (request, reply) => {
@@ -637,6 +679,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerAvailabilityRoutes(app);
   registerBookingRoutes(app);
   registerSavedPreferencesRoutes(app);
+  registerReviewRoutes(app);
+  registerConductRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);
   // The two routes the LOCAL media transport needs — this process playing the

@@ -2,14 +2,15 @@
  * `npm run db:seed`
  *
  * Bootstraps the reference data every later phase reads: the twelve categories
- * (§Phase 4, §1d) and the island register (§Phase 7, §0.0 item 12).
+ * (§Phase 4, §1d), the island register (§Phase 7, §0.0 item 12) and each
+ * category's fixed review-tag set (§Phase 11, §1f).
  *
  * 🔧 **This file was `seed-categories.ts` until Phase 7.** It was renamed
  * rather than joined by a second script because one command has to leave a
  * checkout with *all* its reference data — a `db:seed` that quietly did half
  * the job would show up as an empty island picker several phases later.
  *
- * Both seeds are create-if-absent and safe on every deploy. Neither reverts an
+ * All three seeds are create-if-absent and safe on every deploy. None reverts an
  * admin's edit; see each `seed*` function for what it does and does not
  * overwrite.
  */
@@ -17,6 +18,7 @@ import { createPrismaClient } from '../db/client.js';
 import { loadConfig } from '../config/env.js';
 import { seedCategories } from '../modules/categories/seed.js';
 import { seedIslands } from '../modules/location/seed.js';
+import { seedReviewTags } from '../modules/reviews/seed.js';
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env);
@@ -46,6 +48,10 @@ async function main(): Promise<void> {
       `Islands: ${String(islands.created)} created, ${String(islands.refreshed)} refreshed, ` +
         `${String(islands.ambiguousTotal)} rendered with an atoll code.\n`,
     );
+
+    // After the categories, which it reads: one tag set per category.
+    const tags = await seedReviewTags(prisma);
+    process.stdout.write(`Review tags: ${String(tags.created)} created.\n`);
   } finally {
     await prisma.$disconnect();
   }

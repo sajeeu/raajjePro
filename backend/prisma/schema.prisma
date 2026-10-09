@@ -327,6 +327,9 @@ model User {
   savedAddresses    SavedAddress[]
   savedTimeWindows  SavedTimeWindow[]
   savedPreferences  SavedPreferences?
+  /// §Phase 11. Authorship is retained after anonymisation and never returned
+  /// in any response — see [Review].
+  reviewsWritten    Review[]
 
   @@index([phoneE164])
   @@index([status, deletionDeadlineAt])
@@ -519,6 +522,11 @@ model ProviderProfile {
   emergencyPasses        EmergencyPass[]
   /// §Phase 17.4.
   recurringSeries        RecurringSeries[]
+  /// §Phase 11.
+  reviews                Review[]
+  ratingAggregate        ProviderRatingAggregate?
+  reviewTagCounts        ProviderReviewTagCount[]
+  conductSnapshot        ProviderConductSnapshot?
 
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
@@ -906,6 +914,8 @@ model Category {
   listings          Listing[]
   /// §Phase 17.3. Emergencies are raised by category, never by listing.
   emergencyRequests EmergencyRequest[]
+  /// §Phase 11, §1f: the fixed tag set a review on this category picks from.
+  reviewTags        ReviewTag[]
 
   @@index([isActive, sortOrder])
   @@map("category")
@@ -1295,13 +1305,17 @@ model Listing {
   reservations           Reservation[]
   slotState              ListingSlotState?
 
-  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
   /// §Phase 17.1. §1b's protected-listing rule reads these by status and
   /// `scheduledFor`; nothing counts them for display.
   bookings        Booking[]
   /// §Phase 17.4.
   recurringSeries RecurringSeries[]
+  /// §Phase 11.
+  reviews         Review[]
+  ratingAggregate ListingRatingAggregate?
+  reviewTagCounts ListingReviewTagCount[]
 
   /// §1a's derived visibility resolves through this composite: the
   /// published-listing count is `(providerProfileId, status, visibility,
@@ -2564,9 +2578,21 @@ model Booking {
   /// Series started from this booking ("Same time next week?").
   seriesStarted       RecurringSeries[]    @relation("RecurringSeriesOrigin")
 
+  // -- §Phase 11 -------------------------------------------------------------
+
+  /// §1f: "Any provider may contest a metric through the Phase 22 queue; a
+  /// booking excluded on appeal is excluded from the aggregate and
+  /// audit-logged." Set by an admin, reversible (invariant 1d), and read by
+  /// every conduct metric — an excluded booking counts towards nothing,
+  /// including the job count.
+  conductExcludedAt        DateTime? @map("conduct_excluded_at") @db.Timestamptz(6)
+  conductExcludedByAdminId String?   @map("conduct_excluded_by_admin_id") @db.Uuid
+
   statusHistory BookingStatusEvent[]
   amendments    BookingAmendment[]
   reports       Report[]
+  /// §Phase 11. One review per booking — the unique key is on [Review].
+  review        Review?
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -3251,4 +3277,254 @@ model SavedPreferences {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("saved_preferences")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 11 — reviews, ratings and §1f's conduct metrics
+// ---------------------------------------------------------------------------
+
+/// Which side of the line a tag sits on. §1f: "Negative tags are the point" —
+/// a positive-only set makes every profile look identical.
+enum ReviewTagSentiment {
+  positive
+  negative
+
+  @@map("review_tag_sentiment")
+}
+
+/// §1f's structured review tags: "six to eight fixed tags per category,
+/// positive and negative … **fixed per category, never free text**." Seeded
+/// per category by `seedReviewTags`, create-if-absent keyed on `key`, so a
+/// category's set can diverge from another's through data rather than a
+/// schema change.
+///
+/// 🔧 Every category carries §1f's own eight today — the plan names one set
+/// and no other (owner's decision, 2026-10-09, decision 32).
+model ReviewTag {
+  id String @id @default(uuid()) @db.Uuid
+
+  categoryId String   @map("category_id") @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  /// Stable machine name, e.g. `arrived_late`. The label may be reworded; the
+  /// key never is, because counts aggregate under it.
+  key       String             @db.VarChar(60)
+  label     String             @db.VarChar(60)
+  sentiment ReviewTagSentiment
+  sortOrder Int                @map("sort_order")
+
+  /// Retired rather than deleted (invariant 8): a review that applied a
+  /// retired tag keeps it, and its count keeps counting.
+  retiredAt DateTime? @map("retired_at") @db.Timestamptz(6)
+
+  applications   ReviewTagApplication[]
+  providerCounts ProviderReviewTagCount[]
+  listingCounts  ListingReviewTagCount[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([categoryId, key])
+  @@index([categoryId, sortOrder])
+  @@map("review_tag")
+}
+
+/// One customer's rating of one completed booking (§Phase 11).
+///
+/// "`Review` tied to a **`completed`** booking. One review per booking,
+/// enforced" — the unique key on `bookingId` is the enforcement, so two
+/// concurrent posts cannot both land.
+///
+/// **Authorship is retained, never returned.** `authorId` survives the
+/// author's account being anonymised (§Phase 3 never deletes the user row),
+/// so a disputed review can still be traced and adjudicated; no DTO in this
+/// system carries it. `authorAnonymisedAt` is stamped by the anonymisation
+/// hook so the public card can say the account is gone without reading the
+/// user row.
+model Review {
+  id String @id @default(uuid()) @db.Uuid
+
+  bookingId String  @unique @map("booking_id") @db.Uuid
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  /// Denormalised from the booking: the per-listing and per-provider
+  /// aggregates are both scoped reads, and a listing never changes owner.
+  listingId         String          @map("listing_id") @db.Uuid
+  listing           Listing         @relation(fields: [listingId], references: [id])
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  authorId String @map("author_id") @db.Uuid
+  author   User   @relation(fields: [authorId], references: [id])
+
+  /// 1–5. The only required part — §1f's "two taps minimum". A CHECK
+  /// constraint in the migration holds the range.
+  rating Int     @db.SmallInt
+  /// The optional written review (`Rate This Job.dc.html`). Free text about a
+  /// real person, so it is a §Phase 22 report target and never an input to any
+  /// number.
+  body   String? @db.VarChar(2000)
+
+  /// Moderation (invariant 1d): a flag, reversible, never a delete. A hidden
+  /// review is excluded from every aggregate and every public read.
+  hiddenAt        DateTime? @map("hidden_at") @db.Timestamptz(6)
+  hiddenByAdminId String?   @map("hidden_by_admin_id") @db.Uuid
+  hiddenReason    String?   @map("hidden_reason") @db.VarChar(500)
+
+  /// Set by the anonymisation hook. The review stays and counts.
+  authorAnonymisedAt DateTime? @map("author_anonymised_at") @db.Timestamptz(6)
+
+  tags ReviewTagApplication[]
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([listingId, hiddenAt, createdAt])
+  @@index([providerProfileId, hiddenAt, createdAt])
+  @@index([authorId])
+  @@map("review")
+}
+
+/// One tag applied on one review. Unique per pair, so a tag counts once per
+/// review however many times the client sends it.
+model ReviewTagApplication {
+  id String @id @default(uuid()) @db.Uuid
+
+  reviewId String    @map("review_id") @db.Uuid
+  review   Review    @relation(fields: [reviewId], references: [id])
+  tagId    String    @map("tag_id") @db.Uuid
+  tag      ReviewTag @relation(fields: [tagId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([reviewId, tagId])
+  @@index([tagId])
+  @@map("review_tag_application")
+}
+
+/// §Phase 11's "rating aggregation per listing and per provider; star
+/// breakdown, computed transactionally on write". Recomputed from the visible
+/// reviews inside the transaction that posts or hides one — never
+/// incremented — so it cannot drift from its source. The row is locked first,
+/// which serialises two writers on the same provider.
+model ProviderRatingAggregate {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @unique @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  reviewCount Int @default(0) @map("review_count")
+  /// Sum of visible ratings; the average is derived on read so no float is
+  /// stored.
+  ratingSum   Int @default(0) @map("rating_sum")
+  stars1      Int @default(0) @map("stars_1")
+  stars2      Int @default(0) @map("stars_2")
+  stars3      Int @default(0) @map("stars_3")
+  stars4      Int @default(0) @map("stars_4")
+  stars5      Int @default(0) @map("stars_5")
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("provider_rating_aggregate")
+}
+
+/// The same, per listing.
+model ListingRatingAggregate {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String  @unique @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  reviewCount Int @default(0) @map("review_count")
+  ratingSum   Int @default(0) @map("rating_sum")
+  stars1      Int @default(0) @map("stars_1")
+  stars2      Int @default(0) @map("stars_2")
+  stars3      Int @default(0) @map("stars_3")
+  stars4      Int @default(0) @map("stars_4")
+  stars5      Int @default(0) @map("stars_5")
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("listing_rating_aggregate")
+}
+
+/// §1f's tag counts, per provider ("aggregated across all their services").
+/// `customerCount` is what the display threshold reads — 🔧 **three different
+/// customers**, not three applications (owner's decision, 2026-10-09,
+/// decision 32), so one customer with three bookings cannot brand anyone.
+model ProviderReviewTagCount {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+  tagId             String          @map("tag_id") @db.Uuid
+  tag               ReviewTag       @relation(fields: [tagId], references: [id])
+
+  /// Visible reviews carrying the tag — the number the profile prints.
+  applicationCount Int @default(0) @map("application_count")
+  /// Distinct authors among them — the number the threshold reads.
+  customerCount    Int @default(0) @map("customer_count")
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([providerProfileId, tagId])
+  @@map("provider_review_tag_count")
+}
+
+/// The same, per listing (the Service Preview's Reviews tab).
+model ListingReviewTagCount {
+  id String @id @default(uuid()) @db.Uuid
+
+  listingId String    @map("listing_id") @db.Uuid
+  listing   Listing   @relation(fields: [listingId], references: [id])
+  tagId     String    @map("tag_id") @db.Uuid
+  tag       ReviewTag @relation(fields: [tagId], references: [id])
+
+  applicationCount Int @default(0) @map("application_count")
+  customerCount    Int @default(0) @map("customer_count")
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([listingId, tagId])
+  @@map("listing_review_tag_count")
+}
+
+/// §1f's seven conduct metrics for one provider, as last computed (§Phase
+/// 11: "recomputed on booking terminal transitions rather than on read").
+///
+/// A terminal transition stamps `staleSince` **inside the booking's own
+/// transaction**, so no transition can be missed; the `conduct-recompute`
+/// job recomputes every stale row, and once a day every row, because a
+/// rolling 90-day window moves with no transition at all. Rates are stored
+/// as integer basis points (0–10000) — no float in the database — and null
+/// means "no denominator", never zero.
+model ProviderConductSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+
+  providerProfileId String          @unique @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  jobsCompletedCount Int @default(0) @map("jobs_completed_count")
+  completedInWindow  Int @default(0) @map("completed_in_window")
+
+  completionRateBp      Int? @map("completion_rate_bp")
+  cancellationRateBp    Int? @map("cancellation_rate_bp")
+  noShowRateBp          Int? @map("no_show_rate_bp")
+  /// 🔧 Always null today: §1f's denominator is "completed with an arrival
+  /// mark", and nothing records an arrival (ledger P11-1).
+  onTimeRateBp          Int? @map("on_time_rate_bp")
+  priceAdherenceRateBp  Int? @map("price_adherence_rate_bp")
+  acceptanceRateBp      Int? @map("acceptance_rate_bp")
+  medianResponseSeconds Int? @map("median_response_seconds")
+
+  /// The instant the window was measured to. The provider's evidence list is
+  /// computed against this same instant, so the numbers and the bookings
+  /// behind them always agree.
+  computedAt DateTime? @map("computed_at") @db.Timestamptz(6)
+  staleSince DateTime? @map("stale_since") @db.Timestamptz(6)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([staleSince])
+  @@map("provider_conduct_snapshot")
 }

@@ -9,6 +9,7 @@ import type {
   BookingAmendmentStatus,
   BookingStatus,
 } from '../../generated/prisma/enums.js';
+import { isTerminal } from './transitions.js';
 
 /** A transaction or the client. Every write takes one so the service composes them. */
 export type Db = PrismaClient | Prisma.TransactionClient;
@@ -100,11 +101,23 @@ export interface StatusEventInput {
 }
 
 /**
+ * 🔧 §Phase 11. Called on every **terminal** status event, inside the
+ * transaction that wrote it — §Phase 11's conduct metrics are "recomputed on
+ * booking terminal transitions", and this is the one writer of every status
+ * event, so hooking here is what makes "every" true without touching any of
+ * the call sites in 17.1–17.4.
+ */
+export type TerminalEventHook = (db: Db, bookingId: string, at: Date) => Promise<void>;
+
+/**
  * §Phase 17.1's data access. Nothing here decides anything: the machine is
  * `transitions.ts`, the money is `pricing.ts`, and the rules are `service.ts`.
  */
 export class BookingRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly onTerminalEvent: TerminalEventHook | null = null,
+  ) {}
 
   // -- Reads ----------------------------------------------------------------
 
@@ -310,8 +323,8 @@ export class BookingRepository {
     return count === 1;
   }
 
-  recordStatusEvent(input: StatusEventInput, db: Db) {
-    return db.bookingStatusEvent.create({
+  async recordStatusEvent(input: StatusEventInput, db: Db) {
+    const event = await db.bookingStatusEvent.create({
       data: {
         bookingId: input.bookingId,
         fromStatus: input.fromStatus,
@@ -322,6 +335,10 @@ export class BookingRepository {
         createdAt: input.at,
       },
     });
+    if (this.onTerminalEvent !== null && isTerminal(input.toStatus)) {
+      await this.onTerminalEvent(db, input.bookingId, input.at);
+    }
+    return event;
   }
 
   // -- Amendments (§1h) -----------------------------------------------------

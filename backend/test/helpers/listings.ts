@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 
 import type { PrismaClient } from '../../src/generated/prisma/client.js';
 import { seedCategories } from '../../src/modules/categories/seed.js';
+import { seedReviewTags } from '../../src/modules/reviews/seed.js';
 import type { OwnListingDto } from '../../src/modules/listings/types.js';
 import { freshIp } from './app.js';
 import { ensureIslandsSeeded, islandByName } from './islands.js';
@@ -16,7 +17,9 @@ interface Envelope<T> {
 /** The category catalogue, seeded once per process — the same shape `ensureIslandsSeeded` takes. */
 let categoriesSeeded: Promise<unknown> | null = null;
 export function ensureCategoriesSeeded(prisma: PrismaClient): Promise<unknown> {
-  categoriesSeeded ??= seedCategories(prisma);
+  // §Phase 11's tag set rides along: it is per category, and seeding it here
+  // means every test that can make a booking can also review one.
+  categoriesSeeded ??= seedCategories(prisma).then(() => seedReviewTags(prisma));
   return categoriesSeeded;
 }
 

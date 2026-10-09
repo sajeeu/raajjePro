@@ -13,7 +13,7 @@ Completion rate, cancellation rate, no-show rate, on-time rate, price adherence,
 - CUSTOMER cancellations never count against a provider. Only provider-initiated ones after `accepted`.
 - Price adherence compares `finalAmount` to `agreedAmount`. An increase WITHOUT an accepted amendment is a failure — see the booking-payment-attestation skill for the locked agreement.
 - Acceptance rate counts EXPLICIT responses only; timeouts feed response rate, not acceptance.
-- On-time applies to slot and request modes only. Emergency has no `scheduledFor` to be late against.
+- On-time covers ALL THREE modes (Round 22): slot and request against `scheduledFor`, emergency against the selected offer's own `etaMinutes`. Its denominator is "completed with an arrival mark", and nothing records an arrival yet — so it is null until ledger P11-1 closes. Never report it as 0.
 
 ## Display rules — these are invariants, not preferences
 
