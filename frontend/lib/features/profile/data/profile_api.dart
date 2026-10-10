@@ -7,8 +7,8 @@ import 'package:raajjepro/core/auth/auth_controller.dart';
 ///
 /// Deliberately thin, and the server's shape decides that rather than this
 /// class: `backend/src/modules/account/dto.ts` records why there is no phone
-/// number, no avatar, no island and no saved/booking counts here. Phases 14
-/// and 17 add their counts to the same call, additively.
+/// number, no avatar, no island and no booking counts here. 🔧 §Phase 14
+/// added the saved count, additively.
 class ProfileSummary {
   const ProfileSummary({
     required this.id,
@@ -16,6 +16,7 @@ class ProfileSummary {
     required this.memberSince,
     required this.isProvider,
     required this.providerOnboardingComplete,
+    this.savedCount = 0,
   });
 
   factory ProfileSummary.fromJson(Map<String, dynamic> json) => ProfileSummary(
@@ -27,7 +28,15 @@ class ProfileSummary {
     // reading of that: nobody had completed a flow that did not exist.
     providerOnboardingComplete:
         json['providerOnboardingComplete'] as bool? ?? false,
+    savedCount: _savedCount(json['saved']),
   );
+
+  /// Services and providers together — the Saved row's one number. Absent on
+  /// a response that predates §Phase 14, which read as nothing saved.
+  static int _savedCount(Object? saved) => saved is Map<String, dynamic>
+      ? ((saved['services'] as num?)?.toInt() ?? 0) +
+            ((saved['providers'] as num?)?.toInt() ?? 0)
+      : 0;
 
   final String id;
   final String fullName;
@@ -46,6 +55,10 @@ class ProfileSummary {
   /// question from [isProvider], which flips at step 2 —
   /// `RoleSwitch.destinationFor` explains why the distinction matters.
   final bool providerOnboardingComplete;
+
+  /// 🔧 §Phase 14 — what the Saved screen would show, counted by the server
+  /// with the same visibility rule as its lists.
+  final int savedCount;
 }
 
 /// Typed calls for the Profile screen. No rule lives here; the server decides.

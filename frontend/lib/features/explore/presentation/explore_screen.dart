@@ -25,7 +25,8 @@ import 'package:raajjepro/shared/shared.dart';
 /// draws it and does nothing when tapped, marked in the tree by [InertControl]
 /// so a test can hold the line (`test/features/explore/explore_chrome_test.dart`):
 /// the island pill (Phase 7), the search field (Phase 15), the Saved heart
-/// (Phase 14) and the notification bell (Phase 19).
+/// (Phase 14 — 🔧 now wired, see [_SavedButton]) and the notification bell
+/// (Phase 19).
 ///
 /// 🔧 **Three of them are no longer inert.** Phase 6 built Profile, so the
 /// header's account disc and the `Profile` nav tab now go there, and Phase 7
@@ -82,15 +83,7 @@ class ExploreScreen extends ConsumerWidget {
                     child: Text('Explore Services', style: type.screenTitle),
                   ),
                 ),
-                const InertControl(
-                  label: 'Saved',
-                  owedBy: 'Phase 14',
-                  child: SaveHeartToggle(
-                    saved: false,
-                    onChanged: null,
-                    style: SaveHeartStyle.flat,
-                  ),
-                ),
+                const _SavedButton(),
               ],
             ),
           ),
@@ -182,6 +175,44 @@ class ExploreScreen extends ConsumerWidget {
 /// 🔧 **Phase 6 gave it its destination.** A signed-in user reaches Profile;
 /// a guest reaches Sign in, because Profile renders an account and a guest
 /// has none. It was an [InertControl] owed by Phase 6 until then.
+/// The heart beside the title (`Discovery.dc.html` → `goSaved`). 🔧 **§Phase
+/// 14 gave it its destination**: it is navigation to Saved, not a toggle —
+/// there is nothing on Explore to save — so it announces as a button. Saving
+/// needs an account (§1c: Registered), so a guest is sent to sign in, as the
+/// account disc does.
+class _SavedButton extends ConsumerWidget {
+  const _SavedButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final signedIn = ref.watch(authControllerProvider) is AuthSignedIn;
+    return Pressable(
+      onTap: () =>
+          Navigator.of(context)
+              .pushNamed(signedIn ? AppRoutes.saved : AppRoutes.signIn),
+      semanticLabel: 'Saved',
+      tooltip: 'Saved',
+      focusRadius: AppRadius.pill,
+      builder: (context, s) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: s.pressed ? colors.surfaceMuted : colors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: colors.border),
+        ),
+        child: SizedBox.square(
+          dimension: AppSizes.iconButtonSize,
+          child: Icon(
+            Icons.favorite_border_rounded,
+            size: AppSizes.iconLg,
+            color: colors.textTertiary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AccountAvatar extends ConsumerWidget {
   const _AccountAvatar();
 

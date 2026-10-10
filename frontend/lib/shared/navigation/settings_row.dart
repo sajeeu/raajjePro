@@ -25,6 +25,7 @@ class SettingsRow extends StatelessWidget {
     super.key,
     this.subtitle,
     this.destructive = false,
+    this.count,
   });
   final IconData icon;
   final String title;
@@ -32,13 +33,22 @@ class SettingsRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool destructive;
 
+  /// 🔧 §Phase 14: a number set before the chevron — Profile's Saved row —
+  /// leaving the row subtitle-free as Round 48 §4 asks. Null or zero draws
+  /// nothing.
+  final int? count;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final type = context.type;
     return AppCard(
       onTap: onTap,
-      semanticLabel: subtitle == null ? title : '$title, $subtitle',
+      semanticLabel: [
+        title,
+        ?subtitle,
+        if (count != null && count! > 0) '$count',
+      ].join(', '),
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.lg,
         AppSpacing.md,
@@ -80,6 +90,16 @@ class SettingsRow extends StatelessWidget {
               ],
             ),
           ),
+          if (count != null && count! > 0) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              '$count',
+              style: type.secondary.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+              ),
+            ),
+          ],
           Icon(Icons.chevron_right_rounded, color: colors.placeholder),
         ],
       ),

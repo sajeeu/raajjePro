@@ -3,6 +3,10 @@ import 'package:raajjepro/core/format/relative_time.dart';
 import 'package:raajjepro/core/public/public_copy.dart';
 import 'package:raajjepro/core/public/public_models.dart';
 
+// `displayName` moved to `core/public/` on its second consumer (§Phase 14's
+// Saved providers); re-exported so this feature's imports are unchanged.
+export 'package:raajjepro/core/public/public_copy.dart' show displayName;
+
 /// Every sentence the provider profile composes from data, in one place so the
 /// words are testable without pumping a widget.
 ///
@@ -62,10 +66,3 @@ String tagChip(TagCount tag) => '${tag.label} (${tag.count})';
 /// "2 published services".
 String servicesHeading(int count) =>
     '$count published ${count == 1 ? 'service' : 'services'}';
-
-/// The header's name. Onboarding requires a business name, so the fallback is
-/// for a profile that predates that rule, never a person's name (decision 34).
-String displayName(PublicProvider provider) {
-  final name = provider.businessName?.trim();
-  return name == null || name.isEmpty ? 'RaajjePro provider' : name;
-}

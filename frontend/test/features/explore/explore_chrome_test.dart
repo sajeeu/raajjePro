@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raajjepro/core/auth/auth_controller.dart';
 import 'package:raajjepro/core/auth/auth_models.dart';
 import 'package:raajjepro/core/auth/token_store.dart';
+import 'package:raajjepro/core/routes.dart';
 import 'package:raajjepro/features/auth/presentation/sign_in_screen.dart';
 import 'package:raajjepro/features/explore/presentation/explore_screen.dart';
 import 'package:raajjepro/features/explore/presentation/tab_placeholder_screen.dart';
@@ -27,8 +28,9 @@ import 'helpers.dart';
 /// header's account disc and the `Profile` nav tab have real destinations, and
 /// Phase 7 built the island picker, so the header pill opens it. Their inert
 /// assertions are gone — replaced by tests of where they go, which is the
-/// state Phase 4 was holding the line for. The search field, the Saved heart,
-/// the bell and the category tiles are still inert and still asserted.
+/// state Phase 4 was holding the line for. 🔧 Phase 14 paid a fourth: the
+/// Saved heart now opens Saved. The search field, the bell and the category
+/// tiles are still inert and still asserted.
 ///
 /// The one control that is *absent* rather than inert is the emergency entry,
 /// and it has its own test here for the same reason: it must not reappear as
@@ -84,28 +86,6 @@ void main() {
         expect(find.byType(EditableText), findsNothing);
       },
     );
-
-    testWidgets('the Saved heart is drawn, owes Phase 14, and cannot toggle', (
-      tester,
-    ) async {
-      await pump(tester);
-      expect(inert(tester, 'Saved').owedBy, 'Phase 14');
-
-      final heart = tester.widget<SaveHeartToggle>(
-        find.byType(SaveHeartToggle),
-      );
-      expect(heart.onChanged, isNull);
-      expect(heart.saved, isFalse);
-
-      // Tapping it changes nothing — no navigation, no state.
-      await tester.tap(find.byType(SaveHeartToggle));
-      await settle(tester);
-      expect(find.byType(ExploreScreen), findsOneWidget);
-      expect(
-        tester.widget<SaveHeartToggle>(find.byType(SaveHeartToggle)).saved,
-        isFalse,
-      );
-    });
 
     testWidgets('the notification bell is drawn with no destination', (
       tester,
@@ -300,6 +280,76 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(find.byType(AppHeader), findsOneWidget);
+    });
+  });
+
+  // 🔧 §Phase 14 paid the Saved heart's debt: its inert tripwire is gone,
+  // replaced by where it goes.
+  group('the Saved heart — Phase 14 owed this', () {
+    Finder savedButton() => find.bySemanticsLabel('Saved');
+
+    testWidgets(
+      'is navigation, not a toggle: there is nothing on Explore to save',
+      (tester) async {
+        await pump(tester);
+        expect(
+          tester
+              .widgetList<InertControl>(find.byType(InertControl))
+              .where((c) => c.label == 'Saved'),
+          isEmpty,
+        );
+        expect(find.byType(SaveHeartToggle), findsNothing);
+        expect(
+          tester.getSemantics(savedButton()),
+          matchesSemantics(
+            label: 'Saved',
+            isButton: true,
+            hasEnabledState: true,
+            isEnabled: true,
+            hasTapAction: true,
+            hasFocusAction: true,
+            isFocusable: true,
+          ),
+        );
+      },
+    );
+
+    testWidgets('takes a signed-in user to Saved', (tester) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [
+          apiClientProvider.overrideWithValue(api),
+          tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
+          authControllerProvider.overrideWith(
+            () => _FixedAuthController(
+              AuthSignedIn(UserAccount.fromJson(userJson())),
+            ),
+          ),
+        ],
+        routes: {AppRoutes.saved: (_) => const Text('saved-screen')},
+      );
+      await tester.tap(savedButton());
+      await settle(tester);
+      expect(find.text('saved-screen'), findsOneWidget);
+    });
+
+    testWidgets('takes a guest to Sign in — saving needs an account (§1c)', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        const ExploreScreen(),
+        overrides: [apiClientProvider.overrideWithValue(api)],
+        routes: {
+          SignInScreen.routeName: (_) => const SignInScreen(),
+          AppRoutes.saved: (_) => const Text('saved-screen'),
+        },
+      );
+      await tester.tap(savedButton());
+      await settle(tester);
+      expect(find.byType(SignInScreen), findsOneWidget);
+      expect(find.text('saved-screen'), findsNothing);
     });
   });
 

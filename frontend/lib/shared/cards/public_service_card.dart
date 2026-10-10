@@ -7,7 +7,7 @@ import 'package:raajjepro/core/theme/app_theme.dart';
 import 'package:raajjepro/core/theme/category_icons.dart';
 import 'package:raajjepro/shared/badges/verification_badge.dart';
 import 'package:raajjepro/shared/motion/pressable.dart';
-import 'package:raajjepro/shared/states/inert_control.dart';
+import 'package:raajjepro/shared/toggles/listing_save_heart.dart';
 import 'package:raajjepro/shared/toggles/save_heart_toggle.dart';
 
 /// The thumbnail column of the full card (`ServiceCard.dc.html`, variant
@@ -40,8 +40,9 @@ const double _thumbMinHeight = 112;
 ///
 /// `Pressable` excludes its child's semantics (`frontend/CLAUDE.md`), so a
 /// heart *inside* a tappable card would vanish from the semantics tree. The
-/// card's tap is laid **under** the heart instead, as a sibling. Saving is
-/// §Phase 14's, so the heart is drawn and marked [InertControl].
+/// card's tap is laid **under** the heart instead, as a sibling. 🔧 **§Phase
+/// 14 wired it**: the heart is a [ListingSaveHeart], which reads and writes
+/// the app's one saved state, so this card needs nothing passed in for it.
 class PublicServiceCard extends StatelessWidget {
   const PublicServiceCard({
     required this.listing,
@@ -113,15 +114,10 @@ class PublicServiceCard extends StatelessWidget {
         PositionedDirectional(
           top: AppSpacing.md2,
           end: AppSpacing.md2,
-          child: InertControl(
-            label: 'Save this service',
-            owedBy: 'Phase 14',
-            child: SaveHeartToggle(
-              saved: false,
-              onChanged: null,
-              style: SaveHeartStyle.flat,
-              itemName: listing.name,
-            ),
+          child: ListingSaveHeart(
+            listingId: listing.id,
+            listingName: listing.name,
+            style: SaveHeartStyle.flat,
           ),
         ),
       ],

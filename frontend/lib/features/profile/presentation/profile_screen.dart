@@ -24,7 +24,8 @@ import 'package:raajjepro/shared/shared.dart';
 /// settings is Phase 3's real screen and Legal is Phase 3's placeholder
 /// index. Saved (Phase 14), Saved preferences (Phase 17.4) and Help & support
 /// (Phase 19b) land on [UnbuiltScreen], which names the owing phase rather
-/// than doing nothing. The four booking tiles do the same, each carrying its
+/// than doing nothing. 🔧 Saved preferences reached its real screen in Phase
+/// 17.4, and Saved in Phase 14 — which also put the saved count on its row. The four booking tiles do the same, each carrying its
 /// own tab so Round 48 §2's "four labels, one destination" defect does not
 /// come back through the placeholder.
 ///
@@ -173,6 +174,10 @@ class _ProfileBody extends ConsumerWidget {
                   SettingsRow(
                     icon: row.icon,
                     title: row.title,
+                    // §Phase 14: "Profile's count updates".
+                    count: row.route == AppRoutes.saved
+                        ? summary.savedCount
+                        : null,
                     onTap: () => Navigator.of(context).pushNamed(row.route),
                   ),
                   const SizedBox(height: AppSpacing.md),

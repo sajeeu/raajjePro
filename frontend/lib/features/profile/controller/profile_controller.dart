@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:raajjepro/core/favorites/favorites_controller.dart';
 import 'package:raajjepro/features/profile/data/profile_api.dart';
 
 // `retry: null`. Riverpod 3 auto-retries a failed `build()` with exponential
@@ -25,7 +26,25 @@ final profileControllerProvider =
 /// The Profile screen's one read (§Phase 6: "one call for the Profile screen").
 class ProfileController extends AsyncNotifier<ProfileSummary> {
   @override
-  Future<ProfileSummary> build() => ref.read(profileApiProvider).summary();
+  Future<ProfileSummary> build() {
+    // 🔧 §Phase 14: "Profile's count updates". Profile stays mounted under
+    // Saved and under any listing opened from it, so a save or unsave the
+    // server accepted re-reads the summary — quietly, the old count on screen
+    // until the new one lands, never a skeleton for a number.
+    ref.listen(favoritesProvider.select((s) => s.revision), (previous, next) {
+      if (previous != next) _refreshQuietly();
+    });
+    return ref.read(profileApiProvider).summary();
+  }
+
+  Future<void> _refreshQuietly() async {
+    try {
+      final next = await ref.read(profileApiProvider).summary();
+      if (ref.mounted) state = AsyncData(next);
+    } on Object {
+      // Keep the count shown; the next visit reads it again.
+    }
+  }
 
   Future<void> reload() async {
     state = const AsyncLoading();

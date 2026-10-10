@@ -41,6 +41,13 @@ import { ContactRevealService, databaseKillSwitches } from './modules/bookings/c
 import { DispatchFeeService } from './modules/bookings/dispatch-fee.js';
 import { EmergencyService } from './modules/bookings/emergency.js';
 import { RecurringSeriesService } from './modules/bookings/recurring.js';
+import { registerFavoriteRoutes } from './modules/favorites/routes.js';
+import {
+  FavoriteCounts,
+  favoritesExportContributor,
+  FavoritesService,
+  registerFavoritesAnonymisation,
+} from './modules/favorites/service.js';
 import { registerSavedPreferencesRoutes } from './modules/saved-preferences/routes.js';
 import {
   registerSavedPreferencesAnonymisation,
@@ -211,6 +218,7 @@ declare module 'fastify' {
     emergency: EmergencyService;
     recurringSeries: RecurringSeriesService;
     savedPreferences: SavedPreferencesService;
+    favorites: FavoritesService;
     reviews: ReviewService;
     publicListings: PublicListingService;
     conduct: ConductService;
@@ -334,6 +342,9 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
       // nor Phase 5 depends on anything constructed between here and there,
       // and `account` is decorated in the same place it always was.
       providerOnboarding: providers,
+      // §Phase 14. Only the counts, over §1a's gate — the lists are built
+      // further down, once the public-listing service they print through exists.
+      savedCounts: new FavoriteCounts({ prisma: deps.prisma, visibility: providers.visibility }),
     }),
   );
   app.decorate('social', new SocialAuthRegistry(stubProviders()));
@@ -350,6 +361,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   exportContributors.register(serviceAreaExportContributor(deps.prisma));
   // Phase 17.4. A saved address is the user's own data and leaves with it.
   exportContributors.register(savedPreferencesExportContributor(deps.prisma));
+  // Phase 14. Who a person saved is their data too.
+  exportContributors.register(favoritesExportContributor(deps.prisma));
 
   // Phase 8. `MediaService` is the one upload path every module uses; the
   // storage behind it is a transport, defaulting to the local directory
@@ -574,17 +587,28 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // Phase 12. The public listing page and the provider summary beside it. It
   // sits after reviews and availability because it composes both, and nothing
   // depends on it — the dependency runs one way.
+  const publicListings = new PublicListingService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    providers,
+    reviews,
+    availability,
+    media,
+    events: listings.events,
+    log: app.log,
+  });
+  app.decorate('publicListings', publicListings);
+
+  // Phase 14. Saved services and providers, printed through the same public
+  // shapes Phases 12 and 13 built — the dependency runs one way.
   app.decorate(
-    'publicListings',
-    new PublicListingService({
+    'favorites',
+    new FavoritesService({
       prisma: deps.prisma,
       clock: deps.clock,
       providers,
+      publicListings,
       reviews,
-      availability,
-      media,
-      events: listings.events,
-      log: app.log,
     }),
   );
 
@@ -603,6 +627,8 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerProviderAnonymisation(anonymisation);
   // Phase 17.4. Saved addresses and standing instructions are personal data.
   registerSavedPreferencesAnonymisation(anonymisation);
+  // Phase 14. Every live favourite is stamped.
+  registerFavoritesAnonymisation(anonymisation);
   // Phase 11. Reviews stay and keep counting; their attribution goes, and the
   // author id is retained internally (ledger P1).
   registerReviewAnonymisation(anonymisation);
@@ -697,6 +723,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerAvailabilityRoutes(app);
   registerBookingRoutes(app);
   registerSavedPreferencesRoutes(app);
+  registerFavoriteRoutes(app);
   registerReviewRoutes(app);
   registerPublicListingRoutes(app);
   registerConductRoutes(app);

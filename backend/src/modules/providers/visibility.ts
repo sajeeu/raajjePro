@@ -191,6 +191,17 @@ export class ProviderVisibility {
     return row !== null;
   }
 
+  /**
+   * 🔧 §Phase 14. The same rule as a predicate, for a query that reaches
+   * providers through a relation — a saved provider, or a saved listing's
+   * provider — and has to page and count over it in SQL. It is the two halves
+   * `isVisible` and `findVisibleProviders` already AND together, handed out
+   * rather than copied, so suspension is still an input to this one helper.
+   */
+  visibleWhere(): Prisma.ProviderProfileWhereInput {
+    return { AND: [candidateWhere({}, null), this.listings.havingPublishedListing()] };
+  }
+
   /** Same rule, addressed by the owning user — the shape Phase 13 gets from a search result row. */
   async isVisibleByUserId(userId: string): Promise<boolean> {
     const row = await this.prisma.providerProfile.findUnique({

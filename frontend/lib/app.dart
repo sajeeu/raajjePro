@@ -52,6 +52,7 @@ import 'package:raajjepro/features/my_services/presentation/my_services_screen.d
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/provider_profile/presentation/provider_profile_screen.dart';
+import 'package:raajjepro/features/saved/presentation/saved_screen.dart';
 import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
 import 'package:raajjepro/features/service_preview/presentation/service_preview_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
@@ -125,8 +126,8 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // `UnbuiltScreen` naming the phase that owes them.
         ProfileScreen.routeName: (_) => const ProfileScreen(),
         LegalIndexScreen.routeName: (_) => const LegalIndexScreen(),
-        AppRoutes.saved: (_) =>
-            const UnbuiltScreen(title: 'Saved', owedBy: 'Phase 14'),
+        // Phase 14 — saved services and providers, from `Discovery.dc.html`.
+        SavedScreen.routeName: (_) => const SavedScreen(),
         // Phase 17.4 — §1h's saved preferences, reattributed here by the
         // owner on 2026-09-10 and built against `Saved Preferences.dc.html`.
         // Profile's row now reaches the real screen (ledger row P6-2).

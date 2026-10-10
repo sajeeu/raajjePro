@@ -6,6 +6,8 @@ Map<String, dynamic> profileSummaryJson({
   String memberSince = '2026-01-14T08:30:00.000Z',
   bool isProvider = false,
   bool providerOnboardingComplete = false,
+  int savedServices = 0,
+  int savedProviders = 0,
 }) => {
   'id': id,
   'fullName': fullName,
@@ -14,4 +16,6 @@ Map<String, dynamic> profileSummaryJson({
   // §Phase 6a's signal, and what the role switcher routes on. Separate from
   // `isProvider` because they are different moments — see `role_switch.dart`.
   'providerOnboardingComplete': providerOnboardingComplete,
+  // §Phase 14 — "Profile's count updates".
+  'saved': {'services': savedServices, 'providers': savedProviders},
 };

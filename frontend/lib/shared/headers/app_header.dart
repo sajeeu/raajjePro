@@ -11,10 +11,20 @@ class AppHeaderAction {
     required this.label,
     required this.onTap,
     this.badgeCount,
+    this.toggled,
+    this.iconColor,
   });
 
   final IconData icon;
   final String label;
+
+  /// Given for an on/off action — §Phase 14's "Save this provider" heart —
+  /// so a screen reader hears the state ("on"/"off"), not just the verb.
+  final bool? toggled;
+
+  /// The glyph's colour where the state is the colour (a saved heart is red).
+  /// Null keeps the header's usual tertiary ink.
+  final Color? iconColor;
 
   /// Null renders the disc exactly as it always looks but inert — no tap, no
   /// press scale, and reported as disabled to a screen reader. Explore uses
@@ -155,6 +165,8 @@ class AppHeader extends StatelessWidget {
                         : '${a.label}, ${a.badgeCount} new',
                     onTap: a.onTap,
                     badgeCount: a.badgeCount,
+                    toggled: a.toggled,
+                    iconColor: a.iconColor,
                   ),
                 ],
                 if (trailingSlot != null) ...[
@@ -248,12 +260,16 @@ class _RoundAction extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.badgeCount,
+    this.toggled,
+    this.iconColor,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
   final int? badgeCount;
+  final bool? toggled;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -263,6 +279,7 @@ class _RoundAction extends StatelessWidget {
 
     return Pressable(
       onTap: onTap,
+      toggled: toggled,
       semanticLabel: label,
       tooltip: label,
       focusRadius: AppRadius.pill,
@@ -283,7 +300,7 @@ class _RoundAction extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: AppSizes.iconLg,
-                    color: colors.textTertiary,
+                    color: iconColor ?? colors.textTertiary,
                   ),
                 ),
               ),

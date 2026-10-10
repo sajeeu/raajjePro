@@ -22,11 +22,9 @@ import type { UserWithProfile } from '../auth/repository.js';
  *   field anywhere in this schema and `Island` itself is §Phase 7's seed, so
  *   the location half of that line cannot be answered honestly and the screen
  *   renders the member-since half alone.
- * - **No saved or booking counts.** §Phase 14's Done-when ("Profile's count
- *   updates") and §Phase 17's tabs are what put numbers on this screen. This
- *   is the call they extend — additively, per the /v1 contract — and neither
- *   `Favorite` nor `Booking` exists yet, so a count today could only be a
- *   zero that means "not built".
+ * - **No booking counts.** §Phase 17's tabs are what would put numbers on
+ *   this screen. This is the call they would extend — additively, per the /v1
+ *   contract. 🔧 **§Phase 14 added the saved count**, below.
  *
  * `isProvider` is here because §Phase 6's role switcher routes on it: a first
  * switch goes to §Phase 6a's onboarding and every later one to §Phase 10's
@@ -60,11 +58,20 @@ export interface ProfileSummaryDto {
    * creation path and Phase 8's fallback care about.
    */
   providerOnboardingComplete: boolean;
+  /**
+   * 🔧 **Added by §Phase 14** — "Profile's count updates". What the Saved
+   * screen would show right now, by the same visibility rule as its lists
+   * (`favorites/service.ts`), so the number and the screen never disagree: a
+   * saved service whose provider unpublished is counted again when it is
+   * shown again, and not before.
+   */
+  saved: { services: number; providers: number };
 }
 
 export function profileSummaryDto(
   user: UserWithProfile,
   providerOnboardingComplete: boolean,
+  saved: { services: number; providers: number },
 ): ProfileSummaryDto {
   return {
     id: user.id,
@@ -72,5 +79,6 @@ export function profileSummaryDto(
     memberSince: user.createdAt.toISOString(),
     isProvider: user.providerProfile !== null,
     providerOnboardingComplete,
+    saved,
   };
 }

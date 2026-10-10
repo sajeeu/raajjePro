@@ -41,6 +41,15 @@ export function assertRecoverableByEmail(user: { emailVerifiedAt: Date | null })
  * the one question it asks and the provider module answers it. Widening this
  * to the whole service would let an identity endpoint reach a payment detail.
  */
+/**
+ * 🔧 §Phase 14. "Profile's count updates" — the one question `profile-summary`
+ * asks the favourites module, narrowed the same way: the counts, and nothing
+ * that could read what was saved.
+ */
+export interface SavedCountSource {
+  countFor(userId: string): Promise<{ services: number; providers: number }>;
+}
+
 export interface ProviderOnboardingSource {
   /** §Phase 6a, derived — see `providers/onboarding.ts` for the rule. */
   isOnboardingComplete(user: {
@@ -61,6 +70,8 @@ export class AccountService {
       exportContributors: ExportContributors;
       /** §Phase 6a: the one thing the Profile screen's role switcher routes on. */
       providerOnboarding: ProviderOnboardingSource;
+      /** §Phase 14: the saved count on Profile's Saved row. */
+      savedCounts: SavedCountSource;
     },
   ) {}
 
@@ -220,7 +231,11 @@ export class AccountService {
    */
   async profileSummary(userId: string): Promise<ProfileSummaryDto> {
     const user = await this.loadOrThrow(userId);
-    return profileSummaryDto(user, await this.deps.providerOnboarding.isOnboardingComplete(user));
+    const [onboardingComplete, saved] = await Promise.all([
+      this.deps.providerOnboarding.isOnboardingComplete(user),
+      this.deps.savedCounts.countFor(user.id),
+    ]);
+    return profileSummaryDto(user, onboardingComplete, saved);
   }
 
   /**

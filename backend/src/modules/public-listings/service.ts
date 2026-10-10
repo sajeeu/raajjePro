@@ -2,7 +2,7 @@ import type { FastifyBaseLogger } from 'fastify';
 
 import type { Clock } from '../../core/clock.js';
 import { NotFoundError } from '../../core/errors.js';
-import type { Listing, PrismaClient } from '../../generated/prisma/client.js';
+import type { Category, Listing, PrismaClient } from '../../generated/prisma/client.js';
 import type { AvailabilityService } from '../availability/service.js';
 import { EMERGENCY_DISPATCH_FEE_LAARI } from '../bookings/windows.js';
 import { emergencyEligibility } from '../listings/emergency.js';
@@ -17,6 +17,7 @@ import type { ReviewService } from '../reviews/service.js';
 import {
   toPublicListingCardDto,
   toPublicListingDto,
+  type PublicListingCardDto,
   type PublicListingDto,
   type PublicProviderProfileDto,
   type PublicProviderSummaryDto,
@@ -139,18 +140,81 @@ export class PublicListingService {
       orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
     });
     const published = rows.flatMap((row) =>
-      row.category === null ? [] : [{ listing: row, category: row.category }],
+      row.category === null ? [] : [{ listing: row, category: row.category, provider }],
     );
 
+    const [summary, cards] = await Promise.all([
+      this.deps.reviews.providerSummary(providerProfileId),
+      this.toCards(published),
+    ]);
+
+    return {
+      provider,
+      rating: { reviewCount: summary.reviewCount, averageRating: summary.averageRating },
+      tags: summary.tags,
+      listings: cards,
+    };
+  }
+
+  /**
+   * 🔧 §Phase 14. The cards for a set of listings, each beside its provider —
+   * what the Saved screen prints, since its services belong to many providers.
+   *
+   * **Only what is public right now comes back.** The listing must match
+   * `PUBLICLY_VISIBLE_LISTING` and its provider must pass the same
+   * `readPublic` → `findVisibleProviders` gate every public read uses; an id
+   * that fails either is simply absent from the map, never an error, because
+   * a saved thing going quiet is not the saver's fault. Same no-contact,
+   * no-payment shapes as the profile's cards.
+   */
+  async cardsByIds(
+    listingIds: string[],
+  ): Promise<Map<string, { listing: PublicListingCardDto; provider: PublicProviderDto }>> {
+    const rows = await this.deps.prisma.listing.findMany({
+      where: { id: { in: listingIds }, ...PUBLICLY_VISIBLE_LISTING },
+      include: { category: true },
+    });
+
+    const providers = new Map<string, PublicProviderDto>();
+    for (const providerId of new Set(rows.map((row) => row.providerProfileId))) {
+      try {
+        providers.set(providerId, await this.deps.providers.readPublic(providerId));
+      } catch (error) {
+        if (!(error instanceof NotFoundError)) throw error;
+      }
+    }
+
+    const published = rows.flatMap((row) => {
+      const provider = providers.get(row.providerProfileId);
+      return row.category === null || provider === undefined
+        ? []
+        : [{ listing: row, category: row.category, provider }];
+    });
+    const cards = await this.toCards(published);
+
+    const byId = new Map<string, { listing: PublicListingCardDto; provider: PublicProviderDto }>();
+    published.forEach(({ provider }, i) => {
+      const card = cards[i];
+      if (card !== undefined) byId.set(card.id, { listing: card, provider });
+    });
+    return byId;
+  }
+
+  /**
+   * One definition of a card for the profile's grid and the Saved list, so the
+   * two can never print the same listing differently.
+   */
+  private async toCards(
+    published: { listing: Listing; category: Category; provider: PublicProviderDto }[],
+  ): Promise<PublicListingCardDto[]> {
     const coverIds = published.flatMap(({ listing }) =>
       listing.coverMediaId === null ? [] : [listing.coverMediaId],
     );
-    const [summary, ratings, covers, cards] = await Promise.all([
-      this.deps.reviews.providerSummary(providerProfileId),
+    const [ratings, covers, extras] = await Promise.all([
       this.deps.reviews.listingRatings(published.map(({ listing }) => listing.id)),
       this.deps.prisma.listingMedia.findMany({ where: { id: { in: coverIds } } }),
       Promise.all(
-        published.map(async ({ listing }) => ({
+        published.map(async ({ listing, provider }) => ({
           areas: await this.listings.findServiceAreas(listing.id),
           secondSignal: await this.secondSignal(listing, provider),
         })),
@@ -158,23 +222,17 @@ export class PublicListingService {
     ]);
     const coverById = new Map(covers.map((row) => [row.id, row]));
 
-    return {
-      provider,
-      rating: { reviewCount: summary.reviewCount, averageRating: summary.averageRating },
-      tags: summary.tags,
-      listings: published.map(({ listing, category }, i) =>
-        toPublicListingCardDto({
-          listing,
-          category,
-          cover:
-            listing.coverMediaId === null ? null : (coverById.get(listing.coverMediaId) ?? null),
-          serviceAreas: (cards[i]?.areas ?? []).map((row) => toIslandDto(row.island)),
-          secondSignal: cards[i]?.secondSignal ?? { kind: 'next_open', nextOpenAt: null },
-          rating: ratings.get(listing.id) ?? { reviewCount: 0, averageRating: null },
-          mediaUrl: (objectKey) => this.deps.media.readUrl(objectKey),
-        }),
-      ),
-    };
+    return published.map(({ listing, category }, i) =>
+      toPublicListingCardDto({
+        listing,
+        category,
+        cover: listing.coverMediaId === null ? null : (coverById.get(listing.coverMediaId) ?? null),
+        serviceAreas: (extras[i]?.areas ?? []).map((row) => toIslandDto(row.island)),
+        secondSignal: extras[i]?.secondSignal ?? { kind: 'next_open', nextOpenAt: null },
+        rating: ratings.get(listing.id) ?? { reviewCount: 0, averageRating: null },
+        mediaUrl: (objectKey) => this.deps.media.readUrl(objectKey),
+      }),
+    );
   }
 
   /**

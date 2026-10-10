@@ -54,8 +54,9 @@ const double _heroHeight = 250;
 ///
 /// ## What is not built here
 ///
-/// Message, Report and Save are drawn where the artboard draws them and land on
-/// the phase that owns each (18, 22 and 14) — see [_openUnbuilt]. The artboard
+/// Message and Report are drawn where the artboard draws them and land on the
+/// phase that owns each (18 and 22) — see [_openUnbuilt]. 🔧 Save is §Phase
+/// 14's and is now live (a [ListingSaveHeart]). The artboard
 /// is one scrolling page; the plan's "About / Reviews / Provider tabs" are its
 /// three groups of sections, in the order the artboard puts them.
 class ServicePreviewScreen extends ConsumerStatefulWidget {
@@ -420,12 +421,11 @@ class _Hero extends StatelessWidget {
                         onTap: () => Navigator.of(context).maybePop(),
                       ),
                       const Spacer(),
-                      // Saving is §Phase 14's. Drawn where the artboard draws
-                      // it, wired to nothing, marked so a test can tell.
-                      const InertControl(
-                        label: 'Save this service',
-                        owedBy: 'Phase 14',
-                        child: SaveHeartToggle(saved: false, onChanged: null),
+                      // §Phase 14 — persists through the API, optimistic,
+                      // rolled back visibly; a guest is sent to sign in.
+                      ListingSaveHeart(
+                        listingId: listing.id,
+                        listingName: listing.name,
                       ),
                       if (showReport) ...[
                         const SizedBox(width: AppSpacing.sm2),

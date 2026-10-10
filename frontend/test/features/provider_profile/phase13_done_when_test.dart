@@ -253,15 +253,20 @@ void main() {
       expect(pushed[AppRoutes.listingPreview], {'listingId': 'listing-2'});
     });
 
+    // 🔧 §Phase 14 wired the hearts; this asserted them inert until then
+    // (ledger P13-3). `phase14_done_when_test.dart` asserts what they do.
     testWidgets('the card is a container: its heart is not swallowed, and is '
-        'inert until §Phase 14', (tester) async {
+        'live since §Phase 14', (tester) async {
       script(providerProfileJson());
       await pump(tester);
       expectNoSwallowedControls(tester);
-      final heart = find.byWidgetPredicate(
-        (w) => w is InertControl && w.owedBy == 'Phase 14',
+      expect(find.byType(ListingSaveHeart), findsNWidgets(2));
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is InertControl && w.owedBy == 'Phase 14',
+        ),
+        findsNothing,
       );
-      expect(heart, findsNWidgets(2));
     });
 
     testWidgets('the Service Preview’s provider card now opens this page', (
@@ -466,7 +471,7 @@ void main() {
       expect(find.textContaining('Phase 18'), findsOneWidget);
     });
 
-    testWidgets('Report lands on its owner; Save is drawn and inert', (
+    testWidgets('Report lands on its owner; Save is live since §Phase 14', (
       tester,
     ) async {
       script(providerProfileJson());
@@ -477,6 +482,11 @@ void main() {
       );
       expect(
         save.getSemanticsData().flagsCollection.isEnabled,
+        Tristate.isTrue,
+      );
+      // A toggle, so a screen reader hears whether it is saved.
+      expect(
+        save.getSemanticsData().flagsCollection.isToggled,
         Tristate.isFalse,
       );
 

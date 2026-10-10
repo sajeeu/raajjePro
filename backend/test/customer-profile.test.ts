@@ -100,13 +100,15 @@ describe.skipIf(databaseUrl === undefined)('customer profile', () => {
       });
       // The exact key list, so a field added here has to be added
       // deliberately. `providerOnboardingComplete` is §Phase 6a's, and the
-      // role switcher routes on it (`providers/onboarding.ts`).
+      // role switcher routes on it (`providers/onboarding.ts`); `saved` is
+      // §Phase 14's, and Profile's Saved row prints it.
       expect(Object.keys((JSON.parse(body) as Envelope<Summary>).data).sort()).toEqual([
         'fullName',
         'id',
         'isProvider',
         'memberSince',
         'providerOnboardingComplete',
+        'saved',
       ]);
     });
 

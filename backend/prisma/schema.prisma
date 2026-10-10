@@ -330,6 +330,9 @@ model User {
   /// §Phase 11. Authorship is retained after anonymisation and never returned
   /// in any response — see [Review].
   reviewsWritten    Review[]
+  /// §Phase 14. The services and providers this customer has saved.
+  favoriteListings  FavoriteListing[]
+  favoriteProviders FavoriteProvider[]
 
   @@index([phoneE164])
   @@index([status, deletionDeadlineAt])
@@ -527,6 +530,8 @@ model ProviderProfile {
   ratingAggregate        ProviderRatingAggregate?
   reviewTagCounts        ProviderReviewTagCount[]
   conductSnapshot        ProviderConductSnapshot?
+  /// §Phase 14 (Round 15: favourites extend to providers).
+  favoritedBy            FavoriteProvider[]
 
   /// The candidate scan in `findVisibleProviders` filters on these two before
   /// it asks the listing source anything.
@@ -1316,6 +1321,8 @@ model Listing {
   reviews         Review[]
   ratingAggregate ListingRatingAggregate?
   reviewTagCounts ListingReviewTagCount[]
+  /// §Phase 14.
+  favoritedBy     FavoriteListing[]
 
   /// §1a's derived visibility resolves through this composite: the
   /// published-listing count is `(providerProfileId, status, visibility,
@@ -3527,4 +3534,55 @@ model ProviderConductSnapshot {
 
   @@index([staleSince])
   @@map("provider_conduct_snapshot")
+}
+
+/// §Phase 14 — a service a customer saved with the heart.
+///
+/// **One row per (user, listing), ever.** Unsaving stamps `deletedAt` and
+/// saving again clears it and moves `savedAt`, so the pair stays unique without
+/// a partial index and nothing is removed (invariant 8). A saved listing that
+/// stops being public is kept, not stamped: it is simply absent from every
+/// read until §1a and `PUBLICLY_VISIBLE_LISTING` show it again.
+model FavoriteListing {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  listingId String  @map("listing_id") @db.Uuid
+  listing   Listing @relation(fields: [listingId], references: [id])
+
+  /// When it was last saved. The Saved screen's order, newest first.
+  savedAt   DateTime  @map("saved_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([userId, listingId])
+  @@index([userId, deletedAt, savedAt])
+  @@map("favorite_listing")
+}
+
+/// §Phase 14, Round 15 — a provider a customer saved. "Customers remember a
+/// person, not a listing", and this is the on-platform substitute for taking
+/// their number. Same row discipline as [FavoriteListing].
+model FavoriteProvider {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  providerProfileId String          @map("provider_profile_id") @db.Uuid
+  providerProfile   ProviderProfile @relation(fields: [providerProfileId], references: [id])
+
+  savedAt   DateTime  @map("saved_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([userId, providerProfileId])
+  @@index([userId, deletedAt, savedAt])
+  @@map("favorite_provider")
 }

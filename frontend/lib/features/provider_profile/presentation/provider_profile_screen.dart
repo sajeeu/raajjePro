@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:raajjepro/core/auth/auth_controller.dart';
-import 'package:raajjepro/core/auth/auth_models.dart';
+import 'package:raajjepro/core/auth/email_gate.dart';
 import 'package:raajjepro/core/clock.dart';
+import 'package:raajjepro/core/favorites/favorites_controller.dart';
+import 'package:raajjepro/core/favorites/save_action.dart';
+import 'package:raajjepro/core/feedback/app_haptics.dart';
 import 'package:raajjepro/core/public/public_copy.dart';
 import 'package:raajjepro/core/public/public_models.dart';
 import 'package:raajjepro/core/routes.dart';
@@ -76,9 +80,10 @@ const double _newProviderTile = 40;
 ///
 /// ## What is not built here
 ///
-/// Message (§Phase 18), Report (§Phase 22) and Save (§Phase 14) are drawn where
-/// the artboard draws them. Message and Report land on the phase that owes
-/// them; Save is inert.
+/// Message (§Phase 18) and Report (§Phase 22) are drawn where the artboard
+/// draws them and land on the phase that owes them. 🔧 Save is §Phase 14's
+/// and is live: the header heart saves the provider (Round 15), and each
+/// service card's heart saves that service.
 class ProviderProfileScreen extends ConsumerWidget {
   const ProviderProfileScreen({required this.args, super.key});
 
@@ -90,6 +95,9 @@ class ProviderProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(providerProfileProvider(args.providerId));
     final body = state is AsyncData<PublicProviderProfile>;
+    final saved = ref.watch(
+      favoritesProvider.select((s) => s.providerSaved(args.providerId)),
+    );
 
     void report() => _openUnbuilt(context, 'Report', 'Phase 22');
 
@@ -104,13 +112,27 @@ class ProviderProfileScreen extends ConsumerWidget {
             // reporting a provider who is not there is not a thing.
             actions: body
                 ? [
-                    // §Phase 14's. Drawn, inert — `onTap: null` keeps the disc
-                    // as it looks and reports it disabled (the Explore bell's
-                    // precedent).
-                    const AppHeaderAction(
-                      icon: Icons.favorite_border_rounded,
+                    // §Phase 14, Round 15 — the on-platform substitute for
+                    // taking their number. Optimistic, rolled back visibly.
+                    AppHeaderAction(
+                      icon: saved
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
                       label: 'Save this provider',
-                      onTap: null,
+                      toggled: saved,
+                      iconColor: saved ? context.colors.error : null,
+                      onTap: () {
+                        AppHaptics.selection();
+                        unawaited(
+                          setSaved(
+                            context,
+                            ref,
+                            FavoriteKind.provider,
+                            args.providerId,
+                            saved: !saved,
+                          ),
+                        );
+                      },
                     ),
                     AppHeaderAction(
                       icon: Icons.flag_outlined,
@@ -156,22 +178,7 @@ class ProviderProfileScreen extends ConsumerWidget {
   /// fixes it; it is not the check — the server refuses an unverified send on
   /// its own (invariant 4). Past the gate the enquiry thread is §Phase 18's.
   void _message(BuildContext context, WidgetRef ref) {
-    final auth = ref.read(authControllerProvider);
-    final navigator = Navigator.of(context);
-    if (auth is! AuthSignedIn) {
-      navigator.pushNamed(AppRoutes.signIn);
-      return;
-    }
-    if (!auth.user.emailVerified) {
-      navigator.pushNamed(
-        AppRoutes.verifyEmail,
-        arguments: <String, dynamic>{
-          'email': auth.user.email,
-          'purpose': 'verifyEmail',
-        },
-      );
-      return;
-    }
+    if (!passEmailGate(context, ref)) return;
     _openUnbuilt(context, 'Messages', 'Phase 18');
   }
 

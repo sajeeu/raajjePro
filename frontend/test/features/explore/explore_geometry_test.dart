@@ -282,15 +282,13 @@ void main() {
   });
 
   group('accessibility floors hold at the geometry', () {
-    testWidgets('every inert control still clears the 48 dp touch floor', (
-      tester,
-    ) async {
+    testWidgets('the Saved heart clears the 48 dp touch floor', (tester) async {
       await pump(tester);
-      // The heart's disc is 28; Pressable carries the 48 dp hit area.
+      // §Phase 14 made it a real button; Pressable carries the 48 dp area.
       final heartHit = tester.getRect(
         find
-            .descendant(
-              of: find.byType(SaveHeartToggle),
+            .ancestor(
+              of: find.byIcon(Icons.favorite_border_rounded),
               matching: find.byType(Pressable),
             )
             .first,

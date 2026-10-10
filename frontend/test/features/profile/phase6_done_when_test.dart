@@ -15,6 +15,7 @@ import 'package:raajjepro/features/my_services/presentation/my_services_screen.d
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/controller/role_switch.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/saved/presentation/saved_screen.dart';
 import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
 
@@ -171,10 +172,8 @@ void main() {
       expect(find.text('1. Scope'), findsOneWidget);
     });
 
-    testWidgets('the two unbuilt rows each name the phase that owes them', (
-      tester,
-    ) async {
-      const owed = {'Saved': 'Phase 14', 'Help & support': 'Phase 19b'};
+    testWidgets('the unbuilt row names the phase that owes it', (tester) async {
+      const owed = {'Help & support': 'Phase 19b'};
       await bootToProfile(tester);
       for (final entry in owed.entries) {
         await tester.ensureVisible(find.text(entry.key));
@@ -189,6 +188,29 @@ void main() {
         await settle(tester);
         expect(find.byType(ProfileScreen), findsOneWidget);
       }
+    });
+
+    // 🔧 Phase 14 built it. Until 2026-10-10 this row was asserted to reach
+    // an `UnbuiltScreen` owed by Phase 14 (ledger P6-2).
+    testWidgets('Saved reaches the real screen', (tester) async {
+      api
+        ..on(
+          'GET',
+          '/v1/users/me/favorites/listings?limit=50',
+          (_) => {'_list': <Object>[]},
+        )
+        ..on(
+          'GET',
+          '/v1/users/me/favorites/providers?limit=50',
+          (_) => {'_list': <Object>[]},
+        );
+      await bootToProfile(tester);
+      await tester.ensureVisible(find.text('Saved'));
+      await tester.tap(find.text('Saved'));
+      await settle(tester);
+      expect(find.byType(SavedScreen), findsOneWidget);
+      expect(find.byType(UnbuiltScreen), findsNothing);
+      expect(find.text('Nothing saved yet'), findsOneWidget);
     });
 
     // 🔧 Phase 17.4 built it. Until 2026-10-09 this row was asserted to reach

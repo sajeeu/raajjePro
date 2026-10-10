@@ -96,3 +96,12 @@ String? averageText(RatingTotals rating) {
   if (average == null || rating.reviewCount == 0) return null;
   return average.toStringAsFixed(1);
 }
+
+/// A provider's public name: the business name. Onboarding requires one, so
+/// the fallback is for a profile that predates that rule, never a person's
+/// name (decision 34). 🔧 Moved here from the provider profile by §Phase 14,
+/// whose Saved providers rows print it too.
+String displayName(PublicProvider provider) {
+  final name = provider.businessName?.trim();
+  return name == null || name.isEmpty ? 'RaajjePro provider' : name;
+}
