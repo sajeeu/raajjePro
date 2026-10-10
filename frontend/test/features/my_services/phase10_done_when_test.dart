@@ -19,6 +19,7 @@ import 'package:raajjepro/shared/shared.dart';
 import '../../core/auth/auth_controller_test.dart' show tokensJson, userJson;
 import '../../helpers/fake_api.dart';
 import '../../helpers/listings.dart';
+import '../../helpers/public_listing.dart';
 import '../../helpers/pump.dart';
 import '../profile/helpers.dart';
 import 'harness.dart';
@@ -284,9 +285,23 @@ void main() {
       );
     });
 
-    testWidgets('View as customer reaches the phase that owes the public '
-        'page', (tester) async {
+    testWidgets('View as customer opens the Service Preview for that listing', (
+      tester,
+    ) async {
       scriptDashboard(listings: [published()]);
+      api.on(
+        'GET',
+        '/v1/listings/listing-1/public',
+        (_) => publicListingJson(viewerIsOwner: true),
+      );
+      api.on(
+        'GET',
+        '/v1/listings/listing-1/reviews?limit=3',
+        (_) => {
+          '_list': <Map<String, dynamic>>[],
+          '_meta': <String, dynamic>{},
+        },
+      );
       await bootToProfile(tester, onboardingComplete: true);
       await switchToProviding(tester);
 
@@ -294,7 +309,11 @@ void main() {
       await tester.tap(find.text('View as customer'));
       await settle(tester);
 
-      expect(find.textContaining('Phase 12'), findsWidgets);
+      // Phase 12 is built: the public page, not the placeholder that named it.
+      expect(find.textContaining('Phase 12'), findsNothing);
+      expect(find.text('Home Deep Cleaning'), findsOneWidget);
+      // The owner looking at their own listing is offered Edit.
+      expect(find.text('Edit service'), findsOneWidget);
     });
   });
 

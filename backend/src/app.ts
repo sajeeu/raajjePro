@@ -68,6 +68,8 @@ import type { ProviderConductSource } from './modules/providers/conduct.js';
 import { registerConductRoutes } from './modules/conduct/routes.js';
 import { ConductService } from './modules/conduct/service.js';
 import { registerReviewAnonymisation } from './modules/reviews/anonymise.js';
+import { registerPublicListingRoutes } from './modules/public-listings/routes.js';
+import { PublicListingService } from './modules/public-listings/service.js';
 import { registerReviewRoutes } from './modules/reviews/routes.js';
 import { ReviewService } from './modules/reviews/service.js';
 import { ProviderVisibility } from './modules/providers/visibility.js';
@@ -210,6 +212,7 @@ declare module 'fastify' {
     recurringSeries: RecurringSeriesService;
     savedPreferences: SavedPreferencesService;
     reviews: ReviewService;
+    publicListings: PublicListingService;
     conduct: ConductService;
     contactReveal: ContactRevealService;
     dispatchFees: DispatchFeeService;
@@ -560,13 +563,28 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   // §1a's gate is constructed over the same published-listing source the
   // provider service uses, so a provider who is not public has no public
   // reviews either.
+  const reviews = new ReviewService({
+    prisma: deps.prisma,
+    clock: deps.clock,
+    audit,
+    visibility: new ProviderVisibility(deps.prisma, deps.publishedListings ?? PUBLISHED_LISTINGS),
+  });
+  app.decorate('reviews', reviews);
+
+  // Phase 12. The public listing page and the provider summary beside it. It
+  // sits after reviews and availability because it composes both, and nothing
+  // depends on it — the dependency runs one way.
   app.decorate(
-    'reviews',
-    new ReviewService({
+    'publicListings',
+    new PublicListingService({
       prisma: deps.prisma,
       clock: deps.clock,
-      audit,
-      visibility: new ProviderVisibility(deps.prisma, deps.publishedListings ?? PUBLISHED_LISTINGS),
+      providers,
+      reviews,
+      availability,
+      media,
+      events: listings.events,
+      log: app.log,
     }),
   );
 
@@ -680,6 +698,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerBookingRoutes(app);
   registerSavedPreferencesRoutes(app);
   registerReviewRoutes(app);
+  registerPublicListingRoutes(app);
   registerConductRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);

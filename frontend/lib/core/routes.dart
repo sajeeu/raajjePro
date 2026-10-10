@@ -83,4 +83,17 @@ abstract final class AppRoutes {
 
   /// §1c's dispatch fee, settled by the customer.
   static const dispatchFee = '/dispatch-fee';
+
+  /// 🔧 **§Phase 12's Service Preview** — the public listing page. Takes a
+  /// `listingId` argument. Here rather than only on the screen because it is
+  /// reached from features that may not import it: My Services' "View as
+  /// customer", the wizard's "View listing", and — when they land — §Phase
+  /// 15's result cards and §Phase 16's Home rows.
+  static const listingPreview = '/listing';
+
+  /// The two booking entries the Service Preview routes to by `bookingMode`.
+  /// Each screen keeps its own `routeName`; `service_preview_routes_test.dart`
+  /// asserts the strings agree, so the two copies cannot drift apart.
+  static const bookSlot = '/book';
+  static const requestTime = '/request';
 }

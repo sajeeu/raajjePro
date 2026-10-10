@@ -13,10 +13,10 @@ import 'package:raajjepro/shared/shared.dart';
 /// category and the islands the provider chose, because that is the thing
 /// they have been filling in seven steps to achieve.
 ///
-/// 🔧 **One divergence from `Create Service.dc.html`: no "View listing"
-/// button.** The prototype's links to `Service Preview.dc.html`, which is
-/// §Phase 12's screen and does not exist — a button that landed nowhere would
-/// be worse than its absence. §Phase 12 adds it back.
+/// 🔧 **"View listing" is back (§Phase 12).** It was absent while
+/// `Service Preview.dc.html` had no screen — a button that landed nowhere
+/// would have been worse than its absence. It opens the public page, which is
+/// what a customer will see.
 class PublishedSheet extends StatelessWidget {
   const PublishedSheet({
     required this.listing,
@@ -81,6 +81,21 @@ class PublishedSheet extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.sm2),
+          AppButton.secondary(
+            key: const Key('published-view-listing'),
+            label: 'View listing',
+            expand: true,
+            onPressed: () {
+              // Pop the sheet, then open the page over the wizard so Back
+              // returns to where the provider was.
+              Navigator.of(context).pop();
+              Navigator.of(context).pushNamed(
+                AppRoutes.listingPreview,
+                arguments: <String, dynamic>{'listingId': listing.id},
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.sm),
           AppButton.text(label: 'Done', expand: true, onPressed: onDone),
         ],
       ),

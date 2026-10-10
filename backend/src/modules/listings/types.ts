@@ -279,7 +279,7 @@ export function toMediaDto(
  * re-checks the shape on the way out rather than casting, because a hand-edited
  * row or a future migration is exactly the case a cast hides.
  */
-function readFaqs(value: unknown): ListingFaqDto[] {
+export function readFaqs(value: unknown): ListingFaqDto[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry): ListingFaqDto[] => {
     if (entry === null || typeof entry !== 'object') return [];

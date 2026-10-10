@@ -1272,7 +1272,33 @@ on-time half moved to P11-1.
 
 **After a pull, run `npm run db:seed`** — it now seeds the review tags too.
 
-**Next**: `/phase-12`. `/phase-10a` part 2 (the admin panel) is still paused by
+**Phase 12 is built** — the Service Preview, the public listing page.
+`docs/decisions/33-phase-12-service-preview.md` carries the detail.
+
+`GET /v1/listings/:id/public` and `GET /v1/providers/:id/public-summary` are open
+to a guest and answer one 404 for everything not public (draft, hidden, deleted,
+suspended provider, unknown id). **No contact or payment data is possible**
+rather than merely absent: the DTOs have no field for either and the Flutter
+models parse by name. `viewerIsOwner` is the Edit control's only source. Each
+page view records a `view` event (the Phase 8 seam), never the owner's own.
+
+The screen (`features/service_preview/`, route `/listing`) is reached from My
+Services' "View as customer" and the wizard's "View listing". Book Now routes by
+`bookingMode` — time picker or request form — with the emergency door beside it
+(fee stated up front) where the server says the listing offers it; a guest goes
+to sign-in and an unverified user to **email** verification first.
+
+🔧 **Four things the plan's wording gets wrong or leaves open, flagged in the
+decision record:** "phone verification" is email verification (there is no SMS);
+"About / Reviews / Provider tabs" was built as the approved prototype's single
+scroll; the response-time metric is Phase 11's, not Phase 19's; and the chip
+badge was replaced by the full badge so the tier's words are on screen.
+
+Message (Phase 18), Report (Phase 22), the save heart (Phase 14) and the provider
+card (Phase 13) are drawn where the artboard draws them and land on the phase
+that owes each — ledger **P12-1 to P12-4**.
+
+**Next**: `/phase-13`. `/phase-10a` part 2 (the admin panel) is still paused by
 the owner.
 
 | | |

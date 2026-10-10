@@ -52,6 +52,7 @@ import 'package:raajjepro/features/my_services/presentation/my_services_screen.d
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
+import 'package:raajjepro/features/service_preview/presentation/service_preview_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
 import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
 import 'package:raajjepro/shared/shared.dart';
@@ -172,6 +173,15 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
 
         AppRoutes.createService: (context) => ServiceWizardScreen(
           args: ServiceWizardArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+
+        // Phase 12. The public listing page. Takes a `listingId`, untyped, so
+        // My Services, the wizard and — when they land — search and Home can
+        // open it without importing this feature.
+        ServicePreviewScreen.routeName: (context) => ServicePreviewScreen(
+          args: ServicePreviewArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),

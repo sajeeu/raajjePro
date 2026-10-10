@@ -349,15 +349,12 @@ class _Dashboard extends ConsumerWidget {
       case ServiceMenuAction.edit:
         await _openWizard(context, ref, listing: listing);
       case ServiceMenuAction.viewAsCustomer:
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            // §Phase 12 owns the Service Preview, and `/v1/listings/:id` is
-            // deliberately unclaimed until it defines the public shape.
-            builder: (_) => const UnbuiltScreen(
-              title: 'Service preview',
-              owedBy: 'Phase 12',
-            ),
-          ),
+        // §Phase 12's Service Preview: the listing as a customer meets it. A
+        // paused or draft listing is not public, so the page says so rather
+        // than showing the owner something no customer can see.
+        await Navigator.of(context).pushNamed(
+          AppRoutes.listingPreview,
+          arguments: <String, dynamic>{'listingId': listing.id},
         );
       case ServiceMenuAction.pause:
         await _setLive(context, ref, listing, false);
