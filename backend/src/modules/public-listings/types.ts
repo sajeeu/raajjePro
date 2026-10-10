@@ -143,14 +143,14 @@ export interface PublicListingCardDto {
 
 /**
  * `GET /v1/providers/:id/public` — §Phase 13's public profile: the header,
- * the stats grid (`provider.conduct`, numbers only — §1f), the tags customers
- * applied three or more times, and the listings grid.
+ * the stats grid (`provider.conduct`, numbers only — §1f), the tags at least
+ * three different customers applied (decision 32), and the listings grid.
  */
 export interface PublicProviderProfileDto {
   provider: PublicProviderDto;
   /** Across every listing, deleted ones included (§Phase 8: their reviews remain intact). */
   rating: Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>;
-  /** One per tag key, merged across categories; only those three different customers applied. */
+  /** One per tag key, merged across categories; only tags at least three different customers applied. */
   tags: TagCountDto[];
   /** Newest published first. Never empty: a provider with none is not found (§1a). */
   listings: PublicListingCardDto[];
