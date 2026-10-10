@@ -1388,6 +1388,13 @@ results. `docs/decisions/36-phase-15-search.md` has the detail.
 Ledger: **P7-3** closed. **P15-1** added: the price filter compares across
 units.
 
+**Known flake, do not chase it twice.** On 2026-10-10, one full
+`verify.sh` run failed `frontend/test/features/service_wizard/service_wizard_test.dart`
+→ "step 4 — media a failed upload keeps the bytes and offers Retry". A vitest
+mutation check was running against the same machine at the time. The test
+passed in isolation and on the next two full runs. The control session
+accepted it as load-induced. If it fails again on an idle machine, it is real.
+
 **Next**: `/phase-16`. `/phase-10a` part 2 (the admin panel) is still paused
 by the owner.
 
