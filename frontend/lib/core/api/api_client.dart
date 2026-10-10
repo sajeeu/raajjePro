@@ -180,7 +180,12 @@ class HttpApiClient implements ApiClient {
     final decoded = _decode(response);
     if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
       final data = decoded['data'];
-      if (data is Map<String, dynamic>) return data;
+      if (data is Map<String, dynamic>) {
+        // 🔧 §Phase 15: search pages an *object* (`{total, items}`), so a
+        // cursor can ride beside a map too, under the same `_meta` key.
+        final meta = decoded['meta'];
+        return meta is Map<String, dynamic> ? {...data, '_meta': meta} : data;
+      }
       if (data is List) {
         // `meta` travels with a list under `_meta`, because a paged endpoint's
         // cursor is useless to a caller that cannot see it: dropping it here

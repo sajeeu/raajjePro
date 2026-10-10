@@ -104,6 +104,41 @@ export async function getProviderEntitlements(
     where: { providerProfileId },
     select: { tier: true, status: true },
   });
+  return entitlementsFromRow(providerProfileId, row);
+}
+
+/**
+ * 🔧 §Phase 15. The providers among `providerProfileIds` whose entitlements
+ * carry `priorityPlacement`. Search reads this to decide which results rank
+ * ahead of the rest and carry the Sponsored label.
+ *
+ * **This is the same rule, not a copy of it.** It is one read for a whole
+ * result set instead of one per provider, and each row goes through
+ * `entitlementsFromRow`, which `getProviderEntitlements` also uses. So a
+ * provider billing calls premium is exactly the provider search boosts.
+ * It is still a live read on every call, never cached.
+ */
+export async function priorityPlacementProviderIds(
+  prisma: PrismaClient,
+  providerProfileIds: string[],
+): Promise<Set<string>> {
+  if (providerProfileIds.length === 0) return new Set();
+  const rows = await prisma.providerSubscription.findMany({
+    where: { providerProfileId: { in: providerProfileIds } },
+    select: { providerProfileId: true, tier: true, status: true },
+  });
+  return new Set(
+    rows
+      .filter((row) => entitlementsFromRow(row.providerProfileId, row).priorityPlacement)
+      .map((row) => row.providerProfileId),
+  );
+}
+
+/** One subscription row (or none) to entitlements. Both readers above use it. */
+function entitlementsFromRow(
+  providerProfileId: string,
+  row: { tier: SubscriptionTier; status: SubscriptionStatus } | null,
+): ProviderEntitlements {
   if (row === null) return freeTierEntitlements(providerProfileId);
 
   const tier = tierFor(row.status, row.tier);

@@ -43,6 +43,12 @@ const double _thumbMinHeight = 112;
 /// card's tap is laid **under** the heart instead, as a sibling. 🔧 **§Phase
 /// 14 wired it**: the heart is a [ListingSaveHeart], which reads and writes
 /// the app's one saved state, so this card needs nothing passed in for it.
+///
+/// 🔧 **§Phase 15 adds [sponsored]**, which draws the prototype's `Sponsored`
+/// pill on the thumbnail: "any paid influence on ordering carries a visible
+/// 'Sponsored' label". It is the server's fact about this result, so the card
+/// never decides it. It is also spoken, because a label only a sighted reader
+/// gets is not a visible label for everyone.
 class PublicServiceCard extends StatelessWidget {
   const PublicServiceCard({
     required this.listing,
@@ -51,10 +57,14 @@ class PublicServiceCard extends StatelessWidget {
     required this.providerConduct,
     required this.now,
     required this.onTap,
+    this.sponsored = false,
     super.key,
   });
 
   final PublicListingCard listing;
+
+  /// Priority placement moved this result up (§Phase 15). Only search sets it.
+  final bool sponsored;
   final String providerName;
   final VerificationTier providerTier;
 
@@ -69,6 +79,7 @@ class PublicServiceCard extends StatelessWidget {
     final price = priceHeadline(listing.pricing);
     final mode = bookingCta(listing.bookingMode);
     final summary = [
+      if (sponsored) 'Sponsored',
       listing.name,
       'by $providerName',
       '${price.big}${price.unit}',
@@ -94,7 +105,7 @@ class PublicServiceCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _Thumb(listing: listing),
+                    _Thumb(listing: listing, sponsored: sponsored),
                     const SizedBox(width: AppSpacing.md2),
                     Expanded(
                       child: _Text(
@@ -126,9 +137,10 @@ class PublicServiceCard extends StatelessWidget {
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.listing});
+  const _Thumb({required this.listing, required this.sponsored});
 
   final PublicListingCard listing;
+  final bool sponsored;
 
   @override
   Widget build(BuildContext context) {
@@ -148,16 +160,59 @@ class _Thumb extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.input),
         ),
         alignment: Alignment.center,
-        child: listing.coverUrl == null
-            ? glyph
-            : Image.network(
-                listing.coverUrl!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                // An expired signed URL is a wash, not a broken-image glyph.
-                errorBuilder: (context, error, stack) => glyph,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Center(
+              child: listing.coverUrl == null
+                  ? glyph
+                  : Image.network(
+                      listing.coverUrl!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      // An expired signed URL is a wash, not a broken-image glyph.
+                      errorBuilder: (context, error, stack) => glyph,
+                    ),
+            ),
+            if (sponsored)
+              const PositionedDirectional(
+                top: AppSpacing.xs,
+                start: AppSpacing.xs,
+                child: _SponsoredPill(),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// `ServiceCard.dc.html`'s full-variant `Sponsored` pill, drawn on the photo
+/// beside the platform's other marker. The card's own semantic label already
+/// says it, so the pill adds no second announcement.
+class _SponsoredPill extends StatelessWidget {
+  const _SponsoredPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return ExcludeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.n7,
+            vertical: AppSpacing.xxs,
+          ),
+          child: Text(
+            'Sponsored',
+            style: context.type.pillSmall.copyWith(color: colors.textSecondary),
+          ),
+        ),
       ),
     );
   }

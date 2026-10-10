@@ -76,6 +76,8 @@ import { registerConductRoutes } from './modules/conduct/routes.js';
 import { ConductService } from './modules/conduct/service.js';
 import { registerReviewAnonymisation } from './modules/reviews/anonymise.js';
 import { registerPublicListingRoutes } from './modules/public-listings/routes.js';
+import { registerSearchRoutes } from './modules/search/routes.js';
+import { SearchService } from './modules/search/service.js';
 import { PublicListingService } from './modules/public-listings/service.js';
 import { registerReviewRoutes } from './modules/reviews/routes.js';
 import { ReviewService } from './modules/reviews/service.js';
@@ -221,6 +223,8 @@ declare module 'fastify' {
     favorites: FavoritesService;
     reviews: ReviewService;
     publicListings: PublicListingService;
+    // Not `search`: Fastify already owns that name, for the HTTP SEARCH method.
+    listingSearch: SearchService;
     conduct: ConductService;
     contactReveal: ContactRevealService;
     dispatchFees: DispatchFeeService;
@@ -612,6 +616,17 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     }),
   );
 
+  // Phase 15. Search and category results, printed through the public card
+  // shapes and gated by the same §1a helper every public read uses.
+  app.decorate(
+    'listingSearch',
+    new SearchService({
+      prisma: deps.prisma,
+      visibility: providers.visibility,
+      publicListings,
+    }),
+  );
+
   const anonymisation = new AnonymisationHooks();
   // A deleted account must stop receiving pushes. Revoking inside the
   // anonymisation transaction means a hook failure leaves the user frozen and
@@ -726,6 +741,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
   registerFavoriteRoutes(app);
   registerReviewRoutes(app);
   registerPublicListingRoutes(app);
+  registerSearchRoutes(app);
   registerConductRoutes(app);
   registerSubscriptionRoutes(app);
   registerSubscriptionAdminRoutes(app);

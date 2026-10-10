@@ -29,8 +29,8 @@ import 'helpers.dart';
 /// Phase 7 built the island picker, so the header pill opens it. Their inert
 /// assertions are gone — replaced by tests of where they go, which is the
 /// state Phase 4 was holding the line for. 🔧 Phase 14 paid a fourth: the
-/// Saved heart now opens Saved. The search field, the bell and the category
-/// tiles are still inert and still asserted.
+/// Saved heart now opens Saved. 🔧 Phase 15 paid the search field and the
+/// category tiles. The bell is still inert and still asserted.
 ///
 /// The one control that is *absent* rather than inert is the emergency entry,
 /// and it has its own test here for the same reason: it must not reappear as
@@ -65,28 +65,7 @@ void main() {
       )
       .first;
 
-  /// Finds the [InertControl] wrapper for [label] and returns it.
-  InertControl inert(WidgetTester tester, String label) {
-    final matches = tester
-        .widgetList<InertControl>(find.byType(InertControl))
-        .where((c) => c.label == label);
-    expect(matches, hasLength(1), reason: 'expected one inert "$label"');
-    return matches.first;
-  }
-
   group('present, and doing nothing', () {
-    testWidgets(
-      'the search field is drawn, owes Phase 15, and takes no input',
-      (tester) async {
-        await pump(tester);
-        expect(inert(tester, 'Search').owedBy, 'Phase 15');
-        expect(find.text('What service do you need?'), findsOneWidget);
-        // Not a real field: nothing can be typed into it and nothing submits.
-        expect(find.byType(TextField), findsNothing);
-        expect(find.byType(EditableText), findsNothing);
-      },
-    );
-
     testWidgets('the notification bell is drawn with no destination', (
       tester,
     ) async {
@@ -97,17 +76,63 @@ void main() {
       );
       expect(bell.onTap, isNull);
     });
+  });
 
-    testWidgets('a category tile is drawn but leads nowhere yet', (
+  // 🔧 §Phase 15 paid the search field's and the tiles' debts. Their inert
+  // tripwires are gone, replaced by where they go.
+  group('search and the category tiles — Phase 15 owed these', () {
+    Future<void> pumpWithResults(WidgetTester tester, List<Object?> seen) =>
+        pumpScreen(
+          tester,
+          const ExploreScreen(),
+          overrides: [apiClientProvider.overrideWithValue(api)],
+          routes: {
+            AppRoutes.search: (context) {
+              seen.add(ModalRoute.of(context)?.settings.arguments);
+              return const Scaffold(body: Text('results'));
+            },
+          },
+        );
+
+    testWidgets('the field takes a query and submits it to the results', (
       tester,
     ) async {
-      await pump(tester);
-      final tile = tester.widget<CategoryTile>(find.byType(CategoryTile).first);
-      expect(tile.onTap, isNull);
+      final seen = <Object?>[];
+      await pumpWithResults(tester, seen);
+      expect(
+        tester
+            .widgetList<InertControl>(find.byType(InertControl))
+            .where((c) => c.label == 'Search'),
+        isEmpty,
+      );
+      await tester.enterText(find.byType(TextField), '  sofa clean ');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await settle(tester);
+      expect(find.text('results'), findsOneWidget);
+      expect(seen.single, {'query': 'sofa clean'});
+    });
 
+    testWidgets('the arrow submits too', (tester) async {
+      final seen = <Object?>[];
+      await pumpWithResults(tester, seen);
+      await tester.enterText(find.byType(TextField), 'plumber');
+      await tester.tap(find.bySemanticsLabel('Search'));
+      await settle(tester);
+      expect(seen.single, {'query': 'plumber'});
+    });
+
+    testWidgets("a category tile opens that category's results", (
+      tester,
+    ) async {
+      final seen = <Object?>[];
+      await pumpWithResults(tester, seen);
+      final tile = tester.widget<CategoryTile>(find.byType(CategoryTile).first);
       await tester.tap(find.byType(CategoryTile).first);
       await settle(tester);
-      expect(find.byType(ExploreScreen), findsOneWidget);
+      expect(seen.single, {
+        'categoryId': tile.category.id,
+        'categoryName': tile.category.name,
+      });
     });
   });
 

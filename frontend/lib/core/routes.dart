@@ -42,6 +42,12 @@ abstract final class AppRoutes {
   // Phase 4.
   static const explore = '/explore';
 
+  /// 🔧 **§Phase 15's results**, search and category alike. Takes untyped
+  /// `{'query': …}` or `{'categoryId': …, 'categoryName': …}` arguments. The
+  /// name lives here because Explore opens it now, and §Phase 16's Home will
+  /// too, and neither may import the search feature.
+  static const search = '/search';
+
   /// §Phase 6a's onboarding intro — a first switch into provider mode.
   static const becomeProvider = '/become-a-provider';
 

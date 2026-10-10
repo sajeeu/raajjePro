@@ -206,7 +206,7 @@ void main() {
 
       expect(find.text("Categories didn't load"), findsOneWidget);
       expect(
-        find.text('Your connection dropped while loading.'),
+        find.text('Your connection dropped while loading. Search still works.'),
         findsOneWidget,
       );
 
@@ -236,13 +236,13 @@ void main() {
     });
 
     testWidgets(
-      'the error state never claims search still works, because it does not',
+      'the error state says search still works, because since Phase 15 it does',
       (tester) async {
         api.offline('GET', '/v1/categories');
         await pump(tester);
-        // The prototype's copy ends "Search still works." The field above is
-        // inert until Phase 15; restoring that sentence belongs with it.
-        expect(find.textContaining('Search still works'), findsNothing);
+        // explore-corrections.md #2, closed by Phase 15: the field above
+        // submits even when the grid failed to load.
+        expect(find.textContaining('Search still works'), findsOneWidget);
       },
     );
   });

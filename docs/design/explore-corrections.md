@@ -53,6 +53,9 @@ moment they are already stuck.
 `explore_screen_test.dart` asserts the sentence is absent; delete that test
 with the change.
 
+🔧 **Closed 2026-10-10 by Phase 15.** The field submits, and both error bodies
+end "Search still works." The test now asserts the sentence is present.
+
 ### 3 · The empty state does not point at search either
 
 **Prototype:** *"Categories are still loading for your region. Check back
@@ -71,6 +74,10 @@ anywhere in the plan.
 **Closed by:** Phase 15 for the search clause. The "for your region" clause
 should be dropped from the prototype outright — it describes behaviour the
 product does not have.
+
+🔧 **Search clause closed 2026-10-10 by Phase 15:** "No service categories
+are available right now. Check back shortly, or search directly for what you
+need." "For your region" stays out.
 
 ### 4 · The island pill reads "Island", not "Malé"
 
@@ -91,6 +98,9 @@ All four are drawn to the prototype and wired to nothing, each wrapped in
 `InertControl` naming its owner: tiles and search → Phase 15, heart →
 Phase 14, bell → Phase 19, account disc → Phase 6. `explore_chrome_test.dart` fails when any of them
 is wired, which is how the owning phase learns the test exists.
+
+🔧 **Phase 15 wired the tiles and the search field (2026-10-10).** Their
+tripwires became tests of where they go. Only the bell is still inert.
 
 ---
 

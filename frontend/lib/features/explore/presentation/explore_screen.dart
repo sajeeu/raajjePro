@@ -32,7 +32,9 @@ import 'package:raajjepro/shared/shared.dart';
 /// header's account disc and the `Profile` nav tab now go there, and Phase 7
 /// built the island picker, so the header pill opens it — each was recorded as
 /// owed by the phase that has now paid, and their tripwire tests were removed
-/// with the wiring, which is what those tests exist to force.
+/// with the wiring, which is what those tests exist to force. 🔧 §Phase 15
+/// paid two more: the search field submits to the results, and every
+/// category tile opens its category's results. Only the bell is still inert.
 ///
 /// **One control the prototype has is deliberately absent, not inert:** the
 /// "Something urgent? Get help now" entry. Round 23 removed the per-card
@@ -94,11 +96,7 @@ class ExploreScreen extends ConsumerWidget {
               AppSpacing.xl,
               AppSpacing.md2,
             ),
-            child: InertControl(
-              label: 'Search',
-              owedBy: 'Phase 15',
-              child: _SearchField(),
-            ),
+            child: _SearchField(),
           ),
           Expanded(
             child: switch (categories) {
@@ -331,46 +329,90 @@ class _IslandPill extends ConsumerWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
+/// The search field (`Discovery.dc.html` → `goSearch`). 🔧 **§Phase 15 made
+/// it real.** Submitting from the keyboard or the arrow opens the results.
+/// An empty search is allowed, and it lists everything on offer. The results
+/// header's query pill comes back here with the same words, focused, to
+/// change them: the artboard's `editSearch`.
+class _SearchField extends StatefulWidget {
   const _SearchField();
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  final _controller = TextEditingController();
+  final _focus = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    _focus.unfocus();
+    final edit = await Navigator.of(context).pushNamed<Object?>(
+      AppRoutes.search,
+      arguments: <String, dynamic>{'query': _controller.text.trim()},
+    );
+    if (!mounted || edit is! String) return;
+    _controller
+      ..text = edit
+      ..selection = TextSelection.collapsed(offset: edit.length);
+    _focus.requestFocus();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final type = context.type;
-    return Semantics(
-      label: 'Search services. Not available yet.',
-      enabled: false,
-      textField: true,
-      excludeSemantics: true,
-      child: Container(
-        height: AppSizes.inputHeight,
-        padding: const EdgeInsetsDirectional.fromSTEB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.sm,
-          0,
-        ),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          border: Border.all(color: colors.border),
-          boxShadow: AppShadows.card(colors.ink),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search_rounded, size: 18, color: colors.placeholder),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                'What service do you need?',
-                style: type.body.copyWith(
+    return Container(
+      height: AppSizes.inputHeight,
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.sm,
+        0,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        border: Border.all(color: colors.border),
+        boxShadow: AppShadows.card(colors.ink),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, size: 18, color: colors.placeholder),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              focusNode: _focus,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _submit(),
+              maxLength: 100,
+              style: type.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.ink,
+              ),
+              decoration: InputDecoration.collapsed(
+                hintText: 'What service do you need?',
+                hintStyle: type.body.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colors.placeholder,
                 ),
-              ),
+              ).copyWith(counterText: ''),
             ),
-            DecoratedBox(
+          ),
+          Pressable(
+            onTap: _submit,
+            semanticLabel: 'Search',
+            tooltip: 'Search',
+            focusRadius: AppRadius.pill,
+            builder: (context, s) => DecoratedBox(
               decoration: BoxDecoration(
                 gradient: colors.ctaGradient,
                 shape: BoxShape.circle,
@@ -384,8 +426,8 @@ class _SearchField extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -416,10 +458,14 @@ class _Grid extends StatelessWidget {
         index: i,
         child: CategoryTile(
           category: categories[i],
-          // Category results are Phase 15's surface; the tile is a real
-          // control with nothing behind it yet, so it stays inert rather than
-          // pretending.
-          onTap: null,
+          // 🔧 §Phase 15: the category's own results.
+          onTap: () => Navigator.of(context).pushNamed(
+            AppRoutes.search,
+            arguments: <String, dynamic>{
+              'categoryId': categories[i].id,
+              'categoryName': categories[i].name,
+            },
+          ),
         ),
       ),
     );
@@ -515,13 +561,11 @@ class _GridError extends StatelessWidget {
       padding: AppSpacing.screenInsets,
       child: EmptyState.error(
         title: "Categories didn't load",
-        // The prototype ends this sentence "Search still works." It does not
-        // in this build — the field above is inert until Phase 15 — and a
-        // recovery instruction that does not recover is worse than none.
-        // Restored with search; see docs/design/explore-corrections.md.
+        // 🔧 "Search still works." is restored now that the field searches
+        // (§Phase 15; docs/design/explore-corrections.md #2).
         body: offline
-            ? 'Your connection dropped while loading.'
-            : "We couldn't reach RaajjePro just then.",
+            ? 'Your connection dropped while loading. Search still works.'
+            : "We couldn't reach RaajjePro just then. Search still works.",
         onRetry: onRetry,
       ),
     );
@@ -540,9 +584,11 @@ class _GridEmpty extends StatelessWidget {
       child: EmptyState(
         icon: Icons.search_rounded,
         title: 'Nothing to explore yet',
+        // 🔧 The search clause is restored with §Phase 15 (correction #3);
+        // "for your region" stays out, because categories are not regional.
         body:
-            'No service categories are available right now. This is usually '
-            'temporary — try again in a moment.',
+            'No service categories are available right now. Check back '
+            'shortly, or search directly for what you need.',
         actionLabel: 'Try again',
         onAction: onRetry,
       ),

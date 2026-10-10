@@ -54,6 +54,8 @@ import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
 import 'package:raajjepro/features/provider_profile/presentation/provider_profile_screen.dart';
 import 'package:raajjepro/features/saved/presentation/saved_screen.dart';
 import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
+import 'package:raajjepro/features/search/controller/search_controller.dart';
+import 'package:raajjepro/features/search/presentation/search_results_screen.dart';
 import 'package:raajjepro/features/service_preview/presentation/service_preview_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
 import 'package:raajjepro/features/service_wizard/presentation/service_wizard_screen.dart';
@@ -184,6 +186,14 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // open it without importing this feature.
         ServicePreviewScreen.routeName: (context) => ServicePreviewScreen(
           args: ServicePreviewArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+
+        // Phase 15. Search and category results. Takes untyped arguments so
+        // Explore, and later Home, can open it without importing the feature.
+        SearchResultsScreen.routeName: (context) => SearchResultsScreen(
+          args: SearchArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),

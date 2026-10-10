@@ -197,9 +197,14 @@ export class ProviderVisibility {
    * provider — and has to page and count over it in SQL. It is the two halves
    * `isVisible` and `findVisibleProviders` already AND together, handed out
    * rather than copied, so suspension is still an input to this one helper.
+   *
+   * 🔧 §Phase 15 adds the optional `filters`, which are the ones
+   * `findVisibleProviders` already takes. Search narrows by §1g's
+   * Maldivian-owned and by `acceptingNewCustomers`. Like everywhere else,
+   * they can only narrow the rule and never widen it.
    */
-  visibleWhere(): Prisma.ProviderProfileWhereInput {
-    return { AND: [candidateWhere({}, null), this.listings.havingPublishedListing()] };
+  visibleWhere(filters: VisibleProviderFilters = {}): Prisma.ProviderProfileWhereInput {
+    return { AND: [candidateWhere(filters, null), this.listings.havingPublishedListing()] };
   }
 
   /** Same rule, addressed by the owning user — the shape Phase 13 gets from a search result row. */
