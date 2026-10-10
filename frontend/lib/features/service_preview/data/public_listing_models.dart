@@ -2,11 +2,14 @@ import 'package:flutter/foundation.dart';
 
 import 'package:raajjepro/core/domain/category.dart' show BookingMode;
 import 'package:raajjepro/core/domain/island.dart';
-import 'package:raajjepro/core/domain/verification_tier.dart';
-import 'package:raajjepro/core/listings/service_listing.dart'
-    show PriceUnit, PricingModel;
+import 'package:raajjepro/core/public/public_models.dart';
 
-/// §Phase 12's two public reads, as the client holds them.
+// 🔧 Phase 13 moved the shapes the provider profile shares — the provider, its
+// conduct, the category, the pricing and the second signal — to
+// `core/public/`. Re-exported so this feature's own imports read as before.
+export 'package:raajjepro/core/public/public_models.dart';
+
+/// §Phase 12's public listing read, as the client holds it.
 ///
 /// **Nothing here has a field that could hold a phone number, an email or a
 /// bank detail** — and that is the point rather than a convenience. The server
@@ -16,86 +19,6 @@ import 'package:raajjepro/core/listings/service_listing.dart'
 /// behind a flag").
 ///
 /// Money is integer laari from the wire to the last widget (invariant 7).
-
-@immutable
-class PublicCategory {
-  const PublicCategory({
-    required this.id,
-    required this.name,
-    required this.iconIdentifier,
-    required this.colorToken,
-  });
-
-  factory PublicCategory.fromJson(Map<String, dynamic> json) => PublicCategory(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    iconIdentifier: json['iconIdentifier'] as String? ?? '',
-    colorToken: json['colorToken'] as String? ?? '',
-  );
-
-  final String id;
-  final String name;
-  final String iconIdentifier;
-  final String colorToken;
-}
-
-@immutable
-class PublicPricing {
-  const PublicPricing({
-    required this.model,
-    required this.priceLaari,
-    required this.priceMinLaari,
-    required this.priceMaxLaari,
-    required this.unit,
-  });
-
-  factory PublicPricing.fromJson(Map<String, dynamic> json) => PublicPricing(
-    // An unknown model reads as `quote`: "price on request" promises nothing
-    // about an amount, which is the safe reading of one this build has not met.
-    model: PricingModel.parse(json['model'] as String?) ?? PricingModel.quote,
-    priceLaari: json['priceLaari'] as int?,
-    priceMinLaari: json['priceMinLaari'] as int?,
-    priceMaxLaari: json['priceMaxLaari'] as int?,
-    unit: PriceUnit.parse(json['unit'] as String?),
-  );
-
-  final PricingModel model;
-  final int? priceLaari;
-  final int? priceMinLaari;
-  final int? priceMaxLaari;
-  final PriceUnit? unit;
-}
-
-/// The mode-appropriate second signal (§1c, Round 23): next open time for a
-/// slot listing, median response time for a request one. Never both.
-@immutable
-sealed class SecondSignal {
-  const SecondSignal();
-
-  factory SecondSignal.fromJson(Map<String, dynamic> json) =>
-      json['kind'] == 'next_open'
-      ? NextOpen(
-          json['nextOpenAt'] is String
-              ? DateTime.parse(json['nextOpenAt'] as String)
-              : null,
-        )
-      : ResponseTime((json['medianResponseSeconds'] as num?)?.toInt());
-}
-
-class NextOpen extends SecondSignal {
-  const NextOpen(this.at);
-
-  /// Null when the provider has published no time that can still be booked.
-  final DateTime? at;
-}
-
-class ResponseTime extends SecondSignal {
-  const ResponseTime(this.medianSeconds);
-
-  /// Null below §1f's ten-completed-booking floor: nothing is shown, and
-  /// certainly not a zero.
-  final int? medianSeconds;
-}
 
 @immutable
 class PublicEmergency {
@@ -152,19 +75,6 @@ class Faq {
 
   final String question;
   final String answer;
-}
-
-@immutable
-class TagCount {
-  const TagCount({required this.label, required this.count});
-
-  factory TagCount.fromJson(Map<String, dynamic> json) => TagCount(
-    label: json['label'] as String? ?? '',
-    count: (json['count'] as num?)?.toInt() ?? 0,
-  );
-
-  final String label;
-  final int count;
 }
 
 @immutable
@@ -227,70 +137,6 @@ class PublicReview {
   final String? body;
   final String? authorDisplayName;
   final DateTime createdAt;
-}
-
-/// §1f's rates as numbers. The screen prints none of them as a label, and
-/// there is deliberately nowhere to put one.
-@immutable
-class PublicConduct {
-  const PublicConduct({
-    required this.jobsCompletedCount,
-    required this.belowFloor,
-    required this.medianResponseSeconds,
-  });
-
-  factory PublicConduct.fromJson(Map<String, dynamic> json) {
-    final metrics = json['metrics'];
-    return PublicConduct(
-      jobsCompletedCount: (json['jobsCompletedCount'] as num?)?.toInt() ?? 0,
-      belowFloor: json['metricsBelowFloor'] as bool? ?? true,
-      medianResponseSeconds: metrics is Map<String, dynamic>
-          ? (metrics['medianResponseSeconds'] as num?)?.toInt()
-          : null,
-    );
-  }
-
-  final int jobsCompletedCount;
-
-  /// §1f: fewer than ten completed bookings in the window. The server decides.
-  final bool belowFloor;
-  final int? medianResponseSeconds;
-}
-
-@immutable
-class PublicProvider {
-  const PublicProvider({
-    required this.id,
-    required this.businessName,
-    required this.bio,
-    required this.yearsOfExperience,
-    required this.tier,
-    required this.maldivianOwned,
-    required this.acceptingNewCustomers,
-    required this.conduct,
-  });
-
-  factory PublicProvider.fromJson(Map<String, dynamic> json) => PublicProvider(
-    id: json['id'] as String,
-    businessName: json['businessName'] as String?,
-    bio: json['bio'] as String?,
-    yearsOfExperience: (json['yearsOfExperience'] as num?)?.toInt(),
-    tier: VerificationTier.parse(json['verificationTier'] as String?),
-    maldivianOwned: json['maldivianOwned'] as bool?,
-    acceptingNewCustomers: json['acceptingNewCustomers'] as bool? ?? true,
-    conduct: PublicConduct.fromJson(
-      json['conduct'] as Map<String, dynamic>? ?? const {},
-    ),
-  );
-
-  final String id;
-  final String? businessName;
-  final String? bio;
-  final int? yearsOfExperience;
-  final VerificationTier tier;
-  final bool? maldivianOwned;
-  final bool acceptingNewCustomers;
-  final PublicConduct conduct;
 }
 
 @immutable

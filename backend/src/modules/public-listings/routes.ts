@@ -43,4 +43,14 @@ export function registerPublicListingRoutes(app: FastifyInstance): void {
     async (request, reply) =>
       reply.send(ok(await app.publicListings.readProviderSummary(request.params.id))),
   );
+
+  // 🔧 §Phase 13 — the provider's public profile. Who may call: anyone,
+  // including a guest. Not found unless §1a shows the provider, even by
+  // direct id; the response is identical whoever asks.
+  r.get(
+    '/v1/providers/:id/public',
+    { schema: { params: idParams }, config: publicRead },
+    async (request, reply) =>
+      reply.send(ok(await app.publicListings.readProviderProfile(request.params.id))),
+  );
 }

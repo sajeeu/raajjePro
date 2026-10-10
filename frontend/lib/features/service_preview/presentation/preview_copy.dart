@@ -1,9 +1,15 @@
 import 'package:raajjepro/core/domain/category.dart' show BookingMode;
 import 'package:raajjepro/core/format/maldives_time.dart';
-import 'package:raajjepro/core/format/money.dart';
 import 'package:raajjepro/core/listings/service_listing.dart'
     show PriceUnit, PricingModel;
+import 'package:raajjepro/core/public/public_copy.dart';
 import 'package:raajjepro/features/service_preview/data/public_listing_models.dart';
+
+// 🔧 Phase 13 moved the sentences the provider profile shares — the booking
+// CTA, the response time, the next open time, the job count and the headline
+// price — to `core/public/public_copy.dart`. Re-exported so this feature's
+// own imports read as before.
+export 'package:raajjepro/core/public/public_copy.dart';
 
 /// Every sentence the Service Preview composes from data, in one place so the
 /// words are testable without pumping a widget.
@@ -40,21 +46,19 @@ class PriceCopy {
 }
 
 PriceCopy priceCopy(PublicPricing pricing, String providerName) {
-  final unitSuffix = pricing.unit?.suffix ?? '';
+  // The figure and its unit are the card's too; the rest is this page's own.
+  final (:big, :unit) = priceHeadline(pricing);
   switch (pricing.model) {
     case PricingModel.fixed:
-      final big = _amount(pricing.priceLaari);
       return PriceCopy(
         big: big,
-        unit: unitSuffix,
+        unit: unit,
         label: 'Flat rate',
         note: 'One price, stated up front. What you see is what you pay.',
-        footPrice: '$big $unitSuffix'.trim(),
+        footPrice: '$big $unit'.trim(),
         footSub: _perLabel(pricing.unit) ?? 'flat rate',
       );
     case PricingModel.hourly:
-      final big = _amount(pricing.priceLaari);
-      final unit = pricing.unit?.suffix ?? PriceUnit.hour.suffix;
       return PriceCopy(
         big: big,
         unit: unit,
@@ -66,8 +70,6 @@ PriceCopy priceCopy(PublicPricing pricing, String providerName) {
         footSub: 'per hour',
       );
     case PricingModel.daily:
-      final big = _amount(pricing.priceLaari);
-      final unit = pricing.unit?.suffix ?? PriceUnit.day.suffix;
       return PriceCopy(
         big: big,
         unit: unit,
@@ -77,8 +79,6 @@ PriceCopy priceCopy(PublicPricing pricing, String providerName) {
         footSub: 'per day',
       );
     case PricingModel.range:
-      final min = pricing.priceMinLaari;
-      final big = min == null ? 'Price on request' : 'From ${mvr(min)}';
       return PriceCopy(
         big: big,
         unit: '',
@@ -91,26 +91,19 @@ PriceCopy priceCopy(PublicPricing pricing, String providerName) {
       );
     case PricingModel.quote:
       return PriceCopy(
-        big: 'Price on request',
+        big: big,
         unit: '',
         label: 'Quoted per job',
         note:
             'Describe the job and $providerName replies with a quote before '
             'anything is booked.',
-        footPrice: 'Price on request',
+        footPrice: big,
         footSub: 'quote before booking',
       );
   }
 }
 
-String _amount(int? laari) => laari == null ? 'MVR —' : mvr(laari);
-
 String? _perLabel(PriceUnit? unit) => unit?.label;
-
-/// "Pick a time" / "Request a time" — §1c's two affordances and the CTA, one
-/// string, so the card and the button cannot disagree about the wait.
-String bookingCta(BookingMode mode) =>
-    mode == BookingMode.slot ? 'Pick a time' : 'Request a time';
 
 String bookingModeSub(PublicListing listing, String providerName) {
   switch (listing.bookingMode) {
@@ -121,32 +114,6 @@ String bookingModeSub(PublicListing listing, String providerName) {
       return 'You suggest a time; $providerName replies with a time and a '
           'price.';
   }
-}
-
-/// "about 12 minutes" / "about 1 hour" — the provider's median, in words.
-String responseTimePhrase(int seconds) {
-  final minutes = (seconds / 60).round();
-  if (minutes < 1) return 'under a minute';
-  if (minutes < 60) {
-    return 'about $minutes ${minutes == 1 ? 'minute' : 'minutes'}';
-  }
-  final hours = (minutes / 60).round();
-  if (hours < 48) return 'about $hours ${hours == 1 ? 'hour' : 'hours'}';
-  final days = (hours / 24).round();
-  return 'about $days days';
-}
-
-/// "Tomorrow 09:00" — the first time a customer could actually book.
-String nextOpenPhrase(DateTime at, DateTime now) =>
-    '${maldivesDayLabel(at, now)} ${maldivesClock(at)}';
-
-/// §1f's "New provider" and the job count, or the count alone once the
-/// window's floor is met. Never a rate, never a label.
-String jobsLine(PublicConduct conduct) {
-  final count = conduct.jobsCompletedCount;
-  final jobs = '$count ${count == 1 ? 'job' : 'jobs'} completed';
-  if (!conduct.belowFloor) return jobs;
-  return count == 0 ? 'New provider' : 'New provider · $jobs';
 }
 
 /// The line under the provider's name: the mode's second signal, then jobs.

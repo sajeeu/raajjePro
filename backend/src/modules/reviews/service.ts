@@ -213,6 +213,39 @@ export class ReviewService {
   }
 
   /**
+   * 🔧 §Phase 13. The two-field rating of several listings at once — what a
+   * listing card prints. **The caller has already decided these listings are
+   * public** (it found them through `PUBLICLY_VISIBLE_LISTING` under a
+   * provider §1a shows), so unlike `listingSummary` this asserts nothing; it
+   * exists so a grid of cards is one query rather than one per card.
+   */
+  async listingRatings(
+    listingIds: string[],
+  ): Promise<Map<string, Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>>> {
+    const rows = await this.prisma.listingRatingAggregate.findMany({
+      where: { listingId: { in: listingIds } },
+      select: { listingId: true, reviewCount: true, ratingSum: true },
+    });
+    const found = new Map(rows.map((row) => [row.listingId, row]));
+    return new Map(
+      listingIds.map((id) => {
+        const row = found.get(id);
+        const reviewCount = row?.reviewCount ?? 0;
+        return [
+          id,
+          {
+            reviewCount,
+            averageRating:
+              row === undefined || reviewCount === 0
+                ? null
+                : Math.round((row.ratingSum / reviewCount) * 100) / 100,
+          },
+        ];
+      }),
+    );
+  }
+
+  /**
    * A visible provider's reviews across every listing — including a listing
    * since deleted, whose reviews §Phase 8 says "remain intact" and still count
    * for the provider.
@@ -444,7 +477,7 @@ function toSummary(
     },
     // Most-applied first, the order "On time (31) · Fair price (28) · Arrived
     // late (3)" reads in; the category's own order breaks a tie.
-    tags: tags
+    tags: mergeByKey(tags)
       .sort((a, b) => b.applicationCount - a.applicationCount || a.tag.sortOrder - b.tag.sortOrder)
       .map((t) => ({
         key: t.tag.key,
@@ -453,6 +486,32 @@ function toSummary(
         count: t.applicationCount,
       })),
   };
+}
+
+/**
+ * 🔧 §Phase 13. One entry per tag *key*. A provider's rows span categories,
+ * each of which seeds its own copy of the same tag (see `providerTagCounts`),
+ * so the profile would otherwise print "On time" once per category. A
+ * listing has one category, so this is a no-op on a listing's own rows.
+ */
+function mergeByKey<
+  T extends { applicationCount: number; tag: { key: string; sortOrder: number } },
+>(rows: T[]): T[] {
+  const byKey = new Map<string, T>();
+  for (const row of rows) {
+    const seen = byKey.get(row.tag.key);
+    if (seen === undefined) {
+      byKey.set(row.tag.key, row);
+      continue;
+    }
+    // The wording and order of whichever category lists the tag first.
+    const lead = row.tag.sortOrder < seen.tag.sortOrder ? row : seen;
+    byKey.set(row.tag.key, {
+      ...lead,
+      applicationCount: seen.applicationCount + row.applicationCount,
+    });
+  }
+  return [...byKey.values()];
 }
 
 function encodeCursor(createdAt: Date, id: string): string {

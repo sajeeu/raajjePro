@@ -2,7 +2,7 @@ import type { FastifyBaseLogger } from 'fastify';
 
 import type { Clock } from '../../core/clock.js';
 import { NotFoundError } from '../../core/errors.js';
-import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { Listing, PrismaClient } from '../../generated/prisma/client.js';
 import type { AvailabilityService } from '../availability/service.js';
 import { EMERGENCY_DISPATCH_FEE_LAARI } from '../bookings/windows.js';
 import { emergencyEligibility } from '../listings/emergency.js';
@@ -12,10 +12,13 @@ import { PUBLICLY_VISIBLE_LISTING } from '../listings/visibility.js';
 import { toIslandDto } from '../location/types.js';
 import type { MediaService } from '../media/service.js';
 import type { ProviderProfileService } from '../providers/service.js';
+import type { PublicProviderDto } from '../providers/types.js';
 import type { ReviewService } from '../reviews/service.js';
 import {
+  toPublicListingCardDto,
   toPublicListingDto,
   type PublicListingDto,
+  type PublicProviderProfileDto,
   type PublicProviderSummaryDto,
   type PublicSecondSignalDto,
 } from './types.js';
@@ -78,14 +81,7 @@ export class PublicListingService {
 
     const viewerIsOwner = viewerUserId !== null && listing.providerProfile.userId === viewerUserId;
 
-    const secondSignal: PublicSecondSignalDto =
-      listing.bookingMode === 'slot'
-        ? { kind: 'next_open', nextOpenAt: await this.nextOpenAt(listing.id) }
-        : {
-            kind: 'response_time',
-            // Already null below §1f's floor — see `PublicSecondSignalDto`.
-            medianResponseSeconds: provider.conduct.metrics?.medianResponseSeconds ?? null,
-          };
+    const secondSignal = await this.secondSignal(listing, provider);
 
     // Re-derived from the provider's tier as of now rather than trusting the
     // stored flag alone: the tier-drop sweep clears `isEmergency`, but this
@@ -118,6 +114,85 @@ export class PublicListingService {
     const { reviewCount, averageRating } =
       await this.deps.reviews.providerSummary(providerProfileId);
     return { provider, rating: { reviewCount, averageRating } };
+  }
+
+  /**
+   * `GET /v1/providers/:id/public` — §Phase 13's public profile.
+   *
+   * Who may call: anyone, including a guest. **Not found unless §1a shows the
+   * provider**, by the same `readPublic` → `findVisibleProviders` gate the
+   * listing page uses — so a drafts-only provider is a 404 even by direct id,
+   * and so is a suspended one, with the same body as an id that never existed.
+   *
+   * The response is the same viewer-independent shape for everyone: nothing
+   * here reads who is asking, so there is no viewer for whom it could carry
+   * more.
+   */
+  async readProviderProfile(providerProfileId: string): Promise<PublicProviderProfileDto> {
+    const provider = await this.deps.providers.readPublic(providerProfileId);
+
+    // Unpaged on purpose: what a provider can hold published is bounded by
+    // §1b's entitlement cap, and the profile's job is to show all of it.
+    const rows = await this.deps.prisma.listing.findMany({
+      where: { providerProfileId, ...PUBLICLY_VISIBLE_LISTING },
+      include: { category: true },
+      orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
+    });
+    const published = rows.flatMap((row) =>
+      row.category === null ? [] : [{ listing: row, category: row.category }],
+    );
+
+    const coverIds = published.flatMap(({ listing }) =>
+      listing.coverMediaId === null ? [] : [listing.coverMediaId],
+    );
+    const [summary, ratings, covers, cards] = await Promise.all([
+      this.deps.reviews.providerSummary(providerProfileId),
+      this.deps.reviews.listingRatings(published.map(({ listing }) => listing.id)),
+      this.deps.prisma.listingMedia.findMany({ where: { id: { in: coverIds } } }),
+      Promise.all(
+        published.map(async ({ listing }) => ({
+          areas: await this.listings.findServiceAreas(listing.id),
+          secondSignal: await this.secondSignal(listing, provider),
+        })),
+      ),
+    ]);
+    const coverById = new Map(covers.map((row) => [row.id, row]));
+
+    return {
+      provider,
+      rating: { reviewCount: summary.reviewCount, averageRating: summary.averageRating },
+      tags: summary.tags,
+      listings: published.map(({ listing, category }, i) =>
+        toPublicListingCardDto({
+          listing,
+          category,
+          cover:
+            listing.coverMediaId === null ? null : (coverById.get(listing.coverMediaId) ?? null),
+          serviceAreas: (cards[i]?.areas ?? []).map((row) => toIslandDto(row.island)),
+          secondSignal: cards[i]?.secondSignal ?? { kind: 'next_open', nextOpenAt: null },
+          rating: ratings.get(listing.id) ?? { reviewCount: 0, averageRating: null },
+          mediaUrl: (objectKey) => this.deps.media.readUrl(objectKey),
+        }),
+      ),
+    };
+  }
+
+  /**
+   * The mode-appropriate second signal (§1c, Round 23) — one definition for
+   * the listing page and every card on the profile, so the two can never
+   * disagree about the same listing.
+   */
+  private async secondSignal(
+    listing: Pick<Listing, 'id' | 'bookingMode'>,
+    provider: PublicProviderDto,
+  ): Promise<PublicSecondSignalDto> {
+    return listing.bookingMode === 'slot'
+      ? { kind: 'next_open', nextOpenAt: await this.nextOpenAt(listing.id) }
+      : {
+          kind: 'response_time',
+          // Already null below §1f's floor — see `PublicSecondSignalDto`.
+          medianResponseSeconds: provider.conduct.metrics?.medianResponseSeconds ?? null,
+        };
   }
 
   /**

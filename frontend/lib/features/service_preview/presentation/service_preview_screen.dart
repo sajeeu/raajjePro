@@ -102,7 +102,12 @@ class _ServicePreviewScreenState extends ConsumerState<ServicePreviewScreen> {
           onMessage: () => _message(value.listing),
           onEdit: () => _edit(value.listing),
           onReport: _report,
-          onProvider: () => _openUnbuilt('Provider profile', 'Phase 13'),
+          onProvider: () => Navigator.of(context).pushNamed(
+            AppRoutes.providerProfile,
+            arguments: <String, dynamic>{
+              'providerId': value.listing.provider.id,
+            },
+          ),
         ),
       },
     );

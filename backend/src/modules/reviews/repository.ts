@@ -85,7 +85,7 @@ export class ReviewAggregates {
     tx: Prisma.TransactionClient,
     providerProfileId: string,
   ): Promise<void> {
-    const counts = await tagCounts(tx, { providerProfileId });
+    const counts = await providerTagCounts(tx, providerProfileId);
     for (const [tagId, count] of counts) {
       await tx.providerReviewTagCount.upsert({
         where: { providerProfileId_tagId: { providerProfileId, tagId } },
@@ -171,6 +171,49 @@ async function tagCounts(
     [...byTag].map(([tagId, e]) => [
       tagId,
       { applicationCount: e.applications, customerCount: e.authors.size },
+    ]),
+  );
+}
+
+/**
+ * 🔧 §Phase 13. The provider-level twin of `tagCounts`, and the reason it
+ * exists: **a provider spans categories, and every category seeds its own copy
+ * of the same tags.** "On time" on a Plumbing listing and "On time" on an AC
+ * Repair listing are two `ReviewTag` rows with one `key`, so counting by tag
+ * id put the same tag on the profile twice and judged §1f's three-customer
+ * threshold per category rather than per provider.
+ *
+ * `applicationCount` stays per tag row — the merge by key is a sum, done where
+ * the profile is read. `customerCount` becomes the distinct authors across
+ * every row sharing the key, because distinct authors do not sum: one customer
+ * who applied "Arrived late" in two categories is one customer, not two, and
+ * must not be able to carry a tag over the threshold alone.
+ */
+async function providerTagCounts(
+  db: Db,
+  providerProfileId: string,
+): Promise<Map<string, { applicationCount: number; customerCount: number }>> {
+  const rows = await db.reviewTagApplication.findMany({
+    where: { review: { providerProfileId, ...VISIBLE_REVIEW } },
+    select: { tagId: true, tag: { select: { key: true } }, review: { select: { authorId: true } } },
+  });
+  const applications = new Map<string, number>();
+  const keyOf = new Map<string, string>();
+  const authorsByKey = new Map<string, Set<string>>();
+  for (const row of rows) {
+    applications.set(row.tagId, (applications.get(row.tagId) ?? 0) + 1);
+    keyOf.set(row.tagId, row.tag.key);
+    const authors = authorsByKey.get(row.tag.key) ?? new Set<string>();
+    authors.add(row.review.authorId);
+    authorsByKey.set(row.tag.key, authors);
+  }
+  return new Map(
+    [...applications].map(([tagId, applicationCount]) => [
+      tagId,
+      {
+        applicationCount,
+        customerCount: authorsByKey.get(keyOf.get(tagId) ?? '')?.size ?? 0,
+      },
     ]),
   );
 }

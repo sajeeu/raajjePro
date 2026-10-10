@@ -51,6 +51,7 @@ import 'package:raajjepro/features/legal/presentation/legal_placeholder_screen.d
 import 'package:raajjepro/features/my_services/presentation/my_services_screen.dart';
 import 'package:raajjepro/features/onboarding/presentation/become_provider_screen.dart';
 import 'package:raajjepro/features/profile/presentation/profile_screen.dart';
+import 'package:raajjepro/features/provider_profile/presentation/provider_profile_screen.dart';
 import 'package:raajjepro/features/saved_preferences/presentation/saved_preferences_screen.dart';
 import 'package:raajjepro/features/service_preview/presentation/service_preview_screen.dart';
 import 'package:raajjepro/features/service_wizard/controller/service_wizard_controller.dart';
@@ -182,6 +183,15 @@ class _RaajjeProAppState extends ConsumerState<RaajjeProApp> {
         // open it without importing this feature.
         ServicePreviewScreen.routeName: (context) => ServicePreviewScreen(
           args: ServicePreviewArgs.fromRouteArguments(
+            ModalRoute.of(context)?.settings.arguments,
+          ),
+        ),
+
+        // Phase 13. The provider's public profile. Takes a `providerId`,
+        // untyped, so the Service Preview's provider card — and later saved
+        // providers and search — can open it without importing this feature.
+        ProviderProfileScreen.routeName: (context) => ProviderProfileScreen(
+          args: ProviderProfileArgs.fromRouteArguments(
             ModalRoute.of(context)?.settings.arguments,
           ),
         ),

@@ -91,6 +91,12 @@ abstract final class AppRoutes {
   /// 15's result cards and §Phase 16's Home rows.
   static const listingPreview = '/listing';
 
+  /// 🔧 **§Phase 13's provider public profile.** Takes a `providerId`
+  /// argument. Here for the same reason as [listingPreview]: the Service
+  /// Preview's provider card reaches it, and so will §Phase 14's saved
+  /// providers and §Phase 15's results, none of which may import it.
+  static const providerProfile = '/provider-profile';
+
   /// The two booking entries the Service Preview routes to by `bookingMode`.
   /// Each screen keeps its own `routeName`; `service_preview_routes_test.dart`
   /// asserts the strings agree, so the two copies cannot drift apart.

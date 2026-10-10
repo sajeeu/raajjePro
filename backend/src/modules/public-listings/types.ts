@@ -9,7 +9,7 @@ import type {
 import type { IslandDto } from '../location/types.js';
 import type { ListingFaqDto, SelfDeclaredCoverDto } from '../listings/types.js';
 import type { PublicProviderDto } from '../providers/types.js';
-import type { RatingSummaryDto } from '../reviews/types.js';
+import type { RatingSummaryDto, TagCountDto } from '../reviews/types.js';
 import { readFaqs } from '../listings/types.js';
 
 /**
@@ -117,6 +117,45 @@ export interface PublicProviderSummaryDto {
   rating: Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>;
 }
 
+/**
+ * 🔧 §Phase 13. One of a provider's published services, as a card prints it
+ * (`ServiceCard`, the full variant). The same gate as `PublicListingDto` —
+ * no field here could hold contact or payment details — and a strict subset of
+ * it, so a card can never claim something the listing's own page would not.
+ *
+ * **No provider block.** Every card on the profile belongs to the provider the
+ * page is about, and the client takes the name and tier from there; repeating
+ * them per card would be a second copy of the one fact that must not differ.
+ */
+export interface PublicListingCardDto {
+  id: string;
+  name: string;
+  category: PublicCategoryDto;
+  cover: PublicMediaDto | null;
+  pricing: PublicPricingDto;
+  bookingMode: BookingMode;
+  secondSignal: PublicSecondSignalDto;
+  serviceAreas: IslandDto[];
+  /** Offered on the listing AND the category is `callbackEligible` (Round 28). */
+  callbackGuarantee: boolean;
+  rating: Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>;
+}
+
+/**
+ * `GET /v1/providers/:id/public` — §Phase 13's public profile: the header,
+ * the stats grid (`provider.conduct`, numbers only — §1f), the tags customers
+ * applied three or more times, and the listings grid.
+ */
+export interface PublicProviderProfileDto {
+  provider: PublicProviderDto;
+  /** Across every listing, deleted ones included (§Phase 8: their reviews remain intact). */
+  rating: Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>;
+  /** One per tag key, merged across categories; only those three different customers applied. */
+  tags: TagCountDto[];
+  /** Newest published first. Never empty: a provider with none is not found (§1a). */
+  listings: PublicListingCardDto[];
+}
+
 export interface PublicListingInput {
   listing: Listing;
   category: Category;
@@ -181,6 +220,43 @@ export function toPublicListingDto(input: PublicListingInput): PublicListingDto 
     rating: input.rating,
     provider: input.provider,
     viewerIsOwner: input.viewerIsOwner,
+  };
+}
+
+export interface PublicListingCardInput {
+  listing: Listing;
+  category: Category;
+  cover: ListingMedia | null;
+  serviceAreas: IslandDto[];
+  secondSignal: PublicSecondSignalDto;
+  rating: Pick<RatingSummaryDto, 'reviewCount' | 'averageRating'>;
+  mediaUrl: (objectKey: string) => string;
+}
+
+export function toPublicListingCardDto(input: PublicListingCardInput): PublicListingCardDto {
+  const { listing, category } = input;
+  return {
+    id: listing.id,
+    name: listing.name ?? '',
+    category: {
+      id: category.id,
+      name: category.name,
+      iconIdentifier: category.iconIdentifier,
+      colorToken: category.colorToken,
+    },
+    cover: input.cover === null ? null : toPublicMedia(input.cover, input.mediaUrl),
+    pricing: {
+      model: listing.pricingModel ?? 'quote',
+      priceLaari: listing.priceLaari,
+      priceMinLaari: listing.priceMinLaari,
+      priceMaxLaari: listing.priceMaxLaari,
+      unit: listing.priceUnit,
+    },
+    bookingMode: listing.bookingMode ?? 'request',
+    secondSignal: input.secondSignal,
+    serviceAreas: input.serviceAreas,
+    callbackGuarantee: listing.callbackGuaranteeOffered && category.callbackEligible,
+    rating: input.rating,
   };
 }
 
